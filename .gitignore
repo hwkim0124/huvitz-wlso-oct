@@ -1,0 +1,190 @@
+# =====================================================================
+# .gitignore — huvitz-wlso-oct
+# Solution: HCT-LSO/HCT-LSO.sln  (C#/WPF + C++/MSBuild, Visual Studio 2022)
+#
+# The solution is nested under HCT-LSO/, so the patterns below
+# intentionally use **un-anchored** paths (no leading `/`). That makes
+# `build/`, `nupkgs/restored/`, etc. match whether they appear at the
+# repo root or under HCT-LSO/. This also lets sibling top-level folders
+# (e.g. firmware/, hardware/, tools/) be added later without changes here.
+# =====================================================================
+
+
+# ---------------------------------------------------------------------
+# Repo-specific output folders (resolve under HCT-LSO/)
+# ---------------------------------------------------------------------
+
+# Visual Studio build outputs (centralized via HCT-LSO/Directory.Build.props)
+build/
+
+# NuGet packages: ignore the restore cache, keep the vendored local feed
+nupkgs/restored/
+# Note: nupkgs/local/ IS intentionally checked in (vendored .nupkg files).
+
+# Deploy folder is manually curated. Binaries are large and noisy in git,
+# so we ignore built artifacts but keep manifests, configs, licenses, and
+# anything hand-authored. Uncomment if/when you adopt this policy:
+#
+# deploy/**/*.exe
+# deploy/**/*.dll
+# deploy/**/*.pdb
+# deploy/**/*.lib
+# deploy/**/*.exp
+# !deploy/README.md
+# !deploy/MANIFEST.md
+# !deploy/SHA256SUMS.txt
+# !deploy/**/*.config
+# !deploy/**/*.json
+# !deploy/**/LICENSE*
+# !deploy/**/THIRD-PARTY-NOTICES*
+
+
+# ---------------------------------------------------------------------
+# Visual Studio user / workspace files
+# ---------------------------------------------------------------------
+
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+*.vsidx
+
+# Visual Studio launch profiles per developer
+**/Properties/launchSettings.json
+
+# ReSharper / Rider
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+.idea/
+
+# Visual Studio Code (allow shared settings if any, ignore the rest)
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+
+# ---------------------------------------------------------------------
+# .NET / MSBuild
+# ---------------------------------------------------------------------
+
+# Per-project default output dirs (in case anything escapes Directory.Build.props)
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+
+# Build logs and diagnostics
+*.binlog
+*.tlog
+msbuild.log
+msbuild.err
+msbuild.wrn
+
+# .NET Core/SDK
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# NuGet
+*.nupkg
+*.snupkg
+# ...but keep deliberately vendored packages
+!nupkgs/local/**/*.nupkg
+!nupkgs/local/**/*.snupkg
+# Old packages.config restore folder, if it ever appears
+packages/
+# Lock files (packages.lock.json) ARE checked in — do NOT add them here.
+
+
+# ---------------------------------------------------------------------
+# C++ / MSBuild (vcxproj) intermediates
+# ---------------------------------------------------------------------
+
+*.obj
+*.ilk
+*.exp
+*.iobj
+*.ipdb
+*.pdb
+*.pch
+*.ipch
+*.idb
+*.tli
+*.tlh
+*.aps
+*.ncb
+*.opensdf
+*.sdf
+*.cachefile
+*.VC.db
+*.VC.opendb
+ipch/
+enc_temp_folder/
+
+
+# ---------------------------------------------------------------------
+# Common executable / library artifacts at unexpected locations
+# ---------------------------------------------------------------------
+
+# Top-level (repo-root) only — do not match externs/ prebuilt binaries
+# or nupkgs/local/.
+/*.dll
+/*.exe
+/*.lib
+
+
+# ---------------------------------------------------------------------
+# Test results / coverage
+# ---------------------------------------------------------------------
+
+TestResults/
+[Tt]est[Rr]esult*/
+*.trx
+*.coverage
+*.coveragexml
+coverage*.json
+coverage*.xml
+coverage*.info
+BenchmarkDotNet.Artifacts/
+
+
+# ---------------------------------------------------------------------
+# Tools and caches
+# ---------------------------------------------------------------------
+
+.nuget/
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+
+# Node (only if any front-end / docs tooling appears later)
+node_modules/
+
+
+# ---------------------------------------------------------------------
+# OS junk
+# ---------------------------------------------------------------------
+
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+
+# ---------------------------------------------------------------------
+# Secrets — must never be committed
+# ---------------------------------------------------------------------
+
+*.pfx
+*.snk
+*.publishsettings
+*.licenseheader
+appsettings.*.local.json
+secrets.json
