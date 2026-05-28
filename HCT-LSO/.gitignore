@@ -9,6 +9,7 @@
 # (e.g. firmware/, hardware/, tools/) be added later without changes here.
 # =====================================================================
 
+externs/*
 
 # ---------------------------------------------------------------------
 # Repo-specific output folders (resolve under HCT-LSO/)
