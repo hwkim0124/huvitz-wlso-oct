@@ -20,6 +20,8 @@
 #include "OctAngioDefines.h"
 #include "OctAngioSetup.h"
 
+#include "LsoScanStruct.h"
+
 #include "DeviceDefines.h"
 #include "DeviceStructs.h"
 #include "DeviceLights.h"

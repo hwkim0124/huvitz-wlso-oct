@@ -50,10 +50,10 @@ namespace wso_domain
 	{
 		LSO_WHITE_LED = 0,
 		RETINA_IR_LED = 1,
-		CORNEA_IR_L_LED = 2,
-		CORNEA_IR_R_LED = 3,
+		CORNEA_IR_LEFT_LED = 2,
+		CORNEA_IR_RIGHT_LED = 3,
 		UNKNOWN = 0xFF,
-		NUM_LIGHT_LEDS = (CORNEA_IR_R_LED + 1)
+		NUM_LIGHT_LEDS = (CORNEA_IR_RIGHT_LED + 1)
 	};
 
 	enum class StepMotorType : unsigned char
@@ -90,6 +90,16 @@ namespace wso_domain
 		RIGHT = 0x01,
 		UNKNOWN = 0x99,
 		NUMBER_OF_ITEMS = (RIGHT + 1)
+	};
+
+	enum class CameraType : unsigned char
+	{
+		IR_CORNEA_LEFT = 0x00,
+		IR_CORNEA_RIGHT = 0x01,
+		IR_RETINA = 0x02,
+		IR_CORNEA_LOWER = 0x03,
+		COLOR_FUNDUS = 0x04,
+		NUMBER_OF_ITEMS = (COLOR_FUNDUS + 1)
 	};
 
 

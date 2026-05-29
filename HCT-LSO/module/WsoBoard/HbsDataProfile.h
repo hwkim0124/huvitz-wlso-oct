@@ -43,6 +43,7 @@ namespace wso_board
 		bool saveCalibration(void);
 		bool saveConfiguration(void);
 		bool saveSystemConfigure(void);
+		bool saveLsoScannerParam(void);
 		bool saveGalvanoDynamicParam(void);
 
 		const HbsDescriptor* getHbsDescriptor(void) const;

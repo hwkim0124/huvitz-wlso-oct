@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\packages\vcpkg-export-wslotoolkit.1.0.1\build\native\vcpkg-export-wslotoolkit.props" Condition="Exists('..\..\packages\vcpkg-export-wslotoolkit.1.0.1\build\native\vcpkg-export-wslotoolkit.props')" />
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{b47d34be-6ef3-4c9b-92b6-a63dbf1a24df}</ProjectGuid>
+    <RootNamespace>WsoDevice</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(SolutionDir)build\$(Platform)\$(Configuration)\system_libs\</OutDir>
+    <IntDir>$(SolutionDir)build\$(Platform)\$(Configuration)\system_libs\Output\$(ProjectName)\</IntDir>
+    <TargetName>$(ProjectName.ToLower())</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)build\$(Platform)\$(Configuration)\system_libs\</OutDir>
+    <IntDir>$(SolutionDir)build\$(Platform)\$(Configuration)\system_libs\Output\$(ProjectName)\</IntDir>
+    <TargetName>$(ProjectName.ToLower())</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnabled>true</VcpkgEnabled>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;WSODEVICE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;WSODEVICE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;WSODEVICE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)module\CppUtil;$(SolutionDir)module\WsoDomain;$(SolutionDir)module\WsoBoard;$(SolutionDir)externs\FTDI;$(SolutionDir)externs\Spinnaker\include</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+      <AdditionalLibraryDirectories>$(OutDir);$(SolutionDir)externs\FTDI\x64;$(SolutionDir)externs\Spinnaker\lib64\vs2015</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cpputil.lib;wsoboard.lib;wsodomain.lib;FTD3XX.lib;Spinnaker_v140.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;WSODEVICE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)module\CppUtil;$(SolutionDir)module\WsoDomain;$(SolutionDir)module\WsoBoard;$(SolutionDir)externs\FTDI;$(SolutionDir)externs\Spinnaker\include</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+      <AdditionalLibraryDirectories>$(OutDir);$(SolutionDir)externs\FTDI\x64;$(SolutionDir)externs\Spinnaker\lib64\vs2015</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cpputil.lib;wsoboard.lib;wsodomain.lib;FTD3XX.lib;Spinnaker_v140.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="BoardComponent.h" />
+    <ClInclude Include="ColorCamera.h" />
+    <ClInclude Include="CorneaCamera.h" />
+    <ClInclude Include="CorneaIrLed.h" />
+    <ClInclude Include="crc.h" />
+    <ClInclude Include="FirmwareControl.h" />
+    <ClInclude Include="framework.h" />
+    <ClInclude Include="Galvanometer.h" />
+    <ClInclude Include="InfraredCamera.h" />
+    <ClInclude Include="LightLed.h" />
+    <ClInclude Include="LsoFocusMotor.h" />
+    <ClInclude Include="LsoScanner.h" />
+    <ClInclude Include="LsoWhiteLed.h" />
+    <ClInclude Include="MainBoard.h" />
+    <ClInclude Include="OctFocusMotor.h" />
+    <ClInclude Include="OctPolarMotor.h" />
+    <ClInclude Include="OctReferMotor.h" />
+    <ClInclude Include="RetinaCamera.h" />
+    <ClInclude Include="RetinaIrLed.h" />
+    <ClInclude Include="slo_scan_defs.h" />
+    <ClInclude Include="SwingMotor.h" />
+    <ClInclude Include="wso_device.h" />
+    <ClInclude Include="WsoDevice2.h" />
+    <ClInclude Include="StageMotor.h" />
+    <ClInclude Include="StepMotor.h" />
+    <ClInclude Include="TraceProfile.h" />
+    <ClInclude Include="UsbComm.h" />
+    <ClInclude Include="UsbPacket.h" />
+    <ClInclude Include="UsbPort.h" />
+    <ClInclude Include="XstageMotor.h" />
+    <ClInclude Include="YstageMotor.h" />
+    <ClInclude Include="ZstageMotor.h" />
+    <ClInclude Include="ZynqXadcDriver.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="BoardComponent.cpp" />
+    <ClCompile Include="ColorCamera.cpp" />
+    <ClCompile Include="CorneaCamera.cpp" />
+    <ClCompile Include="CorneaIrLed.cpp" />
+    <ClCompile Include="crc.cpp" />
+    <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="FirmwareControl.cpp" />
+    <ClCompile Include="Galvanometer.cpp" />
+    <ClCompile Include="InfraredCamera.cpp" />
+    <ClCompile Include="LightLed.cpp" />
+    <ClCompile Include="LsoFocusMotor.cpp" />
+    <ClCompile Include="LsoScanner.cpp" />
+    <ClCompile Include="LsoWhiteLed.cpp" />
+    <ClCompile Include="MainBoard.cpp" />
+    <ClCompile Include="OctFocusMotor.cpp" />
+    <ClCompile Include="OctPolarMotor.cpp" />
+    <ClCompile Include="OctReferMotor.cpp" />
+    <ClCompile Include="RetinaCamera.cpp" />
+    <ClCompile Include="RetinaIrLed.cpp" />
+    <ClCompile Include="StageMotor.cpp" />
+    <ClCompile Include="StepMotor.cpp" />
+    <ClCompile Include="SwingMotor.cpp" />
+    <ClCompile Include="TraceProfile.cpp" />
+    <ClCompile Include="UsbComm.cpp" />
+    <ClCompile Include="UsbPort.cpp" />
+    <ClCompile Include="XstageMotor.cpp" />
+    <ClCompile Include="YstageMotor.cpp" />
+    <ClCompile Include="ZstageMotor.cpp" />
+    <ClCompile Include="ZynqXadcDriver.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\..\packages\vcpkg-export-wslotoolkit.1.0.1\build\native\vcpkg-export-wslotoolkit.targets" Condition="Exists('..\..\packages\vcpkg-export-wslotoolkit.1.0.1\build\native\vcpkg-export-wslotoolkit.targets')" />
+  </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\..\packages\vcpkg-export-wslotoolkit.1.0.1\build\native\vcpkg-export-wslotoolkit.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\vcpkg-export-wslotoolkit.1.0.1\build\native\vcpkg-export-wslotoolkit.props'))" />
+    <Error Condition="!Exists('..\..\packages\vcpkg-export-wslotoolkit.1.0.1\build\native\vcpkg-export-wslotoolkit.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\vcpkg-export-wslotoolkit.1.0.1\build\native\vcpkg-export-wslotoolkit.targets'))" />
+  </Target>
+</Project>

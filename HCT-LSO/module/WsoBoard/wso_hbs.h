@@ -394,22 +394,29 @@ namespace wso_board
     //////////////////////////////////////////////////////////////////////////////////////
     typedef struct
     {
-        //S32 REF_RetinaPos;
-        //S32 REF_CorneaPos;
-        //S32 PolarizationPos;
-        //Dispersion_st   RetinaDispersion;
-        //Dispersion_st   CorneaDispersion;
-        //SpectroCal_st   SpectroCal;
-        //GalvanoCal_st   OctGalvano_Xcal;
-        //GalvanoCal_st   OctGalvano_Ycal;
-        //SLDparam_st     SLD_Param;
-        //DiopterCal_st   DiopterCal; //focus motors calibration
-        //IcgaFilterPos_st IcgaFilterPos;
-        //IcgaFilterPos_st MselPos; //OCT mirror added. 2023.01.25
-        //float			slo_adc_offset[3];
-        //float 			slo_det_gain_ratio[3];//0.000 ~1.000
-        //APD_param_st    APD_param[3];
-        //U64 chksum;//8 bytes.
+        /*
+        S32 REF_RetinaPos;
+        S32 REF_CorneaPos;
+        S32 PolarizationPos;
+        Dispersion_st   RetinaDispersion;
+        Dispersion_st   CorneaDispersion;
+        SpectroCal_st   SpectroCal;
+        GalvanoCal_st   OctGalvano_Xcal;
+        GalvanoCal_st   OctGalvano_Ycal;
+        SLDparam_st     SLD_Param;
+        // DiopterCal_st   DiopterCal; //focus motors calibration
+        float			slo_adc_offset[3];
+        float 			slo_det_gain_ratio[3];//0.000 ~1.000
+        U64 chksum;//8 bytes.
+        */
+        S32 REF_RetinaPos;
+        S32 REF_CorneaPos;
+        S32 PolarizationPos;
+        Dispersion_st   RetinaDispersion;
+        Dispersion_st   CorneaDispersion;
+        SpectroCal_st   SpectroCal;
+        GalvanoCal_st   OctGalvano_Xcal;
+        GalvanoCal_st   OctGalvano_Ycal;
 
         LED_Info_st		LED_Cal;
         DiopterCal_st   DiopterCal; //focus motors calibration

@@ -353,6 +353,18 @@ bool wso_board::HbsDataProfile::saveSystemConfigure(void)
 	return false;
 }
 
+bool wso_board::HbsDataProfile::saveLsoScannerParam(void)
+{
+	auto* channel = getDataChannel();
+	if (auto desc = getHbsDescriptor(); channel) {
+		auto data = getHbsLsoScanner();
+		if (channel->writeLsoScannerParam(data, desc)) {
+			return true;
+		}
+	}
+	return false;
+}
+
 bool wso_board::HbsDataProfile::saveGalvanoDynamicParam(void)
 {
 	auto* channel = getDataChannel();
