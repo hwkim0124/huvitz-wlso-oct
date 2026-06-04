@@ -4,6 +4,7 @@
 #include "BoardComponent.h"
 #include "Spinnaker.h"
 
+
 namespace wso_device
 {
 	class MainBoard;
@@ -27,24 +28,21 @@ namespace wso_device
 		bool isLiveMode(void) const;
 
 		void startSingleFrameLiveMode(void);
-
 		void startFrameSeqROILiveMode(void);
 		void startFrameOffsetROILiveMode(void);
 		void startFrmaeOffsetROICaptureMode(void);
+		void startFrameRollSwTrigOverlabLiveMode(void);
+		void startFrameRollSwTrigOverlabCaptureMode(void);
 
-		void startFrameRollSWTrigOverlabLiveMode(void);
-		void startFrameRollSWTrigOverlabCaptureMode(void);
-
-		void startSWTriggerLiveMode(void);
-		void stopSWTriggerLiveMode(void);
+		void startSwTriggerLiveMode(void);
+		void stopSwTriggerLiveMode(void);
 		void setupSoftwareTrigger(int nMode = 0);
-		void ShootSWTrigger(void);
+		void shootSwTrigger(void);
 
-		void startHWTriggerLiveMode(void);
-		void stopHWTriggerLiveMode(void);
+		void startHwTriggerLiveMode(void);
+		void stopHwTriggerLiveMode(void);
 		bool isCameraStreaming(void);
-		void setupHWTriggerSetting(bool bContinuous = true);
-
+		void setupHwTriggerSetting(bool bContinuous = true);
 		void setupCameraTriggerOnOffOnly(bool bOn);
 
 		void startOriginalMode(void);
@@ -55,8 +53,8 @@ namespace wso_device
 		int getFrameSizeInBytes(void) const;
 		int getFrameSizeForBpp(int nBytesPerPixel) const; 
 
-		void getParameters(ColorCameraSettingParam* pParam);
-		void setParameters(ColorCameraSettingParam* pParam);
+		ColorCameraSettings& getCameraSettings(void);
+		void setCameraSettings(ColorCameraSettings params);
 
 		unsigned int getROI_Max_Width();
 		unsigned int getROI_Max_Height();
@@ -95,9 +93,9 @@ namespace wso_device
 
 		unsigned int getFlipMode();
 
-		void setSeqParameters(CaptureFrameSeqROIPreset* pParam);
-		void setOffsetRoiParameters(CaptureFrameOffsetROIPreset* pParam);
-		void setRollSWTrigOverlapParameters(CaptureFrameRollSWTrigOverlapPreset* pParam);
+		void setCaptureSequencerPreset(LsoCaptureFrameSeqROIPreset preset);
+		void setCaptureOffsetRoiPreset(LsoCaptureFrameOffsetROIPreset preset);
+		void setRollSwTrigOverlapPreset(LsoCaptureFrameRollSwTrigOverlapPreset preset);
 
 		bool loadConfig();
 		bool saveConfig();
@@ -108,39 +106,34 @@ namespace wso_device
 	private:
 		struct ColorCameraImpl;
 		std::unique_ptr<ColorCameraImpl> d_ptr;
-		ColorCameraImpl& getImpl(void) const;
+		ColorCameraImpl& impl(void) const;
 
 		Spinnaker::CameraPtr getCamera(void) const;
 
 		void acquireCameraData(void);
 		void acquireCameraSingleFrameData(void);
-
 		void acquireCameraSingleSequencerROIData(void);
 		void acquireCameraMultiSequencerROIData(void);
 
 		void acquireCameraOffsetROIData(void);
 		void acquireCaptureCameraOffsetROIData(void);
-
-		void acquireCameraRollSWTrigOverlapLive(void);
-		void acquireCameraRollSWTrigOverlapCapture(void);
-
-		void acquireCameraRollHWTriggerCaptureData(void);
+		void acquireCameraRollSwTrigOverlapLive(void);
+		void acquireCameraRollSwTrigOverlapCapture(void);
+		void acquireCameraRollHwTriggerCaptureData(void);
 
 		bool onSequencer(void);
-		bool setSequencer(std::vector<FrameSeqROIParam> paramList);
+		bool setSequencer(std::vector<LsoCaptureFrameROI> paramList);
 		void offSequencer(void);
 		
-		std::vector<std::vector<FrameSeqROIParam>> divideParamVector_(int nFrameCount, FrameSeqROIParam* arrayParams);
+		std::vector<std::vector<LsoCaptureFrameROI>> divideParamVector_(int nFrameCount, LsoCaptureFrameROI* arrayParams);
 
 		void saveUserSet_(int eUserSet);
 		void loadUserSet_(int eUserSet);
 
 		void acquireCameraCaptureData(void);
-
 		int getBytesPerPixel();
 
 	private :
-
 		class ColorCameraDeviceEventHandler : public Spinnaker::DeviceEventHandler
 		{
 		public:
@@ -156,7 +149,6 @@ namespace wso_device
 
 		void HandleDeviceEvent(const Spinnaker::GenICam::gcstring& eventName);
 		std::unique_ptr<ColorCameraDeviceEventHandler> m_deviceEventHandler;
-
 		void SetEventMode(bool enableEvents);
 	};
 }

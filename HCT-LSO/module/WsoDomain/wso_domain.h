@@ -21,6 +21,7 @@
 #include "OctAngioSetup.h"
 
 #include "LsoScanStruct.h"
+#include "LsoCameraStruct.h"
 
 #include "DeviceDefines.h"
 #include "DeviceStructs.h"

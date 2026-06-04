@@ -22,10 +22,9 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{6773757a-d48b-442b-8a0a-40855144e884}</ProjectGuid>
-    <RootNamespace>WsoDomain</RootNamespace>
+    <ProjectGuid>{15d18526-a2c3-4005-b198-f2e36e9ab902}</ProjectGuid>
+    <RootNamespace>WsoConfig</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>WsoDomain</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -83,16 +82,15 @@
     <TargetName>$(ProjectName.ToLower())</TargetName>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg">
+    <VcpkgEnableManifest>false</VcpkgEnableManifest>
     <VcpkgEnabled>true</VcpkgEnabled>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;WSODOMAIN_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;WSOCONFIG_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -106,10 +104,8 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;WSODOMAIN_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;WSOCONFIG_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -123,19 +119,17 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;WSODOMAIN_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;WSOCONFIG_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)module\CppUtil;$(SolutionDir)externs\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)module\CppUtil;$(SolutionDir)module\WsoDomain;$(SolutionDir)module\WsoBoard</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>cpputil.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(OutDir);</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cpputil.lib;wsodomain.lib;wsoboard.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -144,12 +138,10 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;WSODOMAIN_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;WSOCONFIG_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)module\CppUtil;$(SolutionDir)externs\include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)module\CppUtil;$(SolutionDir)module\WsoDomain;$(SolutionDir)module\WsoBoard</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -157,67 +149,39 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>cpputil.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(OutDir);</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cpputil.lib;wsodomain.lib;wsoboard.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="CallbackFuncs.h" />
-    <ClInclude Include="CallbackRegistry.h" />
-    <ClInclude Include="DeviceCameras.h" />
-    <ClInclude Include="DeviceDefines.h" />
-    <ClInclude Include="DeviceLights.h" />
-    <ClInclude Include="DeviceStructs.h" />
-    <ClInclude Include="EventFuncs.h" />
-    <ClInclude Include="EventRegistry.h" />
+    <ClInclude Include="CameraSetting.h" />
+    <ClInclude Include="FixationSetting.h" />
     <ClInclude Include="framework.h" />
-    <ClInclude Include="LsoCameraStruct.h" />
-    <ClInclude Include="LsoScanStruct.h" />
-    <ClInclude Include="OctAngioDefines.h" />
-    <ClInclude Include="OctAngioSetup.h" />
-    <ClInclude Include="OctDataDefines.h" />
-    <ClInclude Include="OctDataSetup.h" />
-    <ClInclude Include="OctScanDefines.h" />
-    <ClInclude Include="OctScanHelper.h" />
-    <ClInclude Include="OctScanOptions.h" />
-    <ClInclude Include="OctScanPattern.h" />
-    <ClInclude Include="OctScanProtocol.h" />
-    <ClInclude Include="OctScanReport.h" />
-    <ClInclude Include="OctScanSegm.h" />
-    <ClInclude Include="OctScanStatus.h" />
-    <ClInclude Include="OctScanStructs.h" />
-    <ClInclude Include="OctDataUtil.h" />
-    <ClInclude Include="PatientDefines.h" />
-    <ClInclude Include="pch.h" />
-    <ClInclude Include="SysConfigDefines.h" />
-    <ClInclude Include="SystemArchive.h" />
-    <ClInclude Include="WsoSettings.h" />
-    <ClInclude Include="wso_domain.h" />
-    <ClInclude Include="WsoDomain2.h" />
-    <ClInclude Include="WsoLogger.h" />
+    <ClInclude Include="GalvanoSetting.h" />
+    <ClInclude Include="LsoCaptureSetting.h" />
+    <ClInclude Include="LsoDisplaySetting.h" />
+    <ClInclude Include="MeasureSetting.h" />
+    <ClInclude Include="SignalSetting.h" />
+    <ClInclude Include="SysConfiguration.h" />
+    <ClInclude Include="SysConfigFile.h" />
+    <ClInclude Include="SystemCaliber.h" />
+    <ClInclude Include="SystemConfig.h" />
+    <ClInclude Include="wso_config.h" />
+    <ClInclude Include="WsoConfig2.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CallbackRegistry.cpp" />
+    <ClCompile Include="CameraSetting.cpp" />
     <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="EventRegistry.cpp" />
-    <ClCompile Include="OctAngioSetup.cpp" />
-    <ClCompile Include="OctDataSetup.cpp" />
-    <ClCompile Include="OctScanHelper.cpp" />
-    <ClCompile Include="OctScanOptions.cpp" />
-    <ClCompile Include="OctScanPattern.cpp" />
-    <ClCompile Include="OctScanProtocol.cpp" />
-    <ClCompile Include="OctScanStatus.cpp" />
-    <ClCompile Include="OctScanStructs.cpp" />
-    <ClCompile Include="OctDataUtil.cpp" />
-    <ClCompile Include="pch.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="SystemArchive.cpp" />
-    <ClCompile Include="WsoLogger.cpp" />
-    <ClCompile Include="WsoSettings.cpp" />
+    <ClCompile Include="FixationSetting.cpp" />
+    <ClCompile Include="GalvanoSetting.cpp" />
+    <ClCompile Include="LsoCaptureSetting.cpp" />
+    <ClCompile Include="LsoDisplaySetting.cpp" />
+    <ClCompile Include="MeasureSetting.cpp" />
+    <ClCompile Include="SignalSetting.cpp" />
+    <ClCompile Include="SysConfiguration.cpp" />
+    <ClCompile Include="SysConfigFile.cpp" />
+    <ClCompile Include="SystemCaliber.cpp" />
+    <ClCompile Include="SystemConfig.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

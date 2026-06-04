@@ -1,12 +1,12 @@
 #include "pch.h"
 #include "ColorCamera.h"
-
 #include "MainBoard.h"
+
 #include <format>
 #include <chrono> // steady clock
 
+
 using namespace wso_device;
-using namespace wso_domain;
 
 using namespace Spinnaker;
 using namespace std::chrono; // steady clock
@@ -42,11 +42,10 @@ struct ColorCamera::ColorCameraImpl
 
 	int nOffsetFrameCount = 0;
 
-	ColorCameraSettingParam* cameraParams = new ColorCameraSettingParam(); // Color Camera base setting 
-	CaptureFrameSeqROIPreset* cameraSeqParams = new CaptureFrameSeqROIPreset(); // Use Global Shutter, Sequencer, ROI
-	CaptureFrameOffsetROIPreset* cameraOffsetRoiParams = new CaptureFrameOffsetROIPreset();
-
-	CaptureFrameRollSWTrigOverlapPreset* cameraRollSWTrigOverlapParams = new CaptureFrameRollSWTrigOverlapPreset();
+	ColorCameraSettings cameraSets; // Color Camera base setting 
+	LsoCaptureFrameSeqROIPreset seqRoiPreset; // Use Global Shutter, Sequencer, ROI
+	LsoCaptureFrameOffsetROIPreset offsetRoiPreset;
+	LsoCaptureFrameRollSwTrigOverlapPreset rollSwTrigPreset;
 
 	mutex mutexLock;
 	mutex mutexHandleLock;
@@ -60,7 +59,7 @@ struct ColorCamera::ColorCameraImpl
 wso_device::ColorCamera::ColorCamera(MainBoard* board) :
 	d_ptr(make_unique<ColorCameraImpl>())
 {
-	getImpl().board = board;
+	impl().board = board;
 }
 
 ColorCamera::~ColorCamera()
@@ -70,92 +69,93 @@ ColorCamera::~ColorCamera()
 			getCamera()->UnregisterEventHandler(*m_deviceEventHandler);
 		}
 		catch (const std::exception& e) {
-			WsoLogError("Error unregistering event handler in destructor: " + std::string(e.what()));
+			WsoLogDebug("Exception caught while unregistering event handler in destructor: " + std::string(e.what()));
 		}
 	}
 
-	getImpl().rawImage = NULL;
+	impl().rawImage = NULL;
 	getCamera() = NULL;
-	getImpl().camList.Clear();
-	getImpl().systemPtr = NULL;
+	impl().camList.Clear();
+	impl().systemPtr = NULL;
+	return;
 }
 
 #pragma region Public
 
 bool wso_device::ColorCamera::initialize(void)
 {
-	getImpl().systemPtr = System::GetInstance();
-	getImpl().camList = getImpl().systemPtr->GetCameras();
-	unsigned int numCameras = getImpl().camList.GetSize();
+	impl().systemPtr = System::GetInstance();
+	impl().camList = impl().systemPtr->GetCameras();
+	unsigned int numCameras = impl().camList.GetSize();
 
 	if (numCameras == 0)
 	{
-		getImpl().camList.Clear();
-		getImpl().systemPtr->ReleaseInstance();
+		impl().camList.Clear();
+		impl().systemPtr->ReleaseInstance();
 		LogE() << "Color camera init failed! ";
 		return false;
 	}
-	getImpl().pCam = getImpl().camList.GetByIndex(0);
-	getImpl().pCam->Init();
+	impl().pCam = impl().camList.GetByIndex(0);
+	impl().pCam->Init();
 
 	loadConfigFromIniFile();
 
 	setInitParameters();
-
 	//saveUserSet_(1);
 
-	getImpl().initiated = true;
-
+	impl().initiated = true;
 	return true;
 }
 
 bool wso_device::ColorCamera::isInitiated(void) const
 {
-	return getImpl().initiated;
+	return impl().initiated;
 }
 
 void wso_device::ColorCamera::uninitialize(void)
 {
 	// 1. worker 스레드 먼저 종료
-	if (getImpl().liveMode) {
-		getImpl().liveMode = false;
-		if (getImpl().worker.joinable()) {
-			getImpl().worker.join();
+	if (impl().liveMode) {
+		impl().liveMode = false;
+		if (impl().worker.joinable()) {
+			impl().worker.join();
 		}
 	}
 
 	// rawImage grab 해제
-	getImpl().rawImage = nullptr;
+	impl().rawImage = nullptr;
 
 	// 2. 카메라가 아직 스트리밍 중이면 중지
-	if (getImpl().pCam && getImpl().pCam->IsStreaming()) {
-		try { getImpl().pCam->EndAcquisition(); }
+	if (impl().pCam && impl().pCam->IsStreaming()) {
+		try { impl().pCam->EndAcquisition(); }
 		catch (...) {}
 	}
 	// 3. 이벤트 핸들러 해제
-	if (m_deviceEventHandler && getImpl().pCam && getImpl().pCam->IsValid()) {
-		try { getImpl().pCam->UnregisterEventHandler(*m_deviceEventHandler); }
+	if (m_deviceEventHandler && impl().pCam && impl().pCam->IsValid()) {
+		try { impl().pCam->UnregisterEventHandler(*m_deviceEventHandler); }
 		catch (...) {}
 		m_deviceEventHandler.reset();
 	}
 	// 4. DeInit 호출 (← 현재 완전 누락)
-	if (getImpl().pCam && getImpl().pCam->IsValid()) {
-		try { getImpl().pCam->DeInit(); }
+	if (impl().pCam && impl().pCam->IsValid()) {
+		try { impl().pCam->DeInit(); }
 		catch (...) {}
 	}
 	// 5. 리소스 해제
-	getImpl().pCam = nullptr;
-	getImpl().camList.Clear();
+	impl().pCam = nullptr;
+	impl().camList.Clear();
 	// 6. systemPtr null 체크 후 ReleaseInstance
-	if (getImpl().systemPtr) {
-		getImpl().systemPtr->ReleaseInstance();
-		getImpl().systemPtr = nullptr;
+	if (impl().systemPtr) {
+		impl().systemPtr->ReleaseInstance();
+		impl().systemPtr = nullptr;
 	}
-	getImpl().initiated = false;
+	impl().initiated = false;
 }
 
 void wso_device::ColorCamera::setInitParameters()
 {
+	auto& params = impl().cameraSets;
+
 	for (int i = 0; i < 3; i++)
 	{
 		try {
@@ -191,27 +191,27 @@ void wso_device::ColorCamera::setInitParameters()
 			unsigned int nMaxWidth = getROI_Max_Width();
 
 			// Set ROI width
-			if (getImpl().cameraParams->roi_x_width >= nMaxWidth)
+			if (params.roi_x_width >= nMaxWidth)
 			{
 				getCamera()->Width.SetValue(nMaxWidth);
 				getCamera()->OffsetX.SetValue(0);
 			}
 			else
 			{
-				getCamera()->Width.SetValue(getImpl().cameraParams->roi_x_width);
-				getCamera()->OffsetX.SetValue(getImpl().cameraParams->roi_x_offset);
+				getCamera()->Width.SetValue(params.roi_x_width);
+				getCamera()->OffsetX.SetValue(params.roi_x_offset);
 			}
 
 			// Set ROI height
-			if (getImpl().cameraParams->roi_y_height >= nMaxHeight)
+			if (params.roi_y_height >= nMaxHeight)
 			{
 				getCamera()->Height.SetValue(nMaxHeight);
 				getCamera()->OffsetY.SetValue(0);
 			}
 			else
 			{
-				getCamera()->Height.SetValue(getImpl().cameraParams->roi_y_height);
-				getCamera()->OffsetY.SetValue(getImpl().cameraParams->roi_y_offset);
+				getCamera()->Height.SetValue(params.roi_y_height);
+				getCamera()->OffsetY.SetValue(params.roi_y_offset);
 			}
 
 			WsoLogDebug("Color Camera Set ImageSize...ok!");
@@ -224,14 +224,14 @@ void wso_device::ColorCamera::setInitParameters()
 
 			// Set Exposure time
 			getCamera()->ExposureAuto.SetValue(ExposureAuto_Off);
-			getCamera()->ExposureTime.SetValue(getImpl().cameraParams->exposure_time);
+			getCamera()->ExposureTime.SetValue(params.exposure_time);
 			//getCamera()->ExposureTime.SetValue(20000);	// Unit = us
 			WsoLogDebug("Color Camera Set ExposureTime...ok!");
 
 			// Set Digital gain
 			getCamera()->GainAuto.SetValue(GainAuto_Off);
-			getCamera()->Gain.SetValue(getImpl().cameraParams->gain);
-			getCamera()->AdcBitDepth.SetValue((AdcBitDepthEnums)getImpl().cameraParams->adcDepthIndex);
+			getCamera()->Gain.SetValue(params.gain);
+			getCamera()->AdcBitDepth.SetValue((AdcBitDepthEnums)params.adcDepthIndex);
 			WsoLogDebug("Color Camera Set Gain...ok!");
 
 			// Set White Balnce 
@@ -274,19 +274,19 @@ void wso_device::ColorCamera::setInitParameters()
 			//getCamera()->ReverseX.SetValue(false);
 			//getCamera()->ReverseY.SetValue(true);	// Horizontal Flip
 			//getCamera()->PixelFormat.SetValue(PixelFormat_BayerRG16);
-			getCamera()->PixelFormat.SetValue((PixelFormatEnums)getImpl().cameraParams->pixelFormat);
-			getCamera()->AcquisitionMode.SetValue((AcquisitionModeEnums)getImpl().cameraParams->acqusitionMode);
+			getCamera()->PixelFormat.SetValue((PixelFormatEnums)params.pixelFormat);
+			getCamera()->AcquisitionMode.SetValue((AcquisitionModeEnums)params.acqusitionMode);
 			WsoLogDebug("Color Camera Set AcquisitionMode...ok!");
 
 			// Set Acquisition Frame Count
-			if ((AcquisitionModeEnums)getImpl().cameraParams->acqusitionMode != AcquisitionMode_SingleFrame)
+			if ((AcquisitionModeEnums)params.acqusitionMode != AcquisitionMode_SingleFrame)
 			{
-				setAcquisitionFrameCount(getImpl().cameraParams->acqusitionFrameCount);
+				setAcquisitionFrameCount(params.acqusitionFrameCount);
 				WsoLogDebug("Color Camera Set AcquisitionFrameCount...ok!");
 			}
 
 			getCamera()->BeginAcquisition();
-			getImpl().rawImage = getCamera()->GetNextImage();
+			impl().rawImage = getCamera()->GetNextImage();
 			getCamera()->EndAcquisition();
 
 			WsoLogDebug("Color Camera Grab Test...ok!");
@@ -297,20 +297,19 @@ void wso_device::ColorCamera::setInitParameters()
 		catch (const std::exception& e)
 		{
 			auto elog = e.what();
-			WsoLogError("Exception occurred during ColorCamera init!");
-			WsoLogError(elog);
+			WsoLogError("Exception occurred during ColorCamera init! " + std::string(e.what()));
 
 			unsigned int numCameras = 0;
 			getCamera()->DeviceReset.Execute();
 
 			do {
-				getImpl().systemPtr = System::GetInstance();
-				getImpl().camList = getImpl().systemPtr->GetCameras();
-				numCameras = getImpl().camList.GetSize();
+				impl().systemPtr = System::GetInstance();
+				impl().camList = impl().systemPtr->GetCameras();
+				numCameras = impl().camList.GetSize();
 			} while (numCameras == 0);
 
-			getImpl().pCam = getImpl().camList.GetByIndex(0);
-			getImpl().pCam->Init();
+			impl().pCam = impl().camList.GetByIndex(0);
+			impl().pCam->Init();
 		}
 	}
 }
@@ -381,7 +380,7 @@ void wso_device::ColorCamera::setDefaultParameters(bool update)
 			// Set Shutter Mode and Image Grab Test
 			getCamera()->SensorShutterMode.SetValue(SensorShutterMode_Rolling);
 			getCamera()->BeginAcquisition();
-			getImpl().rawImage = getCamera()->GetNextImage();
+			impl().rawImage = getCamera()->GetNextImage();
 			getCamera()->EndAcquisition();
 			//getCamera()->SensorShutterMode.SetValue(SensorShutterMode_GlobalReset);
 			WsoLogDebug("Color Camera Grab Test...ok!");
@@ -391,21 +390,19 @@ void wso_device::ColorCamera::setDefaultParameters(bool update)
 		}
 		catch (const std::exception& e)
 		{
-			auto elog = e.what();
-			WsoLogError("Exception occurred during ColorCamera init!");
-			WsoLogError(elog);
+			WsoLogError("Exception occurred during ColorCamera init!" + std::string(e.what()));
 
 			unsigned int numCameras = 0;
 			getCamera()->DeviceReset.Execute();
 
 			do {
-				getImpl().systemPtr = System::GetInstance();
-				getImpl().camList = getImpl().systemPtr->GetCameras();
-				numCameras = getImpl().camList.GetSize();
+				impl().systemPtr = System::GetInstance();
+				impl().camList = impl().systemPtr->GetCameras();
+				numCameras = impl().camList.GetSize();
 			} while (numCameras == 0);
 
-			getImpl().pCam = getImpl().camList.GetByIndex(0);
-			getImpl().pCam->Init();
+			impl().pCam = impl().camList.GetByIndex(0);
+			impl().pCam->Init();
 		}
 	}
 }
@@ -416,15 +413,15 @@ void wso_device::ColorCamera::startLiveMode(void)
 		return;
 	}
 
-	if (getImpl().liveMode) {
+	if (impl().liveMode) {
 		return;
 	}
 
-	getImpl().liveMode = true;
+	impl().liveMode = true;
 
 	setupCameraTriggerOnOffOnly(false);
 
-	getImpl().worker = thread{ &ColorCamera::acquireCameraData, this };
+	impl().worker = thread{ &ColorCamera::acquireCameraData, this };
 }
 
 void wso_device::ColorCamera::pauseLiveMode(void)
@@ -432,21 +429,21 @@ void wso_device::ColorCamera::pauseLiveMode(void)
 	if (!isInitiated()) {
 		return;
 	}
-	if (!getImpl().liveMode) {
+	if (!impl().liveMode) {
 		return;
 	}
 
-	getImpl().liveMode = false;
+	impl().liveMode = false;
 
-	if (getImpl().worker.joinable()) {
-		getImpl().worker.join();
+	if (impl().worker.joinable()) {
+		impl().worker.join();
 	}
 	return;
 }
 
 bool wso_device::ColorCamera::isLiveMode(void) const
 {
-	return getImpl().liveMode;
+	return impl().liveMode;
 }
 
 void wso_device::ColorCamera::startSingleFrameLiveMode(void)
@@ -455,15 +452,15 @@ void wso_device::ColorCamera::startSingleFrameLiveMode(void)
 		return;
 	}
 
-	if (getImpl().liveMode) {
+	if (impl().liveMode) {
 		return;
 	}
 
-	getImpl().liveMode = true;
+	impl().liveMode = true;
 
 	setupCameraTriggerOnOffOnly(false);
 
-	getImpl().worker = thread{ &ColorCamera::acquireCameraSingleFrameData, this };
+	impl().worker = thread{ &ColorCamera::acquireCameraSingleFrameData, this };
 }
 
 void wso_device::ColorCamera::startFrameSeqROILiveMode(void)
@@ -472,22 +469,22 @@ void wso_device::ColorCamera::startFrameSeqROILiveMode(void)
 		return;
 	}
 
-	if (getImpl().liveMode) {
+	if (impl().liveMode) {
 		return;
 	}
 
-	getImpl().liveMode = true;
+	impl().liveMode = true;
 
 	setupCameraTriggerOnOffOnly(false);
 
-	int nTotalFrameCount = getImpl().cameraSeqParams->FrameCount;
+	int nTotalFrameCount = impl().seqRoiPreset.frameCount;
 	if (nTotalFrameCount > 8)
 	{
-		getImpl().worker = thread{ &ColorCamera::acquireCameraMultiSequencerROIData, this };
+		impl().worker = thread{ &ColorCamera::acquireCameraMultiSequencerROIData, this };
 	}
 	else
 	{
-		getImpl().worker = thread{ &ColorCamera::acquireCameraSingleSequencerROIData, this };
+		impl().worker = thread{ &ColorCamera::acquireCameraSingleSequencerROIData, this };
 	}
 }
 
@@ -497,15 +494,15 @@ void wso_device::ColorCamera::startFrameOffsetROILiveMode(void)
 		return;
 	}
 
-	if (getImpl().liveMode) {
+	if (impl().liveMode) {
 		return;
 	}
 
-	getImpl().liveMode = true;
+	impl().liveMode = true;
 
 	setupCameraTriggerOnOffOnly(false);
 
-	getImpl().worker = thread{ &ColorCamera::acquireCameraOffsetROIData, this };
+	impl().worker = thread{ &ColorCamera::acquireCameraOffsetROIData, this };
 }
 
 void wso_device::ColorCamera::startFrmaeOffsetROICaptureMode(void)
@@ -514,58 +511,60 @@ void wso_device::ColorCamera::startFrmaeOffsetROICaptureMode(void)
 		return;
 	}
 
-	if (getImpl().liveMode) {
+	if (impl().liveMode) {
 		return;
 	}
 
-	getImpl().liveMode = true;
+	impl().liveMode = true;
 
 	setupCameraTriggerOnOffOnly(false);
 
 	acquireCaptureCameraOffsetROIData();
 }
 
-void wso_device::ColorCamera::startFrameRollSWTrigOverlabLiveMode(void)
+void wso_device::ColorCamera::startFrameRollSwTrigOverlabLiveMode(void)
 {
 	if (!isInitiated()) {
 		return;
 	}
 
-	if (getImpl().liveMode) {
+	if (impl().liveMode) {
 		return;
 	}
 
-	getImpl().liveMode = true;
-	getImpl().worker = thread{ &ColorCamera::acquireCameraRollSWTrigOverlapLive, this };
+	impl().liveMode = true;
+	impl().worker = thread{ &ColorCamera::acquireCameraRollSwTrigOverlapLive, this };
+	return;
 }
 
-void wso_device::ColorCamera::startFrameRollSWTrigOverlabCaptureMode(void)
+void wso_device::ColorCamera::startFrameRollSwTrigOverlabCaptureMode(void)
 {
 	if (!isInitiated()) {
 		return;
 	}
 
-	if (getImpl().liveMode) {
+	if (impl().liveMode) {
 		return;
 	}
 
-	getImpl().liveMode = true;
-	acquireCameraRollSWTrigOverlapCapture();
+	impl().liveMode = true;
+	acquireCameraRollSwTrigOverlapCapture();
+	return;
 }
 
-void wso_device::ColorCamera::startSWTriggerLiveMode(void)
+void wso_device::ColorCamera::startSwTriggerLiveMode(void)
 {
-	unique_lock<mutex> lock(getImpl().mutexLock);
+	unique_lock<mutex> lock(impl().mutexLock);
 
 	if (!isInitiated()) {
 		return;
 	}
 
-	if (getImpl().liveMode) {
+	if (impl().liveMode) {
 		return;
 	}
 
-	getImpl().liveMode = true;
+	impl().liveMode = true;
 
 	if (getCamera()->IsStreaming())
 		getCamera()->EndAcquisition();
@@ -575,11 +574,12 @@ void wso_device::ColorCamera::startSWTriggerLiveMode(void)
 
 	// Acquisition 시작
 	getCamera()->BeginAcquisition();
+	return;
 }
 
-void wso_device::ColorCamera::stopSWTriggerLiveMode(void)
+void wso_device::ColorCamera::stopSwTriggerLiveMode(void)
 {
-	unique_lock<mutex> lock(getImpl().mutexLock);
+	unique_lock<mutex> lock(impl().mutexLock);
 
 	if (getCamera()->IsStreaming())
 	{
@@ -591,7 +591,8 @@ void wso_device::ColorCamera::stopSWTriggerLiveMode(void)
 	if (nTriggerMode == TriggerMode_On)
 		getCamera()->TriggerMode.SetValue(TriggerMode_Off);
 
-	getImpl().liveMode = false;
+	impl().liveMode = false;
+	return;
 }
 
 void wso_device::ColorCamera::setupSoftwareTrigger(int nMode)
@@ -641,12 +642,12 @@ void wso_device::ColorCamera::setupSoftwareTrigger(int nMode)
 	}
 }
 
-void wso_device::ColorCamera::ShootSWTrigger()
+void wso_device::ColorCamera::shootSwTrigger()
 {
-	if (!getImpl().liveMode)
+	if (!impl().liveMode)
 		return;
 
-	unique_lock<mutex> lock(getImpl().mutexLock);
+	unique_lock<mutex> lock(impl().mutexLock);
 
 	auto t1 = steady_clock::now();
 
@@ -655,7 +656,7 @@ void wso_device::ColorCamera::ShootSWTrigger()
 	int nPixelFormat = getCamera()->PixelFormat.GetValue();
 	int nBytesPerPixel = getBytesPerPixel();
 	uint32_t frameSize = getFrameSizeForBpp(nBytesPerPixel);
-	unsigned char* buffer = getImpl().sonyFrameBuffer;
+	unsigned char* buffer = impl().sonyFrameBuffer;
 
 	uint32_t frameCount = 0;
 
@@ -667,17 +668,17 @@ void wso_device::ColorCamera::ShootSWTrigger()
 
 	//frameCount++;
 
-	getImpl().rawImage = getCamera()->GetNextImage();
+	impl().rawImage = getCamera()->GetNextImage();
 
 	auto t4 = steady_clock::now();
 
-	std::memcpy(buffer, getImpl().rawImage->GetData(), frameSize);
+	std::memcpy(buffer, impl().rawImage->GetData(), frameSize);
 
 	auto t5 = steady_clock::now();
 
 	CallbackRegistry::getInstance()->runColorCameraSWTriggerFrameCaptured(buffer, width, height, frameCount, getFlipMode(), nPixelFormat, nBytesPerPixel);
 
-	getImpl().rawImage->Release();
+	impl().rawImage->Release();
 
 	auto t6 = steady_clock::now();
 
@@ -699,36 +700,37 @@ void wso_device::ColorCamera::ShootSWTrigger()
 	LogD() << "Image Callback = " << ms;
 }
 
-void wso_device::ColorCamera::startHWTriggerLiveMode(void)
+void wso_device::ColorCamera::startHwTriggerLiveMode(void)
 {
 	if (!isInitiated()) {
 		return;
 	}
 
-	if (getImpl().liveMode) {
+	if (impl().liveMode) {
 		return;
 	}
 
-	getImpl().liveMode = true;
+	impl().liveMode = true;
 
-	setupHWTriggerSetting(false);
+	setupHwTriggerSetting(false);
 
-	getImpl().worker = thread{ &ColorCamera::acquireCameraRollHWTriggerCaptureData, this };
+	impl().worker = thread{ &ColorCamera::acquireCameraRollHwTriggerCaptureData, this };
+	return;
 }
 
-void wso_device::ColorCamera::stopHWTriggerLiveMode(void)
+void wso_device::ColorCamera::stopHwTriggerLiveMode(void)
 {
 	if (!isInitiated()) {
 		return;
 	}
-	if (!getImpl().liveMode) {
+	if (!impl().liveMode) {
 		return;
 	}
 
-	getImpl().liveMode = false;
+	impl().liveMode = false;
 
-	if (getImpl().worker.joinable()) {
-		getImpl().worker.join();
+	if (impl().worker.joinable()) {
+		impl().worker.join();
 	}
 	return;
 }
@@ -739,15 +741,15 @@ bool wso_device::ColorCamera::isCameraStreaming(void)
 		return false;
 	}
 
-	if (getImpl().pCam == nullptr)
+	if (impl().pCam == nullptr)
 	{
 		return false;
 	}
 	
-	return getImpl().pCam->IsStreaming();
+	return impl().pCam->IsStreaming();
 }
 
-void wso_device::ColorCamera::setupHWTriggerSetting(bool bContinuous)
+void wso_device::ColorCamera::setupHwTriggerSetting(bool bContinuous)
 {
 	try {
 		// 1. Acquisition 중단
@@ -828,20 +830,21 @@ void wso_device::ColorCamera::startOriginalMode(void)
 		return;
 	}
 
-	if (getImpl().liveMode) {
+	if (impl().liveMode) {
 		return;
 	}
 
-	getImpl().originalMode = true;
+	impl().originalMode = true;
 
 	setupCameraTriggerOnOffOnly(false);
 
 	acquireCameraCaptureData();
+	return;
 }
 
 void wso_device::ColorCamera::pauseOriginalMode(void)
 {
-	getImpl().originalMode = false;
+	impl().originalMode = false;
 }
 
 int wso_device::ColorCamera::getFrameWidth(void) const
@@ -870,162 +873,27 @@ int wso_device::ColorCamera::getFrameSizeForBpp(int nBytesPerPixel) const
 	return getFrameWidth() * getFrameHeight() * sizeof(char) * nBytesPerPixel;
 }
 
-void wso_device::ColorCamera::setParameters(ColorCameraSettingParam* pParam)
+
+ColorCameraSettings& wso_device::ColorCamera::getCameraSettings(void)
 {
+	auto& camsets = impl().cameraSets;
+
 	try
 	{
-		if (pParam)
-		{
-			/////현재의 Width, Height 값에 안맞는 offset 값을 넣으면 문제가 생기므로, 처음에 0,0으로 초기화를 먼저 시켜준다.
-			setROI_X_Offset(0);
-			setROI_Y_Offset(0);
-			///
-			setROI_X_Width(pParam->roi_x_width);
-			setROI_Y_Height(pParam->roi_y_height);
-			setROI_X_Offset(pParam->roi_x_offset);
-			setROI_Y_Offset(pParam->roi_y_offset);
-			setExposureTime(pParam->exposure_time);
-			setAcquisitionMode(pParam->acqusitionMode);
-			setAcquisitionFrameCount(pParam->acqusitionFrameCount);
-			setPixelFormat(pParam->pixelFormat);
-			setBinningHorizontal(pParam->binningHorizontal);
-			setBinningVertical(pParam->binningVertical);
-			setGain(pParam->gain);
-			setAdcBitDepth(pParam->adcDepthIndex);
-
-			getImpl().cameraParams->roi_x_width = pParam->roi_x_width;
-			getImpl().cameraParams->roi_y_height = pParam->roi_y_height;
-			getImpl().cameraParams->roi_x_offset = pParam->roi_x_offset;
-			getImpl().cameraParams->roi_y_offset = pParam->roi_y_offset;
-			getImpl().cameraParams->exposure_time = pParam->exposure_time;
-			getImpl().cameraParams->acqusitionMode = pParam->acqusitionMode;
-			getImpl().cameraParams->acqusitionFrameCount = pParam->acqusitionFrameCount;
-			getImpl().cameraParams->pixelFormat = pParam->pixelFormat;
-			getImpl().cameraParams->binningHorizontal = pParam->binningHorizontal;
-			getImpl().cameraParams->binningVertical = pParam->binningVertical;
-			getImpl().cameraParams->gain = pParam->gain;
-			getImpl().cameraParams->adcDepthIndex = pParam->adcDepthIndex;
-
-			saveConfigToIniFile();
-			//saveUserSet_(1);
-		}
-	}
-	catch (const std::exception& e)
-	{
-		auto elog = e.what();
-		WsoLogError("Exception occurred during ColorCamera Set!");
-		WsoLogError(elog);
-	}
-}
-
-void wso_device::ColorCamera::setSeqParameters(CaptureFrameSeqROIPreset* pParam)
-{
-	try
-	{
-		if (pParam)
-		{
-			getImpl().cameraSeqParams->FrameCount = pParam->FrameCount;
-
-			if (pParam->FrameCount > 0)
-			{
-				getImpl().cameraSeqParams->pParams = new FrameSeqROIParam[getImpl().cameraSeqParams->FrameCount];
-				// 복사
-				memcpy(getImpl().cameraSeqParams->pParams, pParam->pParams,
-					sizeof(FrameSeqROIParam) * pParam->FrameCount);
-			}
-		}
-	}
-	catch (const std::exception& e)
-	{
-		auto elog = e.what();
-		WsoLogError("Exception occurred during ColorCamera Set!");
-		WsoLogError(elog);
-	}
-}
-
-void wso_device::ColorCamera::setOffsetRoiParameters(CaptureFrameOffsetROIPreset* pParam)
-{
-	try
-	{
-		if (pParam)
-		{
-			getImpl().cameraOffsetRoiParams->RoiWidth = pParam->RoiWidth;
-			getImpl().cameraOffsetRoiParams->RoiHeight = pParam->RoiHeight;
-			getImpl().cameraOffsetRoiParams->FrameCount = pParam->FrameCount;
-
-			if (pParam->FrameCount > 0)
-			{
-				getImpl().cameraOffsetRoiParams->pParams = new FrameOffsetROIParam[getImpl().cameraOffsetRoiParams->FrameCount];
-				// 복사
-				memcpy(getImpl().cameraOffsetRoiParams->pParams, pParam->pParams,
-					sizeof(FrameOffsetROIParam) * pParam->FrameCount);
-			}
-		}
-	}
-	catch (const std::exception& e)
-	{
-		auto elog = e.what();
-		WsoLogError("Exception occurred during ColorCamera Set!");
-		WsoLogError(elog);
-	}
-}
-
-void wso_device::ColorCamera::setRollSWTrigOverlapParameters(CaptureFrameRollSWTrigOverlapPreset* pParam)
-{
-	try
-	{
-		if (pParam)
-		{
-			getImpl().cameraRollSWTrigOverlapParams->FrameWidth = pParam->FrameWidth;
-			getImpl().cameraRollSWTrigOverlapParams->FrameHeight = pParam->FrameHeight;
-			getImpl().cameraRollSWTrigOverlapParams->OverlapFrameCount = pParam->OverlapFrameCount;
-			getImpl().cameraRollSWTrigOverlapParams->OffsetX = pParam->OffsetX;
-			getImpl().cameraRollSWTrigOverlapParams->OffsetY = pParam->OffsetY;
-			getImpl().cameraRollSWTrigOverlapParams->TriggerIntervalMs = pParam->TriggerIntervalMs;
-		}
-	}
-	catch (const std::exception& e)
-	{
-		auto elog = e.what();
-		WsoLogError("Exception occurred during ColorCamera Set!");
-		WsoLogError(elog);
-	}
-}
-
-void wso_device::ColorCamera::getParameters(ColorCameraSettingParam* pParam)
-{
-	try
-	{
-		if (pParam)
-		{
-			pParam->roi_max_width = getROI_Max_Width();
-			pParam->roi_max_Height = getROI_Max_Height();
-			pParam->roi_x_width = getROI_X_Width();
-			pParam->roi_y_height = getROI_Y_Height();
-			pParam->roi_x_offset = getROI_X_Offset();
-			pParam->roi_y_offset = getROI_Y_Offset();
-			pParam->exposure_time = getExposureTime();
-			pParam->acqusitionMode = getAcquisitionMode();
-			pParam->acqusitionFrameCount = getAcquisitionFrameCount();
-			pParam->pixelFormat = getPixelFormat();
-			pParam->binningHorizontal = getBinningHorizontal();
-			pParam->binningVertical = getBinningVertical();
-			pParam->gain = getGain();
-			pParam->adcDepthIndex = getAdcBitDepth();
-
-			getImpl().cameraParams->roi_x_width = pParam->roi_x_width;
-			getImpl().cameraParams->roi_y_height = pParam->roi_y_height;
-			getImpl().cameraParams->roi_x_offset = pParam->roi_x_offset;
-			getImpl().cameraParams->roi_y_offset = pParam->roi_y_offset;
-			getImpl().cameraParams->exposure_time = pParam->exposure_time;
-			getImpl().cameraParams->acqusitionMode = pParam->acqusitionMode;
-			getImpl().cameraParams->acqusitionFrameCount = pParam->acqusitionFrameCount;
-			getImpl().cameraParams->pixelFormat = pParam->pixelFormat;
-			getImpl().cameraParams->binningHorizontal = pParam->binningHorizontal;
-			getImpl().cameraParams->binningVertical = pParam->binningVertical;
-			getImpl().cameraParams->gain = pParam->gain;
-			getImpl().cameraParams->adcDepthIndex = pParam->adcDepthIndex;
-		}
+		camsets.roi_max_width = getROI_Max_Width();
+		camsets.roi_max_Height = getROI_Max_Height();
+		camsets.roi_x_width = getROI_X_Width();
+		camsets.roi_y_height = getROI_Y_Height();
+		camsets.roi_x_offset = getROI_X_Offset();
+		camsets.roi_y_offset = getROI_Y_Offset();
+		camsets.exposure_time = getExposureTime();
+		camsets.acqusitionMode = getAcquisitionMode();
+		camsets.acqusitionFrameCount = getAcquisitionFrameCount();
+		camsets.pixelFormat = getPixelFormat();
+		camsets.binningHorizontal = getBinningHorizontal();
+		camsets.binningVertical = getBinningVertical();
+		camsets.gain = getGain();
+		camsets.adcDepthIndex = getAdcBitDepth();
 	}
 	catch (const std::exception& e)
 	{
@@ -1033,7 +901,94 @@ void wso_device::ColorCamera::getParameters(ColorCameraSettingParam* pParam)
 		WsoLogError("Exception occurred during ColorCamera Get!");
 		WsoLogError(elog);
 	}
-	return;
+	return camsets;
+}
+
+void wso_device::ColorCamera::setCameraSettings(ColorCameraSettings params)
+{
+	try
+	{
+		/////현재의 Width, Height 값에 안맞는 offset 값을 넣으면 문제가 생기므로, 처음에 0,0으로 초기화를 먼저 시켜준다.
+		setROI_X_Offset(0);
+		setROI_Y_Offset(0);
+		///
+		setROI_X_Width(params.roi_x_width);
+		setROI_Y_Height(params.roi_y_height);
+		setROI_X_Offset(params.roi_x_offset);
+		setROI_Y_Offset(params.roi_y_offset);
+		setExposureTime(params.exposure_time);
+		setAcquisitionMode(params.acqusitionMode);
+		setAcquisitionFrameCount(params.acqusitionFrameCount);
+		setPixelFormat(params.pixelFormat);
+		setBinningHorizontal(params.binningHorizontal);
+		setBinningVertical(params.binningVertical);
+		setGain(params.gain);
+		setAdcBitDepth(params.adcDepthIndex);
+
+		auto& camsets = impl().cameraSets;
+		camsets.roi_x_width = params.roi_x_width;
+		camsets.roi_y_height = params.roi_y_height;
+		camsets.roi_x_offset = params.roi_x_offset;
+		camsets.roi_y_offset = params.roi_y_offset;
+		camsets.exposure_time = params.exposure_time;
+		camsets.acqusitionMode = params.acqusitionMode;
+		camsets.acqusitionFrameCount = params.acqusitionFrameCount;
+		camsets.pixelFormat = params.pixelFormat;
+		camsets.binningHorizontal = params.binningHorizontal;
+		camsets.binningVertical = params.binningVertical;
+		camsets.gain = params.gain;
+		camsets.adcDepthIndex = params.adcDepthIndex;
+
+		saveConfigToIniFile();
+	}
+	catch (const std::exception& e)
+	{
+		auto elog = e.what();
+		WsoLogError("Exception occurred during ColorCamera Set!");
+		WsoLogError(elog);
+	}
+}
+
+void wso_device::ColorCamera::setCaptureSequencerPreset(LsoCaptureFrameSeqROIPreset preset)
+{
+	try
+	{
+		impl().seqRoiPreset = preset;
+	}
+	catch (const std::exception& e)
+	{
+		auto elog = e.what();
+		WsoLogError("Exception occurred during ColorCamera Set!");
+		WsoLogError(elog);
+	}
+}
+
+void wso_device::ColorCamera::setCaptureOffsetRoiPreset(LsoCaptureFrameOffsetROIPreset preset)
+{
+	try
+	{
+		impl().offsetRoiPreset = preset;
+	}
+	catch (const std::exception& e)
+	{
+		auto elog = e.what();
+		WsoLogError("Exception occurred during ColorCamera Set!");
+		WsoLogError(elog);
+	}
+}
+
+void wso_device::ColorCamera::setRollSwTrigOverlapPreset(LsoCaptureFrameRollSwTrigOverlapPreset preset)
+{
+	try
+	{
+		impl().rollSwTrigPreset = preset;
+	}
+	catch (const std::exception& e)
+	{
+		auto elog = e.what();
+		WsoLogError("Exception occurred during ColorCamera Set!");
+		WsoLogError(elog);
+	}
 }
 
 unsigned int wso_device::ColorCamera::getROI_Max_Width()
@@ -1233,16 +1188,17 @@ bool wso_device::ColorCamera::loadConfigFromIniFile()
 			return false;
 		}
 
-		getImpl().cameraParams->roi_x_width = ini->ReadUInt(L"COLOR_CAMERA", L"RoiXWidth");
-		getImpl().cameraParams->roi_y_height = ini->ReadUInt(L"COLOR_CAMERA", L"RoiYHeight");
-		getImpl().cameraParams->roi_x_offset = ini->ReadUInt(L"COLOR_CAMERA", L"RoiXOffset");
-		getImpl().cameraParams->roi_y_offset = ini->ReadUInt(L"COLOR_CAMERA", L"RoiYOffset");
-		getImpl().cameraParams->exposure_time = ini->ReadUInt(L"COLOR_CAMERA", L"ExposureTime");
-		getImpl().cameraParams->acqusitionMode = ini->ReadUInt(L"COLOR_CAMERA", L"AcqusitionMode");
-		getImpl().cameraParams->acqusitionFrameCount = ini->ReadUInt(L"COLOR_CAMERA", L"AcqusitionFrameCount");
-		getImpl().cameraParams->pixelFormat = ini->ReadUInt(L"COLOR_CAMERA", L"PixelFormat");
-		getImpl().cameraParams->gain = ini->ReadFloat(L"COLOR_CAMERA", L"Gain");
-		getImpl().cameraParams->adcDepthIndex = ini->ReadUInt(L"COLOR_CAMERA", L"AdcDepth");
+		auto& camsets = impl().cameraSets;
+		camsets.roi_x_width = ini->ReadUInt(L"COLOR_CAMERA", L"RoiXWidth");
+		camsets.roi_y_height = ini->ReadUInt(L"COLOR_CAMERA", L"RoiYHeight");
+		camsets.roi_x_offset = ini->ReadUInt(L"COLOR_CAMERA", L"RoiXOffset");
+		camsets.roi_y_offset = ini->ReadUInt(L"COLOR_CAMERA", L"RoiYOffset");
+		camsets.exposure_time = ini->ReadUInt(L"COLOR_CAMERA", L"ExposureTime");
+		camsets.acqusitionMode = ini->ReadUInt(L"COLOR_CAMERA", L"AcqusitionMode");
+		camsets.acqusitionFrameCount = ini->ReadUInt(L"COLOR_CAMERA", L"AcqusitionFrameCount");
+		camsets.pixelFormat = ini->ReadUInt(L"COLOR_CAMERA", L"PixelFormat");
+		camsets.gain = ini->ReadFloat(L"COLOR_CAMERA", L"Gain");
+		camsets.adcDepthIndex = ini->ReadUInt(L"COLOR_CAMERA", L"AdcDepth");
 
 		bRet = true;
 	}
@@ -1263,16 +1219,17 @@ bool wso_device::ColorCamera::saveConfigToIniFile()
 			return false;
 		}
 
-		ini->WriteInt(L"COLOR_CAMERA", L"RoiXWidth", getImpl().cameraParams->roi_x_width);
-		ini->WriteInt(L"COLOR_CAMERA", L"RoiYHeight", getImpl().cameraParams->roi_y_height);
-		ini->WriteInt(L"COLOR_CAMERA", L"RoiXOffset", getImpl().cameraParams->roi_x_offset);
-		ini->WriteInt(L"COLOR_CAMERA", L"RoiYOffset", getImpl().cameraParams->roi_y_offset);
-		ini->WriteInt(L"COLOR_CAMERA", L"ExposureTime", getImpl().cameraParams->exposure_time);
-		ini->WriteInt(L"COLOR_CAMERA", L"AcqusitionMode", getImpl().cameraParams->acqusitionMode);
-		ini->WriteInt(L"COLOR_CAMERA", L"AcqusitionFrameCount", getImpl().cameraParams->acqusitionFrameCount);
-		ini->WriteInt(L"COLOR_CAMERA", L"PixelFormat", getImpl().cameraParams->pixelFormat);
-		ini->WriteFloat(L"COLOR_CAMERA", L"Gain", getImpl().cameraParams->gain);
-		ini->WriteInt(L"COLOR_CAMERA", L"AdcDepth", getImpl().cameraParams->adcDepthIndex);
+		auto& camsets = impl().cameraSets;
+		ini->WriteInt(L"COLOR_CAMERA", L"RoiXWidth", camsets.roi_x_width);
+		ini->WriteInt(L"COLOR_CAMERA", L"RoiYHeight", camsets.roi_y_height);
+		ini->WriteInt(L"COLOR_CAMERA", L"RoiXOffset", camsets.roi_x_offset);
+		ini->WriteInt(L"COLOR_CAMERA", L"RoiYOffset", camsets.roi_y_offset);
+		ini->WriteInt(L"COLOR_CAMERA", L"ExposureTime", camsets.exposure_time);
+		ini->WriteInt(L"COLOR_CAMERA", L"AcqusitionMode", camsets.acqusitionMode);
+		ini->WriteInt(L"COLOR_CAMERA", L"AcqusitionFrameCount", camsets.acqusitionFrameCount);
+		ini->WriteInt(L"COLOR_CAMERA", L"PixelFormat", camsets.pixelFormat);
+		ini->WriteFloat(L"COLOR_CAMERA", L"Gain", camsets.gain);
+		ini->WriteInt(L"COLOR_CAMERA", L"AdcDepth", camsets.adcDepthIndex);
 
 		bRet = true;
 	}
@@ -1288,14 +1245,14 @@ bool wso_device::ColorCamera::saveConfigToIniFile()
 
 #pragma region Private
 
-ColorCamera::ColorCameraImpl& wso_device::ColorCamera::getImpl(void) const
+ColorCamera::ColorCameraImpl& wso_device::ColorCamera::impl(void) const
 {
 	return *d_ptr;
 }
 
 CameraPtr wso_device::ColorCamera::getCamera(void) const
 {
-	return getImpl().pCam;
+	return impl().pCam;
 }
 
 void wso_device::ColorCamera::acquireCameraData(void)
@@ -1306,22 +1263,22 @@ void wso_device::ColorCamera::acquireCameraData(void)
 
 	uint32_t frameCount;
 
-	unsigned char* buffer = getImpl().sonyFrameBuffer;
+	unsigned char* buffer = impl().sonyFrameBuffer;
 
-	if (!getImpl().liveMode)
+	if (!impl().liveMode)
 	{
 		getCamera()->AcquisitionMode.SetValue(AcquisitionMode_MultiFrame);
 		 getCamera()->AcquisitionFrameCount.GetValue();
 
 		getCamera()->BeginAcquisition();
-		getImpl().rawImage = getCamera()->GetNextImage();
+		impl().rawImage = getCamera()->GetNextImage();
 		
 		ImageProcessor processor;
 		processor.SetColorProcessing(SPINNAKER_COLOR_PROCESSING_ALGORITHM_DIRECTIONAL_FILTER);
-		getImpl().rawImage = processor.Convert(getImpl().rawImage, PixelFormat_BayerGB16);
+		impl().rawImage = processor.Convert(impl().rawImage, PixelFormat_BayerGB16);
 		
 		
-		std::memcpy(buffer, getImpl().rawImage->GetData(), frameSize);
+		std::memcpy(buffer, impl().rawImage->GetData(), frameSize);
 
 		getCamera()->EndAcquisition();
 	}
@@ -1365,14 +1322,14 @@ void wso_device::ColorCamera::acquireCameraData(void)
 		do {
 			frameCount++;
 
-			getImpl().rawImage = getCamera()->GetNextImage();
-			std::memcpy(buffer, getImpl().rawImage->GetData(), frameSize);
+			impl().rawImage = getCamera()->GetNextImage();
+			std::memcpy(buffer, impl().rawImage->GetData(), frameSize);
 
-			unique_lock<mutex> lock(getImpl().mutexLock);
+			unique_lock<mutex> lock(impl().mutexLock);
 			//CallbackRegistry::getInstance()->runColorCameraFrameCaptured(buffer, width, height, frameCount, getFlipMode());
 			CallbackRegistry::getInstance()->runColorCameraFrameCaptured(buffer, width, height, frameCount, getFlipMode(), nPixelFormat, nBytesPerPixel);
 
-		} while (getImpl().liveMode);
+		} while (impl().liveMode);
 
 		getCamera()->EndAcquisition();
 		//getCamera()->ReverseX.SetValue(false);
@@ -1394,7 +1351,7 @@ void wso_device::ColorCamera::acquireCameraSingleFrameData(void) // Single Frame
 
 	uint32_t frameCount;
 
-	unsigned char* buffer = getImpl().sonyFrameBuffer;
+	unsigned char* buffer = impl().sonyFrameBuffer;
 
 	int nPixelFormat = getCamera()->PixelFormat.GetValue();
 	int nBytesPerPixel = getBytesPerPixel();
@@ -1417,20 +1374,20 @@ void wso_device::ColorCamera::acquireCameraSingleFrameData(void) // Single Frame
 
 		auto t2 = steady_clock::now();
 
-		getImpl().rawImage = getCamera()->GetNextImage();
+		impl().rawImage = getCamera()->GetNextImage();
 
 		auto t3 = steady_clock::now();
 
-		std::memcpy(buffer, getImpl().rawImage->GetData(), frameSize);
+		std::memcpy(buffer, impl().rawImage->GetData(), frameSize);
 
 		auto t4 = steady_clock::now();
 
-		unique_lock<mutex> lock(getImpl().mutexLock);
+		unique_lock<mutex> lock(impl().mutexLock);
 		CallbackRegistry::getInstance()->runColorCameraFrameCaptured(buffer, width, height, frameCount, getFlipMode(), nPixelFormat, nBytesPerPixel);
 
 		auto t5 = steady_clock::now();
 
-		getImpl().rawImage->Release();
+		impl().rawImage->Release();
 
 		auto t6 = steady_clock::now();
 
@@ -1463,19 +1420,20 @@ void wso_device::ColorCamera::acquireCameraSingleFrameData(void) // Single Frame
 		ms = duration<double, std::milli>(t7 - t6).count();
 		LogD() << "EndAcquisition() = " << ms;
 
-	} while (getImpl().liveMode);
+	} while (impl().liveMode);
 
 	return;
 }
 
 void wso_device::ColorCamera::acquireCameraSingleSequencerROIData(void)
 {
-	uint32_t totalFrameCount = getImpl().cameraSeqParams->FrameCount;
-	FrameSeqROIParam* Params = getImpl().cameraSeqParams->pParams;
+	auto& preset = impl().seqRoiPreset;
+	uint32_t totalFrameCount = preset.frameCount;
+	LsoCaptureFrameROI* rois = preset.frameRois;
 
 	if (totalFrameCount <= 0)
 		return;
-	if (Params == nullptr)
+	if (rois == nullptr)
 		return;
 
 	uint32_t width;
@@ -1486,7 +1444,7 @@ void wso_device::ColorCamera::acquireCameraSingleSequencerROIData(void)
 	uint32_t frameSize;
 	uint32_t frameCount;
 
-	unsigned char* buffer = getImpl().sonyFrameBuffer;
+	unsigned char* buffer = impl().sonyFrameBuffer;
 
 	int nPixelFormat = getCamera()->PixelFormat.GetValue();
 	int nBytesPerPixel = getBytesPerPixel();
@@ -1504,21 +1462,21 @@ void wso_device::ColorCamera::acquireCameraSingleSequencerROIData(void)
 
 	do {
 
-		getImpl().rawImage = getCamera()->GetNextImage();
+		impl().rawImage = getCamera()->GetNextImage();
 
-		width = Params[frameCount].Width;
-		height = Params[frameCount].Height;
-		offsetX = Params[frameCount].OffsetX;
-		offsetY = Params[frameCount].OffsetY;
+		width = rois[frameCount].width;
+		height = rois[frameCount].height;
+		offsetX = rois[frameCount].offsetX;
+		offsetY = rois[frameCount].offsetY;
 		
 		frameSize = width * height * sizeof(char) * nBytesPerPixel;
 
-		std::memcpy(buffer, getImpl().rawImage->GetData(), frameSize);
+		std::memcpy(buffer, impl().rawImage->GetData(), frameSize);
 
-		unique_lock<mutex> lock(getImpl().mutexLock);
+		unique_lock<mutex> lock(impl().mutexLock);
 		CallbackRegistry::getInstance()->runColorCameraSeqROIFrameCaptured(buffer, width, height, offsetX, offsetY, frameCount, totalFrameCount, getFlipMode(), nPixelFormat, nBytesPerPixel);
 
-		getImpl().rawImage->Release();
+		impl().rawImage->Release();
 
 		frameCount++;
 		if (frameCount == totalFrameCount)
@@ -1526,7 +1484,7 @@ void wso_device::ColorCamera::acquireCameraSingleSequencerROIData(void)
 			frameCount = 0;
 		}
 
-	} while (getImpl().liveMode);
+	} while (impl().liveMode);
 
 	getCamera()->EndAcquisition();
 
@@ -1539,14 +1497,15 @@ void wso_device::ColorCamera::acquireCameraMultiSequencerROIData(void)
 {
 	try
 	{
-		uint32_t totalFrameCount = getImpl().cameraSeqParams->FrameCount;
-		FrameSeqROIParam* Params = getImpl().cameraSeqParams->pParams;
+		auto& preset = impl().seqRoiPreset;
+		uint32_t totalFrameCount = preset.frameCount;
+		LsoCaptureFrameROI* rois = preset.frameRois;
 		
-		std::vector<std::vector<FrameSeqROIParam>> ParamList = divideParamVector_((int)totalFrameCount, Params);
+		std::vector<std::vector<LsoCaptureFrameROI>> roiList = divideParamVector_((int)totalFrameCount, rois);
 
 		if (totalFrameCount <= 0)
 			return;
-		if (Params == nullptr)
+		if (rois == nullptr)
 			return;
 
 		uint32_t width;
@@ -1557,7 +1516,7 @@ void wso_device::ColorCamera::acquireCameraMultiSequencerROIData(void)
 		uint32_t frameSize;
 		uint32_t frameCount;
 
-		unsigned char* buffer = getImpl().sonyFrameBuffer;
+		unsigned char* buffer = impl().sonyFrameBuffer;
 
 		int nPixelFormat = getCamera()->PixelFormat.GetValue();
 		int nBytesPerPixel = getBytesPerPixel();
@@ -1568,17 +1527,17 @@ void wso_device::ColorCamera::acquireCameraMultiSequencerROIData(void)
 
 		do {
 
-			for (int i = 0; i < ParamList.size(); ++i)
+			for (int i = 0; i < roiList.size(); ++i)
 			{
 				{
-					unique_lock<mutex> lock(getImpl().mutexLock);
-					if (!getImpl().liveMode)
+					unique_lock<mutex> lock(impl().mutexLock);
+					if (!impl().liveMode)
 						break;
 				}
 
 				auto t1 = steady_clock::now();
 
-				setSequencer(ParamList[i]);
+				setSequencer(roiList[i]);
 
 				auto t2 = steady_clock::now();
 
@@ -1586,21 +1545,21 @@ void wso_device::ColorCamera::acquireCameraMultiSequencerROIData(void)
 
 				auto t3 = steady_clock::now();
 
-				for (int j = 0; j < ParamList[i].size(); ++j)
+				for (int j = 0; j < roiList[i].size(); ++j)
 				{
-					getImpl().rawImage = getCamera()->GetNextImage();
+					impl().rawImage = getCamera()->GetNextImage();
 
-					width = ParamList[i][j].Width;
-					height = ParamList[i][j].Height;
-					offsetX = ParamList[i][j].OffsetX;
-					offsetY = ParamList[i][j].OffsetY;
+					width = roiList[i][j].width;
+					height = roiList[i][j].height;
+					offsetX = roiList[i][j].offsetX;
+					offsetY = roiList[i][j].offsetY;
 
 					frameSize = width * height * sizeof(char) * nBytesPerPixel;
-					std::memcpy(buffer, getImpl().rawImage->GetData(), frameSize);
+					std::memcpy(buffer, impl().rawImage->GetData(), frameSize);
 
 					CallbackRegistry::getInstance()->runColorCameraSeqROIFrameCaptured(buffer, width, height, offsetX, offsetY, frameCount, totalFrameCount, getFlipMode(), nPixelFormat, nBytesPerPixel);
 
-					getImpl().rawImage->Release();
+					impl().rawImage->Release();
 
 					frameCount++;
 					if (frameCount == totalFrameCount)
@@ -1632,7 +1591,7 @@ void wso_device::ColorCamera::acquireCameraMultiSequencerROIData(void)
 				LogD() << "SequencerMode_Off() = " << ms;
 			}
 
-		} while (getImpl().liveMode);
+		} while (impl().liveMode);
 
 		offSequencer();
 
@@ -1650,23 +1609,22 @@ void wso_device::ColorCamera::acquireCameraOffsetROIData(void)
 {
 	try
 	{
-		uint32_t totalFrameCount = getImpl().cameraOffsetRoiParams->FrameCount;
-		uint32_t nRoiWidth = getImpl().cameraOffsetRoiParams->RoiWidth;
-		uint32_t nRoiHeight = getImpl().cameraOffsetRoiParams->RoiHeight;
-		uint32_t offsetX;
-		uint32_t offsetY;
+		auto& preset = impl().offsetRoiPreset;
+		uint32_t totalFrameCount = preset.frameCount;
+		uint32_t nRoiWidth = preset.roiWidth;
+		uint32_t nRoiHeight = preset.roiHeight;
 
-		FrameOffsetROIParam* Params = getImpl().cameraOffsetRoiParams->pParams;
+		LsoCaptureFrameROI* rois = preset.frameRois;
 
 		if (totalFrameCount <= 0)
 			return;
-		if (Params == nullptr)
+		if (rois == nullptr)
 			return;
 
 		uint32_t frameSize;
 		uint32_t frameCount;
 
-		unsigned char* buffer = getImpl().sonyFrameBuffer;
+		unsigned char* buffer = impl().sonyFrameBuffer;
 
 		int nPixelFormat = getCamera()->PixelFormat.GetValue();
 		int nBytesPerPixel = getBytesPerPixel();
@@ -1692,7 +1650,7 @@ void wso_device::ColorCamera::acquireCameraOffsetROIData(void)
 
 		do {
 
-			getImpl().nOffsetFrameCount = 0;
+			impl().nOffsetFrameCount = 0;
 
 			auto t0 = steady_clock::now();
 
@@ -1700,16 +1658,16 @@ void wso_device::ColorCamera::acquireCameraOffsetROIData(void)
 			{
 				// liveMode 체크를 뮤텍스로 보호
 				{
-					unique_lock<mutex> lock(getImpl().mutexLock);
-					if (!getImpl().liveMode)
+					unique_lock<mutex> lock(impl().mutexLock);
+					if (!impl().liveMode)
 						break;
 				}
 
 				//LogD() << "================================";
 				//LogD() << "ROI Frame : " << i;
 
-				uint32_t offsetX = Params[i].OffsetX;
-				uint32_t offsetY = Params[i].OffsetY;
+				uint32_t offsetX = rois[i].offsetX;
+				uint32_t offsetY = rois[i].offsetY;
 
 				//auto t1 = steady_clock::now();
 				//setROI_X_Offset(Params[i].OffsetX);
@@ -1723,19 +1681,19 @@ void wso_device::ColorCamera::acquireCameraOffsetROIData(void)
 
 				//auto t3 = steady_clock::now();
 
-				getImpl().rawImage = getCamera()->GetNextImage();
+				impl().rawImage = getCamera()->GetNextImage();
 
 				//auto t4 = steady_clock::now();
-				std::memcpy(buffer, getImpl().rawImage->GetData(), frameSize);
+				std::memcpy(buffer, impl().rawImage->GetData(), frameSize);
 
 
 				//auto t5 = steady_clock::now();
-				//unique_lock<mutex> lock(getImpl().mutexLock);
+				//unique_lock<mutex> lock(impl().mutexLock);
 				CallbackRegistry::getInstance()->runColorCameraOffsetROIFrameCaptured(buffer, nRoiWidth, nRoiHeight, offsetX, offsetY, frameCount, totalFrameCount, getFlipMode(), nPixelFormat, nBytesPerPixel);
 
 				//auto t6 = steady_clock::now();
 
-				getImpl().rawImage->Release();
+				impl().rawImage->Release();
 
 				//auto t7 = steady_clock::now();
 
@@ -1747,10 +1705,10 @@ void wso_device::ColorCamera::acquireCameraOffsetROIData(void)
 
 				//Sleep(50);
 
-				//getImpl().nOffsetFrameCount++;
-				//if (getImpl().nOffsetFrameCount == totalFrameCount)
+				//impl().nOffsetFrameCount++;
+				//if (impl().nOffsetFrameCount == totalFrameCount)
 				//{
-				//	getImpl().nOffsetFrameCount = 0;
+				//	impl().nOffsetFrameCount = 0;
 				//}
 
 				//auto m0 = steady_clock::now();
@@ -1762,7 +1720,7 @@ void wso_device::ColorCamera::acquireCameraOffsetROIData(void)
 				//LogD() << "getCamera()->TriggerSoftware.Execute() = " << ms;
 
 				//ms = duration<double, std::milli>(t4 - t3).count();
-				//LogD() << "getImpl().rawImage = getCamera()->GetNextImage() = " << ms;
+				//LogD() << "impl().rawImage = getCamera()->GetNextImage() = " << ms;
 
 				//ms = duration<double, std::milli>(t5 - t4).count();
 				//LogD() << "std::memcpy() = " << ms;
@@ -1771,7 +1729,7 @@ void wso_device::ColorCamera::acquireCameraOffsetROIData(void)
 				//LogD() << "Callback = " << ms;
 
 				//ms = duration<double, std::milli>(t7 - t6).count();
-				//LogD() << "getImpl().rawImage->Release() = " << ms;
+				//LogD() << "impl().rawImage->Release() = " << ms;
 
 				//ms = duration<double, std::milli>(t7 - t1).count();
 				//LogD() << "ROI Frame = " << ms;
@@ -1789,7 +1747,7 @@ void wso_device::ColorCamera::acquireCameraOffsetROIData(void)
 			double totalms = duration<double, std::milli>(t8 - t0).count();
 			LogD() << "Total 1 Frame = " << totalms;
 
-		} while (getImpl().liveMode);
+		} while (impl().liveMode);
 
 		getCamera()->EndAcquisition();
 
@@ -1811,23 +1769,22 @@ void wso_device::ColorCamera::acquireCaptureCameraOffsetROIData(void)
 {
 	try
 	{
-		uint32_t totalFrameCount = getImpl().cameraOffsetRoiParams->FrameCount;
-		uint32_t nRoiWidth = getImpl().cameraOffsetRoiParams->RoiWidth;
-		uint32_t nRoiHeight = getImpl().cameraOffsetRoiParams->RoiHeight;
-		uint32_t offsetX;
-		uint32_t offsetY;
+		auto& preset = impl().offsetRoiPreset;
+		uint32_t totalFrameCount = preset.frameCount;
+		uint32_t nRoiWidth = preset.roiWidth;
+		uint32_t nRoiHeight = preset.roiHeight;
 
-		FrameOffsetROIParam* Params = getImpl().cameraOffsetRoiParams->pParams;
+		LsoCaptureFrameROI* rois = preset.frameRois;
 
 		if (totalFrameCount <= 0)
 			return;
-		if (Params == nullptr)
+		if (rois == nullptr)
 			return;
 
 		uint32_t frameSize;
 		uint32_t frameCount;
 
-		unsigned char* buffer = getImpl().sonyFrameBuffer;
+		unsigned char* buffer = impl().sonyFrameBuffer;
 
 		int nPixelFormat = getCamera()->PixelFormat.GetValue();
 		int nBytesPerPixel = getBytesPerPixel();
@@ -1858,16 +1815,16 @@ void wso_device::ColorCamera::acquireCaptureCameraOffsetROIData(void)
 		{
 			// liveMode 체크를 뮤텍스로 보호
 			//{
-			//	unique_lock<mutex> lock(getImpl().mutexLock);
-			//	if (!getImpl().liveMode)
+			//	unique_lock<mutex> lock(impl().mutexLock);
+			//	if (!impl().liveMode)
 			//		break;
 			//}
 
 			//LogD() << "================================";
 			//LogD() << "ROI Frame : " << i;
 
-			uint32_t offsetX = Params[i].OffsetX;
-			uint32_t offsetY = Params[i].OffsetY;
+			uint32_t offsetX = rois[i].offsetX;
+			uint32_t offsetY = rois[i].offsetY;
 
 			//auto t1 = steady_clock::now();
 			//setROI_X_Offset(Params[i].OffsetX);
@@ -1881,19 +1838,19 @@ void wso_device::ColorCamera::acquireCaptureCameraOffsetROIData(void)
 
 			//auto t3 = steady_clock::now();
 
-			getImpl().rawImage = getCamera()->GetNextImage(3000);
+			impl().rawImage = getCamera()->GetNextImage(3000);
 
 			//auto t4 = steady_clock::now();
-			std::memcpy(buffer, getImpl().rawImage->GetData(), frameSize);
+			std::memcpy(buffer, impl().rawImage->GetData(), frameSize);
 
 
 			//auto t5 = steady_clock::now();
-			unique_lock<mutex> lock(getImpl().mutexLock);
+			unique_lock<mutex> lock(impl().mutexLock);
 			CallbackRegistry::getInstance()->runColorCameraOffsetROIFrameCaptured(buffer, nRoiWidth, nRoiHeight, offsetX, offsetY, frameCount, totalFrameCount, getFlipMode(), nPixelFormat, nBytesPerPixel);
 
 			//auto t6 = steady_clock::now();
 
-			getImpl().rawImage->Release();
+			impl().rawImage->Release();
 
 			//auto t7 = steady_clock::now();
 
@@ -1903,10 +1860,10 @@ void wso_device::ColorCamera::acquireCaptureCameraOffsetROIData(void)
 				frameCount = 0;
 			}
 
-			//getImpl().nOffsetFrameCount++;
-			//if (getImpl().nOffsetFrameCount == totalFrameCount)
+			//impl().nOffsetFrameCount++;
+			//if (impl().nOffsetFrameCount == totalFrameCount)
 			//{
-			//	getImpl().nOffsetFrameCount = 0;
+			//	impl().nOffsetFrameCount = 0;
 			//}
 
 			//auto m0 = steady_clock::now();
@@ -1918,7 +1875,7 @@ void wso_device::ColorCamera::acquireCaptureCameraOffsetROIData(void)
 			//LogD() << "getCamera()->TriggerSoftware.Execute() = " << ms;
 
 			//ms = duration<double, std::milli>(t4 - t3).count();
-			//LogD() << "getImpl().rawImage = getCamera()->GetNextImage() = " << ms;
+			//LogD() << "impl().rawImage = getCamera()->GetNextImage() = " << ms;
 
 			//ms = duration<double, std::milli>(t5 - t4).count();
 			//LogD() << "std::memcpy() = " << ms;
@@ -1927,7 +1884,7 @@ void wso_device::ColorCamera::acquireCaptureCameraOffsetROIData(void)
 			//LogD() << "Callback = " << ms;
 
 			//ms = duration<double, std::milli>(t7 - t6).count();
-			//LogD() << "getImpl().rawImage->Release() = " << ms;
+			//LogD() << "impl().rawImage->Release() = " << ms;
 
 			//ms = duration<double, std::milli>(t7 - t1).count();
 			//LogD() << "ROI Frame = " << ms;
@@ -1949,7 +1906,7 @@ void wso_device::ColorCamera::acquireCaptureCameraOffsetROIData(void)
 
 		getCamera()->TriggerMode.SetValue(TriggerMode_Off);
 
-		getImpl().liveMode = false;
+		impl().liveMode = false;
 
 		return;
 	}
@@ -1961,21 +1918,22 @@ void wso_device::ColorCamera::acquireCaptureCameraOffsetROIData(void)
 	}
 }
 
-void wso_device::ColorCamera::acquireCameraRollSWTrigOverlapLive(void)
+void wso_device::ColorCamera::acquireCameraRollSwTrigOverlapLive(void)
 {
 	try
 	{
-		uint32_t totalFrameCount = getImpl().cameraRollSWTrigOverlapParams->OverlapFrameCount;
-		uint32_t nRoiWidth = getImpl().cameraRollSWTrigOverlapParams->FrameWidth;
-		uint32_t nRoiHeight = getImpl().cameraRollSWTrigOverlapParams->FrameHeight;
-		uint32_t nInterval = getImpl().cameraRollSWTrigOverlapParams->TriggerIntervalMs;
-		uint32_t nOffsetX = getImpl().cameraRollSWTrigOverlapParams->OffsetX;
-		uint32_t nOffsetY = getImpl().cameraRollSWTrigOverlapParams->OffsetY;
+		auto& preset = impl().rollSwTrigPreset;
+		uint32_t totalFrameCount = preset.overlap.overlapFrameCount;
+		uint32_t nRoiWidth = preset.overlap.frameWidth;
+		uint32_t nRoiHeight = preset.overlap.frameHeight;
+		uint32_t nInterval = preset.overlap.triggerIntervalMs;
+		uint32_t nOffsetX = preset.overlap.offsetX;
+		uint32_t nOffsetY = preset.overlap.offsetY;
 
 		if (totalFrameCount <= 0)
 			return;
 
-		unsigned char* buffer = getImpl().sonyFrameBuffer;
+		unsigned char* buffer = impl().sonyFrameBuffer;
 
 		int nPixelFormat = getCamera()->PixelFormat.GetValue();
 		int nBytesPerPixel = getBytesPerPixel();
@@ -2013,8 +1971,8 @@ void wso_device::ColorCamera::acquireCameraRollSWTrigOverlapLive(void)
 			{
 				// liveMode 체크를 뮤텍스로 보호
 				{
-					unique_lock<mutex> lock(getImpl().mutexLock);
-					if (!getImpl().liveMode)
+					unique_lock<mutex> lock(impl().mutexLock);
+					if (!impl().liveMode)
 						break;
 				}
 
@@ -2024,11 +1982,11 @@ void wso_device::ColorCamera::acquireCameraRollSWTrigOverlapLive(void)
 
 				//auto t2 = steady_clock::now();
 
-				getImpl().rawImage = getCamera()->GetNextImage();
+				impl().rawImage = getCamera()->GetNextImage();
 
 				//auto t3 = steady_clock::now();
 
-				std::memcpy(buffer, getImpl().rawImage->GetData(), frameSize);
+				std::memcpy(buffer, impl().rawImage->GetData(), frameSize);
 
 				//auto t4 = steady_clock::now();
 
@@ -2036,7 +1994,7 @@ void wso_device::ColorCamera::acquireCameraRollSWTrigOverlapLive(void)
 
 				//auto t5 = steady_clock::now();
 
-				getImpl().rawImage->Release();
+				impl().rawImage->Release();
 
 				//auto t6 = steady_clock::now();
 
@@ -2074,7 +2032,7 @@ void wso_device::ColorCamera::acquireCameraRollSWTrigOverlapLive(void)
 			//double totalms = duration<double, std::milli>(t8 - t0).count();
 			//LogD() << "Total 1 Frame = " << totalms;
 
-		} while (getImpl().liveMode);
+		} while (impl().liveMode);
 
 		getCamera()->EndAcquisition();
 
@@ -2090,21 +2048,22 @@ void wso_device::ColorCamera::acquireCameraRollSWTrigOverlapLive(void)
 	}
 }
 
-void wso_device::ColorCamera::acquireCameraRollSWTrigOverlapCapture(void)
+void wso_device::ColorCamera::acquireCameraRollSwTrigOverlapCapture(void)
 {
 	try
 	{
-		uint32_t totalFrameCount = getImpl().cameraRollSWTrigOverlapParams->OverlapFrameCount;
-		uint32_t nRoiWidth = getImpl().cameraRollSWTrigOverlapParams->FrameWidth;
-		uint32_t nRoiHeight = getImpl().cameraRollSWTrigOverlapParams->FrameHeight;
-		uint32_t nInterval = getImpl().cameraRollSWTrigOverlapParams->TriggerIntervalMs;
-		uint32_t nOffsetX = getImpl().cameraRollSWTrigOverlapParams->OffsetX;
-		uint32_t nOffsetY = getImpl().cameraRollSWTrigOverlapParams->OffsetY;
+		auto& preset = impl().rollSwTrigPreset;
+		uint32_t totalFrameCount = preset.overlap.overlapFrameCount;
+		uint32_t nRoiWidth = preset.overlap.frameWidth;
+		uint32_t nRoiHeight = preset.overlap.frameHeight;
+		uint32_t nInterval = preset.overlap.triggerIntervalMs;
+		uint32_t nOffsetX = preset.overlap.offsetX;
+		uint32_t nOffsetY = preset.overlap.offsetY;
 
 		if (totalFrameCount <= 0)
 			return;
 
-		unsigned char* buffer = getImpl().sonyFrameBuffer;
+		unsigned char* buffer = impl().sonyFrameBuffer;
 
 		int nPixelFormat = getCamera()->PixelFormat.GetValue();
 		int nBytesPerPixel = getBytesPerPixel();
@@ -2140,13 +2099,13 @@ void wso_device::ColorCamera::acquireCameraRollSWTrigOverlapCapture(void)
 		{
 			getCamera()->TriggerSoftware.Execute();
 
-			getImpl().rawImage = getCamera()->GetNextImage();
+			impl().rawImage = getCamera()->GetNextImage();
 
-			std::memcpy(buffer, getImpl().rawImage->GetData(), frameSize);
+			std::memcpy(buffer, impl().rawImage->GetData(), frameSize);
 
 			CallbackRegistry::getInstance()->runColorCameraRollSWTrigOverlapFrameCaptured(buffer, nRoiWidth, nRoiHeight, frameCount, totalFrameCount, getFlipMode(), nPixelFormat, nBytesPerPixel);
 
-			getImpl().rawImage->Release();
+			impl().rawImage->Release();
 
 			frameCount++;
 			if (frameCount == totalFrameCount)
@@ -2161,7 +2120,7 @@ void wso_device::ColorCamera::acquireCameraRollSWTrigOverlapCapture(void)
 
 		getCamera()->TriggerMode.SetValue(TriggerMode_Off);
 
-		getImpl().liveMode = false;
+		impl().liveMode = false;
 
 		return;
 	}
@@ -2173,7 +2132,7 @@ void wso_device::ColorCamera::acquireCameraRollSWTrigOverlapCapture(void)
 	}
 }
 
-void wso_device::ColorCamera::acquireCameraRollHWTriggerCaptureData(void)
+void wso_device::ColorCamera::acquireCameraRollHwTriggerCaptureData(void)
 {
 	uint32_t width = getFrameWidth();
 	uint32_t height = getFrameHeight();
@@ -2185,7 +2144,7 @@ void wso_device::ColorCamera::acquireCameraRollHWTriggerCaptureData(void)
 
 	uint32_t frameCount = 0;
 
-	unsigned char* buffer = getImpl().sonyFrameBuffer;
+	unsigned char* buffer = impl().sonyFrameBuffer;
 
 	uint32_t nTotalFrameCount;
 	if (getAcquisitionMode() == AcquisitionMode_SingleFrame)
@@ -2203,10 +2162,10 @@ void wso_device::ColorCamera::acquireCameraRollHWTriggerCaptureData(void)
 	{
 		try
 		{
-			getImpl().rawImage = getCamera()->GetNextImage(3000);
+			impl().rawImage = getCamera()->GetNextImage(3000);
 
 			// 정상적으로 이미지를 받은 경우
-			std::memcpy(buffer, getImpl().rawImage->GetData(), frameSize);
+			std::memcpy(buffer, impl().rawImage->GetData(), frameSize);
 		}
 		catch (const Spinnaker::Exception& e)
 		{
@@ -2217,7 +2176,7 @@ void wso_device::ColorCamera::acquireCameraRollHWTriggerCaptureData(void)
 			std::memset(buffer, 0x80, frameSize);
 		}
 
-		unique_lock<mutex> lock(getImpl().mutexLock);
+		unique_lock<mutex> lock(impl().mutexLock);
 		CallbackRegistry::getInstance()->runColorCameraImageCaptured(buffer, width, height, frameCount, nTotalFrameCount, getFlipMode(), nPixelFormat, nBytesPerPixel);
 	}
 
@@ -2230,8 +2189,10 @@ bool wso_device::ColorCamera::onSequencer(void)
 
 	try
 	{
+		auto& preset = impl().seqRoiPreset;
 		int nIndexNextSet = 0;
-		int nSeqSetCount = getImpl().cameraSeqParams->FrameCount;
+		int nSeqSetCount = preset.frameCount;
+		auto* rois = preset.frameRois;
 
 		// Sequencer Mode Off
 		getCamera()->SequencerMode.SetValue(SequencerMode_Off);
@@ -2250,10 +2211,10 @@ bool wso_device::ColorCamera::onSequencer(void)
 			getCamera()->OffsetX.SetValue(0);         
 			getCamera()->OffsetY.SetValue(0);
 
-			getCamera()->Width.SetValue(getImpl().cameraSeqParams->pParams[i].Width);          // ROI 폭
-			getCamera()->Height.SetValue(getImpl().cameraSeqParams->pParams[i].Height);         // ROI 높이
-			getCamera()->OffsetX.SetValue(getImpl().cameraSeqParams->pParams[i].OffsetX);         // X 오프셋
-			getCamera()->OffsetY.SetValue(getImpl().cameraSeqParams->pParams[i].OffsetY);         // Y 오프셋
+			getCamera()->Width.SetValue(rois[i].width);          // ROI 폭
+			getCamera()->Height.SetValue(rois[i].height);         // ROI 높이
+			getCamera()->OffsetX.SetValue(rois[i].offsetX);         // X 오프셋
+			getCamera()->OffsetY.SetValue(rois[i].offsetY);         // Y 오프셋
 
 			// Set 0의 Sequencer 트리거 설정
 			getCamera()->SequencerTriggerSource.SetValue(SequencerTriggerSource_FrameStart);
@@ -2318,14 +2279,14 @@ bool wso_device::ColorCamera::onSequencer(void)
 	return bRet;
 }
 
-bool wso_device::ColorCamera::setSequencer(std::vector<FrameSeqROIParam> paramList)
+bool wso_device::ColorCamera::setSequencer(std::vector<LsoCaptureFrameROI> paramList)
 {
 	bool bRet = false;
 
 	try
 	{
 		int nIndexNextSet = 0;
-		int nSeqSetCount = paramList.size();
+		int nSeqSetCount = (int)paramList.size();
 
 		// Sequencer Mode Off
 		int nMode = getCamera()->SequencerMode.GetValue();
@@ -2348,10 +2309,10 @@ bool wso_device::ColorCamera::setSequencer(std::vector<FrameSeqROIParam> paramLi
 			getCamera()->OffsetX.SetValue(0);
 			getCamera()->OffsetY.SetValue(0);
 
-			getCamera()->Width.SetValue(paramList[i].Width);          // ROI 폭
-			getCamera()->Height.SetValue(paramList[i].Height);         // ROI 높이
-			getCamera()->OffsetX.SetValue(paramList[i].OffsetX);         // X 오프셋
-			getCamera()->OffsetY.SetValue(paramList[i].OffsetY);         // Y 오프셋
+			getCamera()->Width.SetValue(paramList[i].width);          // ROI 폭
+			getCamera()->Height.SetValue(paramList[i].height);         // ROI 높이
+			getCamera()->OffsetX.SetValue(paramList[i].offsetX);         // X 오프셋
+			getCamera()->OffsetY.SetValue(paramList[i].offsetY);         // Y 오프셋
 
 			// Set 0의 Sequencer 트리거 설정
 			getCamera()->SequencerTriggerSource.SetValue(SequencerTriggerSource_FrameStart);
@@ -2423,9 +2384,9 @@ void wso_device::ColorCamera::offSequencer(void)
 	//loadUserSet_(1);
 }
 
-std::vector<std::vector<FrameSeqROIParam>> wso_device::ColorCamera::divideParamVector_(int nFrameCount, FrameSeqROIParam* arrayParams)
+std::vector<std::vector<LsoCaptureFrameROI>> wso_device::ColorCamera::divideParamVector_(int nFrameCount, LsoCaptureFrameROI* arrayParams)
 {
-	std::vector<std::vector<FrameSeqROIParam>> result;
+	std::vector<std::vector<LsoCaptureFrameROI>> result;
 
 	if (arrayParams == nullptr || nFrameCount <= 0) {
 		return result;
@@ -2435,7 +2396,7 @@ std::vector<std::vector<FrameSeqROIParam>> wso_device::ColorCamera::divideParamV
 	int currentIndex = 0;
 
 	while (currentIndex < nFrameCount) {
-		std::vector<FrameSeqROIParam> chunk;
+		std::vector<LsoCaptureFrameROI> chunk;
 
 		// 현재 청크에 최대 8개 또는 남은 개수만큼 추가
 		int endIndex = std::min(currentIndex + chunkSize, nFrameCount);
@@ -2510,7 +2471,7 @@ void wso_device::ColorCamera::acquireCameraCaptureData(void)
 
 	uint32_t frameCount = 0;
 
-	unsigned char* buffer = getImpl().sonyFrameBuffer;
+	unsigned char* buffer = impl().sonyFrameBuffer;
 
 	uint32_t nTotalFrameCount;
 	if (getAcquisitionMode() == AcquisitionMode_SingleFrame)
@@ -2526,10 +2487,10 @@ void wso_device::ColorCamera::acquireCameraCaptureData(void)
 
 	for (uint32_t frameCount = 0; frameCount < nTotalFrameCount; ++frameCount)
 	{
-		getImpl().rawImage = getCamera()->GetNextImage();
+		impl().rawImage = getCamera()->GetNextImage();
 
 		//ImageProcessor processor;
-		//ImagePtr convertedImage = processor.Convert(getImpl().rawImage, PixelFormat_RGB8);
+		//ImagePtr convertedImage = processor.Convert(impl().rawImage, PixelFormat_RGB8);
 
 		//// Create a unique filename
 		//ostringstream filename;
@@ -2538,8 +2499,8 @@ void wso_device::ColorCamera::acquireCameraCaptureData(void)
 		//filename << nIndex << ".jpg";
 		//convertedImage->Save(filename.str().c_str());
 
-		std::memcpy(buffer, getImpl().rawImage->GetData(), frameSize);
-		unique_lock<mutex> lock(getImpl().mutexLock);
+		std::memcpy(buffer, impl().rawImage->GetData(), frameSize);
+		unique_lock<mutex> lock(impl().mutexLock);
 		CallbackRegistry::getInstance()->runColorCameraImageCaptured(buffer, width, height, frameCount, nTotalFrameCount, getFlipMode(), nPixelFormat, nBytesPerPixel);
 	}
 
@@ -2688,33 +2649,34 @@ void wso_device::ColorCamera::HandleDeviceEvent(const Spinnaker::GenICam::gcstri
 
 				auto t0 = steady_clock::now();
 
-				unique_lock<mutex> lock(getImpl().mutexLock);
+				unique_lock<mutex> lock(impl().mutexLock);
 
 				uint64_t frameID = getCamera()->EventExposureEndFrameID.GetValue();
 				uint64_t timestamp = getCamera()->EventExposureEndTimestamp.GetValue();
 
 				LogD() << "ExposureEnd Event - FrameID: " + std::to_string(frameID) << ", Timestamp: " + std::to_string(timestamp);
 
-				uint32_t frameCount = getImpl().nOffsetFrameCount;
-				uint32_t totalFrameCount = getImpl().cameraOffsetRoiParams->FrameCount;
-				uint32_t nRoiWidth = getImpl().cameraOffsetRoiParams->RoiWidth;
-				uint32_t nRoiHeight = getImpl().cameraOffsetRoiParams->RoiHeight;
+				auto& preset = impl().offsetRoiPreset;
+				uint32_t frameCount = impl().nOffsetFrameCount;
+				uint32_t totalFrameCount = preset.frameCount;
+				uint32_t nRoiWidth = preset.roiWidth;
+				uint32_t nRoiHeight = preset.roiHeight;
 				
-				unsigned char* buffer = getImpl().sonyFrameBuffer;
+				unsigned char* buffer = impl().sonyFrameBuffer;
 
 				int nPixelFormat = getCamera()->PixelFormat.GetValue();
 				int nBytesPerPixel = getBytesPerPixel();
 				
 				uint32_t frameSize = nRoiWidth * nRoiHeight * sizeof(char) * nBytesPerPixel;
 
-				getImpl().rawImage = getCamera()->GetNextImage();
+				impl().rawImage = getCamera()->GetNextImage();
 
-				std::memcpy(buffer, getImpl().rawImage->GetData(), frameSize);
+				std::memcpy(buffer, impl().rawImage->GetData(), frameSize);
 
-				//unique_lock<mutex> lock(getImpl().mutexHandleLock);
+				//unique_lock<mutex> lock(impl().mutexHandleLock);
 				CallbackRegistry::getInstance()->runColorCameraOffsetROIFrameCaptured(buffer, nRoiWidth, nRoiHeight, 0, 0, frameCount, totalFrameCount, getFlipMode(), nPixelFormat, nBytesPerPixel);
 
-				getImpl().rawImage->Release();
+				impl().rawImage->Release();
 
 				auto t8 = steady_clock::now();
 
