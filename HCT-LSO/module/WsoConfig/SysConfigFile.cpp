@@ -856,7 +856,7 @@ bool wso_config::SysConfigFile::saveSectionOfLsoCapture(const LsoCaptureSetting*
 	list = pdoc->NewElement("RollSwTriggerOverlap");
 	group->LinkEndChild(list);
 
-	XMLElement* item = pdoc->NewElement("attribute");
+	item = pdoc->NewElement("attribute");
 	group->LinkEndChild(item);
 	item->SetAttribute("overlapCount", lcset->getFrameRollSwTrigOverlapCount());
 	item->SetAttribute("roiWidth", lcset->getFrameRollSwTrigOverlapRoiWidth());

@@ -1,0 +1,2 @@
+#define OCTPATTERN_API __declspec(dllexport)
+#define OCTPATTERN_API __declspec(dllimport)

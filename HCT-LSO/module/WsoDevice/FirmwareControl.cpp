@@ -158,7 +158,7 @@ FirmwareControl& wso_device::FirmwareControl::operator=(FirmwareControl&& rhs) =
 //	return true; // 메인 스레드는 곧장 리턴
 //}
 
-bool wso_device::FirmwareControl::writeUpgradeFirmware(unsigned char* binary, int length, uint targetAddress, uint binCrc)
+bool wso_device::FirmwareControl::writeUpgradeFirmware(unsigned char* binary, int length, unsigned int targetAddress, unsigned int binCrc)
 {
 	if (impl().board == nullptr || impl().usbComm == nullptr)
 	{
@@ -168,7 +168,7 @@ bool wso_device::FirmwareControl::writeUpgradeFirmware(unsigned char* binary, in
 	auto* hbs = impl().board->getHbsDataProfile();
 	auto data = hbs->getHbsBulkBuffer();
 
-	uint zynq_buf_addr = data->TBL_blk_buf_desc[0].buf_addr;
+	unsigned int zynq_buf_addr = data->TBL_blk_buf_desc[0].buf_addr;
 
 	unique_lock<mutex> lock(impl().mutexLock);
 	CallbackRegistry::getInstance()->runFirmwareMsgCallback("Downloading file..", 0, 0, false, false);

@@ -1,0 +1,2 @@
+#define SIGPROC_API __declspec(dllexport)
+#define SIGPROC_API __declspec(dllimport)

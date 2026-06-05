@@ -2,11 +2,10 @@
 
 #include "CppUtil2.h"
 
+#include <vector>
 
 namespace cpp_util
 {
-
-
 	class CPPUTIL_DLL_API SystemUtil
 	{
 	public:

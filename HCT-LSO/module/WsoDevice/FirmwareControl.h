@@ -20,7 +20,7 @@ namespace wso_device
 		FirmwareControl(const FirmwareControl& rhs) = delete;
 		FirmwareControl& operator=(const FirmwareControl& rhs) = delete;
 
-		bool writeUpgradeFirmware(unsigned char* binary, int length, uint targetAddress, uint binCrc);
+		bool writeUpgradeFirmware(unsigned char* binary, int length, unsigned int targetAddress, unsigned int binCrc);
 		int waitForState(int state, int timeoutMs);
 		int waitWhileState(int state, int timeoutMs, int flieSize);
 		bool isState(int state);

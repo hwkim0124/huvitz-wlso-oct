@@ -2399,7 +2399,7 @@ std::vector<std::vector<LsoCaptureFrameROI>> wso_device::ColorCamera::dividePara
 		std::vector<LsoCaptureFrameROI> chunk;
 
 		// 현재 청크에 최대 8개 또는 남은 개수만큼 추가
-		int endIndex = std::min(currentIndex + chunkSize, nFrameCount);
+		int endIndex = std::min((int)(currentIndex + chunkSize), nFrameCount);
 
 		for (int i = currentIndex; i < endIndex; ++i) {
 			chunk.push_back(arrayParams[i]);

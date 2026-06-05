@@ -130,7 +130,7 @@ namespace wso_device
 		bool LcdFixationControl(std::uint8_t row, std::uint8_t col);
 		bool LcdFixationParameters(std::uint8_t bright, std::uint8_t blink, std::uint16_t period, std::uint16_t ontime, std::uint8_t type);
 
-		bool FpgaWrite(uint buff_addr, uint flash_addr, uint size, uint calc_crc);
+		bool FpgaWrite(std::uint32_t buff_addr, std::uint32_t flash_addr, std::uint32_t size, std::uint32_t calc_crc);
 
 	protected:
 		MsgCommand* getMsgCommand(CommandType ctrl, std::uint8_t msg_len);

@@ -3,10 +3,8 @@
 #include "StrFormat.h"
 
 #include <fstream>
-#include <sstream>
 #include <ostream>
 #include <thread>
-#include <Windows.h>
 #include <ctime>
 #include <chrono>
 

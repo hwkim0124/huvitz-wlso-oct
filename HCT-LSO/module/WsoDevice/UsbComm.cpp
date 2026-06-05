@@ -1239,7 +1239,7 @@ bool wso_device::UsbComm::LcdFixationParameters(std::uint8_t bright, std::uint8_
 	return sendMsgCmd(msg);
 }
 
-bool wso_device::UsbComm::FpgaWrite(uint buff_addr, uint flash_addr, uint size, uint calc_crc)
+bool wso_device::UsbComm::FpgaWrite(std::uint32_t buff_addr, std::uint32_t flash_addr, std::uint32_t size, std::uint32_t calc_crc)
 {
 	lock_guard<mutex> lock(impl().mutexControl);
 	MsgCommand* msg = getMsgCommand(CommandType::FPGA_UP, 16);

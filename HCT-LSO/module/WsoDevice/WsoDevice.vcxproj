@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\..\packages\vcpkg-export-wslotoolkit.1.0.1\build\native\vcpkg-export-wslotoolkit.props" Condition="Exists('..\..\packages\vcpkg-export-wslotoolkit.1.0.1\build\native\vcpkg-export-wslotoolkit.props')" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -118,7 +117,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;WSODEVICE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;WSODEVICE_EXPORTS;_WINDOWS;_USRDLL;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)module\CppUtil;$(SolutionDir)module\WsoDomain;$(SolutionDir)module\WsoBoard;$(SolutionDir)externs\FTDI;$(SolutionDir)externs\Spinnaker\include</AdditionalIncludeDirectories>
@@ -137,7 +136,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;WSODEVICE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;WSODEVICE_EXPORTS;_WINDOWS;_USRDLL;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)module\CppUtil;$(SolutionDir)module\WsoDomain;$(SolutionDir)module\WsoBoard;$(SolutionDir)externs\FTDI;$(SolutionDir)externs\Spinnaker\include</AdditionalIncludeDirectories>
@@ -218,18 +217,12 @@
     <ClCompile Include="ZstageMotor.cpp" />
     <ClCompile Include="ZynqXadcDriver.cpp" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\..\packages\vcpkg-export-wslotoolkit.1.0.1\build\native\vcpkg-export-wslotoolkit.targets" Condition="Exists('..\..\packages\vcpkg-export-wslotoolkit.1.0.1\build\native\vcpkg-export-wslotoolkit.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\..\packages\vcpkg-export-wslotoolkit.1.0.1\build\native\vcpkg-export-wslotoolkit.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\vcpkg-export-wslotoolkit.1.0.1\build\native\vcpkg-export-wslotoolkit.props'))" />
-    <Error Condition="!Exists('..\..\packages\vcpkg-export-wslotoolkit.1.0.1\build\native\vcpkg-export-wslotoolkit.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\vcpkg-export-wslotoolkit.1.0.1\build\native\vcpkg-export-wslotoolkit.targets'))" />
   </Target>
 </Project>
