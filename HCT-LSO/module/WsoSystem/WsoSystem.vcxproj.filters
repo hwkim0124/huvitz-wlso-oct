@@ -1,0 +1,180 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\externs">
+      <UniqueIdentifier>{498fa7ac-d2aa-4a18-a8a7-752850765eaa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\externs">
+      <UniqueIdentifier>{ac422f19-2c15-423b-91b1-593cc7b28268}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="framework.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Bootstrapper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Controller.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Hardware.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wso_system.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WsoSystem2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Configuration.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Fixation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OctScanning.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="exts_configuration.h">
+      <Filter>Header Files\externs</Filter>
+    </ClInclude>
+    <ClInclude Include="exts_fixation.h">
+      <Filter>Header Files\externs</Filter>
+    </ClInclude>
+    <ClInclude Include="exts_hardware.h">
+      <Filter>Header Files\externs</Filter>
+    </ClInclude>
+    <ClInclude Include="exts_slo_scanner.h">
+      <Filter>Header Files\externs</Filter>
+    </ClInclude>
+    <ClInclude Include="exts_sys_config.h">
+      <Filter>Header Files\externs</Filter>
+    </ClInclude>
+    <ClInclude Include="exts_system.h">
+      <Filter>Header Files\externs</Filter>
+    </ClInclude>
+    <ClInclude Include="exts_slo_scanning.h">
+      <Filter>Header Files\externs</Filter>
+    </ClInclude>
+    <ClInclude Include="exts_oct_scanning.h">
+      <Filter>Header Files\externs</Filter>
+    </ClInclude>
+    <ClInclude Include="OctArchive.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="exts_oct_scanner.h">
+      <Filter>Header Files\externs</Filter>
+    </ClInclude>
+    <ClInclude Include="exts_oct_archive.h">
+      <Filter>Header Files\externs</Filter>
+    </ClInclude>
+    <ClInclude Include="OctAnalysis.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="exts_oct_analysis.h">
+      <Filter>Header Files\externs</Filter>
+    </ClInclude>
+    <ClInclude Include="exts_device_lights.h">
+      <Filter>Header Files\externs</Filter>
+    </ClInclude>
+    <ClInclude Include="exts_device_motors.h">
+      <Filter>Header Files\externs</Filter>
+    </ClInclude>
+    <ClInclude Include="exts_calibration.h">
+      <Filter>Header Files\externs</Filter>
+    </ClInclude>
+    <ClInclude Include="exts_oct_calibration.h">
+      <Filter>Header Files\externs</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dllmain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Bootstrapper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Controller.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Hardware.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Configuration.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Fixation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="OctScanning.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="exts_configuration.cpp">
+      <Filter>Source Files\externs</Filter>
+    </ClCompile>
+    <ClCompile Include="exts_fixation.cpp">
+      <Filter>Source Files\externs</Filter>
+    </ClCompile>
+    <ClCompile Include="exts_hardware.cpp">
+      <Filter>Source Files\externs</Filter>
+    </ClCompile>
+    <ClCompile Include="exts_slo_scanner.cpp">
+      <Filter>Source Files\externs</Filter>
+    </ClCompile>
+    <ClCompile Include="exts_sys_config.cpp">
+      <Filter>Source Files\externs</Filter>
+    </ClCompile>
+    <ClCompile Include="exts_system.cpp">
+      <Filter>Source Files\externs</Filter>
+    </ClCompile>
+    <ClCompile Include="exts_slo_scanning.cpp">
+      <Filter>Source Files\externs</Filter>
+    </ClCompile>
+    <ClCompile Include="exts_oct_scanning.cpp">
+      <Filter>Source Files\externs</Filter>
+    </ClCompile>
+    <ClCompile Include="OctArchive.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="exts_oct_scanner.cpp">
+      <Filter>Source Files\externs</Filter>
+    </ClCompile>
+    <ClCompile Include="exts_oct_archive.cpp">
+      <Filter>Source Files\externs</Filter>
+    </ClCompile>
+    <ClCompile Include="OctAnalysis.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="exts_oct_analysis.cpp">
+      <Filter>Source Files\externs</Filter>
+    </ClCompile>
+    <ClCompile Include="exts_device_lights.cpp">
+      <Filter>Source Files\externs</Filter>
+    </ClCompile>
+    <ClCompile Include="exts_device_motors.cpp">
+      <Filter>Source Files\externs</Filter>
+    </ClCompile>
+    <ClCompile Include="exts_calibration.cpp">
+      <Filter>Source Files\externs</Filter>
+    </ClCompile>
+    <ClCompile Include="exts_oct_calibration.cpp">
+      <Filter>Source Files\externs</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+</Project>

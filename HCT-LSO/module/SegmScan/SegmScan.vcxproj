@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{695bce38-e151-4443-9f1e-08df4470dae6}</ProjectGuid>
+    <RootNamespace>SegmScan</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(SolutionDir)build\$(Platform)\$(Configuration)\system_libs\</OutDir>
+    <IntDir>$(SolutionDir)build\$(Platform)\$(Configuration)\system_libs\Output\$(ProjectName)\</IntDir>
+    <TargetName>$(ProjectName.ToLower())</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)build\$(Platform)\$(Configuration)\system_libs\</OutDir>
+    <IntDir>$(SolutionDir)build\$(Platform)\$(Configuration)\system_libs\Output\$(ProjectName)\</IntDir>
+    <TargetName>$(ProjectName.ToLower())</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnabled>true</VcpkgEnabled>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;SEGMSCAN_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;SEGMSCAN_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;SEGMSCAN_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)module\CppUtil;$(SolutionDir)module\WsoDomain;$(SolutionDir)module\RetSegm;$(SolutionDir)module\RetParam;$(SolutionDir)module\NormData;$(SolutionDir)module\SemtSegm;$(SolutionDir)packages\vcpkg-wsotoolkit.1.0.0\installed\x64-windows\include\opencv4</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+      <AdditionalLibraryDirectories>$(OutDir);</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cpputil.lib;wsodomain.lib;normdata.lib;retsegm.lib;retparam.lib;semtsegm.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;SEGMSCAN_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)module\CppUtil;$(SolutionDir)module\WsoDomain;$(SolutionDir)module\RetSegm;$(SolutionDir)module\RetParam;$(SolutionDir)module\NormData;$(SolutionDir)module\SemtSegm;$(SolutionDir)packages\vcpkg-wsotoolkit.1.0.0\installed\x64-windows\include\opencv4</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+      <AdditionalLibraryDirectories>$(OutDir);</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cpputil.lib;wsodomain.lib;normdata.lib;retsegm.lib;retparam.lib;semtsegm.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="CorneaBsegm.h" />
+    <ClInclude Include="CorneaEnfaceChart.h" />
+    <ClInclude Include="CorneaEnfaceImage.h" />
+    <ClInclude Include="CorneaEnfaceMap.h" />
+    <ClInclude Include="CorneaEplot.h" />
+    <ClInclude Include="CorneaETDRSChart.h" />
+    <ClInclude Include="CorneaLayers.h" />
+    <ClInclude Include="CorneaRadiusMap.h" />
+    <ClInclude Include="CorneaThicknessMap.h" />
+    <ClInclude Include="DiscBsegm.h" />
+    <ClInclude Include="DiscClockChart.h" />
+    <ClInclude Include="DiscEnfaceChart.h" />
+    <ClInclude Include="DiscEnfaceImage.h" />
+    <ClInclude Include="DiscEnfaceMap.h" />
+    <ClInclude Include="DiscThicknessMap.h" />
+    <ClInclude Include="framework.h" />
+    <ClInclude Include="GCCThicknessChart.h" />
+    <ClInclude Include="MacularBsegm.h" />
+    <ClInclude Include="MacularEnfaceChart.h" />
+    <ClInclude Include="MacularEnfaceImage.h" />
+    <ClInclude Include="MacularEnfaceMap.h" />
+    <ClInclude Include="MacularETDRSChart.h" />
+    <ClInclude Include="MacularThicknessMap.h" />
+    <ClInclude Include="OcularBsegm.h" />
+    <ClInclude Include="OcularEnfaceChart.h" />
+    <ClInclude Include="OcularEnfaceImage.h" />
+    <ClInclude Include="OcularEnfaceMap.h" />
+    <ClInclude Include="OcularLayers.h" />
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="RetinaLayers.h" />
+    <ClInclude Include="SegmScan.h" />
+    <ClInclude Include="SegmScan2.h" />
+    <ClInclude Include="segm_scan.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="CorneaBsegm.cpp" />
+    <ClCompile Include="CorneaEnfaceChart.cpp" />
+    <ClCompile Include="CorneaEnfaceImage.cpp" />
+    <ClCompile Include="CorneaEnfaceMap.cpp" />
+    <ClCompile Include="CorneaEplot.cpp" />
+    <ClCompile Include="CorneaETDRSChart.cpp" />
+    <ClCompile Include="CorneaLayers.cpp" />
+    <ClCompile Include="CorneaRadiusMap.cpp" />
+    <ClCompile Include="CorneaThicknessMap.cpp" />
+    <ClCompile Include="DiscBsegm.cpp" />
+    <ClCompile Include="DiscClockChart.cpp" />
+    <ClCompile Include="DiscEnfaceChart.cpp" />
+    <ClCompile Include="DiscEnfaceImage.cpp" />
+    <ClCompile Include="DiscEnfaceMap.cpp" />
+    <ClCompile Include="DiscThicknessMap.cpp" />
+    <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="GCCThicknessChart.cpp" />
+    <ClCompile Include="MacularBsegm.cpp" />
+    <ClCompile Include="MacularEnfaceChart.cpp" />
+    <ClCompile Include="MacularEnfaceImage.cpp" />
+    <ClCompile Include="MacularEnfaceMap.cpp" />
+    <ClCompile Include="MacularETDRSChart.cpp" />
+    <ClCompile Include="MacularThicknessMap.cpp" />
+    <ClCompile Include="OcularBsegm.cpp" />
+    <ClCompile Include="OcularEnfaceChart.cpp" />
+    <ClCompile Include="OcularEnfaceImage.cpp" />
+    <ClCompile Include="OcularEnfaceMap.cpp" />
+    <ClCompile Include="OcularLayers.cpp" />
+    <ClCompile Include="pch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="RetinaLayers.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+  </Target>
+</Project>

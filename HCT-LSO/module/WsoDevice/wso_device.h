@@ -6,9 +6,7 @@
 #include "OctReferMotor.h"
 
 #include "LsoFocusMotor.h"
-#include "FixationMotor.h"
 #include "YstageMotor.h"
-#include "TiltMotor.h"
 #include "SwingMotor.h"
 
 #include "LsoWhiteLed.h"
