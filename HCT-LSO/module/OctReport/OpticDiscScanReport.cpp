@@ -5,6 +5,7 @@
 #include "OctReport2.h"
 
 using namespace oct_report;
+using namespace std;
 
 
 struct OpticDiscScanReport::OpticDiscScanReportImpl

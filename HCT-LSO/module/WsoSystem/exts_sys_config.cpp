@@ -18,40 +18,6 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::obtainInternalFixationPreset(Intern
 	return false;
 }
 
-
-bool WSOSYSTEM_DLL_API __stdcall wso_system::obtainSloScanCaptureModeParam(int index, SloScanCaptureModeParam* param)
-{
-	if (auto* config = SystemConfig::getInstance(); config) {
-		if (auto* data = config->getCaptureSetting()->getSloScanCaptureModeParam(index); data) {
-			*param = *data;
-			return true;
-		}
-	}
-	return false;
-}
-
-bool WSOSYSTEM_DLL_API __stdcall wso_system::obtainSloScanImagingModeParam(int index, SloScanImagingModeParam* param)
-{
-	if (auto* config = SystemConfig::getInstance(); config) {
-		if (auto* data = config->getCaptureSetting()->getSloScanImagingModeParam(index); data) {
-			*param = *data;
-			return true;
-		}
-	}
-	return false;
-}
-
-bool WSOSYSTEM_DLL_API __stdcall wso_system::obtainSloScanCaptureInitParam(SloScanCaptureInitParam* param)
-{
-	if (auto* config = SystemConfig::getInstance(); config) {
-		if (auto* data = config->getCaptureSetting()->getSloScanCaptureInitParam(); data) {
-			*param = *data;
-			return true;
-		}
-	}
-	return false;
-}
-
 bool WSOSYSTEM_DLL_API __stdcall wso_system::obtainCorneaCameraConfigParam(CorneaCameraConfigParam* param)
 {
 	if (auto* config = SystemConfig::getInstance(); config) {
@@ -71,6 +37,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::obtainOctGalvanoConfigParam(OctGalv
 			return true;
 		}
 	}
+	return false;
 }
 
 void WSOSYSTEM_DLL_API __stdcall wso_system::submitInternalFixationPreset(InternalFixationPreset param)
@@ -81,29 +48,6 @@ void WSOSYSTEM_DLL_API __stdcall wso_system::submitInternalFixationPreset(Intern
 	return ;
 }
 
-void WSOSYSTEM_DLL_API __stdcall wso_system::submitSloScanCaptureModeParam(int index, SloScanCaptureModeParam param)
-{
-	if (auto* config = SystemConfig::getInstance(); config) {
-		config->getCaptureSetting()->setSloScanCaptureModeParam(index, param);
-	}
-	return;
-}
-
-void WSOSYSTEM_DLL_API __stdcall wso_system::submitSloScanImagingModeParam(int index, SloScanImagingModeParam param)
-{
-	if (auto* config = SystemConfig::getInstance(); config) {
-		config->getCaptureSetting()->setSloScanImagingModeParam(index, param);
-	}
-	return;
-}
-
-void WSOSYSTEM_DLL_API __stdcall wso_system::submitSloScanCaptureInitParam(SloScanCaptureInitParam param)
-{
-	if (auto* config = SystemConfig::getInstance(); config) {
-		config->getCaptureSetting()->setSloScanCaptureInitParam(param);
-	}
-	return;
-}
 
 void WSOSYSTEM_DLL_API __stdcall wso_system::submitCorneaCameraConfigParam(CorneaCameraConfigParam param)
 {

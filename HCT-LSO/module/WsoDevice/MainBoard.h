@@ -19,6 +19,7 @@ namespace wso_device
 	class UsbComm;
 	class InfraredCamera;
 
+	class OctSldLed;
 	class LightLed;
 	class LsoWhiteLed;
 	class RetinaIrLed;
@@ -44,6 +45,8 @@ namespace wso_device
 
 	class LsoScanner;
 	class Galvanometer;
+	class SldLaserDriver;
+	class ZynqXadcDriver;
 
 	class FirmwareControl;
 
@@ -86,11 +89,11 @@ namespace wso_device
 		bool resetSubChannel(void);
 
 		bool waitForSystemReady(void);
-		/*
+
 		bool prepareDevicesForOctScan(void);
 		bool releaseDevicesForOctScan(void);
 		bool turnOnOctScanBeam(bool flag);
-
+		/*
 		bool prepareDevicesForSloScan(bool oct_preview, float diopt);
 		bool releaseDevicesForSloScan(void);
 		*/
@@ -144,6 +147,10 @@ namespace wso_device
 		UsbComm& getUsbComm(void) const;
 		UsbComm& getSubComm(void) const;
 			
+		OctSldLed* getOctSldLed(void) const;
+		SldLaserDriver* getSldLaserDriver(void) const;
+		ZynqXadcDriver* getZyncXadcDriver(void) const;
+
 		OctFocusMotor* getOctFocusMotor(void) const;
 		OctPolarMotor* getOctPolarMotor(void) const;
 		OctReferMotor* getOctReferMotor(void) const;

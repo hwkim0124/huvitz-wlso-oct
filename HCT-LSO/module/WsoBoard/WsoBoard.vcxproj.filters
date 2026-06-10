@@ -48,6 +48,9 @@
     <ClInclude Include="wso_hbs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="wso_hbs2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">

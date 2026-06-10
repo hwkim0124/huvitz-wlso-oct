@@ -217,14 +217,6 @@ float WSOSYSTEM_DLL_API __stdcall wso_system::getStepMotorValueAtPosition(MotorT
 	return 0.0f;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isMirrorMotorAtOrigin(void)
-{
-	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
-		auto result = p->isMirrorMotorAtOrigin();
-		return result;
-	}
-	return false;
-}
 
 bool WSOSYSTEM_DLL_API __stdcall wso_system::isTiltMotorAtHighLimit(void)
 {
@@ -271,14 +263,6 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::isFixationMotorAtOrigin(void)
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isIcgaFilterMotorAtOrigin(void)
-{
-	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
-		auto result = p->isIcgaFilterMotorAtOrigin();
-		return result;
-	}
-	return false;
-}
 
 bool WSOSYSTEM_DLL_API __stdcall wso_system::isOctFocusMotorAtOrigin(void)
 {
@@ -307,10 +291,10 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::isOctReferMotorAtOrigin(void)
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isSloFocusMotorAtOrigin(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isLsoFocusMotorAtOrigin(void)
 {
 	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
-		auto result = p->isSloFocusMotorAtOrigin();
+		auto result = p->isLsoFocusMotorAtOrigin();
 		return result;
 	}
 	return false;
@@ -333,31 +317,3 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::isYaxisMotorAtLowLimit(void)
 	}
 	return false;
 }
-
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isAdapterLensDetached(void)
-{
-	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
-		auto result = p->isAdapterLensDetached();
-		return result;
-	}
-	return false;
-}
-
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isAnteriorLensAttached(void)
-{
-	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
-		auto result = p->isAnteriorLensAttached();
-		return result;
-	}
-	return false;
-}
-
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isWideAngleLensAttached(void)
-{
-	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
-		auto result = p->isWideAngleLensAttached();
-		return result;
-	}
-	return false;
-}
-

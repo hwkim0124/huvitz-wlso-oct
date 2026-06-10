@@ -353,54 +353,54 @@ bool wso_device::UsbComm::checkEyeSideGPIO(EyeSide& side)
 	return false;
 }
 
-bool wso_device::UsbComm::readDescriptor(const HbsDescriptor* data)
+bool wso_device::UsbComm::readDescriptor(const HbsTableDescriptor* data)
 {
 	assert(data != nullptr);
 	lock_guard<mutex> lock(impl().mutexControl);
 
-	if (!readAddress(HBS_TBL_DESCRIPTOR_ADDR, (unsigned char*)(&data->HBS_DescHeader), sizeof(HBS_DescHeader_St))) {
+	if (!readAddress(HBS_TBL_DESCRIPTOR_ADDR, (unsigned char*)(&data->header), sizeof(hbs_table_header_st))) {
 		LogDebug() << "HBS descriptor header failed to read!";
 		return false;
 	}
 
-	if (data->HBS_DescHeader.ver != HBS_TBL_VERSION) {
-		LogDebug() << "HBS table version not matched! " << data->HBS_DescHeader.ver << ", " << HBS_TBL_VERSION;
+	if (data->header.ver != HBS_TBL_VERSION) {
+		LogDebug() << "HBS table version not matched! " << data->header.ver << ", " << HBS_TBL_VERSION;
 		return false;
 	}
-	auto checksum = (data->HBS_DescHeader.ver + data->HBS_DescHeader.count + data->HBS_DescHeader.table_chksum);
-	if (data->HBS_DescHeader.header_chksum != checksum) {
-		LogDebug() << "HBS header checksum invalid! " << data->HBS_DescHeader.header_chksum << ", " << checksum;
+	auto checksum = (data->header.ver + data->header.count + data->header.table_chksum);
+	if (data->header.header_chksum != checksum) {
+		LogDebug() << "HBS header checksum invalid! " << data->header.header_chksum << ", " << checksum;
 		return false;
 	}
-	if (data->HBS_DescHeader.count != HBS_TBL_ITEM_NUM) {
-		LogDebug() << "HBS table header count invalid! " << data->HBS_DescHeader.count << ", " << HBS_TBL_ITEM_NUM;
+	if (data->header.count != HBS_TBL_ITEM_NUM) {
+		LogDebug() << "HBS table header count invalid! " << data->header.count << ", " << HBS_TBL_ITEM_NUM;
 		return false;
 	}
 
-	auto addrData = HBS_TBL_DESCRIPTOR_ADDR + sizeof(HBS_DescHeader_St);
-	auto wordData = int((data->HBS_DescHeader.count) * 2);
+	auto addrData = HBS_TBL_DESCRIPTOR_ADDR + sizeof(hbs_table_header_st);
+	auto wordData = int((data->header.count) * 2);
 	auto sizeData = int(wordData * 4);
 
-	if (!readAddress((uint32_t)addrData, (unsigned char*)(&data->TBL_desc), sizeData)) {
+	if (!readAddress((uint32_t)addrData, (unsigned char*)(&data->entries), sizeData)) {
 		LogDebug() << "HBS descriptor table failed to read!";
 		return false;
 	}
 
-	auto checksum2 = getWordChecksum((unsigned int*)(&data->TBL_desc[0]), wordData);
-	if (checksum2 != data->HBS_DescHeader.table_chksum) {
-		LogDebug() << "HBS table checksum invalid! " << data->HBS_DescHeader.table_chksum << ", " << checksum2;
+	auto checksum2 = getWordChecksum((unsigned int*)(&data->entries[0]), wordData);
+	if (checksum2 != data->header.table_chksum) {
+		LogDebug() << "HBS table checksum invalid! " << data->header.table_chksum << ", " << checksum2;
 		return false;
 	}
 	return true;
 }
 
-bool wso_device::UsbComm::readBulkBuffer(const HbsBulkBuffer* data, const HbsDescriptor* desc)
+bool wso_device::UsbComm::readBulkBuffer(const HbsBufferEntries* data, const HbsTableDescriptor* desc)
 {
 	assert(data != nullptr);
 	assert(desc != nullptr);
 	lock_guard<mutex> lock(impl().mutexControl);
-	const auto addr = desc->TBL_desc[TBL_BLKBUF_ID].buf_addr;
-	const auto size = desc->TBL_desc[TBL_BLKBUF_ID].buf_size;
+	const auto addr = desc->entries[TBL_BLKBUF_ID].buf_addr;
+	const auto size = desc->entries[TBL_BLKBUF_ID].buf_size;
 
 	if (!readAddress(addr, (unsigned char*)data, size)) {
 		LogDebug() << "Failed to read bulk buffer!";
@@ -409,7 +409,7 @@ bool wso_device::UsbComm::readBulkBuffer(const HbsBulkBuffer* data, const HbsDes
 	return true;
 }
 
-bool wso_device::UsbComm::readConfiguration(const HbsConfiguration* data, const HbsDescriptor* desc)
+bool wso_device::UsbComm::readConfiguration(const HbsConfiguration* data, const HbsTableDescriptor* desc)
 {
 	/*
 	assert(data != nullptr);
@@ -435,13 +435,13 @@ bool wso_device::UsbComm::readConfiguration(const HbsConfiguration* data, const 
 	return true;
 }
 
-bool wso_device::UsbComm::readMainBoardVersion(const HbsMainBoardVersion* data, const HbsDescriptor* desc)
+bool wso_device::UsbComm::readMainBoardVersion(const HbsMainBoardVersion* data, const HbsTableDescriptor* desc)
 {
 	assert(data != nullptr);
 	assert(desc != nullptr);
 	lock_guard<mutex> lock(impl().mutexControl);
-	const auto addr = desc->TBL_desc[TBL_MB_VER_INFO_ID].buf_addr;
-	const auto size = desc->TBL_desc[TBL_MB_VER_INFO_ID].buf_size;
+	const auto addr = desc->entries[TBL_MB_VER_INFO_ID].buf_addr;
+	const auto size = desc->entries[TBL_MB_VER_INFO_ID].buf_size;
 
 	const auto data_size = sizeof(HbsMainBoardVersion);
 	if (data_size != size) {
@@ -456,13 +456,13 @@ bool wso_device::UsbComm::readMainBoardVersion(const HbsMainBoardVersion* data, 
 	return true;
 }
 
-bool wso_device::UsbComm::readSystemInitStatus(const HbsSystemInitStatus* data, const HbsDescriptor* desc)
+bool wso_device::UsbComm::readSystemInitStatus(const HbsSystemInitStatus* data, const HbsTableDescriptor* desc)
 {
 	assert(data != nullptr);
 	assert(desc != nullptr);
 	lock_guard<mutex> lock(impl().mutexControl);
-	const auto addr = desc->TBL_desc[TBL_SYS_INIT_STATUS_ID].buf_addr;
-	const auto size = desc->TBL_desc[TBL_SYS_INIT_STATUS_ID].buf_size;
+	const auto addr = desc->entries[TBL_SYS_INIT_STATUS_ID].buf_addr;
+	const auto size = desc->entries[TBL_SYS_INIT_STATUS_ID].buf_size;
 
 	const auto data_size = sizeof(HbsSystemInitStatus);
 	if (data_size != size) {
@@ -477,13 +477,13 @@ bool wso_device::UsbComm::readSystemInitStatus(const HbsSystemInitStatus* data, 
 	return true;
 }
 
-bool wso_device::UsbComm::readCalibration(const HbsCalibration* data, const HbsDescriptor* desc)
+bool wso_device::UsbComm::readCalibration(const HbsCalibration* data, const HbsTableDescriptor* desc)
 {
 	assert(data != nullptr);
 	assert(desc != nullptr);
 	lock_guard<mutex> lock(impl().mutexControl);
-	const auto addr = desc->TBL_desc[TBL_SYSCAL_ID].buf_addr;
-	const auto size = desc->TBL_desc[TBL_SYSCAL_ID].buf_size;
+	const auto addr = desc->entries[TBL_SYSCAL_ID].buf_addr;
+	const auto size = desc->entries[TBL_SYSCAL_ID].buf_size;
 
 	const auto data_size = sizeof(HbsCalibration);
 	if (data_size != size) {
@@ -498,15 +498,15 @@ bool wso_device::UsbComm::readCalibration(const HbsCalibration* data, const HbsD
 	return true;
 }
 
-bool wso_device::UsbComm::readSystemConfigure(const HbsSystemConfigure* data, const HbsDescriptor* desc)
+bool wso_device::UsbComm::readSystemConfigure(const HbsSystemConfig* data, const HbsTableDescriptor* desc)
 {
 	assert(data != nullptr);
 	assert(desc != nullptr);
 	lock_guard<mutex> lock(impl().mutexControl);
-	const auto addr = desc->TBL_desc[TBL_SYS_CFG_ID].buf_addr;
-	const auto size = desc->TBL_desc[TBL_SYS_CFG_ID].buf_size;
+	const auto addr = desc->entries[TBL_SYS_CFG_ID].buf_addr;
+	const auto size = desc->entries[TBL_SYS_CFG_ID].buf_size;
 
-	const auto data_size = sizeof(HbsSystemConfigure);
+	const auto data_size = sizeof(HbsSystemConfig);
 	if (data_size != size) {
 		LogD() << "System configure data size not matched, " << data_size << ", read_size: " << size;
 		return false;
@@ -519,13 +519,13 @@ bool wso_device::UsbComm::readSystemConfigure(const HbsSystemConfigure* data, co
 	return true;
 }
 
-bool wso_device::UsbComm::readGpioStatus(const HbsGpioStatus* data, const HbsDescriptor* desc)
+bool wso_device::UsbComm::readGpioStatus(const HbsGpioStatus* data, const HbsTableDescriptor* desc)
 {
 	assert(data != nullptr);
 	assert(desc != nullptr);
 	lock_guard<mutex> lock(impl().mutexControl);
-	const auto addr = desc->TBL_desc[TBL_GP_STATUS_ID].buf_addr;
-	const auto size = desc->TBL_desc[TBL_GP_STATUS_ID].buf_size;
+	const auto addr = desc->entries[TBL_GP_STATUS_ID].buf_addr;
+	const auto size = desc->entries[TBL_GP_STATUS_ID].buf_size;
 
 	const auto data_size = sizeof(HbsGpioStatus);
 	if (data_size != size) {
@@ -540,13 +540,13 @@ bool wso_device::UsbComm::readGpioStatus(const HbsGpioStatus* data, const HbsDes
 	return true;
 }
 
-bool wso_device::UsbComm::readLsoScannerParam(const HbsLsoScanner* data, const HbsDescriptor* desc)
+bool wso_device::UsbComm::readLsoScannerParam(const HbsLsoScanner* data, const HbsTableDescriptor* desc)
 {
 	assert(data != nullptr);
 	assert(desc != nullptr);
 	lock_guard<mutex> lock(impl().mutexControl);
-	const auto addr = desc->TBL_desc[TBL_LSO_SCANNER_ID].buf_addr;
-	const auto size = desc->TBL_desc[TBL_LSO_SCANNER_ID].buf_size;
+	const auto addr = desc->entries[TBL_LSO_SCANNER_ID].buf_addr;
+	const auto size = desc->entries[TBL_LSO_SCANNER_ID].buf_size;
 
 	const auto data_size = sizeof(HbsLsoScanner);
 	if (data_size != size) {
@@ -561,13 +561,13 @@ bool wso_device::UsbComm::readLsoScannerParam(const HbsLsoScanner* data, const H
 	return true;
 }
 
-bool wso_device::UsbComm::readSldStatus(const HbsSldStatus* data, const HbsDescriptor* desc)
+bool wso_device::UsbComm::readSldStatus(const HbsSldStatus* data, const HbsTableDescriptor* desc)
 {
 	assert(data != nullptr);
 	assert(desc != nullptr);
 	lock_guard<mutex> lock(impl().mutexControl);
-	const auto addr = desc->TBL_desc[TBL_SLD_STATUS_ID].buf_addr;
-	const auto size = desc->TBL_desc[TBL_SLD_STATUS_ID].buf_size;
+	const auto addr = desc->entries[TBL_SLD_STATUS_ID].buf_addr;
+	const auto size = desc->entries[TBL_SLD_STATUS_ID].buf_size;
 
 	const auto data_size = sizeof(HbsSldStatus);
 	if (data_size != size) {
@@ -582,13 +582,13 @@ bool wso_device::UsbComm::readSldStatus(const HbsSldStatus* data, const HbsDescr
 	return true;
 }
 
-bool wso_device::UsbComm::readZynqXADC(const HbsZyncXADC* data, const HbsDescriptor* desc)
+bool wso_device::UsbComm::readZynqXADC(const HbsZyncXADC* data, const HbsTableDescriptor* desc)
 {
 	assert(data != nullptr);
 	assert(desc != nullptr);
 	lock_guard<mutex> lock(impl().mutexControl);
-	const auto addr = desc->TBL_desc[TBL_ZYNQ_XADC_ID].buf_addr;
-	const auto size = desc->TBL_desc[TBL_ZYNQ_XADC_ID].buf_size;
+	const auto addr = desc->entries[TBL_ZYNQ_XADC_ID].buf_addr;
+	const auto size = desc->entries[TBL_ZYNQ_XADC_ID].buf_size;
 
 	const auto data_size = sizeof(HbsZyncXADC);
 	if (data_size != size) {
@@ -603,13 +603,13 @@ bool wso_device::UsbComm::readZynqXADC(const HbsZyncXADC* data, const HbsDescrip
 	return true;
 }
 
-bool wso_device::UsbComm::readGalvanoDynamicParam(const HbsGalvanoDynamicParam* data, const HbsDescriptor* desc)
+bool wso_device::UsbComm::readGalvanoDynamicParam(const HbsGalvanoDynamicParam* data, const HbsTableDescriptor* desc)
 {
 	assert(data != nullptr);
 	assert(desc != nullptr);
 	lock_guard<mutex> lock(impl().mutexControl);
-	const auto addr = desc->TBL_desc[TBL_OCT_GAVANO_ID].buf_addr;
-	const auto size = desc->TBL_desc[TBL_OCT_GAVANO_ID].buf_size;
+	const auto addr = desc->entries[TBL_OCT_GAVANO_ID].buf_addr;
+	const auto size = desc->entries[TBL_OCT_GAVANO_ID].buf_size;
 
 	const auto data_size = sizeof(HbsGalvanoDynamicParam);
 	if (data_size != size) {
@@ -617,7 +617,7 @@ bool wso_device::UsbComm::readGalvanoDynamicParam(const HbsGalvanoDynamicParam* 
 		return false;
 	}
 
-	auto addr2 = static_cast<uint32_t>(addr + sizeof(HbsGalvanometer::traj_profile1));
+	auto addr2 = static_cast<uint32_t>(addr + sizeof(HbsOctGalvano::traj_profile1));
 	if (!readAddress(addr2, (unsigned char*)data, data_size)) {
 		LogDebug() << "Galvano dynamic param data failed to read!";
 		return false;
@@ -625,13 +625,13 @@ bool wso_device::UsbComm::readGalvanoDynamicParam(const HbsGalvanoDynamicParam* 
 	return true;
 }
 
-bool wso_device::UsbComm::readInfraredCameraStatus(const HbsInfraredCameraStatus* data, const HbsDescriptor* desc)
+bool wso_device::UsbComm::readInfraredCameraStatus(const HbsInfraredCameraStatus* data, const HbsTableDescriptor* desc)
 {
 	assert(data != nullptr);
 	assert(desc != nullptr);
 	lock_guard<mutex> lock(impl().mutexControl);
-	const auto addr = desc->TBL_desc[TBL_RET_IR_CAM_STATUS_ID].buf_addr;
-	const auto size = desc->TBL_desc[TBL_RET_IR_CAM_STATUS_ID].buf_size;
+	const auto addr = desc->entries[TBL_RET_IR_CAM_STATUS_ID].buf_addr;
+	const auto size = desc->entries[TBL_RET_IR_CAM_STATUS_ID].buf_size;
 
 	const auto data_size = sizeof(HbsInfraredCameraStatus);
 	if (data_size != size) {
@@ -646,7 +646,7 @@ bool wso_device::UsbComm::readInfraredCameraStatus(const HbsInfraredCameraStatus
 	return true;
 }
 
-bool wso_device::UsbComm::readStepMotorStatus(const HbsStepMotorStatus* data, StepMotorType type, const HbsDescriptor* desc)
+bool wso_device::UsbComm::readStepMotorStatus(const HbsStepMotorStatus* data, StepMotorType type, const HbsTableDescriptor* desc)
 {
 	assert(data != nullptr);
 	assert(desc != nullptr);
@@ -654,8 +654,8 @@ bool wso_device::UsbComm::readStepMotorStatus(const HbsStepMotorStatus* data, St
 
 	auto index = HbsDataProfile::getHbsTableIndex(type);
 	assert(index >= 0);
-	const auto addr = desc->TBL_desc[index].buf_addr;
-	const auto size = desc->TBL_desc[index].buf_size;
+	const auto addr = desc->entries[index].buf_addr;
+	const auto size = desc->entries[index].buf_size;
 
 	const auto data_size = sizeof(HbsStepMotorStatus);
 	if (data_size != size) {
@@ -670,13 +670,13 @@ bool wso_device::UsbComm::readStepMotorStatus(const HbsStepMotorStatus* data, St
 	return true;
 }
 
-bool wso_device::UsbComm::readStageMotorStatus(const HbsStageMotorStatus* data, const HbsDescriptor* desc)
+bool wso_device::UsbComm::readStageMotorStatus(const HbsStageMotorStatus* data, const HbsTableDescriptor* desc)
 {
 	assert(data != nullptr);
 	assert(desc != nullptr);
 	lock_guard<mutex> lock(impl().mutexControl);
-	const auto addr = desc->TBL_desc[TBL_Y_MOTOR_ID].buf_addr;
-	const auto size = desc->TBL_desc[TBL_Y_MOTOR_ID].buf_size;
+	const auto addr = desc->entries[TBL_Y_MOTOR_ID].buf_addr;
+	const auto size = desc->entries[TBL_Y_MOTOR_ID].buf_size;
 
 	const auto data_size = sizeof(HbsStageMotorStatus);
 	if (data_size != size) {
@@ -691,13 +691,13 @@ bool wso_device::UsbComm::readStageMotorStatus(const HbsStageMotorStatus* data, 
 	return true;
 }
 
-bool wso_device::UsbComm::writeCalibration(const HbsCalibration* data, const HbsDescriptor* desc)
+bool wso_device::UsbComm::writeCalibration(const HbsCalibration* data, const HbsTableDescriptor* desc)
 {
 	assert(data != nullptr);
 	assert(desc != nullptr);
 	lock_guard<mutex> lock(impl().mutexControl);
-	const auto addr = desc->TBL_desc[TBL_SYSCAL_ID].buf_addr;
-	const auto size = desc->TBL_desc[TBL_SYSCAL_ID].buf_size;
+	const auto addr = desc->entries[TBL_SYSCAL_ID].buf_addr;
+	const auto size = desc->entries[TBL_SYSCAL_ID].buf_size;
 
 	if (!writeAddress(addr, (unsigned char*)data, size)) {
 		LogD() << "System calibration data write failed!";
@@ -706,7 +706,7 @@ bool wso_device::UsbComm::writeCalibration(const HbsCalibration* data, const Hbs
 	return true;
 }
 
-bool wso_device::UsbComm::writeConfiguration(const HbsConfiguration* data, const HbsDescriptor* desc)
+bool wso_device::UsbComm::writeConfiguration(const HbsConfiguration* data, const HbsTableDescriptor* desc)
 {
 	/*
 	assert(data != nullptr);
@@ -723,13 +723,13 @@ bool wso_device::UsbComm::writeConfiguration(const HbsConfiguration* data, const
 	return true;
 }
 
-bool wso_device::UsbComm::writeSystemConfigure(const HbsSystemConfigure* data, const HbsDescriptor* desc)
+bool wso_device::UsbComm::writeSystemConfigure(const HbsSystemConfig* data, const HbsTableDescriptor* desc)
 {
 	assert(data != nullptr);
 	assert(desc != nullptr);
 	lock_guard<mutex> lock(impl().mutexControl);
-	const auto addr = desc->TBL_desc[TBL_SYS_CFG_ID].buf_addr;
-	const auto size = desc->TBL_desc[TBL_SYS_CFG_ID].buf_size;
+	const auto addr = desc->entries[TBL_SYS_CFG_ID].buf_addr;
+	const auto size = desc->entries[TBL_SYS_CFG_ID].buf_size;
 
 	if (!writeAddress(addr, (unsigned char*)data, size)) {
 		LogDebug() << "System configure data write failed!";
@@ -738,17 +738,17 @@ bool wso_device::UsbComm::writeSystemConfigure(const HbsSystemConfigure* data, c
 	return true;
 }
 
-bool wso_device::UsbComm::writeGalvanoDynamicParam(const HbsGalvanoDynamicParam* data, const HbsDescriptor* desc)
+bool wso_device::UsbComm::writeGalvanoDynamicParam(const HbsGalvanoDynamicParam* data, const HbsTableDescriptor* desc)
 {
 	assert(data != nullptr);
 	assert(desc != nullptr);
 	lock_guard<mutex> lock(impl().mutexControl);
-	const auto addr = desc->TBL_desc[TBL_OCT_GAVANO_ID].buf_addr;
-	const auto size = desc->TBL_desc[TBL_OCT_GAVANO_ID].buf_size;
+	const auto addr = desc->entries[TBL_OCT_GAVANO_ID].buf_addr;
+	const auto size = desc->entries[TBL_OCT_GAVANO_ID].buf_size;
 
 	const auto data_size = sizeof(HbsGalvanoDynamicParam);
 
-	auto addr2 = static_cast<uint32_t>(addr + sizeof(HbsGalvanometer::traj_profile1));
+	auto addr2 = static_cast<uint32_t>(addr + sizeof(HbsOctGalvano::traj_profile1));
 	if (!writeAddress(addr2, (unsigned char*)data, data_size)) {
 		LogDebug() << "Galvano dynamic param data write failed!";
 		return false;
@@ -756,13 +756,13 @@ bool wso_device::UsbComm::writeGalvanoDynamicParam(const HbsGalvanoDynamicParam*
 	return true;
 }
 
-bool wso_device::UsbComm::writeLsoScannerParam(const HbsLsoScanner* data, const HbsDescriptor* desc)
+bool wso_device::UsbComm::writeLsoScannerParam(const HbsLsoScanner* data, const HbsTableDescriptor* desc)
 {
 	assert(data != nullptr);
 	assert(desc != nullptr);
 	lock_guard<mutex> lock(impl().mutexControl);
-	const auto addr = desc->TBL_desc[TBL_LSO_SCANNER_ID].buf_addr;
-	const auto size = desc->TBL_desc[TBL_LSO_SCANNER_ID].buf_size;
+	const auto addr = desc->entries[TBL_LSO_SCANNER_ID].buf_addr;
+	const auto size = desc->entries[TBL_LSO_SCANNER_ID].buf_size;
 
 	if (!writeAddress(addr, (unsigned char*)data, size)) {
 		LogDebug() << "LSO scanner param data write failed!";
@@ -771,13 +771,13 @@ bool wso_device::UsbComm::writeLsoScannerParam(const HbsLsoScanner* data, const 
 	return true;
 }
 
-bool wso_device::UsbComm::writeTrajectoryParam(std::uint8_t tid, const TrajectoryProfileParam* param, const HbsDescriptor* desc)
+bool wso_device::UsbComm::writeTrajectoryParam(std::uint8_t tid, const TrajectoryProfileParam* param, const HbsTableDescriptor* desc)
 {
 	assert(desc != nullptr);
 	assert(param != nullptr);
 	lock_guard<mutex> lock(impl().mutexControl);
-	const auto addr = desc->TBL_desc[TBL_OCT_GAVANO_ID].buf_addr;
-	const auto size = desc->TBL_desc[TBL_OCT_GAVANO_ID].buf_size;
+	const auto addr = desc->entries[TBL_OCT_GAVANO_ID].buf_addr;
+	const auto size = desc->entries[TBL_OCT_GAVANO_ID].buf_size;
 
 	uint32_t addr2 = addr + tid * sizeof(TrajectoryProfile);
 	if (!writeAddress(addr2, (uint8_t*)param, sizeof(TrajectoryProfileParam))) {
@@ -787,13 +787,13 @@ bool wso_device::UsbComm::writeTrajectoryParam(std::uint8_t tid, const Trajector
 	return true;
 }
 
-bool wso_device::UsbComm::writeTrajectoryPositionsX(std::uint8_t tid, const std::int16_t* positions, std::uint16_t count, const HbsDescriptor* desc)
+bool wso_device::UsbComm::writeTrajectoryPositionsX(std::uint8_t tid, const std::int16_t* positions, std::uint16_t count, const HbsTableDescriptor* desc)
 {
 	assert(desc != nullptr);
 	assert(positions != nullptr);
 	lock_guard<mutex> lock(impl().mutexControl);
-	const auto addr = desc->TBL_desc[TBL_OCT_GAVANO_ID].buf_addr;
-	const auto size = desc->TBL_desc[TBL_OCT_GAVANO_ID].buf_size;
+	const auto addr = desc->entries[TBL_OCT_GAVANO_ID].buf_addr;
+	const auto size = desc->entries[TBL_OCT_GAVANO_ID].buf_size;
 
 	uint32_t addr2 = addr + tid * sizeof(TrajectoryProfile) + sizeof(TrajectoryProfileParam) + sizeof(int16_t) * TRAJECT_SAMPLE_SIZE_MAX;
 	if (!writeAddress(addr2, (uint8_t*)positions, count * sizeof(int16_t))) {
@@ -803,13 +803,13 @@ bool wso_device::UsbComm::writeTrajectoryPositionsX(std::uint8_t tid, const std:
 	return true;
 }
 
-bool wso_device::UsbComm::writeTrajectoryPositionsY(std::uint8_t tid, const std::int16_t* positions, std::uint16_t count, const HbsDescriptor* desc)
+bool wso_device::UsbComm::writeTrajectoryPositionsY(std::uint8_t tid, const std::int16_t* positions, std::uint16_t count, const HbsTableDescriptor* desc)
 {
 	assert(desc != nullptr);
 	assert(positions != nullptr);
 	lock_guard<mutex> lock(impl().mutexControl);
-	const auto addr = desc->TBL_desc[TBL_OCT_GAVANO_ID].buf_addr;
-	const auto size = desc->TBL_desc[TBL_OCT_GAVANO_ID].buf_size;
+	const auto addr = desc->entries[TBL_OCT_GAVANO_ID].buf_addr;
+	const auto size = desc->entries[TBL_OCT_GAVANO_ID].buf_size;
 
 	uint32_t addr2 = addr + tid * sizeof(TrajectoryProfile) + sizeof(TrajectoryProfileParam);
 	if (!writeAddress(addr2, (uint8_t*)positions, count * sizeof(int16_t))) {
@@ -1068,6 +1068,97 @@ bool wso_device::UsbComm::LedSetMode(LightType type, std::uint8_t value)
 	msg->packet.ctrl10.s1 = static_cast<std::uint8_t>(type);
 	msg->packet.ctrl10.c1 = value;
 	attachCRC(msg->packet.ctrl10.crc);
+	return sendMsgCmd(msg);
+}
+
+bool wso_device::UsbComm::LedSldControl(LightType type, std::uint8_t onOff)
+{
+	lock_guard<mutex> lock(impl().mutexControl);
+	MsgCommand* msg = getMsgCommand(CommandType::SLD_CTRL, 2);
+	msg->packet.ctrl2.c1 = static_cast<std::uint8_t>(type);
+	msg->packet.ctrl2.c2 = (onOff > 0 ? 1 : 0);
+	attachCRC(msg->packet.ctrl2.crc);
+	return sendMsgCmd(msg);
+}
+
+bool wso_device::UsbComm::LedSldPotentiometer(LightType type, std::uint8_t channel, std::uint16_t data)
+{
+	lock_guard<mutex> lock(impl().mutexControl);
+	MsgCommand* msg = getMsgCommand(CommandType::SLD_POTENTIO, 4);
+	msg->packet.sctrl1.c1 = static_cast<std::uint8_t>(type);
+	msg->packet.sctrl1.c2 = channel;
+	msg->packet.sctrl1.s1 = data;
+	attachCRC(msg->packet.sctrl1.crc);
+	return sendMsgCmd(msg);
+}
+
+bool wso_device::UsbComm::LedSldGetParameters(LightType type, std::uint8_t channel)
+{
+	lock_guard<mutex> lock(impl().mutexControl);
+	MsgCommand* msg = getMsgCommand(CommandType::GET_SLD_POT, 2);
+	msg->packet.ctrl2.c1 = static_cast<std::uint8_t>(type);
+	msg->packet.ctrl2.c2 = channel;
+	attachCRC(msg->packet.ctrl2.crc);
+	return sendMsgCmd(msg);
+}
+
+bool wso_device::UsbComm::LedSldUpdateParameters(LightType type, std::uint8_t channel)
+{
+	lock_guard<mutex> lock(impl().mutexControl);
+	MsgCommand* msg = getMsgCommand(CommandType::FLASH_SLD_POT, 2);
+	msg->packet.ctrl2.c1 = static_cast<std::uint8_t>(type);
+	msg->packet.ctrl2.c2 = channel;
+	attachCRC(msg->packet.ctrl2.crc);
+	return sendMsgCmd(msg);
+}
+
+bool wso_device::UsbComm::OctReferencePhaseControl(std::uint8_t mode)
+{
+	lock_guard<mutex> lock(impl().mutexControl);
+	MsgCommand* msg = getMsgCommand(CommandType::OCT_PHASE_CTRL, 1);
+	msg->packet.ctrl1.c1 = mode;
+	attachCRC(msg->packet.ctrl1.crc);
+	return sendMsgCmd(msg);
+}
+
+bool wso_device::UsbComm::OctSetReferencePhase(std::int16_t phase)
+{
+	lock_guard<mutex> lock(impl().mutexControl);
+	MsgCommand* msg = getMsgCommand(CommandType::OCT_SET_PHASE, 2);
+	msg->packet.ctrl5.s1 = phase;
+	attachCRC(msg->packet.ctrl5.crc);
+	return sendMsgCmd(msg);
+}
+
+bool wso_device::UsbComm::CalibDataBlockErase(std::uint16_t region, std::uint16_t blockNum)
+{
+	lock_guard<mutex> lock(impl().mutexControl);
+	MsgCommand* msg = getMsgCommand(CommandType::ERASE_CALBLOCK, 4);
+	msg->packet.ctrl6.s1 = region;
+	msg->packet.ctrl6.s2 = blockNum;
+	attachCRC(msg->packet.ctrl6.crc);
+	return sendMsgCmd(msg);
+}
+
+bool wso_device::UsbComm::CalibDataBlockProgram(std::uint16_t region, std::uint16_t blockNum, std::uint32_t size)
+{
+	lock_guard<mutex> lock(impl().mutexControl);
+	MsgCommand* msg = getMsgCommand(CommandType::FLASH_CALBLOCK, 8);
+	msg->packet.ctrl13.s1 = region;
+	msg->packet.ctrl13.s2 = blockNum;
+	msg->packet.ctrl13.n1 = size;
+	attachCRC(msg->packet.ctrl3.crc);
+	return sendMsgCmd(msg);
+}
+
+bool wso_device::UsbComm::CalibDataBlockLoadFlash(std::uint16_t region, std::uint16_t blockNum, std::uint32_t size)
+{
+	lock_guard<mutex> lock(impl().mutexControl);
+	MsgCommand* msg = getMsgCommand(CommandType::LOAD_FLASHCALIB, 8);
+	msg->packet.ctrl13.s1 = region;
+	msg->packet.ctrl13.s2 = blockNum;
+	msg->packet.ctrl13.n1 = size;
+	attachCRC(msg->packet.ctrl3.crc);
 	return sendMsgCmd(msg);
 }
 

@@ -14,16 +14,16 @@ struct HbsDataProfile::HbsDataProfileImpl
 {
 	optional<HbsDataComm*> dataComm { nullopt };
 
-	HBS_descriptor_st	HBS_descriptor{};
-	blk_buf_desc_st 	HBS_BlkBufTbl{};
+	hbs_descriptor_st	HBS_descriptor{};
+	buffer_descriptor_st 	HBS_BlkBufTbl{};
 	SysCal_st 			HBS_SysCal{};
 	UserSetup_st 		HBS_UserSetup{};
-	MainBoardVerInfo_st HBS_MainBoardVerInfo{};
+	mainboard_version_st HBS_MainBoardVerInfo{};
 	SysInitStatus_st 	HBS_SysInitStatus{};
 	SysCfg_st 			HBS_SysCfg{};
 
 	GP_Status_st 		HBS_GP_Status{};
-	SLD_status_st 		HBS_SLD_status{};
+	SLD_st 				HBS_SLD_status{};
 	Zynq_XADC_st		HBS_ZynqXADC{};
 
 	HbsStepMotorStatus 	HBS_OctFocusMotor{};
@@ -92,7 +92,7 @@ void wso_board::HbsDataProfile::setHbsDataComm(HbsDataComm* comm)
 	return;
 }
 
-bool wso_board::HbsDataProfile::loadHbsDescriptor(void)
+bool wso_board::HbsDataProfile::loadHbsTableHeader(void)
 {
 	auto* channel = getDataChannel();
 	if (auto data = getHbsDescriptor(); channel) {
@@ -139,8 +139,8 @@ bool wso_board::HbsDataProfile::loadBulkBuffer(void)
 	if (auto desc = getHbsDescriptor();  channel) {
 		auto data = getHbsBulkBuffer();
 		if (channel->readBulkBuffer(data, desc)) {
-			auto checksum1 = data->blk_buf_desc_header.header_chksum;
-			auto checksum2 = data->blk_buf_desc_header.count + data->blk_buf_desc_header.table_chksum;
+			auto checksum1 = data->header.header_chksum;
+			auto checksum2 = data->header.count + data->header.table_chksum;
 			if (checksum1 != checksum2) {
 				LogDebug() << "HBS data header checksum not matched! " << checksum1 << ", " << checksum2;
 				return false;
@@ -154,9 +154,9 @@ bool wso_board::HbsDataProfile::loadBulkBuffer(void)
 				return checksum;
 			};
 
-			auto wordAddr = (unsigned int*)(&data->TBL_blk_buf_desc[0]);
-			auto wordSize = 2 * data->blk_buf_desc_header.count;
-			auto wordsum1 = data->blk_buf_desc_header.table_chksum;
+			auto wordAddr = (unsigned int*)(&data->entries[0]);
+			auto wordSize = 2 * data->header.count;
+			auto wordsum1 = data->header.table_chksum;
 			auto wordsum2 = func_word_checksum(wordAddr, wordSize);
 			if (wordsum1 != wordsum2) {
 				LogDebug() << "HBS data word checksum not matched! " << wordsum1 << ", " << wordsum2;
@@ -377,12 +377,12 @@ bool wso_board::HbsDataProfile::saveGalvanoDynamicParam(void)
 	return false;
 }
 
-const HBS_descriptor_st* wso_board::HbsDataProfile::getHbsDescriptor(void) const
+const hbs_descriptor_st* wso_board::HbsDataProfile::getHbsDescriptor(void) const
 {
 	return &impl().HBS_descriptor;
 }
 
-const HbsBulkBuffer* wso_board::HbsDataProfile::getHbsBulkBuffer(void) const
+const HbsBufferEntries* wso_board::HbsDataProfile::getHbsBulkBuffer(void) const
 {
 	return &impl().HBS_BlkBufTbl;
 }
@@ -407,7 +407,7 @@ const HbsSystemInitStatus* wso_board::HbsDataProfile::getHbsSystemInitStatus(voi
 	return &impl().HBS_SysInitStatus;
 }
 
-const HbsSystemConfigure* wso_board::HbsDataProfile::getHbsSystemConfigure(void) const
+const HbsSystemConfig* wso_board::HbsDataProfile::getHbsSystemConfigure(void) const
 {
 	return &impl().HBS_SysCfg;
 }
@@ -502,7 +502,7 @@ const HbsLsoScanner* wso_board::HbsDataProfile::getHbsLsoScanner(void) const
 	return &impl().HBS_LsoScanner;
 }
 
-const HbsGalvanometer* wso_board::HbsDataProfile::getHbsGalvanometer(void) const
+const HbsOctGalvano* wso_board::HbsDataProfile::getHbsGalvanometer(void) const
 {
 	return &impl().HBS_Galvanometer;
 }

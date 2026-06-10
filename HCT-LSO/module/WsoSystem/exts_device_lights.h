@@ -11,30 +11,10 @@ namespace wso_system
 	{
 		// SLO sources 
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////
-		bool WSOSYSTEM_DLL_API __stdcall obtainQldStatusParam(LightType type, QldStatusParam* param, bool reload);
-		bool WSOSYSTEM_DLL_API __stdcall obtainQldChannelStatus(LightType type, QldStatusParam* param, bool reload);
-		bool WSOSYSTEM_DLL_API __stdcall obtainQldChannelHeader(LightType type, QldStatusParam* param, bool reload);
-		bool WSOSYSTEM_DLL_API __stdcall obtainQldChannelProfile(LightType type, int profile, QldStatusParam* param, bool reload);
-		
-		bool WSOSYSTEM_DLL_API __stdcall submitQldChannelHeader(LightType type, const QldStatusParam* param);
-		bool WSOSYSTEM_DLL_API __stdcall submitQldChannelProfile(LightType type, int profile, const QldStatusParam* param);
-
-		bool WSOSYSTEM_DLL_API __stdcall commitQldChannelHeaderToMemory(LightType type);
-		bool WSOSYSTEM_DLL_API __stdcall commitQldChannelProfileToMemory(LightType type, int profile);
-		bool WSOSYSTEM_DLL_API __stdcall fetchQldChannelHeaderFromMemory(LightType type);
-		bool WSOSYSTEM_DLL_API __stdcall fetchQldChannelProfileFromMemory(LightType type, int profile);
-
 		bool WSOSYSTEM_DLL_API __stdcall turnOnLight(LightType type);
 		bool WSOSYSTEM_DLL_API __stdcall turnOffLight(LightType type);
 		bool WSOSYSTEM_DLL_API __stdcall isLightOn(LightType type);
 
-		bool WSOSYSTEM_DLL_API __stdcall setQldApcAccMode(LightType type, int mode);
-		bool WSOSYSTEM_DLL_API __stdcall setQldCurrentLimitLevel(LightType type, int limit);
-		bool WSOSYSTEM_DLL_API __stdcall setQldReferenceIntensity(LightType type, int profile, int normal, int value);
-		bool WSOSYSTEM_DLL_API __stdcall setQldApcGainResistorDcode(LightType type, int profile, int dcode);
-		bool WSOSYSTEM_DLL_API __stdcall setQldActiveProfile(LightType type, int profile, int normal);
-
-		bool WSOSYSTEM_DLL_API __stdcall obtainQldControlResult(LightType type, int* result, bool reload);
 		bool WSOSYSTEM_DLL_API __stdcall obtainAdcSensorStatus(AdcSensorStatus* status, bool reload);
 
 

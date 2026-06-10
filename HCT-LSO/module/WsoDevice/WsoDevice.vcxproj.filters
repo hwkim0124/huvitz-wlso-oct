@@ -114,6 +114,12 @@
     <ClInclude Include="ZstageMotor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SldLaserDriver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OctSldLed.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -201,6 +207,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ZstageMotor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SldLaserDriver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="OctSldLed.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

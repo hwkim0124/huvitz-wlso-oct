@@ -169,8 +169,10 @@
     <ClInclude Include="OctFocusMotor.h" />
     <ClInclude Include="OctPolarMotor.h" />
     <ClInclude Include="OctReferMotor.h" />
+    <ClInclude Include="OctSldLed.h" />
     <ClInclude Include="RetinaCamera.h" />
     <ClInclude Include="RetinaIrLed.h" />
+    <ClInclude Include="SldLaserDriver.h" />
     <ClInclude Include="slo_scan_defs.h" />
     <ClInclude Include="SwingMotor.h" />
     <ClInclude Include="wso_device.h" />
@@ -204,8 +206,10 @@
     <ClCompile Include="OctFocusMotor.cpp" />
     <ClCompile Include="OctPolarMotor.cpp" />
     <ClCompile Include="OctReferMotor.cpp" />
+    <ClCompile Include="OctSldLed.cpp" />
     <ClCompile Include="RetinaCamera.cpp" />
     <ClCompile Include="RetinaIrLed.cpp" />
+    <ClCompile Include="SldLaserDriver.cpp" />
     <ClCompile Include="StageMotor.cpp" />
     <ClCompile Include="StepMotor.cpp" />
     <ClCompile Include="SwingMotor.cpp" />

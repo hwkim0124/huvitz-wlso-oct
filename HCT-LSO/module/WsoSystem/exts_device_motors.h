@@ -39,23 +39,18 @@ namespace wso_system
 
 		// PI Sensor Vaule
 		///////////////////////////////////////////////////////////////////////////////////////////
-		bool WSOSYSTEM_DLL_API __stdcall isMirrorMotorAtOrigin(void);
 		bool WSOSYSTEM_DLL_API __stdcall isTiltMotorAtHighLimit(void);
 		bool WSOSYSTEM_DLL_API __stdcall isTiltMotorAtLowLimit(void);
 		bool WSOSYSTEM_DLL_API __stdcall isSwingMotorAtHighLimit(void);
 		bool WSOSYSTEM_DLL_API __stdcall isSwingMotorAtLowLimit(void);
 		bool WSOSYSTEM_DLL_API __stdcall isFixationMotorAtOrigin(void);
-		bool WSOSYSTEM_DLL_API __stdcall isIcgaFilterMotorAtOrigin(void);
 		bool WSOSYSTEM_DLL_API __stdcall isOctFocusMotorAtOrigin(void);
 		bool WSOSYSTEM_DLL_API __stdcall isOctPolarMotorAtOrigin(void);
 		bool WSOSYSTEM_DLL_API __stdcall isOctReferMotorAtOrigin(void);
-		bool WSOSYSTEM_DLL_API __stdcall isSloFocusMotorAtOrigin(void);
+		bool WSOSYSTEM_DLL_API __stdcall isLsoFocusMotorAtOrigin(void);
 		bool WSOSYSTEM_DLL_API __stdcall isYaxisMotorAtHighLimit(void);
 		bool WSOSYSTEM_DLL_API __stdcall isYaxisMotorAtLowLimit(void);
 
-		bool WSOSYSTEM_DLL_API __stdcall isAdapterLensDetached(void);
-		bool WSOSYSTEM_DLL_API __stdcall isAnteriorLensAttached(void);
-		bool WSOSYSTEM_DLL_API __stdcall isWideAngleLensAttached(void);
 	}
 
 }

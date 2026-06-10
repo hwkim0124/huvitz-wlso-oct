@@ -172,6 +172,7 @@
     <ClInclude Include="wso_ctypes.h" />
     <ClInclude Include="wso_def.h" />
     <ClInclude Include="HbsStructs.h" />
+    <ClInclude Include="wso_hbs2.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />

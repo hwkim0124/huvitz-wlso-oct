@@ -1,5 +1,9 @@
 #pragma once
 
+#include "OctSldLed.h"
+#include "SldLaserDriver.h"
+#include "ZynqXadcDriver.h"
+
 #include "StepMotor.h"
 #include "OctFocusMotor.h"
 #include "OctPolarMotor.h"

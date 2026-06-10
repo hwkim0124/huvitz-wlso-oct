@@ -219,7 +219,8 @@ namespace wso_device
 		MSG_CMD = 0xC5,
 		MSG_RESP = 0xCC,
 		STATUS_OK = 0x01,
-		STATUS_ERR = 0x02
+		STATUS_ERR = 0x02, 
+		STATUS_RETRY = 0x03,
 	};
 
 	enum class ScanModeType : unsigned short
@@ -263,8 +264,12 @@ namespace wso_device
 		RNGELED = 0x0209,
 		RNGFLED = 0x020A,
 		PNL_LED = 0x020B,
+		SLD_CTRL = 0x020C,
 		LCDFIXPARAM = 0x020E,
 		LCDFIXA = 0x020F,
+		SLD_POTENTIO = 0x0210,
+		FLASH_SLD_POT = 0x0211,
+		GET_SLD_POT = 0x0212,
 
 		FPGA_UP = 0xF00F,
 		UPDATE_CAL_ROM = 0xF033,
@@ -296,10 +301,17 @@ namespace wso_device
 		LOAD_CALIB = 0x4100,
 		SAVE_CALIB = 0x4101,
 		LOAD_CALIB2 = 0x4102,
-		SAVE_CALIB2 = 0x4103,
+		SAVE_CALIB2 = 0x4103, 
+
+		ERASE_CALBLOCK = 0x4104, 
+		FLASH_CALBLOCK = 0x4105,
+		LOAD_FLASHCALIB = 0x4106,
 
 		LSO_SCANNER_CTRL = 0x6000,
 		LSO_Y_GALVO_MOVE = 0x6001,
+		OCT_PHASE_CTRL = 0x7000,
+		OCT_SET_PHASE = 0x7001,
+		/*
 		SLO_CAPTURE_CMD = 0x6002,
 		SLO_AGAIN = 0x6003,
 		SLO_AOFFSET = 0x6004,
@@ -314,6 +326,7 @@ namespace wso_device
 		QLD_WRITE_LD_INFO = 0x7004, 
 		QLD_READ_LD_INFO = 0x7005,
 		QLD_SET_PROFILE = 0x7006,
+		*/
 
 		SET_LSRC_CFG = 0x7700,
 	};

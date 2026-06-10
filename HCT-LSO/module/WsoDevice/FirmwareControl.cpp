@@ -168,7 +168,7 @@ bool wso_device::FirmwareControl::writeUpgradeFirmware(unsigned char* binary, in
 	auto* hbs = impl().board->getHbsDataProfile();
 	auto data = hbs->getHbsBulkBuffer();
 
-	unsigned int zynq_buf_addr = data->TBL_blk_buf_desc[0].buf_addr;
+	unsigned int zynq_buf_addr = data->entries[0].buf_addr;
 
 	unique_lock<mutex> lock(impl().mutexLock);
 	CallbackRegistry::getInstance()->runFirmwareMsgCallback("Downloading file..", 0, 0, false, false);

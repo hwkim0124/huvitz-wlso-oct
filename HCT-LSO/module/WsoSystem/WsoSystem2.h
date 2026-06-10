@@ -30,8 +30,6 @@
 #include "cpp_util.h"
 #include "oct_report.h"
 #include "segm_proc.h"
-#include "slo_grab.h"
-#include "slo_scan.h"
 
 
 namespace wso_system

@@ -2,6 +2,10 @@
 #include "MainBoard.h"
 #include "UsbComm.h"
 
+#include "OctSldLed.h"
+#include "SldLaserDriver.h"
+#include "ZynqXadcDriver.h"
+
 #include "StepMotor.h"
 #include "OctFocusMotor.h"
 #include "OctPolarMotor.h"
@@ -61,6 +65,9 @@ struct MainBoard::MainBoardImpl
 	unordered_map<LightType, unique_ptr<LightLed>> lightLeds;
 	unordered_map<MotorType, unique_ptr<StepMotor>> stepMotors;
 	unordered_map<MotorType, std::unique_ptr<StageMotor>> stageMotors;
+
+	SldLaserDriver sldLaserDriver;
+	ZynqXadcDriver zyncXadcDriver;
 
 	unique_ptr<Galvanometer> octGalvano;
 	unique_ptr<FirmwareControl> firmwareControl;
@@ -538,22 +545,16 @@ bool wso_device::MainBoard::waitForSystemReady(void)
 	bool result = getUsbComm().checkSystemReadyGPIO();
 	return result;
 }
-/*
+
 bool wso_device::MainBoard::prepareDevicesForOctScan(void)
 {
 	bool res = turnOnOctScanBeam(true);
-
-	getOctMirrorMotor()->updatePositionToMirrorIn();
-	getIcgaFilterMotor()->updatePositionToMirrorOut();
-	getFixationMotor()->updatePositionToOrigin();
 	return res;
 }
 
 bool wso_device::MainBoard::releaseDevicesForOctScan(void)
 {
 	turnOnOctScanBeam(false);
-
-	// getOctMirrorMotor()->updatePositionToMirrorOut();
 	return true;
 }
 
@@ -565,6 +566,7 @@ bool wso_device::MainBoard::turnOnOctScanBeam(bool flag)
 	return false;
 }
 
+/*
 bool wso_device::MainBoard::prepareDevicesForSloScan(bool oct_preview, float diopt)
 {
 	if (oct_preview) {
@@ -594,7 +596,7 @@ bool wso_device::MainBoard::loadHostBufferTable(void)
 	
 	hbs->setHbsDataComm(&impl().usbComm);
 
-	if (hbs->loadHbsDescriptor()) {
+	if (hbs->loadHbsTableHeader()) {
 		LogD() << "HBS descriptor loaded from board.";
 	} else {
 		LogD() << "HBS descriptor not loaded!";
@@ -615,7 +617,7 @@ bool wso_device::MainBoard::loadHostBufferTable(void)
 
 	hbsSub->setHbsDataComm(&impl().subComm);
 
-	if (hbsSub->loadHbsDescriptor()) {
+	if (hbsSub->loadHbsTableHeader()) {
 		LogD() << "HBS descriptor loaded from Sub board.";
 	}
 	else {
@@ -825,6 +827,20 @@ bool wso_device::MainBoard::isOctReferMotorAtOrigin(void)
 	return false;
 }
 
+bool wso_device::MainBoard::isLsoFocusMotorAtOrigin(void)
+{
+	/*
+	if (getHbsDataProfile()->loadGpioStatus()) {
+		auto* gpio = getHbsDataProfile()->getHbsGpioStatus();
+		auto status = gpio->PIstatus;
+		if (status & (0x01 << 1)) {
+			return true;
+		}
+	}
+	*/
+	return false;
+}
+
 bool wso_device::MainBoard::isYaxisMotorAtHighLimit(void)
 {
 	if (getHbsDataProfile()->loadGpioStatus()) {
@@ -971,6 +987,21 @@ UsbComm& wso_device::MainBoard::getUsbComm(void) const
 UsbComm& wso_device::MainBoard::getSubComm(void) const
 {
 	return impl().subComm;
+}
+
+OctSldLed* wso_device::MainBoard::getOctSldLed(void) const
+{
+	return (OctSldLed*)getLightLed(LightType::OCT_SLD);
+}
+
+SldLaserDriver* wso_device::MainBoard::getSldLaserDriver(void) const
+{
+	return &impl().sldLaserDriver;
+}
+
+ZynqXadcDriver* wso_device::MainBoard::getZyncXadcDriver(void) const
+{
+	return &impl().zyncXadcDriver;
 }
 
 

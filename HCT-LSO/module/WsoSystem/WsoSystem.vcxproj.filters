@@ -57,16 +57,10 @@
     <ClInclude Include="exts_hardware.h">
       <Filter>Header Files\externs</Filter>
     </ClInclude>
-    <ClInclude Include="exts_slo_scanner.h">
-      <Filter>Header Files\externs</Filter>
-    </ClInclude>
     <ClInclude Include="exts_sys_config.h">
       <Filter>Header Files\externs</Filter>
     </ClInclude>
     <ClInclude Include="exts_system.h">
-      <Filter>Header Files\externs</Filter>
-    </ClInclude>
-    <ClInclude Include="exts_slo_scanning.h">
       <Filter>Header Files\externs</Filter>
     </ClInclude>
     <ClInclude Include="exts_oct_scanning.h">
@@ -98,6 +92,9 @@
     </ClInclude>
     <ClInclude Include="exts_oct_calibration.h">
       <Filter>Header Files\externs</Filter>
+    </ClInclude>
+    <ClInclude Include="WsoSystem.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -131,16 +128,10 @@
     <ClCompile Include="exts_hardware.cpp">
       <Filter>Source Files\externs</Filter>
     </ClCompile>
-    <ClCompile Include="exts_slo_scanner.cpp">
-      <Filter>Source Files\externs</Filter>
-    </ClCompile>
     <ClCompile Include="exts_sys_config.cpp">
       <Filter>Source Files\externs</Filter>
     </ClCompile>
     <ClCompile Include="exts_system.cpp">
-      <Filter>Source Files\externs</Filter>
-    </ClCompile>
-    <ClCompile Include="exts_slo_scanning.cpp">
       <Filter>Source Files\externs</Filter>
     </ClCompile>
     <ClCompile Include="exts_oct_scanning.cpp">

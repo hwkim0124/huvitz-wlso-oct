@@ -21,7 +21,7 @@ namespace wso_board
 	public:
 		void setHbsDataComm(HbsDataComm* comm);
 
-		bool loadHbsDescriptor(void);
+		bool loadHbsTableHeader(void);
 		bool loadHbsTableData(void);
 
 		bool loadBulkBuffer(void);
@@ -46,13 +46,13 @@ namespace wso_board
 		bool saveLsoScannerParam(void);
 		bool saveGalvanoDynamicParam(void);
 
-		const HbsDescriptor* getHbsDescriptor(void) const;
-		const HbsBulkBuffer* getHbsBulkBuffer(void) const;
+		const HbsTableDescriptor* getHbsDescriptor(void) const;
+		const HbsBufferEntries* getHbsBulkBuffer(void) const;
 		const HbsCalibration* getHbsCalibration(void) const;
 		const HbsConfiguration* getHbsConfiguration(void) const;
 		const HbsMainBoardVersion* getHbsMainBoardVersion(void) const;
 		const HbsSystemInitStatus* getHbsSystemInitStatus(void) const;
-		const HbsSystemConfigure* getHbsSystemConfigure(void) const;
+		const HbsSystemConfig* getHbsSystemConfigure(void) const;
 		const HbsGpioStatus* getHbsGpioStatus(void) const;
 		const HbsSldStatus* getHbsSldStatus(void) const;
 
@@ -75,7 +75,7 @@ namespace wso_board
 		const HbsInfraredCameraStatus* getHbsIrCameraStatus(void) const;
 		const HbsLedStatus* getHbsLedStatus(void) const;
 		const HbsLsoScanner* getHbsLsoScanner(void) const;
-		const HbsGalvanometer* getHbsGalvanometer(void) const;
+		const HbsOctGalvano* getHbsGalvanometer(void) const;
 		const HbsGalvanoDynamicParam* getHbsGalvanoDynamicParam(void);
 		const HbsZyncXADC* getHbsZyncXADC(void) const;
 

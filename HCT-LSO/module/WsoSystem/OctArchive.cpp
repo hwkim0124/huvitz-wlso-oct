@@ -1,7 +1,5 @@
 #include "pch.h"
 #include "OctArchive.h"
-#include "SloArchive.h"
-#include "SloScanning.h"
 
 
 using namespace wso_system;
@@ -376,6 +374,7 @@ void wso_system::OctArchive::onOctMeasureImageProcessed(unsigned char* bits, int
 
 void wso_system::OctArchive::onOctProtocolPatternAcquired(bool result)
 {
+	/*
 	if (auto result = getProtocolResult(); result) {
 		if (auto slo = SloArchive::getInstance(); slo) {
 			SloFrameImageDescript desc;
@@ -385,6 +384,7 @@ void wso_system::OctArchive::onOctProtocolPatternAcquired(bool result)
 			}
 		}
 	}
+	*/
 	return;
 }
 

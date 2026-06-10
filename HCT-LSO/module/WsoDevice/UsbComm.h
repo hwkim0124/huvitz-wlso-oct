@@ -52,33 +52,33 @@ namespace wso_device
 		bool checkSystemReadyGPIO(void);
 		bool checkEyeSideGPIO(EyeSide& side);
 
-		bool readDescriptor(const HbsDescriptor* data) override;
-		bool readBulkBuffer(const HbsBulkBuffer* data, const HbsDescriptor* desc) override;
-		bool readCalibration(const HbsCalibration* data, const HbsDescriptor* desc) override;
-		bool readConfiguration(const HbsConfiguration* data, const HbsDescriptor* desc) override;
+		bool readDescriptor(const HbsTableDescriptor* data) override;
+		bool readBulkBuffer(const HbsBufferEntries* data, const HbsTableDescriptor* desc) override;
+		bool readCalibration(const HbsCalibration* data, const HbsTableDescriptor* desc) override;
+		bool readConfiguration(const HbsConfiguration* data, const HbsTableDescriptor* desc) override;
 
-		bool readMainBoardVersion(const HbsMainBoardVersion* data, const HbsDescriptor* desc) override;
-		bool readSystemInitStatus(const HbsSystemInitStatus* data, const HbsDescriptor* desc) override;
-		bool readSystemConfigure(const HbsSystemConfigure* data, const HbsDescriptor* desc) override;
-		bool readGpioStatus(const HbsGpioStatus* data, const HbsDescriptor* desc) override;
-		bool readLsoScannerParam(const HbsLsoScanner* data, const HbsDescriptor* desc) override;
-		bool readSldStatus(const HbsSldStatus* data, const HbsDescriptor* desc) override;
+		bool readMainBoardVersion(const HbsMainBoardVersion* data, const HbsTableDescriptor* desc) override;
+		bool readSystemInitStatus(const HbsSystemInitStatus* data, const HbsTableDescriptor* desc) override;
+		bool readSystemConfigure(const HbsSystemConfig* data, const HbsTableDescriptor* desc) override;
+		bool readGpioStatus(const HbsGpioStatus* data, const HbsTableDescriptor* desc) override;
+		bool readLsoScannerParam(const HbsLsoScanner* data, const HbsTableDescriptor* desc) override;
+		bool readSldStatus(const HbsSldStatus* data, const HbsTableDescriptor* desc) override;
 
-		bool readZynqXADC(const HbsZyncXADC* data, const HbsDescriptor* desc) override;
-		bool readGalvanoDynamicParam(const HbsGalvanoDynamicParam* data, const HbsDescriptor* desc) override;
-		bool readInfraredCameraStatus(const HbsInfraredCameraStatus* data, const HbsDescriptor* desc) override;
-		bool readStepMotorStatus(const HbsStepMotorStatus* data, StepMotorType type, const HbsDescriptor* desc) override;
-		bool readStageMotorStatus(const HbsStageMotorStatus* data, const HbsDescriptor* desc) override;
+		bool readZynqXADC(const HbsZyncXADC* data, const HbsTableDescriptor* desc) override;
+		bool readGalvanoDynamicParam(const HbsGalvanoDynamicParam* data, const HbsTableDescriptor* desc) override;
+		bool readInfraredCameraStatus(const HbsInfraredCameraStatus* data, const HbsTableDescriptor* desc) override;
+		bool readStepMotorStatus(const HbsStepMotorStatus* data, StepMotorType type, const HbsTableDescriptor* desc) override;
+		bool readStageMotorStatus(const HbsStageMotorStatus* data, const HbsTableDescriptor* desc) override;
 
-		bool writeCalibration(const HbsCalibration* data, const HbsDescriptor* desc) override;
-		bool writeConfiguration(const HbsConfiguration* data, const HbsDescriptor* desc) override;
-		bool writeSystemConfigure(const HbsSystemConfigure* data, const HbsDescriptor* desc) override;
-		bool writeGalvanoDynamicParam(const HbsGalvanoDynamicParam* data, const HbsDescriptor* desc) override;
-		bool writeLsoScannerParam(const HbsLsoScanner* data, const HbsDescriptor* desc) override;
+		bool writeCalibration(const HbsCalibration* data, const HbsTableDescriptor* desc) override;
+		bool writeConfiguration(const HbsConfiguration* data, const HbsTableDescriptor* desc) override;
+		bool writeSystemConfigure(const HbsSystemConfig* data, const HbsTableDescriptor* desc) override;
+		bool writeGalvanoDynamicParam(const HbsGalvanoDynamicParam* data, const HbsTableDescriptor* desc) override;
+		bool writeLsoScannerParam(const HbsLsoScanner* data, const HbsTableDescriptor* desc) override;
 
-		bool writeTrajectoryParam(std::uint8_t tid, const TrajectoryProfileParam* param, const HbsDescriptor* desc) override;
-		bool writeTrajectoryPositionsX(std::uint8_t tid, const std::int16_t* positions, std::uint16_t count, const HbsDescriptor* desc) override;
-		bool writeTrajectoryPositionsY(std::uint8_t tid, const std::int16_t* positions, std::uint16_t count, const HbsDescriptor* desc) override;
+		bool writeTrajectoryParam(std::uint8_t tid, const TrajectoryProfileParam* param, const HbsTableDescriptor* desc) override;
+		bool writeTrajectoryPositionsX(std::uint8_t tid, const std::int16_t* positions, std::uint16_t count, const HbsTableDescriptor* desc) override;
+		bool writeTrajectoryPositionsY(std::uint8_t tid, const std::int16_t* positions, std::uint16_t count, const HbsTableDescriptor* desc) override;
 
 		bool SysCalibLoad(std::uint16_t offset, std::uint16_t size);
 		bool SysCalibSave(std::uint16_t offset, std::uint16_t size);
@@ -114,6 +114,18 @@ namespace wso_device
 
 		bool LedSetIntensity(LightType type, std::uint8_t value);
 		bool LedSetMode(LightType type, std::uint8_t value);
+
+		bool LedSldControl(LightType type, std::uint8_t onOff);
+		bool LedSldPotentiometer(LightType type, std::uint8_t channel, std::uint16_t data);
+		bool LedSldGetParameters(LightType type, std::uint8_t channel = 4);
+		bool LedSldUpdateParameters(LightType type, std::uint8_t channel = 4);
+
+		bool OctReferencePhaseControl(std::uint8_t mode);
+		bool OctSetReferencePhase(std::int16_t phase);
+
+		bool CalibDataBlockErase(std::uint16_t region, std::uint16_t blockNum);
+		bool CalibDataBlockProgram(std::uint16_t region, std::uint16_t blockNum, std::uint32_t size);
+		bool CalibDataBlockLoadFlash(std::uint16_t region, std::uint16_t blockNum, std::uint32_t size);
 
 		bool GalvanoMoveX(short x);
 		bool GalvanoSlewXY(short x, short y);

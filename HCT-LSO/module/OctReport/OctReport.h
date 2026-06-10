@@ -22,6 +22,7 @@
 #include <vector>
 #include <memory>
 #include <string>
+#include <algorithm>
 
 #include "wso_domain.h"
 #include "oct_result.h"

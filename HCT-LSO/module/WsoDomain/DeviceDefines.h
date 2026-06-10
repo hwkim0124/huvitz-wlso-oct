@@ -42,8 +42,9 @@ namespace wso_domain
 		STAGE_X = 0x0A,
 		STAGE_Y = 0x0B,
 		STAGE_Z = 0x0C,
+		HEAD_REST = 0x0F,
 
-		NUM_MOTORS = (STAGE_Z + 1)
+		NUM_MOTORS = (HEAD_REST + 1)
 	};
 
 	enum class LightType : unsigned short
@@ -52,6 +53,7 @@ namespace wso_domain
 		RETINA_IR_LED = 1,
 		CORNEA_IR_LEFT_LED = 2,
 		CORNEA_IR_RIGHT_LED = 3,
+		OCT_SLD = 0x04,
 		UNKNOWN = 0xFF,
 		NUM_LIGHT_LEDS = (CORNEA_IR_RIGHT_LED + 1)
 	};
@@ -71,8 +73,9 @@ namespace wso_domain
 		STAGE_X = 0x0A,
 		STAGE_Y = 0x0B,
 		STAGE_Z = 0x0C,
+		HEAD_REST = 0x0F,
 
-		NUM_MOTORS = (STAGE_Z + 1)
+		NUM_MOTORS = (HEAD_REST + 1)
 	};
 
 	enum class StageMotorType : unsigned char

@@ -126,7 +126,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)module\CppUtil;$(SolutionDir)module\WsoDomain;$(SolutionDir)module\RetSegm;$(SolutionDir)module\SegmScan;$(SolutionDir)module\OctResult;$(SolutionDir)module\OctReport</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)module\CppUtil;$(SolutionDir)module\WsoDomain;$(SolutionDir)module\RetSegm;$(SolutionDir)module\SemtSegm;$(SolutionDir)module\SegmScan;$(SolutionDir)module\OctResult;$(SolutionDir)module\OctReport;$(SolutionDir)packages\vcpkg-wsotoolkit.1.0.0\installed\x64-windows\include\opencv4</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -147,7 +147,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)module\CppUtil;$(SolutionDir)module\WsoDomain;$(SolutionDir)module\RetSegm;$(SolutionDir)module\SemtSegm;$(SolutionDir)module\SegmScan;$(SolutionDir)module\OctResult;$(SolutionDir)module\OctReport</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)module\CppUtil;$(SolutionDir)module\WsoDomain;$(SolutionDir)module\RetSegm;$(SolutionDir)module\SemtSegm;$(SolutionDir)module\SegmScan;$(SolutionDir)module\OctResult;$(SolutionDir)module\OctReport;$(SolutionDir)packages\vcpkg-wsotoolkit.1.0.0\installed\x64-windows\include\opencv4</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

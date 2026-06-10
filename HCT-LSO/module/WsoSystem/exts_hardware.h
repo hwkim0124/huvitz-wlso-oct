@@ -20,16 +20,13 @@ namespace wso_system
 
 		// Cornea Camera
 		///////////////////////////////////////////////////////////////////////////////////////////
-		bool WSOSYSTEM_DLL_API __stdcall startCorneaCameraPreview(CorneaCameraFrameCaptured clb);
-		bool WSOSYSTEM_DLL_API __stdcall closeCorneaCameraPreview(void);
-		bool WSOSYSTEM_DLL_API __stdcall isCorneaCameraPreviewing(void);
-		float WSOSYSTEM_DLL_API __stdcall getCorneaCameraAgain(void);
-		float WSOSYSTEM_DLL_API __stdcall getCorneaCameraDgain(void);
-		bool WSOSYSTEM_DLL_API __stdcall setCorneaCameraAgain(float value);
-		bool WSOSYSTEM_DLL_API __stdcall setCorneaCameraDgain(float value);
-
-		int WSOSYSTEM_DLL_API __stdcall getWorkingDotIntensity(int index);
-		bool WSOSYSTEM_DLL_API __stdcall setWorkingDotIntensity(int index, int value);
+		bool WSOSYSTEM_DLL_API __stdcall startCorneaCameraPreview(InfraredCameraId camId, CorneaCameraFrameCaptured clb);
+		bool WSOSYSTEM_DLL_API __stdcall closeCorneaCameraPreview(InfraredCameraId camId);
+		bool WSOSYSTEM_DLL_API __stdcall isCorneaCameraPreviewing(InfraredCameraId camId);
+		float WSOSYSTEM_DLL_API __stdcall getCorneaCameraAgain(InfraredCameraId camId);
+		float WSOSYSTEM_DLL_API __stdcall getCorneaCameraDgain(InfraredCameraId camId);
+		bool WSOSYSTEM_DLL_API __stdcall setCorneaCameraAgain(InfraredCameraId camId, float value);
+		bool WSOSYSTEM_DLL_API __stdcall setCorneaCameraDgain(InfraredCameraId camId, float value);
 
 
 		// Chinrest

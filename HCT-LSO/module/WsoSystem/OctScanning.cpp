@@ -468,7 +468,7 @@ bool wso_system::OctScanning::alignScanFocusToReadyPosition(bool init_scan, bool
 			control->moveOctReferenceToOrigin(anter);
 			control->changeOctDiopterFocus(diopt);
 			control->moveOctPolarizationToOrigin();
-			control->moveFixationToOrigin();
+			// control->moveFixationToOrigin();
 		}
 		else {
 			// At the subsequent measures.
@@ -569,6 +569,7 @@ bool wso_system::OctScanning::captureMeasureResult(void)
 	if (auto p = impl().mainboard; p) {
 		impl().protocol.eyeSide = p->getEyeSide();
 
+		/*
 		OctCorneaImageDescript image;
 		if (p->getCorneaCamera()->captureFrame(image)) {
 			if (auto archive = OctArchive::getInstance(); archive) {
@@ -577,6 +578,7 @@ bool wso_system::OctScanning::captureMeasureResult(void)
 				}
 			}
 		}
+		*/
 	}
 	return false;
 }

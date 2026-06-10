@@ -42,10 +42,10 @@ void WSOSYSTEM_DLL_API __stdcall wso_system::releaseAdapterLensAttached(void)
 	return;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::startCorneaCameraPreview(CorneaCameraFrameCaptured clb)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::startCorneaCameraPreview(InfraredCameraId camId, CorneaCameraFrameCaptured clb)
 {
 	if (auto* inst = Hardware::getInstance(); inst) {
-		if (auto* p = inst->getMainBoard()->getCorneaCamera(); p) {
+		if (auto* p = inst->getMainBoard()->getCorneaCamera(camId); p) {
 			inst->connectCorneaCameraImageCaptured(clb);
 			return p->play();
 		}
@@ -53,10 +53,10 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::startCorneaCameraPreview(CorneaCame
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::closeCorneaCameraPreview(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::closeCorneaCameraPreview(InfraredCameraId camId)
 {
 	if (auto* inst = Hardware::getInstance(); inst) {
-		if (auto* p = inst->getMainBoard()->getCorneaCamera(); p) {
+		if (auto* p = inst->getMainBoard()->getCorneaCamera(camId); p) {
 			p->pause();
 			inst->disconnectCorneaCameraImageCaptured();
 			return true;
@@ -65,10 +65,10 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::closeCorneaCameraPreview(void)
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isCorneaCameraPreviewing(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isCorneaCameraPreviewing(InfraredCameraId camId)
 {
 	if (auto* inst = Hardware::getInstance(); inst) {
-		if (auto* p = inst->getMainBoard()->getCorneaCamera(); p) {
+		if (auto* p = inst->getMainBoard()->getCorneaCamera(camId); p) {
 			auto result = p->isPlaying();
 			return result;
 		}
@@ -76,55 +76,38 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::isCorneaCameraPreviewing(void)
 	return false;
 }
 
-float WSOSYSTEM_DLL_API __stdcall wso_system::getCorneaCameraAgain(void)
+float WSOSYSTEM_DLL_API __stdcall wso_system::getCorneaCameraAgain(InfraredCameraId camId)
 {
-	if (auto* p = Hardware::getInstance()->getMainBoard()->getCorneaCamera(); p) {
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getCorneaCamera(camId); p) {
 		return p->getAnalogGain();
 	}
 	return 0.0f;
 }
 
-float WSOSYSTEM_DLL_API __stdcall wso_system::getCorneaCameraDgain(void)
+float WSOSYSTEM_DLL_API __stdcall wso_system::getCorneaCameraDgain(InfraredCameraId camId)
 {
-	if (auto* p = Hardware::getInstance()->getMainBoard()->getCorneaCamera(); p) {
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getCorneaCamera(camId); p) {
 		return p->getDigitalGain();
 	}
 	return 0.0f;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::setCorneaCameraAgain(float value)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::setCorneaCameraAgain(InfraredCameraId camId, float value)
 {
-	if (auto* p = Hardware::getInstance()->getMainBoard()->getCorneaCamera(); p) {
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getCorneaCamera(camId); p) {
 		return p->setAnalogGain(value, true);
 	}
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::setCorneaCameraDgain(float value)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::setCorneaCameraDgain(InfraredCameraId camId, float value)
 {
-	if (auto* p = Hardware::getInstance()->getMainBoard()->getCorneaCamera(); p) {
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getCorneaCamera(camId); p) {
 		return p->setDigitalGain(value, true);
 	}
 	return false;
 }
 
-int WSOSYSTEM_DLL_API __stdcall wso_system::getWorkingDotIntensity(int index)
-{
-	if (auto* p = Hardware::getInstance()->getMainBoard()->getCorneaCamera(); p) {
-		auto value = p->getWdotIntensity(index);
-		return value;
-	}
-	return 0;
-}
-
-bool WSOSYSTEM_DLL_API __stdcall wso_system::setWorkingDotIntensity(int index, int value)
-{
-	if (auto* p = Hardware::getInstance()->getMainBoard()->getCorneaCamera(); p) {
-		auto result = p->setWdotIntensity(index, value);
-		return result;
-	}
-	return false;
-}
 
 bool WSOSYSTEM_DLL_API __stdcall wso_system::moveChinrestUp(void)
 {

@@ -20,7 +20,7 @@ namespace wso_board
 
 #define TBL_BLKBUF_ID 0
 #define TBL_CALBLKBUF_ID 1
-#define TBL_SYSCAL_ID 2
+#define TBL_SYSCAL_ID 2         // Reserved. 
 #define TBL_MB_VER_INFO_ID 3
 #define TBL_SYS_INIT_STATUS_ID 4
 #define TBL_SYS_CFG_ID 5
@@ -45,9 +45,9 @@ namespace wso_board
 #define TBL_LSO_SCANNER_ID 24
 #define TBL_OCT_GAVANO_ID 25
 #define TBL_RET_IR_CAM_STATUS_ID 26
-#define TBL_ANT_IR_CAM_0_STATUS_ID 27
-#define TBL_ANT_IR_CAM_1_STATUS_ID 28
-#define TBL_ANT_IR_CAM_2_STATUS_ID 29
+#define TBL_ANT_IR_CAM_0_STATUS_ID 27   // Low Side
+#define TBL_ANT_IR_CAM_1_STATUS_ID 28   // Left
+#define TBL_ANT_IR_CAM_2_STATUS_ID 29   // Right
 
 #define HBS_TBL_VERSION 1
 #define HBS_TBL_DESCRIPTOR_ADDR 0xFFFF0000
@@ -56,7 +56,7 @@ namespace wso_board
 #define MAX_OCT_DAC_SAMPLE_SIZE 16384
 #define MAX_TRAJ_NUM 32
 #define MAX_LSO_TRAJ_NUM 8
-#define MAX_STEP_MOTOR_NUM 13
+#define MAX_STEP_MOTOR_NUM 16
 
 
     /////////////////////////////////////////////////////////////////////////////////////////////
@@ -65,36 +65,48 @@ namespace wso_board
         U32 count;
         U32 header_chksum;
         U32 table_chksum;
-    } HBS_DescHeader_St;
+    } hbs_table_header_st;
 
     typedef struct {
         U32 buf_addr;
         U32 buf_size;
-    } TBL_desc_st;
+    } hbs_table_entry_st;
 
     typedef struct {
-        HBS_DescHeader_St HBS_DescHeader;
-        TBL_desc_st TBL_desc[HBS_MAX_TBL_ITEM_NUM];
-    } HBS_descriptor_st;
+        hbs_table_header_st header;
+        hbs_table_entry_st entries[HBS_MAX_TBL_ITEM_NUM];
+    } hbs_descriptor_st;
     
     typedef struct {
         U32 count;
         U32 header_chksum;
         U32 table_chksum;
-    } blk_buf_desc_header_st;
+    } block_buffer_header_st;
 
     typedef struct {
-        blk_buf_desc_header_st blk_buf_desc_header;
-        TBL_desc_st TBL_blk_buf_desc[BLK_BUF_TBL_NUM];
-    } blk_buf_desc_st;
+        U32 buf_addr;
+        U32 buf_size;
+    } block_buffer_entry_st;
+
+    typedef struct {
+        block_buffer_header_st header;
+        block_buffer_entry_st entries[BLK_BUF_TBL_NUM];
+    } buffer_descriptor_st;
 
 
 
     //////////////////////////////////////////////////////////////////////////////////////////////
     typedef struct {
-        S8 AppVer[8];  // Applicatin version
-        S8 FpgaVer[8]; // FPGA version
-    } MainBoardVerInfo_st;
+        S8 app_ver[8];  // Applicatin version
+        S8 fpga_ver[8]; // FPGA version
+    } mainboard_version_st;
+
+    typedef struct {
+        U32 status; // 0 initializing,1: fail,2 OK
+        U32 dev_status;
+        U16 DevErrCode[32];
+        U16 model_cfg; // model id added , 2018.11.21
+    } SysInitStatus_st;
 
     typedef struct {
         S8 SysSerialNo[16];
@@ -110,13 +122,6 @@ namespace wso_board
         U16 AutoSlew;
         U32 SlewRate;
     } SysCfg_st; // 256 bytes
-
-    typedef struct {
-        U32 Status; // 0 initializing,1: fail,2 OK
-        U32 DevStatus;
-        U16 DevErrCode[32];
-        U16 model_cfg; // model id added , 2018.11.21
-    } SysInitStatus_st;
 
 
     //////////////////////////////////////////////////////////////////////////////////////////////
@@ -155,9 +160,25 @@ namespace wso_board
     } StepMotorInfo_st;
 
     typedef struct {
-        S16 LimitSensorStatus[2]; //
+		S16 LimitSensorStatus[2]; // [0] : Low limit, [1] : High limit
         S16 limit_overide;        // 2019.11
     } DC_CR_Motor_st;
+
+    typedef struct {
+        U32 min_speed_pps;
+        U32 max_speed_pps;
+        U32 acc_step;
+
+        S32 sm_init_dir;
+        S32 sm_pos_min; // minus end position,added 2013.9.27;
+        S32 sm_pos_max; // plus end position//added 2013.9.27;
+        S32 sm_init_pos;
+        S32 pi_detect_max;
+        S32 sm_pi_escape_pulse;
+        
+        S32 sm_pi_hit_ref_pos;   // expected PI signal level change position
+        S32 sm_pi_hit_margin;    // expected PI signal level margin, ref_pos+- margin.
+    } step_m_init_table_st;
 
 
     ///////////////////////////////////////////////////////////////////////////////////////
@@ -325,18 +346,6 @@ namespace wso_board
 
     //////////////////////////////////////////////////////////////////////////////////////
     typedef struct {
-        char DeviceSN[32];     // Max 32 bytes, ASCII String
-        char MfgDate[16];      // Max 16 bytes,ASCII string.
-        char DeviceProcNo[32]; // Max 32 bytes, ASCII string
-    } MfgDeviceRecord_st;    // Manufacturing Device Recode
-
-    typedef struct {
-        U8 UseModuleEnables;     // 1:enable, 0:disable
-        U8 MotorEnable[16];      // If 1:enabled, 0:disabled.
-        U8 ModuleEnableMask[16]; // If 1:enabled, 0:disabled.
-    } ModuleEnable_st;
-
-    typedef struct {
         U32 crc;
         U32 RomBlkBaseAddr; // Flash ROM each CalBlkx start addr
         U32 RomBlkSize; // Flash ROM each Calblkx size of bytes : sizeof(CalBlkx_st)
@@ -377,6 +386,18 @@ namespace wso_board
     } CalBlk3_st; // galvano calibration parameters.reserved.
 
     typedef struct {
+        char DeviceSN[32];     // Max 32 bytes, ASCII String
+        char MfgDate[16];      // Max 16 bytes,ASCII string.
+        char DeviceProcNo[32]; // Max 32 bytes, ASCII string
+    } MfgDeviceRecord_st;    // Manufacturing Device Recode
+
+    typedef struct {
+        U8 UseModuleEnables;     // 1:enable, 0:disable
+        U8 MotorEnable[16];      // If 1:enabled, 0:disabled.
+        U8 ModuleEnableMask[16]; // If 1:enabled, 0:disabled.
+    } ModuleEnable_st;
+
+    typedef struct {
         U32 crc; //
         MfgDeviceRecord_st MfgDeviceRecord;
         ModuleEnable_st ModuleEnable;
@@ -385,11 +406,18 @@ namespace wso_board
 
     typedef struct {
         U32 crc;
-        U16 step_m_init_table[MAX_STEP_MOTOR_NUM];
+        step_m_init_table_st step_m_init_table[MAX_STEP_MOTOR_NUM];
         U16 sm_dac_ch_low_torque[MAX_STEP_MOTOR_NUM];
         U16 sm_dac_ch_high_torque[MAX_STEP_MOTOR_NUM];
     } CalBlk5_st;
 
+    typedef struct {
+		U32 crc;
+    } CalBlk6_st;
+
+    typedef struct {
+        U32 crc;
+    } CalBlk7_st;
 
     //////////////////////////////////////////////////////////////////////////////////////
     typedef struct
