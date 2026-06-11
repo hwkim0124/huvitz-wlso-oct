@@ -10,6 +10,7 @@
 # =====================================================================
 
 externs/*
+program/TestWsoSystem/obj/
 
 # ---------------------------------------------------------------------
 # Repo-specific output folders (resolve under HCT-LSO/)
@@ -38,7 +39,7 @@ nupkgs/restored/
 # !deploy/**/*.json
 # !deploy/**/LICENSE*
 # !deploy/**/THIRD-PARTY-NOTICES*
-
+deploy/
 
 # ---------------------------------------------------------------------
 # Visual Studio user / workspace files
