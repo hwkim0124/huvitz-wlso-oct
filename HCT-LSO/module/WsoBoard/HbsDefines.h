@@ -6,8 +6,8 @@
 namespace wso_board
 {
 	using HbsTableDescriptor = hbs_descriptor_st;
-	using HbsBufferEntries = buffer_descriptor_st;
-	using HbsCalibEntries = HBS_CalBlockBuffer_st;
+	using HbsBufferDescriptor = buffer_descriptor_st;
+	using HbsCalibsDescriptor = HBS_CalBlockBuffer_st;
 
 	using HbsMainBoardVersion = mainboard_version_st;
 	using HbsSystemInitStatus = SysInitStatus_st;
@@ -36,12 +36,12 @@ namespace wso_board
 	using HbsAnteriorCamera2 = IRCamStatus_st;
 	using HbsAnteriorCamera3 = IRCamStatus_st;
 
-	using HbsCalibMotorPos = CalBlk0_st;
+	using HbsCalibMotorSets = CalBlk0_st;
 	using HbsCalibOctParams = CalBlk1_st;
 	using HbsCalibOctSource = CalBlk2_st;
 	using HbsCalibOctGalvano = CalBlk3_st;
 	using HbsCalibDeviceCfg = CalBlk4_st;
-	using HbsCalibStepMotor = CalBlk5_st;
+	using HbsCalibStepMotors = CalBlk5_st;
 	using HbsCalibFactorySet1 = CalBlk6_st;
 	using HbsCalibFactorySet2 = CalBlk7_st;
 

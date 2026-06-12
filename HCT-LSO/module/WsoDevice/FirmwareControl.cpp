@@ -166,7 +166,7 @@ bool wso_device::FirmwareControl::writeUpgradeFirmware(unsigned char* binary, in
 	}
 
 	auto* hbs = impl().board->getHbsDataProfile();
-	auto data = hbs->getHbsBulkBuffer();
+	auto data = hbs->getHbsBufferDescriptor();
 
 	unsigned int zynq_buf_addr = data->entries[0].buf_addr;
 
@@ -274,7 +274,7 @@ int wso_device::FirmwareControl::waitForState(int state, int timeoutMs)
 	}
 
 	auto* hbs = impl().board->getHbsDataProfile();
-	auto* hDesc = hbs->getHbsDescriptor();
+	auto* hDesc = hbs->getHbsTableDescriptor();
 	HbsGpioStatus* status = new HbsGpioStatus();
 
 	int elapsed = 0;
@@ -314,7 +314,7 @@ int wso_device::FirmwareControl::waitWhileState(int state, int timeoutMs, int fl
 	}
 
 	auto* hbs = impl().board->getHbsDataProfile();
-	auto* hDesc = hbs->getHbsDescriptor();
+	auto* hDesc = hbs->getHbsTableDescriptor();
 	HbsGpioStatus* status = new HbsGpioStatus();
 
 
@@ -384,7 +384,7 @@ bool wso_device::FirmwareControl::isState(int state)
 	}
 
 	auto* hbs = impl().board->getHbsDataProfile();
-	auto* hDesc = hbs->getHbsDescriptor();
+	auto* hDesc = hbs->getHbsTableDescriptor();
 	HbsGpioStatus* status = new HbsGpioStatus();
 
 	impl().usbComm->readGpioStatus(status, hDesc);
@@ -408,7 +408,7 @@ int wso_device::FirmwareControl::getState()
 	}
 
 	auto* hbs = impl().board->getHbsDataProfile();
-	auto* hDesc = hbs->getHbsDescriptor();
+	auto* hDesc = hbs->getHbsTableDescriptor();
 	HbsGpioStatus* status = new HbsGpioStatus();
 
 	int nRet = impl().usbComm->readGpioStatus(status, hDesc);

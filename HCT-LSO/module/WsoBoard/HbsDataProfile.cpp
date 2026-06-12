@@ -26,6 +26,17 @@ struct HbsDataProfile::HbsDataProfileImpl
 	SLD_st 				HBS_SLD_status{};
 	Zynq_XADC_st		HBS_ZynqXADC{};
 
+	HbsCalibsDescriptor hbsCalibsDescriptor{};
+
+	HbsCalibMotorSets hbsCalibMotorSets{};
+	HbsCalibOctParams hbsCalibOctParams{};
+	HbsCalibOctSource hbsCalibOctSource{};
+	HbsCalibOctGalvano hbsCalibOctGalvano{};
+	HbsCalibDeviceCfg hbsCalibDeviceCfg{};
+	HbsCalibStepMotors hbsCalibStepMotors{};
+	HbsCalibFactorySet1 hbsCalibFactorySet1{};
+	HbsCalibFactorySet2 hbsCalibFactorySet2{};
+
 	HbsStepMotorStatus 	HBS_OctFocusMotor{};
 	HbsStepMotorStatus 	HBS_OctRefMotor{};
 	HbsStepMotorStatus 	HBS_OctPolMotor{};
@@ -95,17 +106,17 @@ void wso_board::HbsDataProfile::setHbsDataComm(HbsDataComm* comm)
 bool wso_board::HbsDataProfile::loadHbsTableHeader(void)
 {
 	auto* channel = getDataChannel();
-	if (auto data = getHbsDescriptor(); channel) {
-		if (channel->readDescriptor(data)) {
+	if (auto data = getHbsTableDescriptor(); channel) {
+		if (channel->readTableDescriptor(data)) {
 			return true;
 		}
 	}
 	return false;
 }
 
-bool wso_board::HbsDataProfile::loadHbsTableData(void)
+bool wso_board::HbsDataProfile::loadHbsTableEntries(void)
 {
-	if (!loadBulkBuffer()) {
+	if (!loadBufferDescriptor()) {
 		return false;
 	}
 	if (!loadCalibration()) {
@@ -132,17 +143,17 @@ bool wso_board::HbsDataProfile::loadHbsTableData(void)
 	return true;
 }
 
-bool wso_board::HbsDataProfile::loadBulkBuffer(void)
+bool wso_board::HbsDataProfile::loadBufferDescriptor(void)
 {
 	auto* channel = getDataChannel();
 
-	if (auto desc = getHbsDescriptor();  channel) {
-		auto data = getHbsBulkBuffer();
-		if (channel->readBulkBuffer(data, desc)) {
+	if (auto desc = getHbsTableDescriptor();  channel) {
+		auto data = getHbsBufferDescriptor();
+		if (channel->readBufferDescriptor(data, desc)) {
 			auto checksum1 = data->header.header_chksum;
 			auto checksum2 = data->header.count + data->header.table_chksum;
 			if (checksum1 != checksum2) {
-				LogDebug() << "HBS data header checksum not matched! " << checksum1 << ", " << checksum2;
+				LogD() << "HBS buffers header checksum not matched, header checksum: " << data->header.header_chksum << ", count: " << data->header.count << ", table checksum: " << data->header.table_chksum;
 				return false;
 			}
 
@@ -159,7 +170,7 @@ bool wso_board::HbsDataProfile::loadBulkBuffer(void)
 			auto wordsum1 = data->header.table_chksum;
 			auto wordsum2 = func_word_checksum(wordAddr, wordSize);
 			if (wordsum1 != wordsum2) {
-				LogDebug() << "HBS data word checksum not matched! " << wordsum1 << ", " << wordsum2;
+				LogD() << "HBS buffers table checksum not matched, table checksum: " << data->header.table_chksum << ", calculated: " << wordsum2;
 				return false;
 			}
 			return true;
@@ -168,10 +179,76 @@ bool wso_board::HbsDataProfile::loadBulkBuffer(void)
 	return false;
 }
 
+bool wso_board::HbsDataProfile::loadCalibBlockEntries(void)
+{
+	return false;
+}
+
+bool wso_board::HbsDataProfile::loadCalibration(void)
+{
+	auto* channel = getDataChannel();
+
+	if (auto desc = getHbsTableDescriptor(); channel) {
+		if (auto data = getHbsCalibsDescriptor(); data) {
+			if (!channel->readCalibsDescriptor(data, desc)) {
+				return false;
+			}
+		}
+	}
+
+	if (auto desc = getHbsCalibsDescriptor(); channel) {
+		if (auto data = getHbsCalibMotorSets(); data) {
+			if (!channel->readCalibMotorSets(data, desc)) {
+				return false;
+			}
+		}
+		if (auto data = getHbsCalibOctParams(); data) {
+			if (!channel->readCalibOctParams(data, desc)) {
+				return false;
+			}
+		}
+		if (auto data = getHbsCalibOctSource(); data) {
+			if (!channel->readCalibOctSource(data, desc)) {
+				return false;
+			}
+		}
+		/*
+		if (auto data = getHbsCalibOctGalvano(); data) {
+			if (!channel->readCalibOctGalvano(data, desc)) {
+				return false;
+			}
+		}
+		*/
+		if (auto data = getHbsCalibDeviceCfg(); data) {
+			if (!channel->readCalibDeviceCfg(data, desc)) {
+				return false;
+			}
+		}
+		if (auto data = getHbsCalibStepMotors(); data) {
+			if (!channel->readCalibStepMotors(data, desc)) {
+				return false;
+			}
+		}
+		/*
+		if (auto data = getHbsCalibFactorySet1(); data) {
+			if (!channel->readCalibFactorySet1(data, desc)) {
+				return false;
+			}
+		}
+		if (auto data = getHbsCalibFactorySet2(); data) {
+			if (!channel->readCalibFactorySet2(data, desc)) {
+				return false;
+			}
+		}
+		*/
+	}
+	return true;
+}
+
 bool wso_board::HbsDataProfile::loadConfiguration(void)
 {
 	auto* channel = getDataChannel();
-	if (auto desc = getHbsDescriptor(); channel) {
+	if (auto desc = getHbsTableDescriptor(); channel) {
 		auto data = getHbsConfiguration();
 		if (channel->readConfiguration(data, desc)) {
 			return true;
@@ -183,7 +260,7 @@ bool wso_board::HbsDataProfile::loadConfiguration(void)
 bool wso_board::HbsDataProfile::loadMainBoardVersion(void)
 {
 	auto* channel = getDataChannel();
-	if (auto desc = getHbsDescriptor(); channel) {
+	if (auto desc = getHbsTableDescriptor(); channel) {
 		auto data = getHbsMainBoardVersion();
 		if (channel->readMainBoardVersion(data, desc)) {
 			return true;
@@ -195,7 +272,7 @@ bool wso_board::HbsDataProfile::loadMainBoardVersion(void)
 bool wso_board::HbsDataProfile::loadSystemInitStatus(void)
 {
 	auto* channel = getDataChannel();
-	if (auto desc = getHbsDescriptor(); channel) {
+	if (auto desc = getHbsTableDescriptor(); channel) {
 		auto data = getHbsSystemInitStatus();
 		if (channel->readSystemInitStatus(data, desc)) {
 			return true;
@@ -204,23 +281,12 @@ bool wso_board::HbsDataProfile::loadSystemInitStatus(void)
 	return false;
 }
 
-bool wso_board::HbsDataProfile::loadCalibration(void)
-{
-	auto* channel = getDataChannel();
-	if (auto desc = getHbsDescriptor(); channel) {
-		if (auto data = getHbsCalibration(); data) {
-			if (channel->readCalibration(data, desc)) {
-				return true;
-			}
-		}
-	}
-	return false;
-}
+
 
 bool wso_board::HbsDataProfile::loadSystemConfigure(void)
 {
 	auto* channel = getDataChannel();
-	if (auto desc = getHbsDescriptor(); channel) {
+	if (auto desc = getHbsTableDescriptor(); channel) {
 		auto data = getHbsSystemConfigure();
 		if (channel->readSystemConfigure(data, desc)) {
 			return true;
@@ -232,7 +298,7 @@ bool wso_board::HbsDataProfile::loadSystemConfigure(void)
 bool wso_board::HbsDataProfile::loadGpioStatus(void)
 {
 	auto* channel = getDataChannel();
-	if (auto desc = getHbsDescriptor(); channel) {
+	if (auto desc = getHbsTableDescriptor(); channel) {
 		auto data = getHbsGpioStatus();
 		if (channel->readGpioStatus(data, desc)) {
 			return true;
@@ -244,7 +310,7 @@ bool wso_board::HbsDataProfile::loadGpioStatus(void)
 bool wso_board::HbsDataProfile::loadSldStatus(void)
 {
 	auto* channel = getDataChannel();
-	if (auto desc = getHbsDescriptor(); channel) {
+	if (auto desc = getHbsTableDescriptor(); channel) {
 		auto data = getHbsSldStatus();
 		if (channel->readSldStatus(data, desc)) {
 			return true;
@@ -256,7 +322,7 @@ bool wso_board::HbsDataProfile::loadSldStatus(void)
 bool wso_board::HbsDataProfile::loadZynqXADC(void)
 {
 	auto* channel = getDataChannel();
-	if (auto desc = getHbsDescriptor(); channel) {
+	if (auto desc = getHbsTableDescriptor(); channel) {
 		auto data = getHbsZyncXADC();
 		if (channel->readZynqXADC(data, desc)) {
 			return true;
@@ -268,7 +334,7 @@ bool wso_board::HbsDataProfile::loadZynqXADC(void)
 bool wso_board::HbsDataProfile::loadGalvanoDynamicParam(void)
 {
 	auto* channel = getDataChannel();
-	if (auto desc = getHbsDescriptor(); channel) {
+	if (auto desc = getHbsTableDescriptor(); channel) {
 		auto data = getHbsGalvanoDynamicParam();
 		if (channel->readGalvanoDynamicParam(data, desc)) {
 			return true;
@@ -280,7 +346,7 @@ bool wso_board::HbsDataProfile::loadGalvanoDynamicParam(void)
 bool wso_board::HbsDataProfile::loadStepMotorStatus(StepMotorType type)
 {
 	auto* channel = getDataChannel();
-	if (auto desc = getHbsDescriptor(); channel) {
+	if (auto desc = getHbsTableDescriptor(); channel) {
 		auto data = getHbsStepMotorStatus(type);
 		if (channel->readStepMotorStatus(data, type, desc)) {
 			return true;
@@ -292,7 +358,7 @@ bool wso_board::HbsDataProfile::loadStepMotorStatus(StepMotorType type)
 bool wso_board::HbsDataProfile::loadStageMotorStatus(void)
 {
 	auto* channel = getDataChannel();
-	if (auto desc = getHbsDescriptor(); channel) {
+	if (auto desc = getHbsTableDescriptor(); channel) {
 		auto data = getHbsYStageMotor();
 		if (channel->readStageMotorStatus(data, desc)) {
 			return true;
@@ -304,7 +370,7 @@ bool wso_board::HbsDataProfile::loadStageMotorStatus(void)
 bool wso_board::HbsDataProfile::loadInfraredCameraStatus(void)
 {
 	auto* channel = getDataChannel();
-	if (auto desc = getHbsDescriptor(); channel) {
+	if (auto desc = getHbsTableDescriptor(); channel) {
 		auto data = getHbsIrCameraStatus();
 		if (channel->readInfraredCameraStatus(data, desc)) {
 			return true;
@@ -316,7 +382,7 @@ bool wso_board::HbsDataProfile::loadInfraredCameraStatus(void)
 bool wso_board::HbsDataProfile::saveCalibration(void)
 {
 	auto* channel = getDataChannel();
-	if (auto desc = getHbsDescriptor(); channel) {
+	if (auto desc = getHbsTableDescriptor(); channel) {
 		auto data = getHbsCalibration();
 		if (channel->writeCalibration(data, desc)) {
 			return true;
@@ -328,7 +394,7 @@ bool wso_board::HbsDataProfile::saveCalibration(void)
 bool wso_board::HbsDataProfile::saveConfiguration(void)
 {
 	auto* channel = getDataChannel();
-	if (auto desc = getHbsDescriptor(); channel) {
+	if (auto desc = getHbsTableDescriptor(); channel) {
 		auto data = getHbsConfiguration();
 		
 		auto* p = const_cast<HbsConfiguration*>(data);
@@ -344,7 +410,7 @@ bool wso_board::HbsDataProfile::saveConfiguration(void)
 bool wso_board::HbsDataProfile::saveSystemConfigure(void)
 {
 	auto* channel = getDataChannel();
-	if (auto desc = getHbsDescriptor(); channel) {
+	if (auto desc = getHbsTableDescriptor(); channel) {
 		auto data = getHbsSystemConfigure();
 		if (channel->writeSystemConfigure(data, desc)) {
 			return true;
@@ -356,7 +422,7 @@ bool wso_board::HbsDataProfile::saveSystemConfigure(void)
 bool wso_board::HbsDataProfile::saveLsoScannerParam(void)
 {
 	auto* channel = getDataChannel();
-	if (auto desc = getHbsDescriptor(); channel) {
+	if (auto desc = getHbsTableDescriptor(); channel) {
 		auto data = getHbsLsoScanner();
 		if (channel->writeLsoScannerParam(data, desc)) {
 			return true;
@@ -368,7 +434,7 @@ bool wso_board::HbsDataProfile::saveLsoScannerParam(void)
 bool wso_board::HbsDataProfile::saveGalvanoDynamicParam(void)
 {
 	auto* channel = getDataChannel();
-	if (auto desc = getHbsDescriptor(); channel) {
+	if (auto desc = getHbsTableDescriptor(); channel) {
 		auto data = getHbsGalvanoDynamicParam();
 		if (channel->writeGalvanoDynamicParam(data, desc)) {
 			return true;
@@ -377,14 +443,59 @@ bool wso_board::HbsDataProfile::saveGalvanoDynamicParam(void)
 	return false;
 }
 
-const hbs_descriptor_st* wso_board::HbsDataProfile::getHbsDescriptor(void) const
+const hbs_descriptor_st* wso_board::HbsDataProfile::getHbsTableDescriptor(void) const
 {
 	return &impl().HBS_descriptor;
 }
 
-const HbsBufferEntries* wso_board::HbsDataProfile::getHbsBulkBuffer(void) const
+const HbsBufferDescriptor* wso_board::HbsDataProfile::getHbsBufferDescriptor(void) const
 {
 	return &impl().HBS_BlkBufTbl;
+}
+
+const HbsCalibsDescriptor* wso_board::HbsDataProfile::getHbsCalibsDescriptor(void) const
+{
+	return &impl().hbsCalibsDescriptor;
+}
+
+const HbsCalibMotorSets* wso_board::HbsDataProfile::getHbsCalibMotorSets(void) const
+{
+	return &impl().hbsCalibMotorSets;
+}
+
+const HbsCalibOctParams* wso_board::HbsDataProfile::getHbsCalibOctParams(void) const
+{
+	return &impl().hbsCalibOctParams;
+}
+
+const HbsCalibOctSource* wso_board::HbsDataProfile::getHbsCalibOctSource(void) const
+{
+	return &impl().hbsCalibOctSource;
+}
+
+const HbsCalibOctGalvano* wso_board::HbsDataProfile::getHbsCalibOctGalvano(void) const
+{
+	return &impl().hbsCalibOctGalvano;
+}
+
+const HbsCalibDeviceCfg* wso_board::HbsDataProfile::getHbsCalibDeviceCfg(void) const
+{
+	return &impl().hbsCalibDeviceCfg;
+}
+
+const HbsCalibStepMotors* wso_board::HbsDataProfile::getHbsCalibStepMotors(void) const
+{
+	return &impl().hbsCalibStepMotors;
+}
+
+const HbsCalibFactorySet1* wso_board::HbsDataProfile::getHbsCalibFactorySet1(void) const
+{
+	return &impl().hbsCalibFactorySet1;
+}
+
+const HbsCalibFactorySet2* wso_board::HbsDataProfile::getHbsCalibFactorySet2(void) const
+{
+	return &impl().hbsCalibFactorySet2;
 }
 
 const HbsCalibration* wso_board::HbsDataProfile::getHbsCalibration(void) const

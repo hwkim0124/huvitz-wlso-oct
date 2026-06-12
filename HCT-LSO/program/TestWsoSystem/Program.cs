@@ -1,6 +1,6 @@
 ﻿using System;
 using WsoNativeLib;
-using WsoNativeLib2;
+
 
 namespace HelloWorld
 {
@@ -11,7 +11,6 @@ namespace HelloWorld
         static void Main(string[] args)
         {
             Console.WriteLine("Hello World!");
-            // WsoAnalytics.InitializeWsoAnalytics();
             Bootstrapper.InitializeWsoSystem(clb: logMsgCallback, true);
         }
 

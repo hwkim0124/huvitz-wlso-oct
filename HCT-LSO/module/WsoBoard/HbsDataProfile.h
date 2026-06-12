@@ -22,11 +22,13 @@ namespace wso_board
 		void setHbsDataComm(HbsDataComm* comm);
 
 		bool loadHbsTableHeader(void);
-		bool loadHbsTableData(void);
+		bool loadHbsTableEntries(void);
 
-		bool loadBulkBuffer(void);
-		bool loadConfiguration(void);
+		bool loadBufferDescriptor(void);
+		bool loadCalibBlockEntries(void);
 		bool loadCalibration(void);
+
+		bool loadConfiguration(void);
 		bool loadMainBoardVersion(void);
 		bool loadSystemInitStatus(void);
 		bool loadSystemConfigure(void);
@@ -46,8 +48,19 @@ namespace wso_board
 		bool saveLsoScannerParam(void);
 		bool saveGalvanoDynamicParam(void);
 
-		const HbsTableDescriptor* getHbsDescriptor(void) const;
-		const HbsBufferEntries* getHbsBulkBuffer(void) const;
+		const HbsTableDescriptor* getHbsTableDescriptor(void) const;
+		const HbsBufferDescriptor* getHbsBufferDescriptor(void) const;
+		const HbsCalibsDescriptor* getHbsCalibsDescriptor(void) const;
+
+		const HbsCalibMotorSets* getHbsCalibMotorSets(void) const;
+		const HbsCalibOctParams* getHbsCalibOctParams(void) const;
+		const HbsCalibOctSource* getHbsCalibOctSource(void) const;
+		const HbsCalibOctGalvano* getHbsCalibOctGalvano(void) const;
+		const HbsCalibDeviceCfg* getHbsCalibDeviceCfg(void) const;
+		const HbsCalibStepMotors* getHbsCalibStepMotors(void) const;
+		const HbsCalibFactorySet1* getHbsCalibFactorySet1(void) const;
+		const HbsCalibFactorySet2* getHbsCalibFactorySet2(void) const;
+
 		const HbsCalibration* getHbsCalibration(void) const;
 		const HbsConfiguration* getHbsConfiguration(void) const;
 		const HbsMainBoardVersion* getHbsMainBoardVersion(void) const;

@@ -58,6 +58,25 @@ namespace wso_board
 #define MAX_LSO_TRAJ_NUM 8
 #define MAX_STEP_MOTOR_NUM 16
 
+#define CALIB_IDX_MOTOR_SETS            0
+#define CALIB_IDX_OCT_PARAMS            1
+#define CALIB_IDX_OCT_SOURCE	        2
+#define CALIB_IDX_OCT_GALVANO	        3   
+#define CALIB_IDX_DEVICE_CFG	        4
+#define CALIB_IDX_STEP_MOTORS	        5
+#define CALIB_IDX_FACTORY_SET1	        8
+#define CALIB_IDX_FACTORY_SET2   	    9
+#define CALIB_ENTRIES_MAX_NUM			16
+
+#define BUFF_ADDR_OFFS_MOTOR_SETS       0x00000
+#define BUFF_ADDR_OFFS_OCT_PARAMS       0x10000
+#define BUFF_ADDR_OFFS_OCT_SOURCE       0x20000
+#define BUFF_ADDR_OFFS_OCT_GALVANO      0x30000
+#define BUFF_ADDR_OFFS_DEVICE_CFG       0x40000
+#define BUFF_ADDR_OFFS_STEP_MOTORS      0x50000
+#define BUFF_ADDR_OFFS_FACTORY_SET1     0x80000
+#define BUFF_ADDR_OFFS_FACTORY_SET2     0x90000
+
 
     /////////////////////////////////////////////////////////////////////////////////////////////
     typedef struct {
@@ -358,7 +377,7 @@ namespace wso_board
         U32 CalBlkBitMap; // #of Active calibratin blockBitMap. If blk0,1 used, set as
         // 0x3,                          //0~65535 decimal If all 16
         // blks used, 0xffff
-        CalBlkInfo_st CalBlkInfo[16]; // CalBlkInfo[0] corresponds to CalkBlk0, ��
+        CalBlkInfo_st blocks[16]; // CalBlkInfo[0] corresponds to CalkBlk0, ��
     } HBS_CalBlockBuffer_st; // RAM memory layout for calibration data interface.
 
     typedef struct {

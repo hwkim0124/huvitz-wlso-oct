@@ -34,6 +34,8 @@ namespace wso_device
 
 	public:
 		void setBoardDescript(string str);
+		std::string getBoardDescript(void) const;
+
 		bool openChannel(bool setNotiCallback);
 		void releaseChannel(void);
 		bool isInitiated(void) const;
@@ -52,8 +54,20 @@ namespace wso_device
 		bool checkSystemReadyGPIO(void);
 		bool checkEyeSideGPIO(EyeSide& side);
 
-		bool readDescriptor(const HbsTableDescriptor* data) override;
-		bool readBulkBuffer(const HbsBufferEntries* data, const HbsTableDescriptor* desc) override;
+		bool readTableDescriptor(const HbsTableDescriptor* data) override;
+		bool readBufferDescriptor(const HbsBufferDescriptor* data, const HbsTableDescriptor* desc) override;
+		bool readCalibsDescriptor(const HbsCalibsDescriptor* data, const HbsTableDescriptor* desc) override;
+
+		bool readCalibMotorSets(const HbsCalibMotorSets* data, const HbsCalibsDescriptor* desc) override;
+		bool readCalibOctParams(const HbsCalibOctParams* data, const HbsCalibsDescriptor* desc) override;
+		bool readCalibOctSource(const HbsCalibOctSource* data, const HbsCalibsDescriptor* desc) override;
+		bool readCalibOctGalvano(const HbsCalibOctGalvano* data, const HbsCalibsDescriptor* desc) override;
+		bool readCalibDeviceCfg(const HbsCalibDeviceCfg* data, const HbsCalibsDescriptor* desc) override;
+		bool readCalibStepMotors(const HbsCalibStepMotors* data, const HbsCalibsDescriptor* desc) override;
+		bool readCalibFactorySet1(const HbsCalibFactorySet1* data, const HbsCalibsDescriptor* desc) override;
+		bool readCalibFactorySet2(const HbsCalibFactorySet2* data, const HbsCalibsDescriptor* desc) override;
+
+
 		bool readCalibration(const HbsCalibration* data, const HbsTableDescriptor* desc) override;
 		bool readConfiguration(const HbsConfiguration* data, const HbsTableDescriptor* desc) override;
 

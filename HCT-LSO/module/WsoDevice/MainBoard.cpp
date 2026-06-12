@@ -92,6 +92,9 @@ struct MainBoard::MainBoardImpl
 
 		stepMotors.clear();
 		stageMotors.clear();
+
+		usbComm.setBoardDescript(USB_MAIN_BOARD_DESC);
+		subComm.setBoardDescript(USB_SUB_BOARD_DESC);
 	}
 };
 
@@ -148,30 +151,30 @@ bool wso_device::MainBoard::initializeMainBoard(int* warnings)
 
 	// No device mode is returned with not initiated status.
 	if (isMainBoardNotInUse()) {
-		WsoLogInfo("Mainboard is not in use, init process skipped.") ;
+		WsoLogInfo("Mainboard not in use, skipping initialization") ;
 		return true;
 	}
 
 	// Usb channel is not opened when no device mode. 
 	if (!openFTDIdevices()) {
-		WsoLogError("Usb port channel open failed!");
+		WsoLogError("Failed to open USB port channels: main, sub board");
 		return false;
 	}
 	else {
-		WsoLogInfo("Usb port channel opened successfully.");
+		WsoLogInfo("USB port channels opened: main, sub board");
 	}
 
 	if (!waitForSystemReady()) {
-		WsoLogError("Target system is not ready!");
+		WsoLogError("Target system not in ready state");
 		return false;
 	}
 
 	if (!loadHostBufferTable()) {
-		WsoLogError("Host buffer table loading failed!");
+		WsoLogError("Failed to load host buffer table");
 		return false;
 	}
 	else {
-		WsoLogInfo("Loading Host buffer table ... ok");
+		WsoLogInfo("Host buffer table loaded");
 	}
 
 	impl().initiated = true;
@@ -473,12 +476,13 @@ bool wso_device::MainBoard::openFTDIdevices(void)
 	// open_retry:
 	for (int i = 0; i < USB_RESET_RETRY_MAX; i++) {
 		if (!getUsbComm().openChannel(true)) {
-			LogD() << "Usb main channel open failed!, retrying ... ";
+			LogD() << "Failed to open USB main channel, retrying ... ";
 			resetUsbChannel();
 			this_thread::sleep_for(chrono::milliseconds(USB_RESET_RETRY_DELAY));
 		}
 		else {
 			openUsb = true;
+			LogD() << "USB main channel opened, desc: " << getUsbComm().getBoardDescript();
 			break;
 		}
 	}
@@ -488,12 +492,13 @@ bool wso_device::MainBoard::openFTDIdevices(void)
 	// Sub Board
 	for (int i = 0; i < USB_RESET_RETRY_MAX; i++) {
 		if (!getSubComm().openChannel(false)) {
-			LogD() << "Usb sub channel open failed!, retrying ... ";
+			LogD() << "Failed to open USB sub channel, retrying ... ";
 			resetSubChannel();
 			this_thread::sleep_for(chrono::milliseconds(USB_RESET_RETRY_DELAY));
 		}
 		else {
 			openUsb = true;
+			LogD() << "USB sub channel opened, desc: " << getUsbComm().getBoardDescript();
 			break;
 		}
 	}
@@ -566,30 +571,6 @@ bool wso_device::MainBoard::turnOnOctScanBeam(bool flag)
 	return false;
 }
 
-/*
-bool wso_device::MainBoard::prepareDevicesForSloScan(bool oct_preview, float diopt)
-{
-	if (oct_preview) {
-		getOctMirrorMotor()->updatePositionToMirrorIn();
-	}
-	else {
-		getOctMirrorMotor()->updatePositionToMirrorOut();
-	}
-	getIcgaFilterMotor()->updatePositionToMirrorOut();
-
-	// getSloFocusMotor()->updatePositionToOrigin();
-	// getFixationMotor()->updatePositionToOrigin();
-	getSloFocusMotor()->updatePositionByDiopter(diopt);
-	getFixationMotor()->updatePositionByDiopter(diopt);
-	return true;
-}
-
-bool wso_device::MainBoard::releaseDevicesForSloScan(void)
-{
-	return true;
-}
-*/
-
 bool wso_device::MainBoard::loadHostBufferTable(void)
 {
 	auto* hbs = getHbsDataProfile();
@@ -597,17 +578,17 @@ bool wso_device::MainBoard::loadHostBufferTable(void)
 	hbs->setHbsDataComm(&impl().usbComm);
 
 	if (hbs->loadHbsTableHeader()) {
-		LogD() << "HBS descriptor loaded from board.";
+		LogD() << "HBS table descriptor loaded from board";
 	} else {
-		LogD() << "HBS descriptor not loaded!";
+		LogD() << "Failed to load HBS table descriptor";
 		return false;
 	}
 
-	if (hbs->loadHbsTableData()) {
-		LogD() << "HBS table data loaded from board.";
+	if (hbs->loadHbsTableEntries()) {
+		LogD() << "HBS table entries loaded from board";
 	}
 	else {
-		LogD() << "HBS table data not loaded!";
+		LogD() << "Failed to load HBS table entries";
 		return false;
 	}
 
@@ -625,7 +606,7 @@ bool wso_device::MainBoard::loadHostBufferTable(void)
 		return false;
 	}
 
-	if (hbsSub->loadHbsTableData()) {
+	if (hbsSub->loadHbsTableEntries()) {
 		LogD() << "HBS table data loaded from Sub board.";
 	}
 	else {

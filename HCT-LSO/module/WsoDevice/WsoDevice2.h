@@ -177,7 +177,7 @@ namespace wso_device
 	constexpr unsigned char USB_NOTI_PID = 0x85;
 	constexpr unsigned long USB_TIMEOUT = 12000; // 3000; // 15000;
 
-	constexpr const char* USB_BOARD_DESC = "SLO_CTRL";
+	constexpr const char* USB_MAIN_BOARD_DESC = "SLO_CTRL";
 	constexpr const char* USB_SUB_BOARD_DESC = "RTCAM_CTRL";
 	constexpr std::uint32_t USB_BOARD_ADDR = 0x80000000;
 

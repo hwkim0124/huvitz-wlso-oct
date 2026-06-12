@@ -363,7 +363,7 @@ bool wso_device::Galvanometer::setTraceProfile(int traceId, short forePadd, shor
 	MainBoard* board = getMainBoard();
 	UsbComm& usbComm = board->getUsbComm();
 
-	if (auto* hbs = getMainBoard()->getHbsDataProfile(); usbComm.writeTrajectoryParam(traceId, &params, hbs->getHbsDescriptor())) {
+	if (auto* hbs = getMainBoard()->getHbsDataProfile(); usbComm.writeTrajectoryParam(traceId, &params, hbs->getHbsTableDescriptor())) {
 		return true;
 	}
 	LogD() << "Galvanometer::setTraceProfile() failed!";
@@ -401,7 +401,7 @@ bool wso_device::Galvanometer::setTraceProfile(int traceId, short forePadd, shor
 	MainBoard* board = getMainBoard();
 	UsbComm& usbComm = board->getUsbComm();
 
-	if (auto* hbs = getMainBoard()->getHbsDataProfile(); usbComm.writeTrajectoryParam(traceId, &param, hbs->getHbsDescriptor())) {
+	if (auto* hbs = getMainBoard()->getHbsDataProfile(); usbComm.writeTrajectoryParam(traceId, &param, hbs->getHbsTableDescriptor())) {
 		return true;
 	}
 	LogD() << "Galvanometer::setTraceProfile() failed!";
@@ -430,7 +430,7 @@ bool wso_device::Galvanometer::setTracePositionsX(int traceId, short* posXs, sho
 	MainBoard* board = getMainBoard();
 	UsbComm& usbComm = board->getUsbComm();
 
-	if (auto* hbs = getMainBoard()->getHbsDataProfile(); usbComm.writeTrajectoryPositionsX(traceId, buff, count, hbs->getHbsDescriptor())) {
+	if (auto* hbs = getMainBoard()->getHbsDataProfile(); usbComm.writeTrajectoryPositionsX(traceId, buff, count, hbs->getHbsTableDescriptor())) {
 		return true;
 	}
 	LogD() << "Galvanometer::setTracePositionsX() failed!";
@@ -459,7 +459,7 @@ bool wso_device::Galvanometer::setTracePositionsY(int traceId, short* posYs, sho
 	MainBoard* board = getMainBoard();
 	UsbComm& usbComm = board->getUsbComm();
 
-	if (auto* hbs = getMainBoard()->getHbsDataProfile(); usbComm.writeTrajectoryPositionsY(traceId, buff, count, hbs->getHbsDescriptor())) {
+	if (auto* hbs = getMainBoard()->getHbsDataProfile(); usbComm.writeTrajectoryPositionsY(traceId, buff, count, hbs->getHbsTableDescriptor())) {
 		return true;
 	}
 	LogD() << "Galvanometer::setTracePositionsY() failed!";

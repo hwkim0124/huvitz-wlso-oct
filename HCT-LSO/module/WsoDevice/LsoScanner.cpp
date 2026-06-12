@@ -75,7 +75,7 @@ bool wso_device::LsoScanner::updateScannerStatus(void)
 
 	auto* hbs = getMainBoard()->getHbsDataProfile();
 	auto* scanner = hbs->getHbsLsoScanner();
-	auto* desc = hbs->getHbsDescriptor();
+	auto* desc = hbs->getHbsTableDescriptor();
 	if (!usbComm.readLsoScannerParam(scanner, desc)) {
 		LogDebug() << "Reading slo scanner status failed!";
 		return false;

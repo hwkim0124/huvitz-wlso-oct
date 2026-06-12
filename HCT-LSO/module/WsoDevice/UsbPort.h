@@ -22,7 +22,7 @@ namespace wso_device
 		UsbPort& operator=(const UsbPort& rhs) = delete;
 
 	public:
-		bool openPort(const std::string& desc = USB_BOARD_DESC, bool useNotificationCallback = false, unsigned long timeout = USB_TIMEOUT,
+		bool openPort(const std::string& desc = USB_MAIN_BOARD_DESC, bool useNotificationCallback = false, unsigned long timeout = USB_TIMEOUT,
 			unsigned char readPid = USB_READ_PID, unsigned char writePid = USB_WRITE_PID,
 			unsigned char readIr1 = USB_IR1_PID, unsigned char readIr2 = USB_IR2_PID);
 		void closePort(void);

@@ -8,9 +8,19 @@ namespace wso_board
 {
 	class WSOBOARD_DLL_API HbsDataComm {
 	public:
-		virtual bool readDescriptor(const HbsTableDescriptor* data) = 0;
+		virtual bool readTableDescriptor(const HbsTableDescriptor* data) = 0;
+		virtual bool readBufferDescriptor(const HbsBufferDescriptor* data, const HbsTableDescriptor* desc) = 0;
+		virtual bool readCalibsDescriptor(const HbsCalibsDescriptor* data, const HbsTableDescriptor* desc) = 0;
 
-		virtual bool readBulkBuffer(const HbsBufferEntries* data, const HbsTableDescriptor* desc) = 0;
+		virtual bool readCalibMotorSets(const HbsCalibMotorSets* data, const HbsCalibsDescriptor* desc) = 0;
+		virtual bool readCalibOctParams(const HbsCalibOctParams* data, const HbsCalibsDescriptor* desc) = 0;
+		virtual bool readCalibOctSource(const HbsCalibOctSource* data, const HbsCalibsDescriptor* desc) = 0;
+		virtual bool readCalibOctGalvano(const HbsCalibOctGalvano* data, const HbsCalibsDescriptor* desc) = 0;
+		virtual bool readCalibDeviceCfg(const HbsCalibDeviceCfg* data, const HbsCalibsDescriptor* desc) = 0;
+		virtual bool readCalibStepMotors(const HbsCalibStepMotors* data, const HbsCalibsDescriptor* desc) = 0;
+		virtual bool readCalibFactorySet1(const HbsCalibFactorySet1* data, const HbsCalibsDescriptor* desc) = 0;
+		virtual bool readCalibFactorySet2(const HbsCalibFactorySet2* data, const HbsCalibsDescriptor* desc) = 0;
+
 		virtual bool readCalibration(const HbsCalibration* data, const HbsTableDescriptor* desc) = 0;
 		virtual bool readConfiguration(const HbsConfiguration* data, const HbsTableDescriptor* desc) = 0;
 		virtual bool readMainBoardVersion(const HbsMainBoardVersion* data, const HbsTableDescriptor* desc) = 0;
