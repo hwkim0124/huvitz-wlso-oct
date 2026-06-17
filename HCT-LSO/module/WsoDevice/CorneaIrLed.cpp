@@ -55,7 +55,7 @@ bool wso_device::CorneaIrLed::initializeCorneaIrLed(void)
 {
 	if (LightLed::initializeLightLed()) {
 		loadCalibParamFromProfile();
-		turnLaserOff();
+		turnLightOff();
 		return true;
 	}
 	return false;

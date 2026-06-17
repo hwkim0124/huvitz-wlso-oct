@@ -216,7 +216,7 @@ bool wso_device::LightLed::isLightOn(void)
 }
 
 
-bool wso_device::LightLed::turnLaserOn(void)
+bool wso_device::LightLed::turnLightOn(void)
 {
 	unsigned short value = getIntensity();
 
@@ -236,7 +236,7 @@ bool wso_device::LightLed::turnLaserOn(void)
 }
 
 
-bool wso_device::LightLed::turnLaserOff(void)
+bool wso_device::LightLed::turnLightOff(void)
 {
 	unsigned short value = getIntensity();
 
@@ -252,7 +252,7 @@ bool wso_device::LightLed::turnLaserOff(void)
 
 bool wso_device::LightLed::control(bool flag)
 {
-	return (flag ? turnLaserOn() : turnLaserOff());
+	return (flag ? turnLightOn() : turnLightOff());
 }
 
 

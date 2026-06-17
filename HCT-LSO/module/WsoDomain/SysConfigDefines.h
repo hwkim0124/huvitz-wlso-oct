@@ -16,6 +16,14 @@ namespace wso_domain
 		int wdots[2] = { 30, 30 };
 	};
 
+	struct CorneaCameraConfigParams {
+		float again_left = 0.0f;
+		float again_right = 0.0f;
+		float again_lower = 0.0f;
+		float dgain_left = 0.0f;
+		float dgain_right = 0.0f;
+		float dgain_lower = 0.0f;
+	};
 
 	struct LcdFixationParam {
 		int row = 0;

@@ -155,12 +155,18 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="CameraSetting.h" />
+    <ClInclude Include="CameraSettings.h" />
     <ClInclude Include="FixationSetting.h" />
+    <ClInclude Include="FixationSettings.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="GalvanoSetting.h" />
+    <ClInclude Include="GalvanoSettings.h" />
     <ClInclude Include="LsoCaptureSetting.h" />
+    <ClInclude Include="LsoCaptureSettings.h" />
     <ClInclude Include="LsoDisplaySetting.h" />
+    <ClInclude Include="LsoDisplaySettings.h" />
     <ClInclude Include="MeasureSetting.h" />
+    <ClInclude Include="OctScanSettings.h" />
     <ClInclude Include="SignalSetting.h" />
     <ClInclude Include="SysConfiguration.h" />
     <ClInclude Include="SysConfigFile.h" />
@@ -171,12 +177,18 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CameraSetting.cpp" />
+    <ClCompile Include="CameraSettings.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="FixationSetting.cpp" />
+    <ClCompile Include="FixationSettings.cpp" />
     <ClCompile Include="GalvanoSetting.cpp" />
+    <ClCompile Include="GalvanoSettings.cpp" />
     <ClCompile Include="LsoCaptureSetting.cpp" />
+    <ClCompile Include="LsoCaptureSettings.cpp" />
     <ClCompile Include="LsoDisplaySetting.cpp" />
+    <ClCompile Include="LsoDisplaySettings.cpp" />
     <ClCompile Include="MeasureSetting.cpp" />
+    <ClCompile Include="OctScanSettings.cpp" />
     <ClCompile Include="SignalSetting.cpp" />
     <ClCompile Include="SysConfiguration.cpp" />
     <ClCompile Include="SysConfigFile.cpp" />

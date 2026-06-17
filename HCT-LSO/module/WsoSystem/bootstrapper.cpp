@@ -98,12 +98,12 @@ bool wso_system::Bootstrapper::initializeWsoSystem(WsoLogMsgCallback clb, bool t
 	if (!initOctScanning()) {
 		// return false;
 	}
-
+	/*
 	if (!implementSystemConfiguration()) {
 		WsoLogError("System configuration not implemented.");
 		// return false;
 	}
-
+	*/
 	WsoLogInfo("Wso system initialized");
 	impl().isSystemInitialized = true;
 	return true;
@@ -116,14 +116,16 @@ bool wso_system::Bootstrapper::isWsoSystemInitialized(void) const
 
 void wso_system::Bootstrapper::releaseWsoSystem(void)
 {
-	if (auto board = Hardware::getInstance()->getMainBoard(); board) {
-		board->releaseMainBoard();
-	}
-	if (auto usb3 = Hardware::getInstance()->getUsb3Grabber(); usb3) {
-		usb3->releaseUsb3Grabber();
-	}
-	if (auto oct = OctScanning::getInstance(); oct) {
-		oct->releaseOctScanning();
+	if (isWsoSystemInitialized()) {
+		if (auto board = Hardware::getInstance()->getMainBoard(); board) {
+			board->releaseMainBoard();
+		}
+		if (auto usb3 = Hardware::getInstance()->getUsb3Grabber(); usb3) {
+			usb3->releaseUsb3Grabber();
+		}
+		if (auto oct = OctScanning::getInstance(); oct) {
+			oct->releaseOctScanning();
+		}
 	}
 
 	impl().isSystemInitialized = false;

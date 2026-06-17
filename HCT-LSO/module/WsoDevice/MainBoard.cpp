@@ -134,6 +134,9 @@ MainBoard::MainBoard() :
 	impl().octSldLed = make_unique<OctSldLed>(this);
 
 	impl().firmwareControl = make_unique<FirmwareControl>(this, &this->getUsbComm());
+
+	impl().sldLaserDriver.initializeSldLaserDriver(this);
+	impl().zyncXadcDriver.initializeZynqXadcDriver(this);
 }
 
 
@@ -188,6 +191,7 @@ bool wso_device::MainBoard::initializeMainBoard(int* warnings)
 void wso_device::MainBoard::releaseMainBoard(void)
 {
 	try {
+		/*
 		getColorCamera()->uninitialize();
 
 		//save Led Setting
@@ -195,6 +199,7 @@ void wso_device::MainBoard::releaseMainBoard(void)
 		getRetinaIrLed()->saveConfigToIniFile();
 		getCorneaIrLeftLed()->saveConfigToIniFile();
 		getCorneaIrRightLed()->saveConfigToIniFile();
+		*/
 
 		getUsbComm().releaseChannel();
 		getSubComm().releaseChannel();

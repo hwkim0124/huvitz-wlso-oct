@@ -99,8 +99,9 @@ namespace wso_domain
 	{
 		LEFT = 0x00,
 		RIGHT = 0x01,
+		LOWER = 0x03,
 		UNKNOWN = 0x99,
-		NUMBER_OF_ITEMS = (RIGHT + 1)
+		NUMBER_OF_ITEMS = 3
 	};
 
 	enum class CameraType : unsigned char

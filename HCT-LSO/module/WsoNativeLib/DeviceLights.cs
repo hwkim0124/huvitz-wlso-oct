@@ -30,11 +30,22 @@ namespace WsoNativeLib
         [return: MarshalAs(UnmanagedType.I1)]
         private static extern bool isLightOn(int type);
 
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool turnOnOctSld();
+
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool turnOffOctSld();
+
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool isOctSldOn();
+
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
         private static extern bool obtainAdcSensorStatus(ref AdcSensorStatus status, [MarshalAs(UnmanagedType.I1)] bool reload);
-
 
 
         [DllImport(LibraryName)]
@@ -82,6 +93,21 @@ namespace WsoNativeLib
         public static bool IsLightOn(LightType type)
         {
             return isLightOn((int)type);
+        }
+
+        public static bool TurnOnOctSld()
+        {
+            return turnOnOctSld();
+        }
+
+        public static bool TurnOffOctSld()
+        {
+            return turnOffOctSld();
+        }
+
+        public static bool IsOctSldOn()
+        {
+            return isOctSldOn();
         }
 
         public static bool ObtainAdcSensorStatus(ref AdcSensorStatus status, bool reload = false)

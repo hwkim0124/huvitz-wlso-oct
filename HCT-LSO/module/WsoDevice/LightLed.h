@@ -38,8 +38,8 @@ namespace wso_device
 		LightType getType(void) const;
 
 		bool isLightOn(void);
-		bool turnLaserOn(void);
-		bool turnLaserOff(void);
+		bool turnLightOn(void);
+		bool turnLightOff(void);
 		bool control(bool flag);
 
 		virtual bool loadCalibParamFromProfile(void) override;

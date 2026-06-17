@@ -8,7 +8,7 @@
 bool WSOSYSTEM_DLL_API __stdcall wso_system::turnOnLight(LightType type)
 {
 	if (auto* p = Hardware::getInstance()->getMainBoard()->getLightLed(type); p) {
-		return p->turnLaserOn();
+		return p->turnLightOn();
 	}
 	return false;
 }
@@ -16,7 +16,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::turnOnLight(LightType type)
 bool WSOSYSTEM_DLL_API __stdcall wso_system::turnOffLight(LightType type)
 {
 	if (auto* p = Hardware::getInstance()->getMainBoard()->getLightLed(type); p) {
-		return p->turnLaserOff();
+		return p->turnLightOff();
 	}
 	return false;
 }
@@ -29,6 +29,29 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::isLightOn(LightType type)
 	return false;
 }
 
+bool WSOSYSTEM_DLL_API __stdcall wso_system::turnOnOctSld(void)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getOctSldLed(); p) {
+		return p->turnLaserOn();
+	}
+	return false;
+}
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::turnOffOctSld(void)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getOctSldLed(); p) {
+		return p->turnLaserOff();
+	}
+	return false;
+}
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isOctSldOn(void)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getOctSldLed(); p) {
+		return p->isLaserOn();
+	}
+	return false;
+}
 
 bool WSOSYSTEM_DLL_API __stdcall wso_system::obtainAdcSensorStatus(AdcSensorStatus* status, bool reload)
 {

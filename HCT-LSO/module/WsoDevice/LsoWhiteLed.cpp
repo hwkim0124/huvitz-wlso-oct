@@ -54,7 +54,7 @@ bool wso_device::LsoWhiteLed::initializeLsoWhiteLed(void)
 {
 	if (LightLed::initializeLightLed()) {
 		loadCalibParamFromProfile();
-		turnLaserOff();
+		turnLightOff();
 		return true;
 	}
 	return false;

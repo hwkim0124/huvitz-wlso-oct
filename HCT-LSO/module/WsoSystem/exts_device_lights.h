@@ -15,6 +15,10 @@ namespace wso_system
 		bool WSOSYSTEM_DLL_API __stdcall turnOffLight(LightType type);
 		bool WSOSYSTEM_DLL_API __stdcall isLightOn(LightType type);
 
+		bool WSOSYSTEM_DLL_API __stdcall turnOnOctSld(void);
+		bool WSOSYSTEM_DLL_API __stdcall turnOffOctSld(void);
+		bool WSOSYSTEM_DLL_API __stdcall isOctSldOn(void);
+
 		bool WSOSYSTEM_DLL_API __stdcall obtainAdcSensorStatus(AdcSensorStatus* status, bool reload);
 
 

@@ -15,25 +15,36 @@ namespace WsoNativeLib
         /////////////////////////////////////////////////////////////////////////////////////
         public enum MotorType : int
         {
-            OctFocus = 0,
-            OctRefer = 1,
-            OctPolar = 2,
-            SloFocus = 3,
-            IcgaFilter = 4,
-            StageY = 5,
-            FixFocus = 6,
-            Tilt = 7,
-            Swing = 8,
-            OctMirror = 9
+            OctFocus = 0x00,
+            OctRefer = 0x01,
+            OctPolar = 0x02,
+            OctRefND = 0x03,
+            LsoFocus = 0x04,
+            ReturnMirror = 0x05,
+            OctAntLens = 0x06,
+            Ap1 = 0x07, 
+            Ap2 = 0x08, 
+            Swing = 0x09,
+            StageX = 0x0A,
+            StageY = 0x0B, 
+            StageZ = 0x0C, 
+            ChinRest = 0x0F,
         }
 
         public enum LightType : int
         {
-            SLO_RED = 0,
-            SLO_GREEN = 1,
-            SLO_BLUE = 2,
-            SLO_IR = 3,
-            OCT_SLD = 4
+            LsoWhiteLed = 0x00,
+            RetinaIrLed = 0x01,
+            CorneaIrLedLeft = 0x02, 
+            CorneaIrLedRight = 0x03,
+            ExtFixationLed = 0x04, 
+            BlueLed = 0x05, 
+            GreenLed = 0x06
+        }
+
+        public enum LaserType : int
+        {
+            OctSld = 0x04,
         }
 
         public enum QldApcMode : int
