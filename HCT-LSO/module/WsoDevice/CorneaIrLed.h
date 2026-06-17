@@ -23,6 +23,8 @@ namespace wso_device
 
 	public:
 		bool initializeCorneaIrLed(void);
+		bool loadCalibParamFromProfile(void) override;
+		bool saveCalibParamToProfile(void) override;
 
 	private:
 		struct CorneaIrLedImpl;

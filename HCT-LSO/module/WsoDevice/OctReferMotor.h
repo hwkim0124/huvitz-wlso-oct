@@ -48,9 +48,8 @@ namespace wso_device
 		bool isAtLowerSideByOrigin(bool isCornea = false) const;
 		bool isAtUpperSideByOrigin(bool isCornea = false) const;
 
-
-		virtual void loadParamsFromProfile(void);
-		virtual void saveParamsToProfile(void);
+		virtual bool loadCalibParamFromProfile(void) override;
+		virtual bool saveCalibParamToProfile(void) override;
 
 	private:
 		struct OctReferMotorImpl;

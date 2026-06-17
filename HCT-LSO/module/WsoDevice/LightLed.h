@@ -25,11 +25,9 @@ namespace wso_device
 
 	public:
 		virtual bool initializeLightLed(void);
-		bool isInitiated(void) const;
 
 		virtual bool setIntensity(unsigned short value);
 		virtual unsigned short getIntensity(void) const;
-
 		virtual bool setLightMode(unsigned short value, bool setBoard = true);
 		virtual unsigned short getLightMode(void) const;
 
@@ -40,8 +38,8 @@ namespace wso_device
 		LightType getType(void) const;
 
 		bool isLightOn(void);
-		bool lightOn(void);
-		bool lightOff(void);
+		bool turnLaserOn(void);
+		bool turnLaserOff(void);
 		bool control(bool flag);
 
 		virtual bool loadCalibParamFromProfile(void) override;
@@ -53,7 +51,6 @@ namespace wso_device
 		bool updateIntensityByOffset(int offset);
 
 	protected:
-		MainBoard* getMainBoard(void) const;
 		std::uint8_t getLightLedId(void) const;
 		std::uint16_t getInitialValue(void) const;
 

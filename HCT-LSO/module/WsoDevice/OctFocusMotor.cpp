@@ -68,7 +68,7 @@ bool wso_device::OctFocusMotor::initializeOctFocusMotor(bool ready)
 	if (StepMotor::initializeStepMotor()) {
 		if (ready) {
 			setPositionsPerDiopter(MOTOR_OCT_FOCUS_STEPS_PER_DIOPTER);
-			loadParamsFromProfile();
+			loadCalibParamFromProfile();
 			updatePositionToZeroDiopter();
 		}
 		return true;
@@ -229,22 +229,25 @@ bool wso_device::OctFocusMotor::isEndOfMinusDiopter(void) const
 	return isEndOfUpperPosition();
 }
 
-
-void wso_device::OctFocusMotor::loadParamsFromProfile(void)
+bool wso_device::OctFocusMotor::loadCalibParamFromProfile(void)
 {
-	auto p = getMainBoard()->getHbsDataProfile()->getHbsCalibration();
-	setZeroDiopterPosition(p->DiopterCal.oct_focus_zeroD_pos);
-	return;
+	if (auto p = getMainBoard()->getHbsDataProfile()->getHbsCalibMotorSets(); p) {
+		auto value = p->MotorCalPos.oct_focus_motor_0D_pos;
+		setZeroDiopterPosition(value);
+		return true;
+	}
+	return false;
 }
 
-
-void wso_device::OctFocusMotor::saveParamsToProfile(void)
+bool wso_device::OctFocusMotor::saveCalibParamToProfile(void)
 {
-	auto p = const_cast<HbsCalibration*>(getMainBoard()->getHbsDataProfile()->getHbsCalibration());
-	p->DiopterCal.oct_focus_zeroD_pos = getZeroDiopterPosition();
-	return;
+	if (auto p = const_cast<HbsCalibMotorSets*>(getMainBoard()->getHbsDataProfile()->getHbsCalibMotorSets()); p) {
+		auto value = getZeroDiopterPosition();
+		p->MotorCalPos.oct_focus_motor_0D_pos = value;
+		return true;
+	}
+	return false;
 }
-
 
 OctFocusMotor::OctFocusMotorImpl& wso_device::OctFocusMotor::impl(void) const
 {

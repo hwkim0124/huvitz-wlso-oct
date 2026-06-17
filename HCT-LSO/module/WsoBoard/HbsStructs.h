@@ -1,6 +1,6 @@
 #pragma once
 
-#include "WsoBoard2.h"
+#include "WsoBoard.h"
 #include "HbsDefines.h"
 
 #include <cstdint>

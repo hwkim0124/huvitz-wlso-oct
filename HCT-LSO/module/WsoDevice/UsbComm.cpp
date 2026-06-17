@@ -460,16 +460,16 @@ bool wso_device::UsbComm::readCalibOctParams(const HbsCalibOctParams* data, cons
 	return true;
 }
 
-bool wso_device::UsbComm::readCalibOctSource(const HbsCalibOctSource* data, const HbsCalibsDescriptor* desc)
+bool wso_device::UsbComm::readCalibLedSource(const HbsCalibLedSource* data, const HbsCalibsDescriptor* desc)
 {
 	assert(data != nullptr);
 	assert(desc != nullptr);
 	lock_guard<mutex> lock(impl().mutexControl);
-	const auto addr = desc->blocks[CALIB_IDX_OCT_SOURCE].HBS_BlkBaseAddr;
-	const auto size = desc->blocks[CALIB_IDX_OCT_SOURCE].RomBlkSize;
+	const auto addr = desc->blocks[CALIB_IDX_LED_SOURCE].HBS_BlkBaseAddr;
+	const auto size = desc->blocks[CALIB_IDX_LED_SOURCE].RomBlkSize;
 
 	if (size <= 0 || !readAddress(addr, (unsigned char*)data, size)) {
-		LogD() << "Failed to read HBS oct source calibration block, addr: " << addr << ", size: " << size;
+		LogD() << "Failed to read HBS led source calibration block, addr: " << addr << ", size: " << size;
 		return false;
 	}
 	return true;
@@ -545,6 +545,26 @@ bool wso_device::UsbComm::readCalibFactorySet2(const HbsCalibFactorySet2* data, 
 
 	if (size <= 0 || !readAddress(addr, (unsigned char*)data, size)) {
 		LogD() << "Failed to read HBS factory set2 calibration block, addr: " << addr << ", size: " << size;
+		return false;
+	}
+	return true;
+}
+
+bool wso_device::UsbComm::pullCalibBlockFromMemory(int region, int blockIdx)
+{
+	auto dsize = HbsDataUtil::getCalibBlockDataSize(blockIdx);
+	if (dsize <= 0 || !FlashCalibBlockLoad(region, blockIdx, dsize)) {
+		LogD() << "Failed to pull calibration block from memory, region: " << region << ", block: " << blockIdx << ", size: " << dsize;
+		return false;
+	}
+	return true;
+}
+
+bool wso_device::UsbComm::pushCalibBlockToMemory(int region, int blockIdx)
+{
+	auto dsize = HbsDataUtil::getCalibBlockDataSize(blockIdx);
+	if (dsize <= 0 || !FlashCalibBlockProgram(region, blockIdx, dsize)) {
+		LogD() << "Failed to push calibration block from memory, region: " << region << ", block: " << blockIdx << ", size: " << dsize;
 		return false;
 	}
 	return true;
@@ -827,6 +847,126 @@ bool wso_device::UsbComm::readStageMotorStatus(const HbsStageMotorStatus* data, 
 
 	if (!writeAddress(addr, (unsigned char*)data, size)) {
 		LogDebug() << "Stage motor status data failed to read!";
+		return false;
+	}
+	return true;
+}
+
+bool wso_device::UsbComm::writeCalibMotorSets(const HbsCalibMotorSets* data, const HbsCalibsDescriptor* desc)
+{
+	assert(data != nullptr);
+	assert(desc != nullptr);
+	lock_guard<mutex> lock(impl().mutexControl);
+	const auto addr = desc->blocks[CALIB_IDX_MOTOR_SETS].HBS_BlkBaseAddr;
+	const auto size = desc->blocks[CALIB_IDX_MOTOR_SETS].RomBlkSize;
+
+	if (!writeAddress(addr, (unsigned char*)data, size)) {
+		LogD() << "Failed to write calibration block of motor sets, addr: " << addr << ", size: " << size;
+		return false;
+	}
+	return true;
+}
+
+bool wso_device::UsbComm::writeCalibOctParams(const HbsCalibOctParams* data, const HbsCalibsDescriptor* desc)
+{
+	assert(data != nullptr);
+	assert(desc != nullptr);
+	lock_guard<mutex> lock(impl().mutexControl);
+	const auto addr = desc->blocks[CALIB_IDX_OCT_PARAMS].HBS_BlkBaseAddr;
+	const auto size = desc->blocks[CALIB_IDX_OCT_PARAMS].RomBlkSize;
+
+	if (!writeAddress(addr, (unsigned char*)data, size)) {
+		LogD() << "Failed to write calibration block of oct params, addr: " << addr << ", size: " << size;
+		return false;
+	}
+	return true;
+}
+
+bool wso_device::UsbComm::writeCalibLedSource(const HbsCalibLedSource* data, const HbsCalibsDescriptor* desc)
+{
+	assert(data != nullptr);
+	assert(desc != nullptr);
+	lock_guard<mutex> lock(impl().mutexControl);
+	const auto addr = desc->blocks[CALIB_IDX_LED_SOURCE].HBS_BlkBaseAddr;
+	const auto size = desc->blocks[CALIB_IDX_LED_SOURCE].RomBlkSize;
+
+	if (!writeAddress(addr, (unsigned char*)data, size)) {
+		LogD() << "Failed to write calibration block of led source, addr: " << addr << ", size: " << size;
+		return false;
+	}
+	return true;
+}
+
+bool wso_device::UsbComm::writeCalibOctGalvano(const HbsCalibOctGalvano* data, const HbsCalibsDescriptor* desc)
+{
+	assert(data != nullptr);
+	assert(desc != nullptr);
+	lock_guard<mutex> lock(impl().mutexControl);
+	const auto addr = desc->blocks[CALIB_IDX_OCT_GALVANO].HBS_BlkBaseAddr;
+	const auto size = desc->blocks[CALIB_IDX_OCT_GALVANO].RomBlkSize;
+
+	if (!writeAddress(addr, (unsigned char*)data, size)) {
+		LogD() << "Failed to write calibration block of oct galvano, addr: " << addr << ", size: " << size;
+		return false;
+	}
+	return true;
+}
+
+bool wso_device::UsbComm::writeCalibDeviceCfg(const HbsCalibDeviceCfg* data, const HbsCalibsDescriptor* desc)
+{
+	assert(data != nullptr);
+	assert(desc != nullptr);
+	lock_guard<mutex> lock(impl().mutexControl);
+	const auto addr = desc->blocks[CALIB_IDX_DEVICE_CFG].HBS_BlkBaseAddr;
+	const auto size = desc->blocks[CALIB_IDX_DEVICE_CFG].RomBlkSize;
+
+	if (!writeAddress(addr, (unsigned char*)data, size)) {
+		LogD() << "Failed to write calibration block of device config, addr: " << addr << ", size: " << size;
+		return false;
+	}
+	return true;
+}
+
+bool wso_device::UsbComm::writeCalibStepMotors(const HbsCalibStepMotors* data, const HbsCalibsDescriptor* desc)
+{
+	assert(data != nullptr);
+	assert(desc != nullptr);
+	lock_guard<mutex> lock(impl().mutexControl);
+	const auto addr = desc->blocks[CALIB_IDX_STEP_MOTORS].HBS_BlkBaseAddr;
+	const auto size = desc->blocks[CALIB_IDX_STEP_MOTORS].RomBlkSize;
+
+	if (!writeAddress(addr, (unsigned char*)data, size)) {
+		LogD() << "Failed to write calibration block of step motors, addr: " << addr << ", size: " << size;
+		return false;
+	}
+	return true;
+}
+
+bool wso_device::UsbComm::writeCalibFactorySet1(const HbsCalibFactorySet1* data, const HbsCalibsDescriptor* desc)
+{
+	assert(data != nullptr);
+	assert(desc != nullptr);
+	lock_guard<mutex> lock(impl().mutexControl);
+	const auto addr = desc->blocks[CALIB_IDX_FACTORY_SET1].HBS_BlkBaseAddr;
+	const auto size = desc->blocks[CALIB_IDX_FACTORY_SET1].RomBlkSize;
+
+	if (!writeAddress(addr, (unsigned char*)data, size)) {
+		LogD() << "Failed to write calibration block of factory set1, addr: " << addr << ", size: " << size;
+		return false;
+	}
+	return true;
+}
+
+bool wso_device::UsbComm::writeCalibFactorySet2(const HbsCalibFactorySet2* data, const HbsCalibsDescriptor* desc)
+{
+	assert(data != nullptr);
+	assert(desc != nullptr);
+	lock_guard<mutex> lock(impl().mutexControl);
+	const auto addr = desc->blocks[CALIB_IDX_FACTORY_SET2].HBS_BlkBaseAddr;
+	const auto size = desc->blocks[CALIB_IDX_FACTORY_SET2].RomBlkSize;
+
+	if (!writeAddress(addr, (unsigned char*)data, size)) {
+		LogD() << "Failed to write calibration block of factory set2, addr: " << addr << ", size: " << size;
 		return false;
 	}
 	return true;
@@ -1212,7 +1352,7 @@ bool wso_device::UsbComm::LedSetMode(LightType type, std::uint8_t value)
 	return sendMsgCmd(msg);
 }
 
-bool wso_device::UsbComm::LedSldControl(LightType type, std::uint8_t onOff)
+bool wso_device::UsbComm::LedSldControl(LaserType type, std::uint8_t onOff)
 {
 	lock_guard<mutex> lock(impl().mutexControl);
 	MsgCommand* msg = getMsgCommand(CommandType::SLD_CTRL, 2);
@@ -1222,7 +1362,7 @@ bool wso_device::UsbComm::LedSldControl(LightType type, std::uint8_t onOff)
 	return sendMsgCmd(msg);
 }
 
-bool wso_device::UsbComm::LedSldPotentiometer(LightType type, std::uint8_t channel, std::uint16_t data)
+bool wso_device::UsbComm::LedSldPotentiometer(LaserType type, std::uint8_t channel, std::uint16_t data)
 {
 	lock_guard<mutex> lock(impl().mutexControl);
 	MsgCommand* msg = getMsgCommand(CommandType::SLD_POTENTIO, 4);
@@ -1233,7 +1373,7 @@ bool wso_device::UsbComm::LedSldPotentiometer(LightType type, std::uint8_t chann
 	return sendMsgCmd(msg);
 }
 
-bool wso_device::UsbComm::LedSldGetParameters(LightType type, std::uint8_t channel)
+bool wso_device::UsbComm::LedSldGetParameters(LaserType type, std::uint8_t channel)
 {
 	lock_guard<mutex> lock(impl().mutexControl);
 	MsgCommand* msg = getMsgCommand(CommandType::GET_SLD_POT, 2);
@@ -1243,7 +1383,7 @@ bool wso_device::UsbComm::LedSldGetParameters(LightType type, std::uint8_t chann
 	return sendMsgCmd(msg);
 }
 
-bool wso_device::UsbComm::LedSldUpdateParameters(LightType type, std::uint8_t channel)
+bool wso_device::UsbComm::LedSldUpdateParameters(LaserType type, std::uint8_t channel)
 {
 	lock_guard<mutex> lock(impl().mutexControl);
 	MsgCommand* msg = getMsgCommand(CommandType::FLASH_SLD_POT, 2);
@@ -1271,7 +1411,7 @@ bool wso_device::UsbComm::OctSetReferencePhase(std::int16_t phase)
 	return sendMsgCmd(msg);
 }
 
-bool wso_device::UsbComm::CalibDataBlockErase(std::uint16_t region, std::uint16_t blockNum)
+bool wso_device::UsbComm::FlashCalibBlockErase(std::uint16_t region, std::uint16_t blockNum)
 {
 	lock_guard<mutex> lock(impl().mutexControl);
 	MsgCommand* msg = getMsgCommand(CommandType::ERASE_CALBLOCK, 4);
@@ -1281,7 +1421,7 @@ bool wso_device::UsbComm::CalibDataBlockErase(std::uint16_t region, std::uint16_
 	return sendMsgCmd(msg);
 }
 
-bool wso_device::UsbComm::CalibDataBlockProgram(std::uint16_t region, std::uint16_t blockNum, std::uint32_t size)
+bool wso_device::UsbComm::FlashCalibBlockProgram(std::uint16_t region, std::uint16_t blockNum, std::uint32_t size)
 {
 	lock_guard<mutex> lock(impl().mutexControl);
 	MsgCommand* msg = getMsgCommand(CommandType::FLASH_CALBLOCK, 8);
@@ -1292,7 +1432,7 @@ bool wso_device::UsbComm::CalibDataBlockProgram(std::uint16_t region, std::uint1
 	return sendMsgCmd(msg);
 }
 
-bool wso_device::UsbComm::CalibDataBlockLoadFlash(std::uint16_t region, std::uint16_t blockNum, std::uint32_t size)
+bool wso_device::UsbComm::FlashCalibBlockLoad(std::uint16_t region, std::uint16_t blockNum, std::uint32_t size)
 {
 	lock_guard<mutex> lock(impl().mutexControl);
 	MsgCommand* msg = getMsgCommand(CommandType::LOAD_FLASHCALIB, 8);

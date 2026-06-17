@@ -13,10 +13,12 @@ static std::wstring CONFIG_INI_DEFAULT_PATH = L".//WsoDeviceCfg.ini";
 struct BoardComponent::BoardComponentImpl
 {
 	MainBoard* board;
+	bool initiated;
+
 	IniFile* _iniConfig;
 
 	BoardComponentImpl() {
-		initBoardComponentImpl();
+		initializeBoardComponentImpl();
 	}
 
 	BoardComponentImpl(MainBoard* board) {
@@ -24,8 +26,9 @@ struct BoardComponent::BoardComponentImpl
 		this->board = board;
 	}
 
-	void initBoardComponentImpl(void) {
+	void initializeBoardComponentImpl(void) {
 		board = nullptr;
+		initiated = false;
 	}
 };
 
@@ -68,6 +71,22 @@ BoardComponent& wso_device::BoardComponent::operator=(const BoardComponent& rhs)
 	return *this;
 }
 
+bool wso_device::BoardComponent::initializeBoardComponent(void)
+{
+	return false;
+}
+
+bool wso_device::BoardComponent::isInitiated(void) const
+{
+	return impl().initiated;
+}
+
+void wso_device::BoardComponent::setInitiated(bool flag)
+{
+	impl().initiated = flag;
+	return;
+}
+
 
 bool wso_device::BoardComponent::loadCalibParamFromProfile(void)
 {
@@ -80,6 +99,11 @@ bool wso_device::BoardComponent::saveCalibParamToProfile(void)
 	return true;
 }
 
+
+MainBoard* wso_device::BoardComponent::getMainBoard(void) const
+{
+	return impl().board;
+}
 
 IniFile* wso_device::BoardComponent::getConfigIniFile(void)
 {

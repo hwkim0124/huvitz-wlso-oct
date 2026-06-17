@@ -54,8 +54,39 @@ CorneaIrLed& wso_device::CorneaIrLed::operator=(const CorneaIrLed& rhs)
 bool wso_device::CorneaIrLed::initializeCorneaIrLed(void)
 {
 	if (LightLed::initializeLightLed()) {
-		//loadCalibParamFromProfile();
-		//lightOff();
+		loadCalibParamFromProfile();
+		turnLaserOff();
+		return true;
+	}
+	return false;
+}
+
+bool wso_device::CorneaIrLed::loadCalibParamFromProfile(void)
+{
+	if (auto p = getMainBoard()->getHbsDataProfile()->getHbsCalibLedSource(); p) {
+		unsigned short value = 0;
+		if (getType() == LightType::CORNEA_IR_LEFT_LED) {
+			value = p->LED_Info.AntIR1_intensity;
+		}
+		else if (getType() == LightType::CORNEA_IR_RIGHT_LED) {
+			value = p->LED_Info.AntIR2_intensity;
+		}
+		setIntensity(value);
+		return true;
+	}
+	return false;
+}
+
+bool wso_device::CorneaIrLed::saveCalibParamToProfile(void)
+{
+	if (auto p = const_cast<HbsCalibLedSource*>(getMainBoard()->getHbsDataProfile()->getHbsCalibLedSource()); p) {
+		auto value = getIntensity();
+		if (getType() == LightType::CORNEA_IR_LEFT_LED) {
+			p->LED_Info.AntIR1_intensity = value;
+		}
+		else if (getType() == LightType::CORNEA_IR_RIGHT_LED) {
+			p->LED_Info.AntIR2_intensity = value;
+		}
 		return true;
 	}
 	return false;

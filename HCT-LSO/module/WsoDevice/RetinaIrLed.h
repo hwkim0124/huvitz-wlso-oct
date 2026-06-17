@@ -24,6 +24,9 @@ namespace wso_device
 	public:
 		bool initializeRetinaIrLed(void);
 
+		bool loadCalibParamFromProfile(void) override;
+		bool saveCalibParamToProfile(void) override;
+
 	private:
 		struct RetinaIrLedImpl;
 		std::unique_ptr<RetinaIrLedImpl> d_ptr;

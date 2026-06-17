@@ -15,22 +15,26 @@ using namespace wso_board;
 struct OctSldLed::OctSldLedImpl
 {
 	OctSldCalibParam param;
+	LaserType type;
 
+	int value;
 
 	OctSldLedImpl() 
 	{
+		type = LaserType::OCT_SLD;
+		value = 0;
 	}
 };
 
 
 OctSldLed::OctSldLed() :
-	d_ptr(make_unique<OctSldLedImpl>()), LightLed()
+	d_ptr(make_unique<OctSldLedImpl>())
 {
 }
 
 
 wso_device::OctSldLed::OctSldLed(MainBoard* board) :
-	d_ptr(make_unique<OctSldLedImpl>()), LightLed(board, LightType::OCT_SLD)
+	d_ptr(make_unique<OctSldLedImpl>()), BoardComponent(board)
 {
 }
 
@@ -47,7 +51,7 @@ OctSldLed::~OctSldLed()
 OctSldLed::OctSldLed::OctSldLed(OctSldLed&& rhs) = default;
 OctSldLed& OctSldLed::OctSldLed::operator=(OctSldLed&& rhs) = default;
 
-
+/*
 wso_device::OctSldLed::OctSldLed(const OctSldLed& rhs)
 	: d_ptr(make_unique<OctSldLedImpl>(*rhs.d_ptr))
 {
@@ -59,16 +63,14 @@ OctSldLed& wso_device::OctSldLed::operator=(const OctSldLed& rhs)
 	*d_ptr = *rhs.d_ptr;
 	return *this;
 }
-
+*/
 
 bool wso_device::OctSldLed::initializeOctSldLed(void)
 {
-	if (LightLed::initializeLightLed()) {
-		loadCalibParamFromProfile();
-		lightOff();
-		return true;
-	}
-	return false;
+	setInitiated(true);
+	loadCalibParamFromProfile();
+	turnLaserOff();
+	return true;
 }
 
 
@@ -127,30 +129,64 @@ bool wso_device::OctSldLed::fetchCalibParam_MemoryToBoard(void)
 
 bool wso_device::OctSldLed::loadCalibParamFromProfile(void)
 {
-	/*
-	if (auto p = getMainBoard()->getHbsDataProfile()->getHbsCalibration(); p) {
+	if (auto p = getMainBoard()->getHbsDataProfile()->getHbsCalibLedSource(); p) {
 		impl().param.highCode = p->SLD_Param.RmonHighCode;
 		impl().param.lowCode1 = p->SLD_Param.RmonLowCode1;
 		impl().param.lowCode2 = p->SLD_Param.RmonLowCode2;
 		impl().param.rsiCode = p->SLD_Param.RsiCode;
 		return true;
 	}
-	*/
 	return false;
 }
 
 bool wso_device::OctSldLed::saveCalibParamToProfile(void)
 {
-	/*
-	if (auto p = const_cast<HbsCalibration*>(getMainBoard()->getHbsDataProfile()->getHbsCalibration()); p) {
+	if (auto p = const_cast<HbsCalibLedSource*>(getMainBoard()->getHbsDataProfile()->getHbsCalibLedSource()); p) {
 		p->SLD_Param.RmonHighCode = impl().param.highCode;
 		p->SLD_Param.RmonLowCode1 = impl().param.lowCode1;
 		p->SLD_Param.RmonLowCode2 = impl().param.lowCode2;
 		p->SLD_Param.RsiCode = impl().param.rsiCode;
 		return true;
 	}
-	*/
 	return false;
+}
+
+bool wso_device::OctSldLed::isLaserOn(void)
+{
+	auto flag = (impl().value > 0);
+	return flag;
+}
+
+bool wso_device::OctSldLed::turnLaserOn(void)
+{
+	auto res = control(1);
+	return res;
+}
+
+bool wso_device::OctSldLed::turnLaserOff(void)
+{
+	auto res = control(0);
+	return res;
+}
+
+bool wso_device::OctSldLed::control(int value)
+{
+	UsbComm& usbComm = getMainBoard()->getUsbComm();
+	if (usbComm.LedSldControl(impl().type, (uint8_t)value)) {
+		impl().value = value;
+		return true;
+	}
+	return false;
+}
+
+const char* wso_device::OctSldLed::getName(void) const
+{
+	return OCT_SLD_NAME;
+}
+
+LaserType wso_device::OctSldLed::getType(void) const
+{
+	return impl().type;
 }
 
 

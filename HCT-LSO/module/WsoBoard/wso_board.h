@@ -6,3 +6,4 @@
 #include "HbsStructs.h"
 #include "HbsDataComm.h"
 #include "HbsDataProfile.h"
+#include "HbsDataUtil.h"

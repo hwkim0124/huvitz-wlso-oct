@@ -25,9 +25,9 @@ ZstageMotor::ZstageMotor() :
 
 
 wso_device::ZstageMotor::ZstageMotor(MainBoard* board) :
-	d_ptr(make_unique<ZstageMotorImpl>()), StageMotor(board, StageMotorType::STAGE_Y)
+	d_ptr(make_unique<ZstageMotorImpl>()), StageMotor(board, StageMotorType::STAGE_Z)
 {
-	setLimitRange(STAGE_Y_LIMIT_RANGE_LOW, STAGE_Y_LIMIT_RANGE_HIGH);
+	setLimitRange(STAGE_Z_LIMIT_RANGE_LOW, STAGE_Z_LIMIT_RANGE_HIGH);
 }
 
 

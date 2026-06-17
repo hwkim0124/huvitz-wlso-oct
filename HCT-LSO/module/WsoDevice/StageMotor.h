@@ -31,11 +31,8 @@ namespace wso_device
 
 	public:
 		virtual bool initializeStageMotor(void);
-		bool isInitiated(void) const;
 		bool isStepMotor(void) const;
 
-		virtual void setControls(CSliderCtrl* pSlider = nullptr, CEdit* pEdit = nullptr);
-		virtual bool updatePositionByEdit(void);
 		virtual bool updatePosition(int pos);
 		virtual bool updatePositionByOffset(int offset);
 		virtual bool updatePositionToCenter(void);
@@ -51,6 +48,7 @@ namespace wso_device
 
 		bool updateStatus(void);
 		void reportStatus(void);
+		bool fetchStatus(StepMotorStatus* status);
 
 		void setPosition(int pos);
 		int getPosition(void) const;
@@ -67,7 +65,10 @@ namespace wso_device
 		bool waitForUpdate(int posOffset = 3, int timeDelay = 30, int countMax = 50);
 
 		const char* getName(void) const;
-		StageMotorType getType(void) const;
+		MotorType getType(void) const;
+		bool isXStageMotor(void) const;
+		bool isYStageMotor(void) const;
+		bool isZStageMotor(void) const;
 
 		virtual bool isEndOfLowerPosition(void) const;
 		virtual bool isEndOfUpperPosition(void) const;
@@ -81,7 +82,6 @@ namespace wso_device
 		*/
 
 	protected:
-		MainBoard* getMainBoard(void) const;
 		std::uint8_t getMotorId(void) const;
 		
 		static std::int32_t getInitPosition(StageMotorType type);

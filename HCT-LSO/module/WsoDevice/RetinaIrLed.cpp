@@ -53,8 +53,28 @@ RetinaIrLed& wso_device::RetinaIrLed::operator=(const RetinaIrLed& rhs)
 bool wso_device::RetinaIrLed::initializeRetinaIrLed(void)
 {
 	if (LightLed::initializeLightLed()) {
-		//loadCalibParamFromProfile();
-		//lightOff();
+		loadCalibParamFromProfile();
+		turnLaserOff();
+		return true;
+	}
+	return false;
+}
+
+bool wso_device::RetinaIrLed::loadCalibParamFromProfile(void)
+{
+	if (auto p = getMainBoard()->getHbsDataProfile()->getHbsCalibLedSource(); p) {
+		auto value = p->LED_Info.RetIR_intensity;
+		setIntensity(value);
+		return true;
+	}
+	return false;
+}
+
+bool wso_device::RetinaIrLed::saveCalibParamToProfile(void)
+{
+	if (auto p = const_cast<HbsCalibLedSource*>(getMainBoard()->getHbsDataProfile()->getHbsCalibLedSource()); p) {
+		auto value = getIntensity();
+		p->LED_Info.RetIR_intensity = value;
 		return true;
 	}
 	return false;

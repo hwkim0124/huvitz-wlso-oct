@@ -61,6 +61,11 @@ namespace wso_device
 	constexpr const char* LED_UNKNOWN_NAME = "UnknownLed";
 
 
+	// Laser LEDs
+	////////////////////////////////////////////////////////////////////////////////////////
+	constexpr const char* OCT_SLD_NAME = "OctSld";
+
+
 	// LCD Fixation
 	///////////////////////////////////////////////////////////////////////////////////////
 	constexpr int LCD_FIXATION_ROW_MIN = -199;
@@ -106,7 +111,7 @@ namespace wso_device
 	constexpr int MOTOR_MOVE_INIT_COUNT = 100;
 
 	constexpr int MOTOR_OCT_FOCUS_STEPS_PER_DIOPTER = 210;
-	constexpr int MOTOR_SLO_FOCUS_STEPS_PER_DIOPTER = 224;
+	constexpr int MOTOR_LSO_FOCUS_STEPS_PER_DIOPTER = 224;
 	constexpr int MOTOR_OCT_POLAR_STEPS_PER_DEGREE = 40; // 4;
 
 	constexpr float MOTOR_LSO_FOCUS_DIOPTER_RANGE = 30.0f;

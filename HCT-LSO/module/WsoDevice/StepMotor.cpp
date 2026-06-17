@@ -15,11 +15,9 @@ using namespace wso_board;
 
 struct StepMotor::StepMotorImpl
 {
-	MainBoard* board;
-
-	bool initiated;
-	bool asyncMode;
 	StepMotorType type;
+
+	bool asyncMode;
 
 	int curPos;
 	int maxSpeed;
@@ -34,15 +32,15 @@ struct StepMotor::StepMotorImpl
 	mutex mutexLock;
 
 	StepMotorImpl()
-		: board(nullptr), initiated(false), asyncMode(false),
-		smPosMin(0), smPosMax(0), curPos(0), maxSpeed(0), minSpeed(0), accStep(0)
+		: asyncMode(false),
+		smPosMin(0), smPosMax(0), curPos(0), maxSpeed(0), minSpeed(0), accStep(0), 
+		targetPos(0), type(StepMotorType::UNKNOWN)
 	{
 	}
 
 	// 복사 생성자
 	StepMotorImpl(const StepMotorImpl& other)
-		: board(other.board),
-		initiated(other.initiated),
+		: 
 		asyncMode(other.asyncMode),
 		type(other.type),
 		curPos(other.curPos),
@@ -58,8 +56,6 @@ struct StepMotor::StepMotorImpl
 
 	StepMotorImpl& operator=(const StepMotorImpl& other) {
 		if (this != &other) {
-			board = other.board;
-			initiated = other.initiated;
 			asyncMode = other.asyncMode;
 			type = other.type;
 			curPos = other.curPos;
@@ -83,9 +79,8 @@ StepMotor::StepMotor() :
 
 
 wso_device::StepMotor::StepMotor(MainBoard* board, StepMotorType type) :
-	d_ptr(make_unique<StepMotorImpl>())
+	d_ptr(make_unique<StepMotorImpl>()), BoardComponent(board)
 {
-	impl().board = board;
 	impl().type = type;
 }
 
@@ -139,14 +134,8 @@ bool wso_device::StepMotor::initializeStepMotor(void)
 		return true;
 	}
 
-	impl().initiated = true;
+	setInitiated(true);
 	return ret;
-}
-
-
-bool wso_device::StepMotor::isInitiated(void) const
-{
-	return impl().initiated;
 }
 
 
@@ -720,13 +709,6 @@ StepMotor::StepMotorImpl& wso_device::StepMotor::impl(void) const
 {
 	return *d_ptr;
 }
-
-
-MainBoard* wso_device::StepMotor::getMainBoard(void) const
-{
-	return impl().board;
-}
-
 
 std::uint8_t wso_device::StepMotor::getMotorId(void) const
 {

@@ -8,7 +8,7 @@
 bool WSOSYSTEM_DLL_API __stdcall wso_system::turnOnLight(LightType type)
 {
 	if (auto* p = Hardware::getInstance()->getMainBoard()->getLightLed(type); p) {
-		return p->lightOn();
+		return p->turnLaserOn();
 	}
 	return false;
 }
@@ -16,7 +16,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::turnOnLight(LightType type)
 bool WSOSYSTEM_DLL_API __stdcall wso_system::turnOffLight(LightType type)
 {
 	if (auto* p = Hardware::getInstance()->getMainBoard()->getLightLed(type); p) {
-		return p->lightOff();
+		return p->turnLaserOff();
 	}
 	return false;
 }

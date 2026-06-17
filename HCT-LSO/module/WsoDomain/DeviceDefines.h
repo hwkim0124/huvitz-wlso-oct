@@ -43,19 +43,27 @@ namespace wso_domain
 		STAGE_Y = 0x0B,
 		STAGE_Z = 0x0C,
 		HEAD_REST = 0x0F,
-
+		UNKNOWN = 0xFF,
 		NUM_MOTORS = (HEAD_REST + 1)
 	};
 
-	enum class LightType : unsigned short
+	enum class LightType : unsigned char
 	{
-		LSO_WHITE_LED = 0,
-		RETINA_IR_LED = 1,
-		CORNEA_IR_LEFT_LED = 2,
-		CORNEA_IR_RIGHT_LED = 3,
-		OCT_SLD = 0x04,
+		LSO_WHITE_LED = 0x00,
+		RETINA_IR_LED = 0x01,  // IR/ICGA
+		CORNEA_IR_LEFT_LED = 0x02,
+		CORNEA_IR_RIGHT_LED = 0x03,
+		EXT_FIXATION_LED = 0x04, 
+		BLUE_LED = 0x05, // FA/Blue FAF mode
+		GREEN_LED = 0x06, // Green FAF 
+		// OCT_SLD = 0x04,
 		UNKNOWN = 0xFF,
-		NUM_LIGHT_LEDS = (CORNEA_IR_RIGHT_LED + 1)
+		NUM_LIGHT_LEDS = (GREEN_LED + 1)
+	};
+
+	enum class LaserType : unsigned char
+	{
+		OCT_SLD = 0x04,
 	};
 
 	enum class StepMotorType : unsigned char
@@ -74,16 +82,16 @@ namespace wso_domain
 		STAGE_Y = 0x0B,
 		STAGE_Z = 0x0C,
 		HEAD_REST = 0x0F,
-
+		UNKNOWN = 0xFF,
 		NUM_MOTORS = (HEAD_REST + 1)
 	};
 
 	enum class StageMotorType : unsigned char
 	{
-		STAGE_X = 0x09,
-		STAGE_Y = 0x05, 
-		STAGE_Z = 0x0B,
-		NUMBER_OF_ITEMS = (STAGE_Z + 1)
+		STAGE_X = 0x0A, // 0x09,
+		STAGE_Y = 0x0B, // 0x05, 
+		STAGE_Z = 0x0C, // 0x0B,
+		NUMBER_OF_ITEMS = 3
 	};
 
 

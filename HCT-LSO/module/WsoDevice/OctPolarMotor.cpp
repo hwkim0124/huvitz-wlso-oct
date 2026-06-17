@@ -68,7 +68,7 @@ bool wso_device::OctPolarMotor::initializeOctPolarMotor(bool ready)
 	if (StepMotor::initializeStepMotor()) {
 		if (ready) {
 			setPositionsPerDegree(MOTOR_OCT_POLAR_STEPS_PER_DEGREE);
-			loadParamsFromProfile();
+			loadCalibParamFromProfile();
 			updatePositionToZeroDegree();
 		}
 		return true;
@@ -200,20 +200,24 @@ int wso_device::OctPolarMotor::getDegreeDirection(void) const
 	return 1;
 }
 
-
-void wso_device::OctPolarMotor::loadParamsFromProfile(void)
+bool wso_device::OctPolarMotor::loadCalibParamFromProfile(void)
 {
-	auto p = getMainBoard()->getHbsDataProfile()->getHbsCalibration();
-	setPositionOfZeroDegree(p->PolarizationPos);
-	return;
+	if (auto p = getMainBoard()->getHbsDataProfile()->getHbsCalibMotorSets(); p) {
+		auto value = p->MotorCalPos.PolarizationPos;
+		setPositionOfZeroDegree(value);
+		return true;
+	}
+	return false;
 }
 
-
-void wso_device::OctPolarMotor::saveParamsToProfile(void)
+bool wso_device::OctPolarMotor::saveCalibParamToProfile(void)
 {
-	auto p = const_cast<HbsCalibration*>(getMainBoard()->getHbsDataProfile()->getHbsCalibration());
-	p->PolarizationPos = getPositionOfZeroDegree();
-	return;
+	if (auto p = const_cast<HbsCalibMotorSets*>(getMainBoard()->getHbsDataProfile()->getHbsCalibMotorSets()); p) {
+		auto value = getPositionOfZeroDegree();
+		p->MotorCalPos.PolarizationPos = value;
+		return true;
+	}
+	return false;
 }
 
 

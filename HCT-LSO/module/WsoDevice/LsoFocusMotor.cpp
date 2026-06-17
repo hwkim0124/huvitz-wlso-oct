@@ -65,11 +65,9 @@ bool wso_device::LsoFocusMotor::initializeLsoFocusMotor(bool ready)
 {
 	if (StepMotor::initializeStepMotor()) {
 		if (ready) {
-			setPositionsPerDiopter(MOTOR_SLO_FOCUS_STEPS_PER_DIOPTER);
-			//loadParamsFromProfile();
-			loadConfigFromIniFile();
+			setPositionsPerDiopter(MOTOR_LSO_FOCUS_STEPS_PER_DIOPTER);
+			loadCalibParamFromProfile();
 			updatePosition(impl().currentPos);
-			//updatePositionToZeroDiopter();
 		}
 		return true;
 	}
@@ -105,8 +103,7 @@ void wso_device::LsoFocusMotor::setZeroDiopterPosition(int pos)
 	return;
 }
 
-
-void wso_device::LsoFocusMotor::loadParamsFromProfile(void)
+bool wso_device::LsoFocusMotor::loadCalibParamFromProfile(void)
 {
 	//auto p = getMainBoard()->getHbsDataProfile()->getHbsCalibration();
 	//setZeroDiopterPosition(p->DiopterCal.Scan_focus_zeroD_pos);
@@ -125,15 +122,26 @@ void wso_device::LsoFocusMotor::loadParamsFromProfile(void)
 	//range = half * 2;
 	//auto step = int(range / MOTOR_SLO_FOCUS_DIOPTER_RANGE);
 	//setPositionsPerDiopter(step);
-	return;
+
+	if (auto p = getMainBoard()->getHbsDataProfile()->getHbsCalibMotorSets(); p) {
+		auto value = p->MotorCalPos.lso_focus_motor_0D_pos;
+		setZeroDiopterPosition(value);
+		return true;
+	}
+	return false;
 }
 
-
-void wso_device::LsoFocusMotor::saveParamsToProfile(void)
+bool wso_device::LsoFocusMotor::saveCalibParamToProfile(void)
 {
 	//auto p = const_cast<HbsCalibration*>(getMainBoard()->getHbsDataProfile()->getHbsCalibration());
 	//p->DiopterCal.Scan_focus_zeroD_pos = getZeroDiopterPosition();
-	return;
+
+	if (auto p = const_cast<HbsCalibMotorSets*>(getMainBoard()->getHbsDataProfile()->getHbsCalibMotorSets()); p) {
+		auto value = getZeroDiopterPosition();
+		p->MotorCalPos.lso_focus_motor_0D_pos = value;
+		return true;
+	}
+	return false;
 }
 
 bool wso_device::LsoFocusMotor::loadConfigFromIniFile()

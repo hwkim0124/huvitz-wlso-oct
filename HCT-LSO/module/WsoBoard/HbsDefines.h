@@ -1,15 +1,16 @@
 #pragma once
 
+#include "WsoBoard.h"
 #include "wso_hbs.h"
 
 
 namespace wso_board
 {
-	using HbsTableDescriptor = hbs_descriptor_st;
-	using HbsBufferDescriptor = buffer_descriptor_st;
+	using HbsTableDescriptor = hbs_table_descriptor_st;
+	using HbsBufferDescriptor = bulk_buffer_descriptor_st;
 	using HbsCalibsDescriptor = HBS_CalBlockBuffer_st;
 
-	using HbsMainBoardVersion = mainboard_version_st;
+	using HbsMainBoardVersion = MainBoardVerInfo_st;
 	using HbsSystemInitStatus = SysInitStatus_st;
 	using HbsSystemConfig = SysCfg_st;
 	using HbsGpioStatus = GP_Status_st;
@@ -31,14 +32,14 @@ namespace wso_board
 	using HbsLedStatus = LED_Info_st;
 	using HbsLsoScanner = LsoScanner_st;
 	using HbsOctGalvano = OctGalvano_st;
-	using HbsRetinaIrCamera = IRCamStatus_st;
-	using HbsAnteriorCamera1 = IRCamStatus_st;
-	using HbsAnteriorCamera2 = IRCamStatus_st;
-	using HbsAnteriorCamera3 = IRCamStatus_st;
+	using HbsRetinaIrCamera = IRCamInfo_st;
+	using HbsAnteriorCamera1 = IRCamInfo_st;
+	using HbsAnteriorCamera2 = IRCamInfo_st;
+	using HbsAnteriorCamera3 = IRCamInfo_st;
 
 	using HbsCalibMotorSets = CalBlk0_st;
 	using HbsCalibOctParams = CalBlk1_st;
-	using HbsCalibOctSource = CalBlk2_st;
+	using HbsCalibLedSource = CalBlk2_st;
 	using HbsCalibOctGalvano = CalBlk3_st;
 	using HbsCalibDeviceCfg = CalBlk4_st;
 	using HbsCalibStepMotors = CalBlk5_st;
@@ -50,7 +51,7 @@ namespace wso_board
 	using HbsStageMotorStatus = StepMotorInfo_st;
 	using HbsCalibration = SysCal_st;
 	using HbsConfiguration = UserSetup_st;
-	using HbsInfraredCameraStatus = IRCamStatus_st;
+	using HbsInfraredCameraStatus = IRCamInfo_st;
 	using HbsGalvanoDynamicParam = Galvano_Dynamic_st;
 
 

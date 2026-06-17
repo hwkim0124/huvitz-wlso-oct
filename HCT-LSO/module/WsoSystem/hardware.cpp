@@ -50,19 +50,19 @@ bool wso_system::Hardware::initializeBoardDevices(void)
 
 	int n_warns;
 	if (!p->initializeMainBoard(&n_warns)) {
-		WsoLogError("Mainboard init failed!");
+		WsoLogError("Mainboard initialization failed");
 		return false;
 	}
 	else {
-		WsoLogInfo("Mainboard initialized ... ok");
+		WsoLogInfo("Mainboard initialized");
 	}
 
 	if (!p->initiateBoardComponents(&n_warns)) {
-		WsoLogError("Board devices init failed!");
+		WsoLogError("Board devices initialization failed");
 		return false;
 	}
 	else {
-		WsoLogInfo("Board devices initialized ... ok");
+		WsoLogInfo("Board devices initialized");
 	}
 
 	return true;
@@ -77,11 +77,11 @@ bool wso_system::Hardware::initializeOctScanner(void)
 		else {
 			if (auto* grab = getUsb3Grabber(); grab) {
 				if (!grab->initializeUsb3Grabber()) {
-					WsoLogError("Oct grabber init failed!");
+					WsoLogError("Failed to initialize Oct Usb3 grabber");
 					return false;
 				}
 				else {
-					WsoLogInfo("Oct grabber initialized ... ok");
+					WsoLogInfo("Oct Usb3 grabber initialized");
 					return true;
 				}
 			}

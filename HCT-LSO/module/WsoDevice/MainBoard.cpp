@@ -69,6 +69,7 @@ struct MainBoard::MainBoardImpl
 	SldLaserDriver sldLaserDriver;
 	ZynqXadcDriver zyncXadcDriver;
 
+	unique_ptr< OctSldLed> octSldLed;
 	unique_ptr<Galvanometer> octGalvano;
 	unique_ptr<FirmwareControl> firmwareControl;
 
@@ -112,22 +113,25 @@ MainBoard::MainBoard() :
 	impl().lightLeds.emplace(LightType::RETINA_IR_LED, make_unique<RetinaIrLed>(this));
 	impl().lightLeds.emplace(LightType::CORNEA_IR_LEFT_LED, make_unique<CorneaIrLed>(this, LightType::CORNEA_IR_LEFT_LED));
 	impl().lightLeds.emplace(LightType::CORNEA_IR_RIGHT_LED, make_unique<CorneaIrLed>(this, LightType::CORNEA_IR_RIGHT_LED));
-	
+		
 	impl().stepMotors.emplace(MotorType::OCT_FOCUS, make_unique<OctFocusMotor>(this));
 	impl().stepMotors.emplace(MotorType::OCT_POLAR, make_unique<OctPolarMotor>(this));
 	impl().stepMotors.emplace(MotorType::OCT_REFER, make_unique<OctReferMotor>(this));
 	impl().stepMotors.emplace(MotorType::LSO_FOCUS, make_unique<LsoFocusMotor>(this));
-
+	impl().stepMotors.emplace(MotorType::RM, make_unique<LsoFocusMotor>(this));
+	impl().stepMotors.emplace(MotorType::OCT_ANT_LENS, make_unique<LsoFocusMotor>(this));
 	impl().stepMotors.emplace(MotorType::SWING, make_unique<SwingMotor>(this));
-
-	impl().lsoScanner = make_unique<LsoScanner>(this);
-	impl().octGalvano = make_unique<Galvanometer>(this);
+	impl().stepMotors.emplace(MotorType::HEAD_REST, make_unique<SwingMotor>(this));
 
 	// By using emplace() instead of insert() to construct and insert the unique_ptr, 
 	// it directly constructs the element within the map, avoiding unnecessary copying or moving. 
 	impl().stageMotors.emplace(MotorType::STAGE_X, make_unique<XstageMotor>(this));
 	impl().stageMotors.emplace(MotorType::STAGE_Y, make_unique<YstageMotor>(this));
 	impl().stageMotors.emplace(MotorType::STAGE_Z, make_unique<ZstageMotor>(this));
+
+	impl().lsoScanner = make_unique<LsoScanner>(this);
+	impl().octGalvano = make_unique<Galvanometer>(this);
+	impl().octSldLed = make_unique<OctSldLed>(this);
 
 	impl().firmwareControl = make_unique<FirmwareControl>(this, &this->getUsbComm());
 }
@@ -211,59 +215,60 @@ bool wso_device::MainBoard::initiateBoardComponents(int* numWarns)
 	*numWarns = warns;
 
 	if (!getLsoWhiteLed()->initializeLsoWhiteLed()) {
-		WsoLogWarn("LSO white led init failed!");
+		WsoLogWarn("Failed to initialize LSO white led");
 		warns += 1;
 	}
 	if (!getRetinaIrLed()->initializeRetinaIrLed()) {
-		WsoLogWarn("Retina IR led init failed!");
+		WsoLogWarn("Failed to initialize retina IR led");
 		warns += 1;
 	}
 	if (!getCorneaIrLeftLed()->initializeCorneaIrLed()) {
-		WsoLogWarn("Cornea IR left led init failed!");
+		WsoLogWarn("Failed to initialize cornea IR left led");
 		warns += 1;
 	}
 	if (!getCorneaIrRightLed()->initializeCorneaIrLed()) {
-		WsoLogWarn("Cornea IR Right led init failed!");
+		WsoLogWarn("Failed to initialize cornea IR right led");
 		warns += 1;
 	}
 
 	if (!getOctFocusMotor()->initializeOctFocusMotor()) {
-		WsoLogWarn("OCT Focus motor init failed!");
+		WsoLogWarn("Failed to initialize OCT focus motor");
 		warns += 1;
 	}
 	if (!getOctPolarMotor()->initializeOctPolarMotor()) {
-		WsoLogWarn("OCT Polarization motor init failed!");
+		WsoLogWarn("Failed to initialize OCT Polarization motor");
 		warns += 1;
 	}
 	if (!getOctReferMotor()->initializeOctReferMotor()) {
-		WsoLogWarn("OCT Reference motor init failed!");
+		WsoLogWarn("Failed to initialize OCT Reference motor");
 		warns += 1;
 	}
 	if (!getLsoFocusMotor()->initializeLsoFocusMotor()) {
-		WsoLogWarn("LSO Focus motor init failed!");
+		WsoLogWarn("Failed to initialize LSO Focus motor");
 		warns += 1;
 	}
 
 	if (!getSwingMotor()->initializeSwingMotor()) {
-		WsoLogWarn("Swing motor init failed!");
+		WsoLogWarn("Failed to initialize Swing motor");
 		warns += 1;
 	}
 
 	if (!getYstageMotor()->initializeStageMotor()) {
-		WsoLogWarn("Stage-Y motor init failed!");
+		WsoLogWarn("Failed to initialize stage-Y motor");
 		warns += 1;
 	}
 	else {
 		ostringstream msg;
-		msg << "Stage-Y motor initialized, Current pos: " << getYstageMotor()->getPosition();
+		msg << "Stage-Y motor initialized, pos: " << getYstageMotor()->getPosition();
 		WsoLogDebug(msg.str());
 	}
 
 	// return true;
-
+	/*
 	if (!initiateRetinaCamera()) {
 		warns += 1;
 	}
+	*/
 	if (!initiateCorneaCamera(InfraredCameraId::CORNEA_LEFT)) {
 		warns += 1;
 	}
@@ -271,7 +276,7 @@ bool wso_device::MainBoard::initiateBoardComponents(int* numWarns)
 	if (!initiateCorneaCamera(InfraredCameraId::CORNEA_RIGHT)) {
 		warns += 1;
 	}
-
+	/*
 	if (!initiateCorneaCamera(InfraredCameraId::CORNEA_LOWER)) {
 		warns += 1;
 	}
@@ -279,7 +284,7 @@ bool wso_device::MainBoard::initiateBoardComponents(int* numWarns)
 	if (!initiateColorCamera()) {
 		warns += 1;
 	}
-
+	*/
 
 	if (!getLsoScanner()->initializeLsoScanner()) {
 		WsoLogWarn("LSO scanner init failed!");
@@ -296,18 +301,18 @@ bool wso_device::MainBoard::initiateRetinaCamera(void)
 
 	auto* camera = getRetinaCamera();
 	if (!camera->initializeRetinaCamera()) {
-		WsoLogWarn("Retina Ir camera not initialized!");
+		WsoLogWarn("Retina IR camera not initialized");
 		warns += 1;
 	}
 	else {
-		WsoLogInfo("Retina Ir camera init ... ok!");
+		WsoLogInfo("Retina IR camera initialized");
 
 		if (camera->play()) {
 			bool is_error = false;
 			for (int i = 0; i < 20; i++) {
 				this_thread::sleep_for(chrono::milliseconds(50));
 				if (camera->getErrorCount() > 0) {
-					WsoLogWarn("Retina Ir camera frame error!");
+					WsoLogWarn("Retina IR camera frame error");
 					warns += 1;
 					is_error = true;
 					break;
@@ -317,24 +322,23 @@ bool wso_device::MainBoard::initiateRetinaCamera(void)
 
 			if (!is_error) {
 				if (camera->getFrameCount() == 0) {
-					WsoLogWarn("Retina Ir camera frame error!");
+					WsoLogWarn("Retina IR camera frame error");
 					warns += 1;
 				}
 				else {
-					WsoLogInfo("Retina Ir camera frame test ok!");
+					WsoLogInfo("Retina IR camera frame tested");
 				}
 			}
 		}
 		else {
-			WsoLogWarn("Retina Ir camera check error!");
+			WsoLogWarn("Failed to start retina IR camera stream");
 			warns += 1;
 		}
 	}
 
 	if (!warns) {
-		LogD() << "Retina Ir init again: " << camera->getAnalogGain() << ", dgain: " << camera->getDigitalGain();
+		LogD() << "Retina IR camera, initial again: " << camera->getAnalogGain() << ", dgain: " << camera->getDigitalGain();
 	}
-
 	return (warns == 0);
 }
 
@@ -344,20 +348,21 @@ bool wso_device::MainBoard::initiateCorneaCamera(InfraredCameraId camId)
 	string strMessage = "";
 
 	auto* camera = getCorneaCamera(camId);
+	auto name = camera->getCameraName();
 	if (!camera->initializeCorneaCamera()) {
-		strMessage = std::format("Cornea {} Ir camera not initialized!", (int)camId);
+		strMessage = std::format("Cornea IR camera not initialized, name: {}, camId: {}", name, (int)(camId));
 		WsoLogWarn(strMessage);
 		warns += 1;
 	}
 	else {
-		WsoLogInfo("Cornea Ir camera init ... ok!");
+		WsoLogInfo("Cornea IR camera initialized");
 
 		if (camera->play()) {
 			bool is_error = false;
 			for (int i = 0; i < 20; i++) {
 				this_thread::sleep_for(chrono::milliseconds(50));
 				if (camera->getErrorCount() > 0) {
-					strMessage = std::format("Cornea {} Ir camera frame error!", (int)camId);
+					strMessage = std::format("Cornea IR camera frame error, name: {}, camId: {}", name, (int)(camId));
 					WsoLogWarn(strMessage);
 					warns += 1;
 					is_error = true;
@@ -368,25 +373,25 @@ bool wso_device::MainBoard::initiateCorneaCamera(InfraredCameraId camId)
 
 			if (!is_error) {
 				if (camera->getFrameCount() == 0) {
-					strMessage = std::format("Cornea {} Ir camera frame error!", (int)camId);
+					strMessage = std::format("Cornea IR camera frame error, name: {}, camId: {}", name, (int)(camId));
 					WsoLogWarn(strMessage);
 					warns += 1;
 				}
 				else {
-					strMessage = std::format("Cornea {} Ir camera frame test ok!", (int)camId);
+					strMessage = std::format("Cornea IR camera frame tested, name: {}, camId: {}", name, (int)(camId));
 					WsoLogInfo(strMessage);
 				}
 			}
 		}
 		else {
-			strMessage = std::format("Cornea {} Ir camera check error!", (int)camId);
+			strMessage = std::format("Failed to start cornea IR camera stream, name: {}, camId: {}", name, (int)(camId));
 			WsoLogWarn(strMessage);
 			warns += 1;
 		}
 	}
 
 	if (!warns) {
-		strMessage = std::format("Cornea {} Ir init again:", (int)camId);
+		strMessage = std::format("Cornea IR camera, name: {}, camId: {}", name, (int)(camId));
 		LogD() << strMessage << camera->getAnalogGain() << ", dgain: " << camera->getDigitalGain();
 	}
 	return (warns == 0);
@@ -402,12 +407,19 @@ bool wso_device::MainBoard::initiateColorCamera(void)
 			break;
 		}
 		else {
-			WsoLogDebug("Color camera init failed!, retrying ...");
+			// WsoLogDebug("Color camera initialized failed, retrying");
 			//if (!openColorCamera(true)) {
 			//	GlobalLogger::error("Color camera open failed!");
 			//	return false;
 			//}
 		}
+	}
+
+	if (color_init) {
+		WsoLogInfo("Color camera initialized");
+	}
+	else {
+		WsoLogWarn("Color camera initialized failed");
 	}
 
 	//if (!color_init) {
@@ -566,7 +578,7 @@ bool wso_device::MainBoard::releaseDevicesForOctScan(void)
 bool wso_device::MainBoard::turnOnOctScanBeam(bool flag)
 {
 	if (auto* p = getOctSldLed(); p) {
-		return p->setIntensity(flag == true ? TURN_ON : TURN_OFF);
+		return p->turnLaserOn();
 	}
 	return false;
 }
@@ -578,17 +590,17 @@ bool wso_device::MainBoard::loadHostBufferTable(void)
 	hbs->setHbsDataComm(&impl().usbComm);
 
 	if (hbs->loadHbsTableHeader()) {
-		LogD() << "HBS table descriptor loaded from board";
+		LogD() << "HBS table descriptor loaded from main-board";
 	} else {
-		LogD() << "Failed to load HBS table descriptor";
+		LogD() << "Failed to load HBS table descriptor from main-board";
 		return false;
 	}
 
 	if (hbs->loadHbsTableEntries()) {
-		LogD() << "HBS table entries loaded from board";
+		LogD() << "HBS table entries loaded from main-board";
 	}
 	else {
-		LogD() << "Failed to load HBS table entries";
+		LogD() << "Failed to load HBS table entries from main-board";
 		return false;
 	}
 
@@ -597,22 +609,23 @@ bool wso_device::MainBoard::loadHostBufferTable(void)
 	auto* hbsSub = getSubDataProfile();
 
 	hbsSub->setHbsDataComm(&impl().subComm);
-
+	/*
 	if (hbsSub->loadHbsTableHeader()) {
-		LogD() << "HBS descriptor loaded from Sub board.";
+		LogD() << "HBS table descriptor loaded from sub-board";
 	}
 	else {
-		LogD() << "HBS descriptor not loaded from Sub!";
+		LogD() << "Failed to load HBS table descriptor from sub-board";
 		return false;
 	}
 
 	if (hbsSub->loadHbsTableEntries()) {
-		LogD() << "HBS table data loaded from Sub board.";
+		LogD() << "HBS table entries loaded from sub-board";
 	}
 	else {
-		LogD() << "HBS table data not loaded from Sub!";
+		LogD() << "Failed to load HBS table entries from sub-board";
 		return false;
 	}
+	*/
 	return true;
 }
 
@@ -623,7 +636,7 @@ bool wso_device::MainBoard::pullSystemCalibFromMemory(void)
 		Sleep(250);
 		// Update calibration data to HBS profile.
 		if (auto* hbs = getHbsDataProfile(); hbs) {
-			if (hbs->loadCalibration()) {
+			if (hbs->loadCalibrationBlocks(true)) {
 				return true;
 			}
 		}
@@ -970,10 +983,6 @@ UsbComm& wso_device::MainBoard::getSubComm(void) const
 	return impl().subComm;
 }
 
-OctSldLed* wso_device::MainBoard::getOctSldLed(void) const
-{
-	return (OctSldLed*)getLightLed(LightType::OCT_SLD);
-}
 
 SldLaserDriver* wso_device::MainBoard::getSldLaserDriver(void) const
 {
@@ -1095,6 +1104,10 @@ LsoScanner* wso_device::MainBoard::getLsoScanner(void) const
 	return impl().lsoScanner.get();
 }
 
+OctSldLed* wso_device::MainBoard::getOctSldLed(void) const
+{
+	return impl().octSldLed.get();
+}
 
 Galvanometer* wso_device::MainBoard::getGalvanometer(void) const
 {

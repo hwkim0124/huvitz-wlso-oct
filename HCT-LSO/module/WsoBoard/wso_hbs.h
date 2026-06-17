@@ -60,7 +60,7 @@ namespace wso_board
 
 #define CALIB_IDX_MOTOR_SETS            0
 #define CALIB_IDX_OCT_PARAMS            1
-#define CALIB_IDX_OCT_SOURCE	        2
+#define CALIB_IDX_LED_SOURCE	        2
 #define CALIB_IDX_OCT_GALVANO	        3   
 #define CALIB_IDX_DEVICE_CFG	        4
 #define CALIB_IDX_STEP_MOTORS	        5
@@ -76,6 +76,9 @@ namespace wso_board
 #define BUFF_ADDR_OFFS_STEP_MOTORS      0x50000
 #define BUFF_ADDR_OFFS_FACTORY_SET1     0x80000
 #define BUFF_ADDR_OFFS_FACTORY_SET2     0x90000
+
+#define CALIB_ACTIVE_REGION             0 
+#define CALIB_BACKUP_REGION             1
 
 
     /////////////////////////////////////////////////////////////////////////////////////////////
@@ -94,23 +97,23 @@ namespace wso_board
     typedef struct {
         hbs_table_header_st header;
         hbs_table_entry_st entries[HBS_MAX_TBL_ITEM_NUM];
-    } hbs_descriptor_st;
+    } hbs_table_descriptor_st;
     
     typedef struct {
         U32 count;
         U32 header_chksum;
         U32 table_chksum;
-    } block_buffer_header_st;
+    } bulk_buffer_header_st;
 
     typedef struct {
         U32 buf_addr;
         U32 buf_size;
-    } block_buffer_entry_st;
+    } bulk_buffer_entry_st;
 
     typedef struct {
-        block_buffer_header_st header;
-        block_buffer_entry_st entries[BLK_BUF_TBL_NUM];
-    } buffer_descriptor_st;
+        bulk_buffer_header_st header;
+        bulk_buffer_entry_st entries[BLK_BUF_TBL_NUM];
+    } bulk_buffer_descriptor_st;
 
 
 
@@ -118,7 +121,7 @@ namespace wso_board
     typedef struct {
         S8 app_ver[8];  // Applicatin version
         S8 fpga_ver[8]; // FPGA version
-    } mainboard_version_st;
+    } MainBoardVerInfo_st;
 
     typedef struct {
         U32 status; // 0 initializing,1: fail,2 OK
@@ -245,13 +248,15 @@ namespace wso_board
 
     typedef struct {
         U32 reserved[4];
-    } IRCamStatus_st;
+    } IRCamInfo_st;
 
     typedef struct {
         U16 WLED_intensity;
         U16 RetIR_intensity;
         U16 AntIR1_intensity;
         U16 AntIR2_intensity;
+        U16 Bled_intensity;
+        U16 Gled_inentity;
     } LED_Info_st;
 
 
@@ -431,12 +436,24 @@ namespace wso_board
     } CalBlk5_st;
 
     typedef struct {
-		U32 crc;
-    } CalBlk6_st;
+        U32 crc;
+        U32 data_size; // data size of bytes of the  effective data from crc(head
+        // data) field to the active end of UserCalblk_st, M/B will
+        // load data_size size at initialization time from flash.Max
+        // 64kbytes.
+        U32 reserved[(0x10000 / 4) - 8]; // 64kbytes-8bytes ,reserved flash space(user
+        // defined data format)
+    } CalBlk6_st; // MAX 64kbytes Block size.
 
     typedef struct {
         U32 crc;
-    } CalBlk7_st;
+        U32 data_size; // data size of bytes of the  effective data from crc(head
+        // data) field to the active end of UserCalblk_st, M/B will
+        // load data_size size at initialization time from flash.Max
+        // 64kbytes.
+        U32 reserved[(0x10000 / 4) - 8]; // 64kbytes-8bytes ,reserved flash space(user
+        // defined data format)
+    } CalBlk7_st; // MAX 64kbytes Block size.
 
     //////////////////////////////////////////////////////////////////////////////////////
     typedef struct

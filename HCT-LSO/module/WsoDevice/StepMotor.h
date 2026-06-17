@@ -25,7 +25,6 @@ namespace wso_device
 
 	public:
 		virtual bool initializeStepMotor(void);
-		bool isInitiated(void) const;
 
 		virtual bool updatePosition(int pos);
 		virtual bool updatePositionUseThread(int pos);
@@ -87,9 +86,8 @@ namespace wso_device
 		virtual bool isAtCenterOfPosition(void) const;
 
 	protected:
-		MainBoard* getMainBoard(void) const;
 		std::uint8_t getMotorId(void) const;
-		
+	
 		static std::int32_t getInitPosition(StepMotorType type);
 
 	private:

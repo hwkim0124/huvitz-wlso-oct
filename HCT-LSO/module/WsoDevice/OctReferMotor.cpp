@@ -63,7 +63,7 @@ OctReferMotor& wso_device::OctReferMotor::operator=(const OctReferMotor& rhs)
 bool wso_device::OctReferMotor::initializeOctReferMotor(bool ready)
 {
 	if (StepMotor::initializeStepMotor()) {
-		loadParamsFromProfile();
+		loadCalibParamFromProfile();
 		updatePositionToRetinaOrigin();
 
 		/*
@@ -247,22 +247,28 @@ bool wso_device::OctReferMotor::isAtUpperSideByOrigin(bool isCornea) const
 	return false;
 }
 
-
-void wso_device::OctReferMotor::loadParamsFromProfile(void)
+bool wso_device::OctReferMotor::loadCalibParamFromProfile(void)
 {
-	auto p = getMainBoard()->getHbsDataProfile()->getHbsCalibration();
-	setPositionOfRetinaOrigin(p->REF_RetinaPos);
-	setPositionOfCorneaOrigin(p->REF_CorneaPos);
-	return;
+	if (auto p = getMainBoard()->getHbsDataProfile()->getHbsCalibMotorSets(); p) {
+		auto value1 = p->MotorCalPos.REF_RetinaPos;
+		auto value2 = p->MotorCalPos.REF_CorneaPos;
+		setPositionOfRetinaOrigin(value1);
+		setPositionOfCorneaOrigin(value2);
+		return true;
+	}
+	return false;
 }
 
-
-void wso_device::OctReferMotor::saveParamsToProfile(void)
+bool wso_device::OctReferMotor::saveCalibParamToProfile(void)
 {
-	auto p = const_cast<HbsCalibration*>(getMainBoard()->getHbsDataProfile()->getHbsCalibration());
-	p->REF_RetinaPos = getPositionOfRetinaOrigin();
-	p->REF_CorneaPos = getPositionOfCorneaOrigin();
-	return;
+	if (auto p = const_cast<HbsCalibMotorSets*>(getMainBoard()->getHbsDataProfile()->getHbsCalibMotorSets()); p) {
+		auto value1 = getPositionOfRetinaOrigin();
+		auto value2 = getPositionOfCorneaOrigin();
+		p->MotorCalPos.REF_RetinaPos = value1;
+		p->MotorCalPos.REF_CorneaPos = value2;
+		return true;
+	}
+	return false;
 }
 
 OctReferMotor::OctReferMotorImpl& wso_device::OctReferMotor::impl(void) const

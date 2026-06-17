@@ -25,9 +25,9 @@ XstageMotor::XstageMotor() :
 
 
 wso_device::XstageMotor::XstageMotor(MainBoard* board) :
-	d_ptr(make_unique<XstageMotorImpl>()), StageMotor(board, StageMotorType::STAGE_Y)
+	d_ptr(make_unique<XstageMotorImpl>()), StageMotor(board, StageMotorType::STAGE_X)
 {
-	setLimitRange(STAGE_Y_LIMIT_RANGE_LOW, STAGE_Y_LIMIT_RANGE_HIGH);
+	setLimitRange(STAGE_X_LIMIT_RANGE_LOW, STAGE_X_LIMIT_RANGE_HIGH);
 }
 
 

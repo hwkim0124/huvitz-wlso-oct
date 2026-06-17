@@ -31,8 +31,8 @@ namespace wso_device
 		virtual int getZeroDiopterPosition(void) const override;
 		virtual void setZeroDiopterPosition(int pos) override;
 
-		virtual void loadParamsFromProfile(void);
-		virtual void saveParamsToProfile(void);
+		virtual bool loadCalibParamFromProfile(void) override;
+		virtual bool saveCalibParamToProfile(void) override;
 
 		virtual bool loadConfigFromIniFile(void) override;
 		virtual bool saveConfigToIniFile(void) override;

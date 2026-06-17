@@ -1,6 +1,6 @@
 #pragma once
 
-#include "WsoBoard2.h"
+#include "WsoBoard.h"
 #include "HbsDefines.h"
 
 namespace wso_board
@@ -23,10 +23,17 @@ namespace wso_board
 
 		bool loadHbsTableHeader(void);
 		bool loadHbsTableEntries(void);
-
 		bool loadBufferDescriptor(void);
-		bool loadCalibBlockEntries(void);
-		bool loadCalibration(void);
+		bool loadCalibrationBlocks(bool fetch, int region = CALIB_ACTIVE_REGION);
+
+		bool loadCalibBlockMotorSets(bool fetch, int region = CALIB_ACTIVE_REGION);
+		bool loadCalibBlockOctParams(bool fetch, int region = CALIB_ACTIVE_REGION);
+		bool loadCalibBlockLedSource(bool fetch, int region = CALIB_ACTIVE_REGION);
+		bool loadCalibBlockOctGalvano(bool fetch, int region = CALIB_ACTIVE_REGION);
+		bool loadCalibBlockDeviceCfg(bool fetch, int region = CALIB_ACTIVE_REGION);
+		bool loadCalibBlockStepMotors(bool fetch, int region = CALIB_ACTIVE_REGION);
+		bool loadCalibBlockFactorySet1(bool fetch, int region = CALIB_ACTIVE_REGION);
+		bool loadCalibBlockFactorySet2(bool fetch, int region = CALIB_ACTIVE_REGION);
 
 		bool loadConfiguration(void);
 		bool loadMainBoardVersion(void);
@@ -42,6 +49,15 @@ namespace wso_board
 		bool loadInfraredCameraStatus(void);
 		bool loadGalvanoDynamicParam(void);
 
+		bool saveCalibBlockMotorSets(bool write, int region = CALIB_ACTIVE_REGION);
+		bool saveCalibBlockOctParams(bool write, int region = CALIB_ACTIVE_REGION);
+		bool saveCalibBlockLedSource(bool write, int region = CALIB_ACTIVE_REGION);
+		bool saveCalibBlockOctGalvano(bool write, int region = CALIB_ACTIVE_REGION);
+		bool saveCalibBlockDeviceCfg(bool write, int region = CALIB_ACTIVE_REGION);
+		bool saveCalibBlockStepMotors(bool write, int region = CALIB_ACTIVE_REGION);
+		bool saveCalibBlockFactorySet1(bool write, int region = CALIB_ACTIVE_REGION);
+		bool saveCalibBlockFactorySet2(bool write, int region = CALIB_ACTIVE_REGION);
+
 		bool saveCalibration(void);
 		bool saveConfiguration(void);
 		bool saveSystemConfigure(void);
@@ -54,7 +70,7 @@ namespace wso_board
 
 		const HbsCalibMotorSets* getHbsCalibMotorSets(void) const;
 		const HbsCalibOctParams* getHbsCalibOctParams(void) const;
-		const HbsCalibOctSource* getHbsCalibOctSource(void) const;
+		const HbsCalibLedSource* getHbsCalibLedSource(void) const;
 		const HbsCalibOctGalvano* getHbsCalibOctGalvano(void) const;
 		const HbsCalibDeviceCfg* getHbsCalibDeviceCfg(void) const;
 		const HbsCalibStepMotors* getHbsCalibStepMotors(void) const;

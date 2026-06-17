@@ -150,7 +150,7 @@ bool wso_device::SldLaserDriver::reloadOctSldStatus(void)
 bool wso_device::SldLaserDriver::reloadSystemProfile(void)
 {
 	if (isInitialized()) {
-		if (auto* hbs = impl().mainboard->getHbsDataProfile(); hbs->loadCalibration()) {
+		if (auto* hbs = impl().mainboard->getHbsDataProfile(); hbs->loadCalibBlockLedSource(false)) {
 			auto sld = getMainBoard()->getOctSldLed();
 			return sld->loadCalibParamFromProfile();
 		}

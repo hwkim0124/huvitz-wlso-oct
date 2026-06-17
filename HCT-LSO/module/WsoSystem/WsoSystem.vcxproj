@@ -153,6 +153,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Bootstrapper.h" />
+    <ClInclude Include="Calibration.h" />
     <ClInclude Include="Configuration.h" />
     <ClInclude Include="Controller.h" />
     <ClInclude Include="exts_calibration.h" />
@@ -180,6 +181,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Bootstrapper.cpp" />
+    <ClCompile Include="Calibration.cpp" />
     <ClCompile Include="Configuration.cpp" />
     <ClCompile Include="Controller.cpp" />
     <ClCompile Include="dllmain.cpp" />

@@ -101,6 +101,7 @@ namespace wso_device
 		bool loadHostBufferTable(void);
 		bool pullSystemCalibFromMemory(void);
 		bool pushSystemCalibToMemory(void);
+
 		bool pullSystemConfigFromMemory(void);
 		bool pushSystemConfigToMemory(void);
 

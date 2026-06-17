@@ -53,8 +53,28 @@ LsoWhiteLed& wso_device::LsoWhiteLed::operator=(const LsoWhiteLed& rhs)
 bool wso_device::LsoWhiteLed::initializeLsoWhiteLed(void)
 {
 	if (LightLed::initializeLightLed()) {
-		//loadCalibParamFromProfile();
-		//lightOff();
+		loadCalibParamFromProfile();
+		turnLaserOff();
+		return true;
+	}
+	return false;
+}
+
+bool wso_device::LsoWhiteLed::loadCalibParamFromProfile(void)
+{
+	if (auto p = getMainBoard()->getHbsDataProfile()->getHbsCalibLedSource(); p) {
+		auto value = p->LED_Info.WLED_intensity;
+		setIntensity(value);
+		return true;
+	}
+	return false;
+}
+
+bool wso_device::LsoWhiteLed::saveCalibParamToProfile(void)
+{
+	if (auto p = const_cast<HbsCalibLedSource*>(getMainBoard()->getHbsDataProfile()->getHbsCalibLedSource()); p) {
+		auto value = getIntensity();
+		p->LED_Info.WLED_intensity = value;
 		return true;
 	}
 	return false;

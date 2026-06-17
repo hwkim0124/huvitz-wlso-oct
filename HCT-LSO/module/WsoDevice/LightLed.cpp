@@ -12,9 +12,6 @@ using namespace std;
 
 struct LightLed::LightLedImpl
 {
-	MainBoard* board;
-	bool initiated;
-
 	LightType type;
 	unsigned short value;
 	unsigned short valueSet1;
@@ -25,8 +22,9 @@ struct LightLed::LightLedImpl
 	unsigned short valueMem;
 	unsigned short lightMode;
 
-	LightLedImpl() : board(nullptr), initiated(false),
-		lightMode(0), value(0), valueSet1(0), valueSet2(0), valueMem(0), valueMin(0), valueMax(100), valueStep(5)
+	LightLedImpl() : 
+		lightMode(1), // 0: Strobe mode (pulse by LSO scan param), 1 : Continuous mode 
+		value(0), valueSet1(0), valueSet2(0), valueMem(0), valueMin(0), valueMax(100), valueStep(5)
 	{
 		type = LightType::UNKNOWN;
 	}
@@ -41,16 +39,15 @@ LightLed::LightLed() :
 
 
 wso_device::LightLed::LightLed(MainBoard* board, LightType type) :
-	d_ptr(make_unique<LightLedImpl>())
+	d_ptr(make_unique<LightLedImpl>()), BoardComponent(board)
 {
-	impl().board = board;
 	impl().type = type;
 
 	impl().valueMin = LED_INTENSITY_MIN;
 	impl().valueMax = LED_INTENSITY_MAX;
 	impl().value = LED_INTENSITY_INIT;
 	impl().valueStep = LED_INTENSITY_STEP;
-	impl().lightMode = 0;
+	impl().lightMode = 1;
 	return;
 }
 
@@ -87,7 +84,7 @@ bool wso_device::LightLed::initializeLightLed(void)
 		return true;
 	}
 
-	impl().initiated = true;
+	setInitiated(true);
 
 	// Set intensity level as default. 
 	unsigned short value = getInitialValue();
@@ -107,12 +104,6 @@ bool wso_device::LightLed::initializeLightLed(void)
 		}
 	}
 	return true;
-}
-
-
-bool wso_device::LightLed::isInitiated(void) const
-{
-	return impl().initiated;
 }
 
 
@@ -225,7 +216,7 @@ bool wso_device::LightLed::isLightOn(void)
 }
 
 
-bool wso_device::LightLed::lightOn(void)
+bool wso_device::LightLed::turnLaserOn(void)
 {
 	unsigned short value = getIntensity();
 
@@ -245,7 +236,7 @@ bool wso_device::LightLed::lightOn(void)
 }
 
 
-bool wso_device::LightLed::lightOff(void)
+bool wso_device::LightLed::turnLaserOff(void)
 {
 	unsigned short value = getIntensity();
 
@@ -261,27 +252,20 @@ bool wso_device::LightLed::lightOff(void)
 
 bool wso_device::LightLed::control(bool flag)
 {
-	return (flag ? lightOn() : lightOff());
+	return (flag ? turnLaserOn() : turnLaserOff());
 }
 
 
 bool wso_device::LightLed::loadCalibParamFromProfile(void)
 {
-	return true;
+	return false;
 }
 
 
 bool wso_device::LightLed::saveCalibParamToProfile(void)
 {
-	return true;
+	return false;
 }
-
-
-MainBoard* wso_device::LightLed::getMainBoard(void) const
-{
-	return impl().board;
-}
-
 
 std::uint8_t wso_device::LightLed::getLightLedId(void) const
 {

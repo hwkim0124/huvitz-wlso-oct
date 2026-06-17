@@ -24,6 +24,9 @@ namespace wso_device
 	public:
 		bool initializeLsoWhiteLed(void);
 
+		bool loadCalibParamFromProfile(void) override;
+		bool saveCalibParamToProfile(void) override;
+
 	private:
 		struct LsoWhiteLedImpl;
 		std::unique_ptr<LsoWhiteLedImpl> d_ptr;

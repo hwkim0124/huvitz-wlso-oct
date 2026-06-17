@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "WsoBoard2.h"
 #include "HbsDefines.h"
 #include "HbsDataProfile.h"
 #include "HbsDataComm.h"
@@ -14,11 +15,11 @@ struct HbsDataProfile::HbsDataProfileImpl
 {
 	optional<HbsDataComm*> dataComm { nullopt };
 
-	hbs_descriptor_st	HBS_descriptor{};
-	buffer_descriptor_st 	HBS_BlkBufTbl{};
+	hbs_table_descriptor_st	HBS_descriptor{};
+	bulk_buffer_descriptor_st 	HBS_BlkBufTbl{};
 	SysCal_st 			HBS_SysCal{};
 	UserSetup_st 		HBS_UserSetup{};
-	mainboard_version_st HBS_MainBoardVerInfo{};
+	MainBoardVerInfo_st HBS_MainBoardVerInfo{};
 	SysInitStatus_st 	HBS_SysInitStatus{};
 	SysCfg_st 			HBS_SysCfg{};
 
@@ -30,7 +31,7 @@ struct HbsDataProfile::HbsDataProfileImpl
 
 	HbsCalibMotorSets hbsCalibMotorSets{};
 	HbsCalibOctParams hbsCalibOctParams{};
-	HbsCalibOctSource hbsCalibOctSource{};
+	HbsCalibLedSource hbsCalibOctSource{};
 	HbsCalibOctGalvano hbsCalibOctGalvano{};
 	HbsCalibDeviceCfg hbsCalibDeviceCfg{};
 	HbsCalibStepMotors hbsCalibStepMotors{};
@@ -53,7 +54,7 @@ struct HbsDataProfile::HbsDataProfileImpl
 	HbsStepMotorStatus	HBS_FixMotor{};
 	DC_CR_Motor_st 		HBS_CR_Motor{};
 
-	IRCamStatus_st 		HBS_IRCamstatus{};
+	IRCamInfo_st 		HBS_IRCamstatus{};
 	LED_Info_st   		HBS_LED_status{};
 
 	LsoScanner_st		HBS_LsoScanner{};
@@ -119,12 +120,14 @@ bool wso_board::HbsDataProfile::loadHbsTableEntries(void)
 	if (!loadBufferDescriptor()) {
 		return false;
 	}
-	if (!loadCalibration()) {
+	if (!loadCalibrationBlocks(false)) {
 		return false;
 	}
+	/*
 	if (!loadConfiguration()) {
 		return false;
 	}
+	*/
 	if (!loadMainBoardVersion()) {
 		return false;
 	}
@@ -179,12 +182,8 @@ bool wso_board::HbsDataProfile::loadBufferDescriptor(void)
 	return false;
 }
 
-bool wso_board::HbsDataProfile::loadCalibBlockEntries(void)
-{
-	return false;
-}
 
-bool wso_board::HbsDataProfile::loadCalibration(void)
+bool wso_board::HbsDataProfile::loadCalibrationBlocks(bool fetch, int region)
 {
 	auto* channel = getDataChannel();
 
@@ -196,53 +195,187 @@ bool wso_board::HbsDataProfile::loadCalibration(void)
 		}
 	}
 
+	if (!loadCalibBlockMotorSets(fetch, region)) {
+		return false;
+	}
+	if (!loadCalibBlockOctParams(fetch, region)) {
+		return false;
+	}
+	if (!loadCalibBlockLedSource(fetch, region)) {
+		return false;
+	}
+	/*
+	if (!loadCalibBlockOctGalvano(fetch, region)) {
+		return false;
+	}
+	*/
+	if (!loadCalibBlockDeviceCfg(fetch, region)) {
+		return false;
+	}
+	if (!loadCalibBlockStepMotors(fetch, region)) {
+		return false;
+	}
+	/*
+	if (!loadCalibBlockFactorySet1(fetch, region)) {
+		return false;
+	}
+	if (!loadCalibBlockFactorySet2(fetch, region)) {
+		return false;
+	}
+	*/
+	return true;
+}
+
+bool wso_board::HbsDataProfile::loadCalibBlockMotorSets(bool fetch, int region)
+{
+	auto* channel = getDataChannel();
 	if (auto desc = getHbsCalibsDescriptor(); channel) {
 		if (auto data = getHbsCalibMotorSets(); data) {
+			if (fetch) {
+				if (!channel->pullCalibBlockFromMemory(region, CALIB_IDX_MOTOR_SETS)) {
+					return false;
+				}
+			}
 			if (!channel->readCalibMotorSets(data, desc)) {
 				return false;
 			}
+			return true;
 		}
+	}
+	return false;
+}
+
+bool wso_board::HbsDataProfile::loadCalibBlockOctParams(bool fetch, int region)
+{
+	auto* channel = getDataChannel();
+	if (auto desc = getHbsCalibsDescriptor(); channel) {
 		if (auto data = getHbsCalibOctParams(); data) {
+			if (fetch) {
+				if (!channel->pullCalibBlockFromMemory(region, CALIB_IDX_OCT_PARAMS)) {
+					return false;
+				}
+			}
 			if (!channel->readCalibOctParams(data, desc)) {
 				return false;
 			}
+			return true;
 		}
-		if (auto data = getHbsCalibOctSource(); data) {
-			if (!channel->readCalibOctSource(data, desc)) {
+	}
+	return false;
+}
+
+bool wso_board::HbsDataProfile::loadCalibBlockLedSource(bool fetch, int region)
+{
+	auto* channel = getDataChannel();
+	if (auto desc = getHbsCalibsDescriptor(); channel) {
+		if (auto data = getHbsCalibLedSource(); data) {
+			if (fetch) {
+				if (!channel->pullCalibBlockFromMemory(region, CALIB_IDX_LED_SOURCE)) {
+					return false;
+				}
+			}
+			if (!channel->readCalibLedSource(data, desc)) {
 				return false;
 			}
+			return true;
 		}
-		/*
+	}
+	return false;
+}
+
+bool wso_board::HbsDataProfile::loadCalibBlockOctGalvano(bool fetch, int region)
+{
+	auto* channel = getDataChannel();
+	if (auto desc = getHbsCalibsDescriptor(); channel) {
 		if (auto data = getHbsCalibOctGalvano(); data) {
+			if (fetch) {
+				if (!channel->pullCalibBlockFromMemory(region, CALIB_IDX_OCT_GALVANO)) {
+					return false;
+				}
+			}
 			if (!channel->readCalibOctGalvano(data, desc)) {
 				return false;
 			}
+			return true;
 		}
-		*/
+	}
+	return false;
+}
+
+bool wso_board::HbsDataProfile::loadCalibBlockDeviceCfg(bool fetch, int region)
+{
+	auto* channel = getDataChannel();
+	if (auto desc = getHbsCalibsDescriptor(); channel) {
 		if (auto data = getHbsCalibDeviceCfg(); data) {
+			if (fetch) {
+				if (!channel->pullCalibBlockFromMemory(region, CALIB_IDX_DEVICE_CFG)) {
+					return false;
+				}
+			}
 			if (!channel->readCalibDeviceCfg(data, desc)) {
 				return false;
 			}
+			return true;
 		}
+	}
+	return false;
+}
+
+bool wso_board::HbsDataProfile::loadCalibBlockStepMotors(bool fetch, int region)
+{
+	auto* channel = getDataChannel();
+	if (auto desc = getHbsCalibsDescriptor(); channel) {
 		if (auto data = getHbsCalibStepMotors(); data) {
+			if (fetch) {
+				if (!channel->pullCalibBlockFromMemory(region, CALIB_IDX_STEP_MOTORS)) {
+					return false;
+				}
+			}
 			if (!channel->readCalibStepMotors(data, desc)) {
 				return false;
 			}
+			return true;
 		}
-		/*
+	}
+	return false;
+}
+
+bool wso_board::HbsDataProfile::loadCalibBlockFactorySet1(bool fetch, int region)
+{
+	auto* channel = getDataChannel();
+	if (auto desc = getHbsCalibsDescriptor(); channel) {
 		if (auto data = getHbsCalibFactorySet1(); data) {
+			if (fetch) {
+				if (!channel->pullCalibBlockFromMemory(region, CALIB_IDX_FACTORY_SET1)) {
+					return false;
+				}
+			}
 			if (!channel->readCalibFactorySet1(data, desc)) {
 				return false;
 			}
+			return true;
 		}
+	}
+	return false;
+}
+
+bool wso_board::HbsDataProfile::loadCalibBlockFactorySet2(bool fetch, int region)
+{
+	auto* channel = getDataChannel();
+	if (auto desc = getHbsCalibsDescriptor(); channel) {
 		if (auto data = getHbsCalibFactorySet2(); data) {
+			if (fetch) {
+				if (!channel->pullCalibBlockFromMemory(region, CALIB_IDX_FACTORY_SET2)) {
+					return false;
+				}
+			}
 			if (!channel->readCalibFactorySet2(data, desc)) {
 				return false;
 			}
+			return true;
 		}
-		*/
 	}
-	return true;
+	return false;
 }
 
 bool wso_board::HbsDataProfile::loadConfiguration(void)
@@ -280,8 +413,6 @@ bool wso_board::HbsDataProfile::loadSystemInitStatus(void)
 	}
 	return false;
 }
-
-
 
 bool wso_board::HbsDataProfile::loadSystemConfigure(void)
 {
@@ -337,6 +468,158 @@ bool wso_board::HbsDataProfile::loadGalvanoDynamicParam(void)
 	if (auto desc = getHbsTableDescriptor(); channel) {
 		auto data = getHbsGalvanoDynamicParam();
 		if (channel->readGalvanoDynamicParam(data, desc)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool wso_board::HbsDataProfile::saveCalibBlockMotorSets(bool write, int region)
+{
+	auto* channel = getDataChannel();
+	if (auto desc = getHbsCalibsDescriptor(); channel) {
+		if (auto data = getHbsCalibMotorSets(); data) {
+			if (!channel->writeCalibMotorSets(data, desc)) {
+				return false;
+			}
+			if (write) {
+				if (!channel->pushCalibBlockToMemory(region, CALIB_IDX_MOTOR_SETS)) {
+					return false;
+				}
+			}
+			return true;
+		}
+	}
+	return false;
+}
+
+bool wso_board::HbsDataProfile::saveCalibBlockOctParams(bool write, int region)
+{
+	auto* channel = getDataChannel();
+	if (auto desc = getHbsCalibsDescriptor(); channel) {
+		if (auto data = getHbsCalibOctParams(); data) {
+			if (!channel->writeCalibOctParams(data, desc)) {
+				return false;
+			}
+			if (write) {
+				if (!channel->pushCalibBlockToMemory(region, CALIB_IDX_OCT_PARAMS)) {
+					return false;
+				}
+			}
+			return true;
+		}
+	}
+	return false;
+}
+
+bool wso_board::HbsDataProfile::saveCalibBlockLedSource(bool write, int region)
+{
+	auto* channel = getDataChannel();
+	if (auto desc = getHbsCalibsDescriptor(); channel) {
+		if (auto data = getHbsCalibLedSource(); data) {
+			if (!channel->writeCalibLedSource(data, desc)) {
+				return false;
+			}
+			if (write) {
+				if (!channel->pushCalibBlockToMemory(region, CALIB_IDX_LED_SOURCE)) {
+					return false;
+				}
+			}
+			return true;
+		}
+	}
+	return false;
+}
+
+bool wso_board::HbsDataProfile::saveCalibBlockOctGalvano(bool write, int region)
+{
+	auto* channel = getDataChannel();
+	if (auto desc = getHbsCalibsDescriptor(); channel) {
+		if (auto data = getHbsCalibOctGalvano(); data) {
+			if (!channel->writeCalibOctGalvano(data, desc)) {
+				return false;
+			}
+			if (write) {
+				if (!channel->pushCalibBlockToMemory(region, CALIB_IDX_OCT_GALVANO)) {
+					return false;
+				}
+			}
+			return true;
+		}
+	}
+	return false;
+}
+
+bool wso_board::HbsDataProfile::saveCalibBlockDeviceCfg(bool write, int region)
+{
+	auto* channel = getDataChannel();
+	if (auto desc = getHbsCalibsDescriptor(); channel) {
+		if (auto data = getHbsCalibDeviceCfg(); data) {
+			if (!channel->writeCalibDeviceCfg(data, desc)) {
+				return false;
+			}
+			if (write) {
+				if (!channel->pushCalibBlockToMemory(region, CALIB_IDX_DEVICE_CFG)) {
+					return false;
+				}
+			}
+			return true;
+		}
+	}
+	return false;
+}
+
+bool wso_board::HbsDataProfile::saveCalibBlockStepMotors(bool write, int region)
+{
+	auto* channel = getDataChannel();
+	if (auto desc = getHbsCalibsDescriptor(); channel) {
+		if (auto data = getHbsCalibStepMotors(); data) {
+			if (!channel->writeCalibStepMotors(data, desc)) {
+				return false;
+			}
+			if (write) {
+				if (!channel->pushCalibBlockToMemory(region, CALIB_IDX_STEP_MOTORS)) {
+					return false;
+				}
+			}
+			return true;
+		}
+	}
+	return false;
+}
+
+bool wso_board::HbsDataProfile::saveCalibBlockFactorySet1(bool write, int region)
+{
+	auto* channel = getDataChannel();
+	if (auto desc = getHbsCalibsDescriptor(); channel) {
+		if (auto data = getHbsCalibFactorySet1(); data) {
+			if (!channel->writeCalibFactorySet1(data, desc)) {
+				return false;
+			}
+			if (write) {
+				if (!channel->pushCalibBlockToMemory(region, CALIB_IDX_FACTORY_SET1)) {
+					return false;
+				}
+			}
+			return true;
+		}
+	}
+	return false;
+}
+
+bool wso_board::HbsDataProfile::saveCalibBlockFactorySet2(bool write, int region)
+{
+	auto* channel = getDataChannel();
+	if (auto desc = getHbsCalibsDescriptor(); channel) {
+		if (auto data = getHbsCalibFactorySet2(); data) {
+			if (!channel->writeCalibFactorySet2(data, desc)) {
+				return false;
+			}
+			if (write) {
+				if (!channel->pushCalibBlockToMemory(region, CALIB_IDX_FACTORY_SET2)) {
+					return false;
+				}
+			}
 			return true;
 		}
 	}
@@ -443,7 +726,7 @@ bool wso_board::HbsDataProfile::saveGalvanoDynamicParam(void)
 	return false;
 }
 
-const hbs_descriptor_st* wso_board::HbsDataProfile::getHbsTableDescriptor(void) const
+const hbs_table_descriptor_st* wso_board::HbsDataProfile::getHbsTableDescriptor(void) const
 {
 	return &impl().HBS_descriptor;
 }
@@ -468,7 +751,7 @@ const HbsCalibOctParams* wso_board::HbsDataProfile::getHbsCalibOctParams(void) c
 	return &impl().hbsCalibOctParams;
 }
 
-const HbsCalibOctSource* wso_board::HbsDataProfile::getHbsCalibOctSource(void) const
+const HbsCalibLedSource* wso_board::HbsDataProfile::getHbsCalibLedSource(void) const
 {
 	return &impl().hbsCalibOctSource;
 }

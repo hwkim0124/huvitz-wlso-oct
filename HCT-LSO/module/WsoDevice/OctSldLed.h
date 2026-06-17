@@ -1,7 +1,7 @@
 #pragma once
 
 #include "WsoDevice2.h"
-#include "LightLed.h"
+#include "BoardComponent.h"
 
 #include <memory>
 #include <string>
@@ -11,7 +11,7 @@ namespace wso_device
 {
 	class MainBoard;
 
-	class WSODEVICE_DLL_API OctSldLed : public LightLed
+	class WSODEVICE_DLL_API OctSldLed : public BoardComponent
 	{
 	public:
 		OctSldLed();
@@ -20,8 +20,8 @@ namespace wso_device
 
 		OctSldLed(OctSldLed&& rhs);
 		OctSldLed& operator=(OctSldLed&& rhs);
-		OctSldLed(const OctSldLed& rhs);
-		OctSldLed& operator=(const OctSldLed& rhs);
+		OctSldLed(const OctSldLed& rhs) = delete;
+		OctSldLed& operator=(const OctSldLed& rhs) = delete;
 
 	public:
 		bool initializeOctSldLed(void) ;
@@ -31,6 +31,14 @@ namespace wso_device
 
 		virtual bool loadCalibParamFromProfile(void) override;
 		virtual bool saveCalibParamToProfile(void) override;
+
+		bool isLaserOn(void);
+		bool turnLaserOn(void);
+		bool turnLaserOff(void);
+		bool control(int value);
+
+		const char* getName(void) const;
+		LaserType getType(void) const;
 
 		std::uint16_t getHighCode(void);
 		std::uint16_t getLowCode1(void);

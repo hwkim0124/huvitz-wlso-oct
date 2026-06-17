@@ -12,6 +12,7 @@ namespace HelloWorld
         {
             Console.WriteLine("Hello World!");
             Bootstrapper.InitializeWsoSystem(clb: logMsgCallback, true);
+            Bootstrapper.ReleaseWsoSystem();
         }
 
         static void CallbackLogMsg(string msg, int type)

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "WsoBoard.h"
 #include "HbsDataProfile.h"
 #include "HbsStructs.h"
 
@@ -14,12 +15,15 @@ namespace wso_board
 
 		virtual bool readCalibMotorSets(const HbsCalibMotorSets* data, const HbsCalibsDescriptor* desc) = 0;
 		virtual bool readCalibOctParams(const HbsCalibOctParams* data, const HbsCalibsDescriptor* desc) = 0;
-		virtual bool readCalibOctSource(const HbsCalibOctSource* data, const HbsCalibsDescriptor* desc) = 0;
+		virtual bool readCalibLedSource(const HbsCalibLedSource* data, const HbsCalibsDescriptor* desc) = 0;
 		virtual bool readCalibOctGalvano(const HbsCalibOctGalvano* data, const HbsCalibsDescriptor* desc) = 0;
 		virtual bool readCalibDeviceCfg(const HbsCalibDeviceCfg* data, const HbsCalibsDescriptor* desc) = 0;
 		virtual bool readCalibStepMotors(const HbsCalibStepMotors* data, const HbsCalibsDescriptor* desc) = 0;
 		virtual bool readCalibFactorySet1(const HbsCalibFactorySet1* data, const HbsCalibsDescriptor* desc) = 0;
 		virtual bool readCalibFactorySet2(const HbsCalibFactorySet2* data, const HbsCalibsDescriptor* desc) = 0;
+
+		virtual bool pullCalibBlockFromMemory(int region, int blockIdx) = 0;
+		virtual bool pushCalibBlockToMemory(int region, int blockIdx) = 0;
 
 		virtual bool readCalibration(const HbsCalibration* data, const HbsTableDescriptor* desc) = 0;
 		virtual bool readConfiguration(const HbsConfiguration* data, const HbsTableDescriptor* desc) = 0;
@@ -36,6 +40,15 @@ namespace wso_board
 		virtual bool readStageMotorStatus(const HbsStageMotorStatus* data, const HbsTableDescriptor* desc) = 0;
 		virtual bool readGalvanoDynamicParam(const HbsGalvanoDynamicParam* data, const HbsTableDescriptor* desc) = 0;
 		virtual bool readLsoScannerParam(const HbsLsoScanner* data, const HbsTableDescriptor* desc) = 0;
+
+		virtual bool writeCalibMotorSets(const HbsCalibMotorSets* data, const HbsCalibsDescriptor* desc) = 0;
+		virtual bool writeCalibOctParams(const HbsCalibOctParams* data, const HbsCalibsDescriptor* desc) = 0;
+		virtual bool writeCalibLedSource(const HbsCalibLedSource* data, const HbsCalibsDescriptor* desc) = 0;
+		virtual bool writeCalibOctGalvano(const HbsCalibOctGalvano* data, const HbsCalibsDescriptor* desc) = 0;
+		virtual bool writeCalibDeviceCfg(const HbsCalibDeviceCfg* data, const HbsCalibsDescriptor* desc) = 0;
+		virtual bool writeCalibStepMotors(const HbsCalibStepMotors* data, const HbsCalibsDescriptor* desc) = 0;
+		virtual bool writeCalibFactorySet1(const HbsCalibFactorySet1* data, const HbsCalibsDescriptor* desc) = 0;
+		virtual bool writeCalibFactorySet2(const HbsCalibFactorySet2* data, const HbsCalibsDescriptor* desc) = 0;
 
 		virtual bool writeCalibration(const HbsCalibration* data, const HbsTableDescriptor* desc) = 0;
 		virtual bool writeConfiguration(const HbsConfiguration* data, const HbsTableDescriptor* desc) = 0;

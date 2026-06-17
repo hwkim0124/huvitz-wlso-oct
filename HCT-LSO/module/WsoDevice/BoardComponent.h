@@ -23,6 +23,10 @@ namespace wso_device
 		BoardComponent& operator=(const BoardComponent& rhs);
 
 	public:
+		bool initializeBoardComponent(void);
+		bool isInitiated(void) const;
+		void setInitiated(bool flag); 
+
 		virtual bool loadCalibParamFromProfile(void) ;
 		virtual bool saveCalibParamToProfile(void) ;
 
@@ -30,6 +34,7 @@ namespace wso_device
 		virtual bool saveConfigToIniFile(void);
 
 	protected:
+		MainBoard* getMainBoard(void) const;
 		static IniFile* getConfigIniFile(void);
 		static bool openConfigIniFile(wstring path);
 

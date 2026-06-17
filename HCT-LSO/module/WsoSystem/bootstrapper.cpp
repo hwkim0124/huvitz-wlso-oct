@@ -86,12 +86,12 @@ bool wso_system::Bootstrapper::initializeWsoSystem(WsoLogMsgCallback clb, bool t
 	establishSystemBootMode();
 
 	if (!initializeHardware()) {
-		WsoLogError("Error: System devices not initialized");
+		WsoLogError("Failed to initialize system devices");
 		return false;
 	}
 
 	if (!implementSystemCalibration()) {
-		WsoLogError("Error: System calibration not implemented.");
+		WsoLogError("System calibration not implemented");
 		return false;
 	}
 
@@ -100,11 +100,11 @@ bool wso_system::Bootstrapper::initializeWsoSystem(WsoLogMsgCallback clb, bool t
 	}
 
 	if (!implementSystemConfiguration()) {
-		WsoLogError("Warning: System configuration not implemented.");
+		WsoLogError("System configuration not implemented.");
 		// return false;
 	}
 
-	WsoLogInfo("Wso system initialzed successfully.");
+	WsoLogInfo("Wso system initialized");
 	impl().isSystemInitialized = true;
 	return true;
 }
@@ -127,7 +127,7 @@ void wso_system::Bootstrapper::releaseWsoSystem(void)
 	}
 
 	impl().isSystemInitialized = false;
-	WsoLogInfo("System released successfully.");
+	WsoLogInfo("Wso system released");
 	return;
 }
 

@@ -2,6 +2,7 @@
 #include "StageMotor.h"
 #include "MainBoard.h"
 #include "UsbComm.h"
+#include "BoardComponent.h"
 
 #include <string>
 #include <sstream>
@@ -14,25 +15,27 @@ using namespace wso_board;
 
 struct StageMotor::StageMotorImpl
 {
-	MainBoard* board;
 	StageMotorType type;
-	bool initiated;
+
 	bool asyncMode;
 	bool stopped;
 
 	int curPos;
+	int maxSpeed;
+	int minSpeed;
+	int accStep;
+	int smPosMin;
+	int smPosMax;
+
 	int centerPos;
 	int targetPos;
 	int limitRange[2];
 	int limitStatus[2];
 
-	CSliderCtrl* pSlider;
-	CEdit* pEdit;
-
 	StageMotorImpl()
-		: board(nullptr), initiated(false), asyncMode(true), stopped(false),
-		curPos(0), centerPos(0), targetPos(0), limitRange{ 0 }, limitStatus{ false },
-		pSlider(NULL), pEdit(NULL)
+		: asyncMode(true), stopped(false),
+		smPosMin(0), smPosMax(0), curPos(0), maxSpeed(0), minSpeed(0), accStep(0), 
+		centerPos(0), targetPos(0), limitRange{ 0 }, limitStatus{ false }
 	{
 	}
 };
@@ -45,9 +48,8 @@ StageMotor::StageMotor() :
 
 
 wso_device::StageMotor::StageMotor(MainBoard* board, StageMotorType type) :
-	d_ptr(make_unique<StageMotorImpl>())
+	d_ptr(make_unique<StageMotorImpl>()), BoardComponent(board)
 {
-	impl().board = board;
 	impl().type = type;
 }
 
@@ -98,41 +100,32 @@ bool wso_device::StageMotor::initializeStageMotor(void)
 	if (getMainBoard()->isMotorsNotInUse()) {
 		return true;
 	}
-	impl().initiated = true;
+	setInitiated(true);
 	return ret;
-}
-
-
-bool wso_device::StageMotor::isInitiated(void) const
-{
-	return impl().initiated;
 }
 
 
 bool wso_device::StageMotor::isStepMotor(void) const
 {
-	return (getType() == StageMotorType::STAGE_Y);
+	return true; //  (getType() == StageMotorType::STAGE_Y);
 }
 
 
-void wso_device::StageMotor::setControls(CSliderCtrl* pSlider, CEdit* pEdit)
+bool wso_device::StageMotor::updatePosition(int pos)
 {
-	/*
-	impl().pSlider = pSlider;
-
-	if (pSlider != nullptr) {
-		pSlider->SetRange(getRangeMin(), getRangeMax());
-		pSlider->SetLineSize(getSliderStepSize());
-		pSlider->SetPageSize(getSliderStepSize());
-		pSlider->SetPos(getPosition());
+	if (!isInitiated()) {
+		return false;
 	}
 
-	impl().pEdit = pEdit;
-	if (pEdit != nullptr) {
-		pEdit->SetWindowTextW(to_wstring(getPosition()).c_str());
+	if (controlMove(pos)) {
+		/*
+		int pos = getPosition();
+		float value = getCurrentValueByPosition();
+		CallbackRegistry::getInstance()->runStepMotorPositionChanged(getMotorType(), pos, value);
+		*/
+		return true;
 	}
-	*/
-	return;
+	return false;
 }
 
 
@@ -146,48 +139,6 @@ int wso_device::StageMotor::getSliderStepSize(void) const
 	return size;
 }
 
-
-bool wso_device::StageMotor::updatePositionByEdit(void)
-{
-	/*
-	if (impl().pEdit != NULL) {
-		CString value;
-		impl().pEdit->GetWindowTextW(value);
-		if (value.GetLength() > 0) {
-			int pos = _ttoi(value);
-			return updatePosition(pos);
-		}
-	}
-	*/
-	return false;
-}
-
-
-bool wso_device::StageMotor::updatePosition(int pos)
-{
-	/*
-	if (!isInitiated()) {
-		return false;
-	}
-	*/
-
-	if (controlMove(pos)) {
-		/*
-		int res = getPosition();
-		if (impl().pSlider != NULL) {
-			impl().pSlider->SetPos(res);
-		}
-		if (impl().pEdit != NULL) {
-			CString text;
-			text.Format(_T("%d"), res);
-			impl().pEdit->SetWindowText(text);
-			impl().pEdit->SetSel(0, -1, FALSE);
-		}
-		*/
-		return true;
-	}
-	return false;
-}
 
 
 bool wso_device::StageMotor::updatePositionByOffset(int offset)
@@ -203,45 +154,6 @@ bool wso_device::StageMotor::updatePositionToCenter(void)
 	int offset = getCenterPosition() - getPosition();
 	return updatePositionByOffset(offset);
 }
-
-
-bool wso_device::StageMotor::updateStatus(void)
-{
-	/*
-	if (!isInitiated()) {
-		return false;
-	}
-	*/
-
-	UsbComm& usbComm = getMainBoard()->getUsbComm();
-	if (isStepMotor()) {
-		if (auto* hbs = getMainBoard()->getHbsDataProfile(); hbs->loadStageMotorStatus()) {
-			auto* info = hbs->getHbsStageMotorStatus(getType());
-			if (info) {
-				impl().curPos = info->CurPos;
-				// impl().limitStatus[0] = info.limit_sensor_state[0];
-				// impl().limitStatus[1] = info.limit_sensor_state[1];
-				impl().limitRange[0] = info->sm_pos_min;
-				impl().limitRange[1] = info->sm_pos_max;
-				return true;
-			}
-		}
-	}
-	/*
-	else {
-		StageDcMotorInfo info;
-		if (usbComm.StageStatus(getType(), getMainBoard()->getBaseAddressOfStageInfo(), &info)) {
-			impl().curPos = info.enc_pos;
-			impl().centerPos = info.center_pos;
-			return true;
-		}
-	}
-	*/
-	LogE() << "Stage motor update status failed!, name: " << getName();
-	return false;
-}
-
-
 
 bool wso_device::StageMotor::controlMove(int pos)
 {
@@ -271,25 +183,6 @@ bool wso_device::StageMotor::controlMove(int pos)
 }
 
 
-bool wso_device::StageMotor::controlJogg(int delta)
-{
-	/*
-	if (!isInitiated()) {
-		return false;
-	}
-	*/
-
-	UsbComm& usbComm = getMainBoard()->getUsbComm();
-	if (usbComm.MotorJogg(getMotorId(), delta)) {
-		impl().stopped = false;
-		return true;
-	}
-
-	LogDebug() << "StageMotor::controlJogg() failed!, name: " << getName();
-	return false;
-}
-
-
 bool wso_device::StageMotor::controlHome(void)
 {
 	if (!isInitiated()) {
@@ -309,7 +202,6 @@ bool wso_device::StageMotor::controlHome(void)
 	return false;
 }
 
-
 bool wso_device::StageMotor::controlStop(void)
 {
 	if (!isInitiated()) {
@@ -325,6 +217,63 @@ bool wso_device::StageMotor::controlStop(void)
 		return true;
 	}
 	LogDebug() << "StageMotor::controlHome() failed!, name =" << getName();
+	return false;
+}
+
+
+bool wso_device::StageMotor::controlJogg(int delta)
+{
+	/*
+	if (!isInitiated()) {
+		return false;
+	}
+	*/
+
+	UsbComm& usbComm = getMainBoard()->getUsbComm();
+	if (usbComm.MotorJogg(getMotorId(), delta)) {
+		impl().stopped = false;
+		return true;
+	}
+
+	LogDebug() << "StageMotor::controlJogg() failed!, name: " << getName();
+	return false;
+}
+
+bool wso_device::StageMotor::updateStatus(void)
+{
+	/*
+	if (!isInitiated()) {
+		return false;
+	}
+	*/
+
+	UsbComm& usbComm = getMainBoard()->getUsbComm();
+	if (isStepMotor()) {
+		if (auto* hbs = getMainBoard()->getHbsDataProfile(); hbs->loadStageMotorStatus()) {
+			auto* info = hbs->getHbsStageMotorStatus(static_cast<StageMotorType>(getType()));
+			if (info) {
+				impl().curPos = info->CurPos;
+				// impl().limitStatus[0] = info.limit_sensor_state[0];
+				// impl().limitStatus[1] = info.limit_sensor_state[1];
+				impl().limitRange[0] = info->sm_pos_min;
+				impl().limitRange[1] = info->sm_pos_max;
+				impl().smPosMax = info->sm_pos_max;
+				impl().smPosMin = info->sm_pos_min;
+				return true;
+			}
+		}
+	}
+	/*
+	else {
+		StageDcMotorInfo info;
+		if (usbComm.StageStatus(getType(), getMainBoard()->getBaseAddressOfStageInfo(), &info)) {
+			impl().curPos = info.enc_pos;
+			impl().centerPos = info.center_pos;
+			return true;
+		}
+	}
+	*/
+	LogE() << "Stage motor update status failed!, name: " << getName();
 	return false;
 }
 
@@ -348,6 +297,23 @@ void wso_device::StageMotor::reportStatus(void)
 	}
 	LogD() << ss.str();
 	return;
+}
+
+bool wso_device::StageMotor::fetchStatus(StepMotorStatus* status)
+{
+	if (status) {
+		status->currPos = getPosition();
+		status->rangeMin = getRangeMin();
+		status->rangeMax = getRangeMax();
+		status->maxSpeed = impl().maxSpeed;
+		status->minSpeed = impl().minSpeed;
+		status->accelStep = impl().accStep;
+		status->sliderPageSize = getSliderStepSize();
+		status->sliderStepSize = getSliderStepSize();
+		// status->rangeMinValue = getValueAtPosition(status->rangeMin);
+		// status->rangeMaxValue = getValueAtPosition(status->rangeMax);
+	}
+	return true;
 }
 
 
@@ -398,11 +364,11 @@ bool wso_device::StageMotor::waitForUpdate(int posOffset, int timeDelay, int cou
 const char* wso_device::StageMotor::getName(void) const
 {
 	switch (getType()) {
-	case StageMotorType::STAGE_X:
+	case MotorType::STAGE_X:
 		return MOTOR_STAGE_X_NAME;
-	case StageMotorType::STAGE_Y:
+	case MotorType::STAGE_Y:
 		return MOTOR_STAGE_Y_NAME;
-	case StageMotorType::STAGE_Z:
+	case MotorType::STAGE_Z:
 		return MOTOR_STAGE_Z_NAME;
 	}
 
@@ -410,9 +376,24 @@ const char* wso_device::StageMotor::getName(void) const
 }
 
 
-StageMotorType wso_device::StageMotor::getType(void) const
+MotorType wso_device::StageMotor::getType(void) const
 {
-	return impl().type;
+	return static_cast<MotorType>(impl().type);
+}
+
+bool wso_device::StageMotor::isXStageMotor(void) const
+{
+	return (getType() == MotorType::STAGE_X);
+}
+
+bool wso_device::StageMotor::isYStageMotor(void) const
+{
+	return (getType() == MotorType::STAGE_Y);
+}
+
+bool wso_device::StageMotor::isZStageMotor(void) const
+{
+	return (getType() == MotorType::STAGE_Z);
 }
 
 
@@ -482,13 +463,6 @@ StageMotor::StageMotorImpl& wso_device::StageMotor::impl(void) const
 {
 	return *d_ptr;
 }
-
-
-MainBoard* wso_device::StageMotor::getMainBoard(void) const
-{
-	return impl().board;
-}
-
 
 std::uint8_t wso_device::StageMotor::getMotorId(void) const
 {

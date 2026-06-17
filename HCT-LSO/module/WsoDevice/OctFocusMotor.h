@@ -56,8 +56,8 @@ namespace wso_device
 		bool isEndOfPlusDiopter(void) const;
 		bool isEndOfMinusDiopter(void) const;
 
-		virtual void loadParamsFromProfile(void);
-		virtual void saveParamsToProfile(void);
+		virtual bool loadCalibParamFromProfile(void) override;
+		virtual bool saveCalibParamToProfile(void) override;
 
 	private:
 		struct OctFocusMotorImpl;

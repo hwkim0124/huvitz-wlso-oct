@@ -52,8 +52,8 @@ namespace wso_device
 		float convertPositionToDegree(int pos) const;
 		int getDegreeDirection(void) const;
 
-		virtual void loadParamsFromProfile(void);
-		virtual void saveParamsToProfile(void);
+		virtual bool loadCalibParamFromProfile(void) override;
+		virtual bool saveCalibParamToProfile(void) override;
 
 	private:
 		struct OctPolarMotorImpl;

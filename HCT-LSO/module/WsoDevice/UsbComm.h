@@ -60,13 +60,15 @@ namespace wso_device
 
 		bool readCalibMotorSets(const HbsCalibMotorSets* data, const HbsCalibsDescriptor* desc) override;
 		bool readCalibOctParams(const HbsCalibOctParams* data, const HbsCalibsDescriptor* desc) override;
-		bool readCalibOctSource(const HbsCalibOctSource* data, const HbsCalibsDescriptor* desc) override;
+		bool readCalibLedSource(const HbsCalibLedSource* data, const HbsCalibsDescriptor* desc) override;
 		bool readCalibOctGalvano(const HbsCalibOctGalvano* data, const HbsCalibsDescriptor* desc) override;
 		bool readCalibDeviceCfg(const HbsCalibDeviceCfg* data, const HbsCalibsDescriptor* desc) override;
 		bool readCalibStepMotors(const HbsCalibStepMotors* data, const HbsCalibsDescriptor* desc) override;
 		bool readCalibFactorySet1(const HbsCalibFactorySet1* data, const HbsCalibsDescriptor* desc) override;
 		bool readCalibFactorySet2(const HbsCalibFactorySet2* data, const HbsCalibsDescriptor* desc) override;
 
+		bool pullCalibBlockFromMemory(int region, int blockIdx) override;
+		bool pushCalibBlockToMemory(int region, int blockIdx) override;
 
 		bool readCalibration(const HbsCalibration* data, const HbsTableDescriptor* desc) override;
 		bool readConfiguration(const HbsConfiguration* data, const HbsTableDescriptor* desc) override;
@@ -83,6 +85,15 @@ namespace wso_device
 		bool readInfraredCameraStatus(const HbsInfraredCameraStatus* data, const HbsTableDescriptor* desc) override;
 		bool readStepMotorStatus(const HbsStepMotorStatus* data, StepMotorType type, const HbsTableDescriptor* desc) override;
 		bool readStageMotorStatus(const HbsStageMotorStatus* data, const HbsTableDescriptor* desc) override;
+
+		bool writeCalibMotorSets(const HbsCalibMotorSets* data, const HbsCalibsDescriptor* desc) override;
+		bool writeCalibOctParams(const HbsCalibOctParams* data, const HbsCalibsDescriptor* desc) override;
+		bool writeCalibLedSource(const HbsCalibLedSource* data, const HbsCalibsDescriptor* desc) override;
+		bool writeCalibOctGalvano(const HbsCalibOctGalvano* data, const HbsCalibsDescriptor* desc) override;
+		bool writeCalibDeviceCfg(const HbsCalibDeviceCfg* data, const HbsCalibsDescriptor* desc) override;
+		bool writeCalibStepMotors(const HbsCalibStepMotors* data, const HbsCalibsDescriptor* desc) override;
+		bool writeCalibFactorySet1(const HbsCalibFactorySet1* data, const HbsCalibsDescriptor* desc) override;
+		bool writeCalibFactorySet2(const HbsCalibFactorySet2* data, const HbsCalibsDescriptor* desc) override;
 
 		bool writeCalibration(const HbsCalibration* data, const HbsTableDescriptor* desc) override;
 		bool writeConfiguration(const HbsConfiguration* data, const HbsTableDescriptor* desc) override;
@@ -129,17 +140,17 @@ namespace wso_device
 		bool LedSetIntensity(LightType type, std::uint8_t value);
 		bool LedSetMode(LightType type, std::uint8_t value);
 
-		bool LedSldControl(LightType type, std::uint8_t onOff);
-		bool LedSldPotentiometer(LightType type, std::uint8_t channel, std::uint16_t data);
-		bool LedSldGetParameters(LightType type, std::uint8_t channel = 4);
-		bool LedSldUpdateParameters(LightType type, std::uint8_t channel = 4);
+		bool LedSldControl(LaserType type, std::uint8_t onOff);
+		bool LedSldPotentiometer(LaserType type, std::uint8_t channel, std::uint16_t data);
+		bool LedSldGetParameters(LaserType type, std::uint8_t channel = 4);
+		bool LedSldUpdateParameters(LaserType type, std::uint8_t channel = 4);
 
 		bool OctReferencePhaseControl(std::uint8_t mode);
 		bool OctSetReferencePhase(std::int16_t phase);
 
-		bool CalibDataBlockErase(std::uint16_t region, std::uint16_t blockNum);
-		bool CalibDataBlockProgram(std::uint16_t region, std::uint16_t blockNum, std::uint32_t size);
-		bool CalibDataBlockLoadFlash(std::uint16_t region, std::uint16_t blockNum, std::uint32_t size);
+		bool FlashCalibBlockErase(std::uint16_t region, std::uint16_t blockNum);
+		bool FlashCalibBlockProgram(std::uint16_t region, std::uint16_t blockNum, std::uint32_t size);
+		bool FlashCalibBlockLoad(std::uint16_t region, std::uint16_t blockNum, std::uint32_t size);
 
 		bool GalvanoMoveX(short x);
 		bool GalvanoSlewXY(short x, short y);

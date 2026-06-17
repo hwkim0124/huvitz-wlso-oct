@@ -164,7 +164,9 @@
     <ClInclude Include="framework.h" />
     <ClInclude Include="HbsDataProfile.h" />
     <ClInclude Include="HbsDataComm.h" />
+    <ClInclude Include="HbsDataUtil.h" />
     <ClInclude Include="HbsDefines.h" />
+    <ClInclude Include="WsoBoard.h" />
     <ClInclude Include="wso_hbs.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="wso_board.h" />
@@ -177,6 +179,7 @@
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="HbsDataProfile.cpp" />
+    <ClCompile Include="HbsDataUtil.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
