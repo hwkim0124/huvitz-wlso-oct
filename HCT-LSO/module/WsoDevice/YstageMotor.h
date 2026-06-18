@@ -1,7 +1,7 @@
 #pragma once
 
 #include "WsoDevice2.h"
-#include "StageMotor.h"
+#include "StepMotor.h"
 
 #include <memory>
 #include <string>
@@ -10,7 +10,7 @@ namespace wso_device
 {
 	class MainBoard;
 
-	class WSODEVICE_DLL_API YstageMotor : public StageMotor
+	class WSODEVICE_DLL_API YstageMotor : public StepMotor
 	{
 	public:
 		YstageMotor();
@@ -23,6 +23,7 @@ namespace wso_device
 		YstageMotor& operator=(const YstageMotor& rhs);
 
 	public:
+		bool initializeYstageMotor(void);
 
 	private:
 		struct YstageMotorImpl;

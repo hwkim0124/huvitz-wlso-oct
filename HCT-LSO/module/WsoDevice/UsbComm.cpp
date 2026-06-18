@@ -813,7 +813,7 @@ bool wso_device::UsbComm::readStepMotorStatus(const HbsStepMotorStatus* data, St
 	assert(desc != nullptr);
 	lock_guard<mutex> lock(impl().mutexControl);
 
-	auto index = HbsDataProfile::getHbsTableIndex(type);
+	auto index = HbsDataProfile::getHbsTableMotorIndex(type);
 	assert(index >= 0);
 	const auto addr = desc->entries[index].buf_addr;
 	const auto size = desc->entries[index].buf_size;
@@ -831,13 +831,16 @@ bool wso_device::UsbComm::readStepMotorStatus(const HbsStepMotorStatus* data, St
 	return true;
 }
 
-bool wso_device::UsbComm::readStageMotorStatus(const HbsStageMotorStatus* data, const HbsTableDescriptor* desc)
+bool wso_device::UsbComm::readStageMotorStatus(const HbsStageMotorStatus* data, StageMotorType type, const HbsTableDescriptor* desc)
 {
 	assert(data != nullptr);
 	assert(desc != nullptr);
 	lock_guard<mutex> lock(impl().mutexControl);
-	const auto addr = desc->entries[TBL_Y_MOTOR_ID].buf_addr;
-	const auto size = desc->entries[TBL_Y_MOTOR_ID].buf_size;
+
+	auto index = HbsDataProfile::getHbsTableMotorIndex(type);
+	assert(index >= 0);
+	const auto addr = desc->entries[index].buf_addr;
+	const auto size = desc->entries[index].buf_size;
 
 	const auto data_size = sizeof(HbsStageMotorStatus);
 	if (data_size != size) {

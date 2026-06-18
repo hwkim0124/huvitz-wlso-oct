@@ -24,7 +24,7 @@ namespace wso_device
 		StepMotor& operator=(const StepMotor& rhs);
 
 	public:
-		virtual bool initializeStepMotor(void);
+		bool initializeStepMotor(void);
 
 		virtual bool updatePosition(int pos);
 		virtual bool updatePositionUseThread(int pos);
@@ -42,8 +42,9 @@ namespace wso_device
 		bool controlMove(int pos, bool async = false);
 		bool controlHome(void);
 		bool controlStop(void);
+		bool controlJogg(int delta);
 
-		virtual bool updateStopVelocity();
+		bool updateStopVelocity();
 		bool controlMoveVelocity(int direction);
 		bool controlStopVelocity();
 		bool controlSetVelocity(int nAccelStop, int nMinSpeed, int nMaxSpeed);
@@ -62,12 +63,24 @@ namespace wso_device
 		int getTargetPosition(void) const;
 		int getCenterPosition(void) const;
 
+		void setLimitRange(int lmin, int lmax);
+		int getLimitMin(void) const;
+		int getLimitMax(void) const;
+		int getLimitSize(void) const;
+
 		int getRangeMax(void) const;
 		int getRangeMin(void) const;
 		int getRangeSize(void) const;
 
 		void setRangeMax(int value);
 		void setRangeMin(int value);
+		int getSliderStepSize(void) const;
+
+		virtual bool isEndOfLowerPosition(void) const;
+		virtual bool isEndOfUpperPosition(void) const;
+		virtual bool isAtLowerSideOfPosition(void) const;
+		virtual bool isAtUpperSideOfPosition(void) const;
+		virtual bool isAtCenterOfPosition(void) const;
 
 		const char* getName(void) const;
 		StepMotorType getType(void) const;
@@ -77,17 +90,11 @@ namespace wso_device
 		bool isXStageMotor(void) const;
 		bool isYStageMotor(void) const;
 		bool isZStageMotor(void) const;
-		int getSliderStepSize(void) const;
-
-		virtual bool isEndOfLowerPosition(void) const;
-		virtual bool isEndOfUpperPosition(void) const;
-		virtual bool isAtLowerSideOfPosition(void) const;
-		virtual bool isAtUpperSideOfPosition(void) const;
-		virtual bool isAtCenterOfPosition(void) const;
+		bool isSwingMotor(void) const;
+		bool isStageMotor(void) const;
 
 	protected:
 		std::uint8_t getMotorId(void) const;
-	
 		static std::int32_t getInitPosition(StepMotorType type);
 
 	private:

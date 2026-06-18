@@ -19,13 +19,13 @@ struct XstageMotor::XstageMotorImpl
 
 
 XstageMotor::XstageMotor() :
-	d_ptr(make_unique<XstageMotorImpl>()), StageMotor()
+	d_ptr(make_unique<XstageMotorImpl>()), StepMotor()
 {
 }
 
 
 wso_device::XstageMotor::XstageMotor(MainBoard* board) :
-	d_ptr(make_unique<XstageMotorImpl>()), StageMotor(board, StageMotorType::STAGE_X)
+	d_ptr(make_unique<XstageMotorImpl>()), StepMotor(board, StepMotorType::STAGE_X)
 {
 	setLimitRange(STAGE_X_LIMIT_RANGE_LOW, STAGE_X_LIMIT_RANGE_HIGH);
 }
@@ -54,6 +54,11 @@ XstageMotor& wso_device::XstageMotor::operator=(const XstageMotor& rhs)
 {
 	*d_ptr = *rhs.d_ptr;
 	return *this;
+}
+
+bool wso_device::XstageMotor::initializeXstageMotor(void)
+{
+	return StepMotor::initializeStepMotor();
 }
 
 

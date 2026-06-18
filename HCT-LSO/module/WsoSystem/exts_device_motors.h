@@ -39,11 +39,8 @@ namespace wso_system
 
 		// PI Sensor Vaule
 		///////////////////////////////////////////////////////////////////////////////////////////
-		bool WSOSYSTEM_DLL_API __stdcall isTiltMotorAtHighLimit(void);
-		bool WSOSYSTEM_DLL_API __stdcall isTiltMotorAtLowLimit(void);
 		bool WSOSYSTEM_DLL_API __stdcall isSwingMotorAtHighLimit(void);
 		bool WSOSYSTEM_DLL_API __stdcall isSwingMotorAtLowLimit(void);
-		bool WSOSYSTEM_DLL_API __stdcall isFixationMotorAtOrigin(void);
 		bool WSOSYSTEM_DLL_API __stdcall isOctFocusMotorAtOrigin(void);
 		bool WSOSYSTEM_DLL_API __stdcall isOctPolarMotorAtOrigin(void);
 		bool WSOSYSTEM_DLL_API __stdcall isOctReferMotorAtOrigin(void);

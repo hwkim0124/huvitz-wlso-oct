@@ -153,6 +153,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="BoardComponent.h" />
+    <ClInclude Include="ChinRestMotor.h" />
     <ClInclude Include="ColorCamera.h" />
     <ClInclude Include="CorneaCamera.h" />
     <ClInclude Include="CorneaIrLed.h" />
@@ -162,16 +163,20 @@
     <ClInclude Include="Galvanometer.h" />
     <ClInclude Include="InfraredCamera.h" />
     <ClInclude Include="LightLed.h" />
+    <ClInclude Include="LsoFilterMotor.h" />
     <ClInclude Include="LsoFocusMotor.h" />
     <ClInclude Include="LsoScanner.h" />
     <ClInclude Include="LsoWhiteLed.h" />
     <ClInclude Include="MainBoard.h" />
+    <ClInclude Include="OctAntLensMotor.h" />
     <ClInclude Include="OctFocusMotor.h" />
     <ClInclude Include="OctPolarMotor.h" />
     <ClInclude Include="OctReferMotor.h" />
+    <ClInclude Include="OctRefNdMotor.h" />
     <ClInclude Include="OctSldLed.h" />
     <ClInclude Include="RetinaCamera.h" />
     <ClInclude Include="RetinaIrLed.h" />
+    <ClInclude Include="RetMirrorMotor.h" />
     <ClInclude Include="SldLaserDriver.h" />
     <ClInclude Include="slo_scan_defs.h" />
     <ClInclude Include="SwingMotor.h" />
@@ -190,6 +195,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BoardComponent.cpp" />
+    <ClCompile Include="ChinRestMotor.cpp" />
     <ClCompile Include="ColorCamera.cpp" />
     <ClCompile Include="CorneaCamera.cpp" />
     <ClCompile Include="CorneaIrLed.cpp" />
@@ -199,16 +205,20 @@
     <ClCompile Include="Galvanometer.cpp" />
     <ClCompile Include="InfraredCamera.cpp" />
     <ClCompile Include="LightLed.cpp" />
+    <ClCompile Include="LsoFilterMotor.cpp" />
     <ClCompile Include="LsoFocusMotor.cpp" />
     <ClCompile Include="LsoScanner.cpp" />
     <ClCompile Include="LsoWhiteLed.cpp" />
     <ClCompile Include="MainBoard.cpp" />
+    <ClCompile Include="OctAntLensMotor.cpp" />
     <ClCompile Include="OctFocusMotor.cpp" />
     <ClCompile Include="OctPolarMotor.cpp" />
     <ClCompile Include="OctReferMotor.cpp" />
+    <ClCompile Include="OctRefNdMotor.cpp" />
     <ClCompile Include="OctSldLed.cpp" />
     <ClCompile Include="RetinaCamera.cpp" />
     <ClCompile Include="RetinaIrLed.cpp" />
+    <ClCompile Include="RetMirrorMotor.cpp" />
     <ClCompile Include="SldLaserDriver.cpp" />
     <ClCompile Include="StageMotor.cpp" />
     <ClCompile Include="StepMotor.cpp" />

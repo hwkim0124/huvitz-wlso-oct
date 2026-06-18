@@ -44,7 +44,7 @@ namespace wso_board
 		bool loadSldStatus(void);
 		bool loadZynqXADC(void);
 		bool loadStepMotorStatus(StepMotorType type);
-		bool loadStageMotorStatus(void);
+		bool loadStageMotorStatus(StageMotorType type);
 
 		bool loadInfraredCameraStatus(void);
 		bool loadGalvanoDynamicParam(void);
@@ -88,18 +88,16 @@ namespace wso_board
 		const HbsStepMotorStatus* getHbsOctFocusMotor(void) const;
 		const HbsStepMotorStatus* getHbsOctReferMotor(void) const;
 		const HbsStepMotorStatus* getHbsOctPolarMotor(void) const;
-		const HbsStepMotorStatus* getHbsOctRefNDMotor(void) const;
+		const HbsStepMotorStatus* getHbsOctReferNdMotor(void) const;
 		const HbsStepMotorStatus* getHbsOctAntLensMotor(void) const;
 		const HbsStepMotorStatus* getHbsLsoFocusMotor(void) const;
+		const HbsStepMotorStatus* getHbsRetMirrorMotor(void) const;
 
-		const HbsStepMotorStatus* getHbsXStageMotor(void) const;
-		const HbsStepMotorStatus* getHbsYStageMotor(void) const;
-		const HbsStepMotorStatus* getHbsZStageMotor(void) const;
+		const HbsStepMotorStatus* getHbsXstageMotor(void) const;
+		const HbsStepMotorStatus* getHbsYstageMotor(void) const;
+		const HbsStepMotorStatus* getHbsZstageMotor(void) const;
 		const HbsStepMotorStatus* getHbsSwingMotor(void) const;
-		const HbsStepMotorStatus* getHbsTiltMotor(void) const;
 		const HbsChinrestMotor* getHbsChinrestMotor(void) const;
-		const HbsStepMotorStatus* getHbsFixationMotor(void) const;
-
 
 		const HbsInfraredCameraStatus* getHbsIrCameraStatus(void) const;
 		const HbsLedStatus* getHbsLedStatus(void) const;
@@ -111,7 +109,8 @@ namespace wso_board
 		const HbsStepMotorStatus* getHbsStepMotorStatus(StepMotorType type) const;
 		const HbsStageMotorStatus* getHbsStageMotorStatus(StageMotorType type) const;
 
-		static int getHbsTableIndex(StepMotorType type);
+		static int getHbsTableMotorIndex(StepMotorType type);
+		static int getHbsTableMotorIndex(StageMotorType type);
 
 	protected:
 		HbsDataComm* getDataChannel(void) const ;

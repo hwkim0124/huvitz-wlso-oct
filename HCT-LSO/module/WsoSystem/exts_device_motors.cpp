@@ -217,25 +217,6 @@ float WSOSYSTEM_DLL_API __stdcall wso_system::getStepMotorValueAtPosition(MotorT
 	return 0.0f;
 }
 
-
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isTiltMotorAtHighLimit(void)
-{
-	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
-		auto result = p->isTiltMotorAtHighLimit();
-		return result;
-	}
-	return false;
-}
-
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isTiltMotorAtLowLimit(void)
-{
-	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
-		auto result = p->isTiltMotorAtLowLimit();
-		return result;
-	}
-	return false;
-}
-
 bool WSOSYSTEM_DLL_API __stdcall wso_system::isSwingMotorAtHighLimit(void)
 {
 	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
@@ -253,16 +234,6 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::isSwingMotorAtLowLimit(void)
 	}
 	return false;
 }
-
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isFixationMotorAtOrigin(void)
-{
-	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
-		auto result = p->isFixationMotorAtOrigin();
-		return result;
-	}
-	return false;
-}
-
 
 bool WSOSYSTEM_DLL_API __stdcall wso_system::isOctFocusMotorAtOrigin(void)
 {

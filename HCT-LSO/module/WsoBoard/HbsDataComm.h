@@ -37,7 +37,7 @@ namespace wso_board
 		virtual bool readZynqXADC(const HbsZyncXADC* data, const HbsTableDescriptor* desc) = 0;
 		virtual bool readInfraredCameraStatus(const HbsInfraredCameraStatus* data, const HbsTableDescriptor* desc) = 0;
 		virtual bool readStepMotorStatus(const HbsStepMotorStatus* data, StepMotorType type, const HbsTableDescriptor* desc) = 0;
-		virtual bool readStageMotorStatus(const HbsStageMotorStatus* data, const HbsTableDescriptor* desc) = 0;
+		virtual bool readStageMotorStatus(const HbsStageMotorStatus* data, StageMotorType type, const HbsTableDescriptor* desc) = 0;
 		virtual bool readGalvanoDynamicParam(const HbsGalvanoDynamicParam* data, const HbsTableDescriptor* desc) = 0;
 		virtual bool readLsoScannerParam(const HbsLsoScanner* data, const HbsTableDescriptor* desc) = 0;
 

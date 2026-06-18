@@ -8,10 +8,17 @@
 #include "OctFocusMotor.h"
 #include "OctPolarMotor.h"
 #include "OctReferMotor.h"
-
+#include "OctRefNdMotor.h"
 #include "LsoFocusMotor.h"
-#include "YstageMotor.h"
+#include "RetMirrorMotor.h"
+#include "OctAntLensMotor.h"
+#include "LsoFilterMotor.h"
+
 #include "SwingMotor.h"
+#include "XstageMotor.h"
+#include "YstageMotor.h"
+#include "ZstageMotor.h"
+#include "ChinRestMotor.h"
 
 #include "LsoWhiteLed.h"
 #include "CorneaIrLed.h"

@@ -83,26 +83,32 @@ namespace wso_device
 	constexpr const char* MOTOR_OCT_POLAR_NAME = "OctPolarizationMotor";
 	constexpr const char* MOTOR_OCT_REFND_NAME = "OctRefNdFilterMotor";
 	constexpr const char* MOTOR_LSO_FOCUS_NAME = "LsoFocusMotor";
+	constexpr const char* MOTOR_RET_MIRROR_NAME = "ReturnMirrorMotor";
 	constexpr const char* MOTOR_OCT_ANT_LENS_NAME = "OctAnteriorLensMotor";
+	constexpr const char* MOTOR_LSO_FILTER_NAME = "LsoFilterMotor";
 
+	constexpr const char* MOTOR_SWING_NAME = "SwingMotor";
 	constexpr const char* MOTOR_STAGE_X_NAME = "XstageMotor";
 	constexpr const char* MOTOR_STAGE_Y_NAME = "YstageMotor";
 	constexpr const char* MOTOR_STAGE_Z_NAME = "ZstageMotor";
-	constexpr const char* MOTOR_FIX_FOCUS_NAME = "FixationFocusMotor";
-	constexpr const char* MOTOR_TILT_NAME = "TiltMotor";
-	constexpr const char* MOTOR_SWING_NAME = "SwingMotor";
+	constexpr const char* MOTOR_CHIN_REST_NAME = "ChinRestMotor";
+
 	constexpr const char* MOTOR_UNKNOWN_NAME = "UnknownMotor";
 
 	constexpr std::int32_t MOTOR_OCT_FOCUS_INIT_POS = 1400;
 	constexpr std::int32_t MOTOR_OCT_REFER_INIT_POS = 42000;
 	constexpr std::int32_t MOTOR_OCT_POLAR_INIT_POS = 19;
+	constexpr std::int32_t MOTOR_OCT_REFND_INIT_POS = 0;
 	constexpr std::int32_t MOTOR_LSO_FOCUS_INIT_POS = 1400;
-	constexpr std::int32_t MOTOR_FIX_FOCUS_INIT_POS = 1400;
+	constexpr std::int32_t MOTOR_RET_MIRROR_INIT_POS = 0;
+	constexpr std::int32_t MOTOR_OCT_ANT_LENS_INIT_POS = 0;
+	constexpr std::int32_t MOTOR_LSO_FILTER_INIT_POS = 0;
+
+	constexpr std::int32_t MOTOR_SWING_INIT_POS = 0;
 	constexpr std::int32_t MOTOR_STAGE_X_INIT_POS = 0;
 	constexpr std::int32_t MOTOR_STAGE_Y_INIT_POS = 0;
 	constexpr std::int32_t MOTOR_STAGE_Z_INIT_POS = 0;
-	constexpr std::int32_t MOTOR_TILT_INIT_POS = 0;
-	constexpr std::int32_t MOTOR_SWING_INIT_POS = 0;
+	constexpr std::int32_t MOTOR_CHIN_REST_INIT_POS = 0;
 
 	constexpr int MOTOR_END_OF_RANGE_OFFSET = 0; // 3;
 	constexpr int MOTOR_CENTER_OF_POSITION_OFFSET = 1; // 3;

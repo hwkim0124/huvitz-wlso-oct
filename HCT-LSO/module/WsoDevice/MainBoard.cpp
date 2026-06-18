@@ -10,12 +10,18 @@
 #include "OctFocusMotor.h"
 #include "OctPolarMotor.h"
 #include "OctReferMotor.h"
+#include "OctRefNdMotor.h"
 #include "LsoFocusMotor.h"
-#include "SwingMotor.h"
+#include "RetMirrorMotor.h"
+#include "OctAntLensMotor.h"
+#include "LsoFilterMotor.h"
 
+#include "SwingMotor.h"
 #include "XstageMotor.h"
 #include "YstageMotor.h"
 #include "ZstageMotor.h"
+#include "ChinRestMotor.h"
+#include "StageMotor.h"
 
 #include "InfraredCamera.h"
 #include "RetinaCamera.h"
@@ -117,17 +123,24 @@ MainBoard::MainBoard() :
 	impl().stepMotors.emplace(MotorType::OCT_FOCUS, make_unique<OctFocusMotor>(this));
 	impl().stepMotors.emplace(MotorType::OCT_POLAR, make_unique<OctPolarMotor>(this));
 	impl().stepMotors.emplace(MotorType::OCT_REFER, make_unique<OctReferMotor>(this));
+	impl().stepMotors.emplace(MotorType::OCT_REFND, make_unique<OctRefNdMotor>(this));
 	impl().stepMotors.emplace(MotorType::LSO_FOCUS, make_unique<LsoFocusMotor>(this));
-	impl().stepMotors.emplace(MotorType::RM, make_unique<LsoFocusMotor>(this));
-	impl().stepMotors.emplace(MotorType::OCT_ANT_LENS, make_unique<LsoFocusMotor>(this));
+	impl().stepMotors.emplace(MotorType::RET_MIRROR, make_unique<RetMirrorMotor>(this));
+	impl().stepMotors.emplace(MotorType::OCT_ANT_LENS, make_unique<OctAntLensMotor>(this));
+	impl().stepMotors.emplace(MotorType::LSO_FILTER, make_unique<LsoFilterMotor>(this));
 	impl().stepMotors.emplace(MotorType::SWING, make_unique<SwingMotor>(this));
-	impl().stepMotors.emplace(MotorType::HEAD_REST, make_unique<SwingMotor>(this));
+	impl().stepMotors.emplace(MotorType::STAGE_X, make_unique<XstageMotor>(this));
+	impl().stepMotors.emplace(MotorType::STAGE_Y, make_unique<YstageMotor>(this));
+	impl().stepMotors.emplace(MotorType::STAGE_Z, make_unique<ZstageMotor>(this));
+	impl().stepMotors.emplace(MotorType::CHIN_REST, make_unique<ChinRestMotor>(this));
 
 	// By using emplace() instead of insert() to construct and insert the unique_ptr, 
 	// it directly constructs the element within the map, avoiding unnecessary copying or moving. 
+	/*
 	impl().stageMotors.emplace(MotorType::STAGE_X, make_unique<XstageMotor>(this));
 	impl().stageMotors.emplace(MotorType::STAGE_Y, make_unique<YstageMotor>(this));
 	impl().stageMotors.emplace(MotorType::STAGE_Z, make_unique<ZstageMotor>(this));
+	*/
 
 	impl().lsoScanner = make_unique<LsoScanner>(this);
 	impl().octGalvano = make_unique<Galvanometer>(this);
@@ -252,20 +265,52 @@ bool wso_device::MainBoard::initiateBoardComponents(int* numWarns)
 		WsoLogWarn("Failed to initialize LSO Focus motor");
 		warns += 1;
 	}
+	if (!getRetMirrorMotor()->initializeRetMirrorMotor()) {
+		WsoLogWarn("Failed to initialize Return mirror motor");
+		warns += 1;
+	}
+	if (!getOctAntLensMotor()->initializeOctAntLensMotor()) {
+		WsoLogWarn("Failed to initialize OCT anterior lens motor");
+		warns += 1;
+	}
 
 	if (!getSwingMotor()->initializeSwingMotor()) {
 		WsoLogWarn("Failed to initialize Swing motor");
 		warns += 1;
 	}
 
-	if (!getYstageMotor()->initializeStageMotor()) {
-		WsoLogWarn("Failed to initialize stage-Y motor");
+	if (!getXstageMotor()->initializeXstageMotor()) {
+		WsoLogWarn("Failed to initialize X-stage motor");
 		warns += 1;
 	}
 	else {
 		ostringstream msg;
-		msg << "Stage-Y motor initialized, pos: " << getYstageMotor()->getPosition();
+		msg << "X-stage motor initialized, pos: " << getXstageMotor()->getPosition();
 		WsoLogDebug(msg.str());
+	}
+
+	if (!getYstageMotor()->initializeYstageMotor()) {
+		WsoLogWarn("Failed to initialize Y-stage motor");
+		warns += 1;
+	}
+	else {
+		ostringstream msg;
+		msg << "Y-stage motor initialized, pos: " << getYstageMotor()->getPosition();
+		WsoLogDebug(msg.str());
+	}
+
+	if (!getZstageMotor()->initializeZstageMotor()) {
+		WsoLogWarn("Failed to initialize Z-stage motor");
+		warns += 1;
+	}
+	else {
+		ostringstream msg;
+		msg << "Z-stage motor initialized, pos: " << getZstageMotor()->getPosition();
+		WsoLogDebug(msg.str());
+	}
+	if (!getChinRestMotor()->initializeChinRestMotor()) {
+		WsoLogWarn("Failed to initialize Chin Rest motor");
+		warns += 1;
 	}
 
 	// return true;
@@ -728,31 +773,6 @@ bool wso_device::MainBoard::isChinrestAtLowLimit(void)
 	return false;
 }
 
-
-bool wso_device::MainBoard::isTiltMotorAtHighLimit(void)
-{
-	if (getHbsDataProfile()->loadGpioStatus()) {
-		auto* gpio = getHbsDataProfile()->getHbsGpioStatus();
-		auto status = gpio->PIstatus;
-		if (status & (0x01 << 11)) {
-			return true;
-		}
-	}
-	return false;
-}
-
-bool wso_device::MainBoard::isTiltMotorAtLowLimit(void)
-{
-	if (getHbsDataProfile()->loadGpioStatus()) {
-		auto* gpio = getHbsDataProfile()->getHbsGpioStatus();
-		auto status = gpio->PIstatus;
-		if (status & (0x01 << 10)) {
-			return true;
-		}
-	}
-	return false;
-}
-
 bool wso_device::MainBoard::isSwingMotorAtHighLimit(void)
 {
 	if (getHbsDataProfile()->loadGpioStatus()) {
@@ -776,19 +796,6 @@ bool wso_device::MainBoard::isSwingMotorAtLowLimit(void)
 	}
 	return false;
 }
-
-bool wso_device::MainBoard::isFixationMotorAtOrigin(void)
-{
-	if (getHbsDataProfile()->loadGpioStatus()) {
-		auto* gpio = getHbsDataProfile()->getHbsGpioStatus();
-		auto status = gpio->PIstatus;
-		if (status & (0x01 << 7)) {
-			return true;
-		}
-	}
-	return false;
-}
-
 
 bool wso_device::MainBoard::isOctFocusMotorAtOrigin(void)
 {
@@ -1035,24 +1042,49 @@ OctReferMotor* wso_device::MainBoard::getOctReferMotor(void) const
 	return (OctReferMotor*)getStepMotor(StepMotorType::OCT_REFER);
 }
 
+OctRefNdMotor* wso_device::MainBoard::getOctRefNdMotor(void) const
+{
+	return (OctRefNdMotor*)getStepMotor(StepMotorType::OCT_REFND);
+}
+
 LsoFocusMotor* wso_device::MainBoard::getLsoFocusMotor(void) const
 {
 	return (LsoFocusMotor*)getStepMotor(StepMotorType::LSO_FOCUS);
 }
 
+RetMirrorMotor* wso_device::MainBoard::getRetMirrorMotor(void) const
+{
+	return (RetMirrorMotor*)getStepMotor(StepMotorType::RET_MIRROR);
+}
+
+OctAntLensMotor* wso_device::MainBoard::getOctAntLensMotor(void) const
+{
+	return (OctAntLensMotor*)getStepMotor(StepMotorType::OCT_ANT_LENS);
+}
+
+LsoFilterMotor* wso_device::MainBoard::getLsoFilterMotor(void) const
+{
+	return (LsoFilterMotor*)getStepMotor(StepMotorType::LSO_FILTER);
+}
+
 XstageMotor* wso_device::MainBoard::getXstageMotor(void) const
 {
-	return (XstageMotor*)getStageMotor(StageMotorType::STAGE_X);
+	return (XstageMotor*)getStepMotor(StepMotorType::STAGE_X);
 }
 
 YstageMotor* wso_device::MainBoard::getYstageMotor(void) const
 {
-	return (YstageMotor*)getStageMotor(StageMotorType::STAGE_Y);
+	return (YstageMotor*)getStepMotor(StepMotorType::STAGE_Y);
 }
 
 ZstageMotor* wso_device::MainBoard::getZstageMotor(void) const
 {
-	return (ZstageMotor*)getStageMotor(StageMotorType::STAGE_Z);
+	return (ZstageMotor*)getStepMotor(StepMotorType::STAGE_Z);
+}
+
+ChinRestMotor* wso_device::MainBoard::getChinRestMotor(void) const
+{
+	return (ChinRestMotor*)getStepMotor(StepMotorType::CHIN_REST);
 }
 
 SwingMotor* wso_device::MainBoard::getSwingMotor(void) const
@@ -1163,6 +1195,10 @@ InfraredCamera* wso_device::MainBoard::getInfraredCamera(CameraType type) const
 	return nullptr;
 }
 
+FirmwareControl* wso_device::MainBoard::getFirmwareControl(void) const
+{
+	return impl().firmwareControl.get();
+}
 
 MainBoard::MainBoardImpl& wso_device::MainBoard::impl(void) const
 {

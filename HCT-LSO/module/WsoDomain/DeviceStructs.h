@@ -11,6 +11,17 @@ namespace wso_domain
 		int maxSpeed;
 		int minSpeed;
 		int accelStep;
+
+		int motorWait;
+		int piStatus;
+		int piHitRefPos;
+		int piHitMargin;
+		int piHitLastPos;
+		int piHitPosError;
+		
+		int limitRange[2] = { 0 };
+		int limitStatus[2] = { 0 };
+
 		int sliderStepSize;
 		int sliderPageSize;
 		float rangeMinValue;
@@ -24,6 +35,14 @@ namespace wso_domain
 			maxSpeed = 0;
 			minSpeed = 0;
 			accelStep = 0;
+
+			motorWait = 0;
+			piStatus = 0;
+			piHitRefPos = 0;
+			piHitMargin = 0;
+			piHitLastPos = 0;
+			piHitPosError = 0;
+
 			sliderStepSize = 0;
 			sliderPageSize = 0;
 			rangeMinValue = 0.0f;

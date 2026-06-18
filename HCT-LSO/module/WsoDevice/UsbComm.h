@@ -84,7 +84,7 @@ namespace wso_device
 		bool readGalvanoDynamicParam(const HbsGalvanoDynamicParam* data, const HbsTableDescriptor* desc) override;
 		bool readInfraredCameraStatus(const HbsInfraredCameraStatus* data, const HbsTableDescriptor* desc) override;
 		bool readStepMotorStatus(const HbsStepMotorStatus* data, StepMotorType type, const HbsTableDescriptor* desc) override;
-		bool readStageMotorStatus(const HbsStageMotorStatus* data, const HbsTableDescriptor* desc) override;
+		bool readStageMotorStatus(const HbsStageMotorStatus* data, StageMotorType type, const HbsTableDescriptor* desc) override;
 
 		bool writeCalibMotorSets(const HbsCalibMotorSets* data, const HbsCalibsDescriptor* desc) override;
 		bool writeCalibOctParams(const HbsCalibOctParams* data, const HbsCalibsDescriptor* desc) override;

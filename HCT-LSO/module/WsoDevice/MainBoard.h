@@ -29,15 +29,18 @@ namespace wso_device
 	class OctFocusMotor;
 	class OctPolarMotor;
 	class OctReferMotor;
+	class OctRefNdMotor;
 	class LsoFocusMotor;
-	class FixationMotor;
-	class TiltMotor;
+	class RetMirrorMotor;
+	class OctAntLensMotor;
+	class LsoFilterMotor;
+	
 	class SwingMotor;
-
-	class StageMotor;
 	class XstageMotor;
 	class YstageMotor;
 	class ZstageMotor;
+	class ChinRestMotor;
+	class StageMotor;
 
 	class CorneaCamera;
 	class RetinaCamera;
@@ -111,11 +114,8 @@ namespace wso_device
 		bool isChinrestAtHighLimit(void);
 		bool isChinrestAtLowLimit(void);
 
-		bool isTiltMotorAtHighLimit(void);
-		bool isTiltMotorAtLowLimit(void);
 		bool isSwingMotorAtHighLimit(void);
 		bool isSwingMotorAtLowLimit(void);
-		bool isFixationMotorAtOrigin(void);
 		bool isOctFocusMotorAtOrigin(void);
 		bool isOctPolarMotorAtOrigin(void);
 		bool isOctReferMotorAtOrigin(void);
@@ -155,12 +155,17 @@ namespace wso_device
 		OctFocusMotor* getOctFocusMotor(void) const;
 		OctPolarMotor* getOctPolarMotor(void) const;
 		OctReferMotor* getOctReferMotor(void) const;
+		OctRefNdMotor* getOctRefNdMotor(void) const;
 		LsoFocusMotor* getLsoFocusMotor(void) const;
+		RetMirrorMotor* getRetMirrorMotor(void) const;
+		OctAntLensMotor* getOctAntLensMotor(void) const;
+		LsoFilterMotor* getLsoFilterMotor(void) const;
 
+		SwingMotor* getSwingMotor(void) const;
 		XstageMotor* getXstageMotor(void) const;
 		YstageMotor* getYstageMotor(void) const;
 		ZstageMotor* getZstageMotor(void) const;
-		SwingMotor* getSwingMotor(void) const;
+		ChinRestMotor* getChinRestMotor(void) const;
 
 		RetinaCamera* getRetinaCamera(void) const;
 		RetinaCamera* getCorneaLeftCamera(void) const;

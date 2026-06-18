@@ -18,6 +18,8 @@ struct StepMotor::StepMotorImpl
 	StepMotorType type;
 
 	bool asyncMode;
+	int targetPos;
+	bool stopped;
 
 	int curPos;
 	int maxSpeed;
@@ -26,15 +28,24 @@ struct StepMotor::StepMotorImpl
 	int smPosMin;
 	int smPosMax;
 
-	int targetPos;
+	int motorWait;
+	int piStatus;
+	int piHitRefPos;
+	int piHitMargin;
+	int piHitLastPos;
+	int piHitPosError;
+
+	int limitRange[2];
+	int limitStatus[2];
 
 	thread worker;
 	mutex mutexLock;
 
 	StepMotorImpl()
-		: asyncMode(false),
+		: asyncMode(false), stopped(true),
 		smPosMin(0), smPosMax(0), curPos(0), maxSpeed(0), minSpeed(0), accStep(0), 
-		targetPos(0), type(StepMotorType::UNKNOWN)
+		targetPos(0), type(StepMotorType::UNKNOWN), piStatus(0), limitRange{ 0 }, limitStatus{ false },
+		motorWait(0), piHitRefPos(0), piHitMargin(0), piHitLastPos(0), piHitPosError(0)
 	{
 	}
 
@@ -42,6 +53,7 @@ struct StepMotor::StepMotorImpl
 	StepMotorImpl(const StepMotorImpl& other)
 		: 
 		asyncMode(other.asyncMode),
+		stopped(other.stopped),
 		type(other.type),
 		curPos(other.curPos),
 		maxSpeed(other.maxSpeed),
@@ -49,6 +61,12 @@ struct StepMotor::StepMotorImpl
 		accStep(other.accStep),
 		smPosMin(other.smPosMin),
 		smPosMax(other.smPosMax),
+		motorWait(other.motorWait), 
+		piStatus(other.piStatus),
+		piHitRefPos(other.piHitRefPos), 
+		piHitMargin(other.piHitMargin), 
+		piHitLastPos(other.piHitLastPos), 
+		piHitPosError(other.piHitPosError),
 		targetPos(other.targetPos)
 		// thread/mutex는 복사 안함(그냥 새로)
 	{
@@ -57,6 +75,8 @@ struct StepMotor::StepMotorImpl
 	StepMotorImpl& operator=(const StepMotorImpl& other) {
 		if (this != &other) {
 			asyncMode = other.asyncMode;
+			stopped = other.stopped;
+
 			type = other.type;
 			curPos = other.curPos;
 			maxSpeed = other.maxSpeed;
@@ -64,6 +84,19 @@ struct StepMotor::StepMotorImpl
 			accStep = other.accStep;
 			smPosMin = other.smPosMin;
 			smPosMax = other.smPosMax;
+
+			motorWait = other.motorWait;
+			piStatus = other.piStatus;
+			piHitRefPos = other.piHitRefPos;
+			piHitMargin = other.piHitMargin;
+			piHitLastPos = other.piHitLastPos;
+			piHitPosError = other.piHitPosError;
+
+			limitStatus[0] = other.limitStatus[0];
+			limitStatus[1] = other.limitStatus[1];
+			limitRange[0] = other.limitRange[0];
+			limitRange[1] = other.limitRange[1];
+
 			targetPos = other.targetPos;
 			// worker, mutexLock은 복사하지 않음. (초기화 또는 필요시 상태만 리셋)
 		}
@@ -121,13 +154,8 @@ bool wso_device::StepMotor::initializeStepMotor(void)
 		return false;
 	}
 	else {
+		// setLimitRange(impl().smPosMin, impl().smPosMax);
 		reportStatus();
-		/*
-		int value = getInitPosition();
-		if (value != getPosition()) {
-		controlMove(value);
-		}
-		*/
 	}
 
 	if (getMainBoard()->isMotorsNotInUse()) {
@@ -179,6 +207,11 @@ bool wso_device::StepMotor::updatePositionUseThread(int pos)
 
 bool wso_device::StepMotor::updatePositionByOffset(int offset)
 {
+	/*
+	if (isStageMotor()) {
+		return controlJogg(offset);
+	}
+	*/
 	int pos = getPosition() + offset;
 	return updatePosition(pos);
 }
@@ -222,6 +255,10 @@ float wso_device::StepMotor::getValueAtPosition(int pos) const
 
 bool wso_device::StepMotor::controlMove(int pos, bool async)
 {
+	if (!isInitiated()) {
+		return false;
+	}
+
 	pos = (pos < getRangeMin() ? getRangeMin() : pos);
 	pos = (pos > getRangeMax() ? getRangeMax() : pos);
 	impl().targetPos = pos;
@@ -229,15 +266,16 @@ bool wso_device::StepMotor::controlMove(int pos, bool async)
 	UsbComm& usbComm = getMainBoard()->getUsbComm();
 	if (usbComm.MotorMove(getMotorId(), pos))
 	{
-		if (!isAsyncMode() && !async) {
+		impl().stopped = false;
+		async = async || isAsyncMode();
+		if (!async) {
 			return waitForUpdate();
 		}
 		return true;
 	}
-	LogError() << "Step motor control move failed!, name: " << getName() << ", pos: " << pos;
+	LogD() << "StepMotor::controlMove() failed, name: " << getName() << ", pos: " << pos << ", async: " << async;
 	return false;
 }
-
 
 bool wso_device::StepMotor::controlHome(void)
 {
@@ -248,12 +286,13 @@ bool wso_device::StepMotor::controlHome(void)
 	UsbComm& usbComm = getMainBoard()->getUsbComm();
 	if (usbComm.MotorHome(getMotorId()))
 	{
+		impl().stopped = false;
 		if (!isAsyncMode()) {
 			return waitForUpdate();
 		}
 		return true;
 	}
-	LogError() << "Step motor control home failed!, name: " << getName();
+	LogD() << "StepMotor::controlHome() failed, name: " << getName() << ", async: " << isAsyncMode();
 	return false;
 }
 
@@ -262,13 +301,29 @@ bool wso_device::StepMotor::controlStop(void)
 	if (!isInitiated()) {
 		return false;
 	}
+	if (impl().stopped) {
+		return true;
+	}
 
 	UsbComm& usbComm = getMainBoard()->getUsbComm();
 	if (usbComm.MotorStop(getMotorId()))
 	{
+		impl().stopped = true;
 		return true;
 	}
-	LogError() << "Step motor control stop failed!, name: " << getName();
+	LogD() << "StepMotor::controlHome() failed, name: " << getName();
+	return false;
+}
+
+bool wso_device::StepMotor::controlJogg(int delta)
+{
+	UsbComm& usbComm = getMainBoard()->getUsbComm();
+	if (usbComm.MotorJogg(getMotorId(), delta)) {
+		impl().stopped = false;
+		return true;
+	}
+
+	LogD() << "StepMotor::controlJogg() failed, name: " << getName();
 	return false;
 }
 
@@ -285,6 +340,7 @@ bool wso_device::StepMotor::updateStopVelocity()
 		CallbackRegistry::getInstance()->runStepMotorPositionChanged(getMotorType(), pos, value);
 		return true;
 	}
+	LogD() << "StepMotor::updateStopVelocity() failed, name: " << getName();
 	return false;
 }
 
@@ -299,7 +355,7 @@ bool wso_device::StepMotor::controlMoveVelocity(int direction)
 	{
 		return true;
 	}
-	LogError() << "Step motor control move velocity failed!, name: " << getName();
+	LogD() << "StepMotor::controlMoveVelocity() failed, name: " << getName();
 	return false;
 }
 
@@ -317,7 +373,7 @@ bool wso_device::StepMotor::controlStopVelocity()
 		}
 		return true;
 	}
-	LogError() << "Step motor control stop failed!, name: " << getName();
+	LogD() << "StepMotor::controlStopVelocity() failed, name: " << getName();
 	return false;
 }
 
@@ -335,7 +391,7 @@ bool wso_device::StepMotor::controlSetVelocity(int nAccelStop, int nMinSpeed, in
 		}
 		return true;
 	}
-	LogError() << "Step motor control set velocity failed!, name: " << getName();
+	LogD() << "StepMotor::controlSetVelocity() failed, name: " << getName() << ", acc_stop: " << nAccelStop << ", min_speed: " << nMinSpeed << ", max_speed: " << nMaxSpeed;
 	return false;
 }
 
@@ -353,7 +409,7 @@ bool wso_device::StepMotor::controlSetDefaultVelocity()
 		}
 		return true;
 	}
-	LogError() << "Step motor control set default velocity failed!, name: " << getName();
+	LogD() << "StepMotor::controlSetDefaultVelocity() failed, name: " << getName();
 	return false;
 }
 
@@ -367,10 +423,11 @@ bool wso_device::StepMotor::updateStatus(void)
 	*/
 
 	UsbComm& usbComm = getMainBoard()->getUsbComm();
-
+	/*
 	if (isYStageMotor()) {
-		if (auto* hbs = getMainBoard()->getHbsDataProfile(); hbs->loadStageMotorStatus()) {
-			auto* info = hbs->getHbsYStageMotor();
+		auto type = static_cast<StageMotorType>(getType());
+		if (auto* hbs = getMainBoard()->getHbsDataProfile(); hbs->loadStageMotorStatus(type)) {
+			auto* info = hbs->getHbsYstageMotor();
 			if (info) {
 				impl().curPos = info->CurPos;
 				impl().smPosMax = info->sm_pos_max;
@@ -378,9 +435,8 @@ bool wso_device::StepMotor::updateStatus(void)
 				return true;
 			}
 		}
-
 	}
-	else {
+	else { */
 		if (auto* hbs = getMainBoard()->getHbsDataProfile(); hbs->loadStepMotorStatus(getType())) {
 			auto* info = hbs->getHbsStepMotorStatus(getType());
 			if (info) {
@@ -390,15 +446,21 @@ bool wso_device::StepMotor::updateStatus(void)
 				impl().smPosMax = info->sm_pos_max;
 				impl().smPosMin = info->sm_pos_min;
 				impl().accStep = info->acc_step;
+
+				impl().motorWait = info->MotorWait;
+				impl().piStatus = info->PI_status;
+				impl().piHitRefPos = info->sm_pi_hit_ref_pos;
+				impl().piHitMargin = info->sm_pi_hit_margin;
+				impl().piHitLastPos = info->sm_last_pi_hit_pos;
+				impl().piHitPosError = info->sm_pi_hit_pos_error;
 				return true;
 			}
 		}
-	}
+	// }
 
-	LogError() << "Step motor update status failed!, name: " << getName();
+	LogD() << "StepMotor::updateStatus() failed, name: " << getName();
 	return false;
 }
-
 
 void wso_device::StepMotor::reportStatus(void)
 {
@@ -423,10 +485,23 @@ bool wso_device::StepMotor::fetchStatus(StepMotorStatus* status)
 		status->maxSpeed = impl().maxSpeed;
 		status->minSpeed = impl().minSpeed;
 		status->accelStep = impl().accStep;
+
+		status->limitRange[0] = impl().limitRange[0];
+		status->limitRange[1] = impl().limitRange[1];
+		status->limitStatus[0] = impl().limitStatus[0];
+		status->limitStatus[1] = impl().limitStatus[1];
+
 		status->sliderPageSize = getSliderStepSize();
 		status->sliderStepSize = getSliderStepSize();
 		status->rangeMinValue = getValueAtPosition(status->rangeMin);
 		status->rangeMaxValue = getValueAtPosition(status->rangeMax);
+
+		status->motorWait = impl().motorWait;
+		status->piStatus = impl().piStatus;
+		status->piHitRefPos = impl().piHitRefPos;
+		status->piHitMargin = impl().piHitMargin;
+		status->piHitLastPos = impl().piHitLastPos;
+		status->piHitPosError = impl().piHitPosError;
 	}
 	return true;
 }
@@ -452,8 +527,11 @@ bool wso_device::StepMotor::waitForUpdate(int posOffset, int timeDelay, int coun
 	case StepMotorType::OCT_FOCUS:
 	case StepMotorType::OCT_REFER:
 	case StepMotorType::OCT_POLAR:
-	case StepMotorType::LSO_FOCUS:
 	case StepMotorType::OCT_REFND:
+	case StepMotorType::LSO_FOCUS:
+	case StepMotorType::RET_MIRROR:
+	case StepMotorType::OCT_ANT_LENS:
+	case StepMotorType::LSO_FILTER:
 		break;
 	default:
 		break;
@@ -469,16 +547,26 @@ bool wso_device::StepMotor::waitForUpdate(int posOffset, int timeDelay, int coun
 		if (!updateStatus()) {
 			break;
 		}
-
-		count++;
-		auto currPos = getPosition();
-		if (count >= countMax) {
+		if (++count >= countMax) {
 			break;
 		}
-		else if ((abs(initPos - currPos) <= posOffset) && count >= MOTOR_MOVE_INIT_COUNT) {
-			break;
+		auto currPos = getPosition();
+		auto targPos = impl().targetPos;
+
+		if (isStageMotor()) {
+			if (abs(currPos - impl().targetPos) <= posOffset) {
+				check = true;
+				break;
+			}
+			if (isEndOfLowerPosition() || isEndOfUpperPosition()) {
+				check = true;
+				break;
+			}
 		}
 		else {
+			if ((abs(initPos - currPos) <= posOffset) && count >= MOTOR_MOVE_INIT_COUNT) {
+				break;
+			}
 			if (abs(currPos - impl().targetPos) <= posOffset) {
 				check = true;
 				break;
@@ -489,7 +577,7 @@ bool wso_device::StepMotor::waitForUpdate(int posOffset, int timeDelay, int coun
 	if (check) {
 		return true;
 	}
-	LogDebug() << "StepMotor::waitForUpdate() timeout!, name: " << getName() << ", curPos: " << getPosition() << ", target: " << impl().targetPos << ", count: " << count;
+	LogD() << "StepMotor::waitForUpdate() timeout, name: " << getName() << ", curPos: " << getPosition() << ", target: " << impl().targetPos << ", count: " << count;
 	return false;
 }
 
@@ -518,6 +606,28 @@ int wso_device::StepMotor::getCenterPosition(void) const
 	return getRangeMin() + getRangeSize() / 2;
 }
 
+void wso_device::StepMotor::setLimitRange(int lmin, int lmax)
+{
+	impl().limitRange[0] = lmin;
+	impl().limitRange[1] = lmax;
+	return;
+}
+
+int wso_device::StepMotor::getLimitMin(void) const
+{
+	return impl().limitRange[0];
+}
+
+int wso_device::StepMotor::getLimitMax(void) const
+{
+	return impl().limitRange[1];
+}
+
+int wso_device::StepMotor::getLimitSize(void) const
+{
+	auto size = impl().limitRange[1] - impl().limitRange[0];
+	return size;
+}
 
 int wso_device::StepMotor::getRangeMax(void) const
 {
@@ -558,7 +668,6 @@ int wso_device::StepMotor::getSliderStepSize(void) const
 	case StepMotorType::OCT_FOCUS:
 	case StepMotorType::OCT_REFER:
 	case StepMotorType::OCT_POLAR:
-	case StepMotorType::OCT_REFND:
 	case StepMotorType::LSO_FOCUS:
 		size = range / 100;
 		break;
@@ -578,10 +687,17 @@ int wso_device::StepMotor::getSliderStepSize(void) const
 
 bool wso_device::StepMotor::isEndOfLowerPosition(void) const
 {
-	auto mpos = getPosition();
-	auto rmin = getRangeMin();
-	if (mpos <= (rmin + MOTOR_END_OF_RANGE_OFFSET)) {
-		return true;
+	if (isStageMotor()) {
+		if (impl().limitStatus[0]) {
+			return true;
+		}
+	}
+	else {
+		auto mpos = getPosition();
+		auto rmin = getRangeMin();
+		if (mpos <= (rmin + MOTOR_END_OF_RANGE_OFFSET)) {
+			return true;
+		}
 	}
 	return false;
 }
@@ -589,10 +705,17 @@ bool wso_device::StepMotor::isEndOfLowerPosition(void) const
 
 bool wso_device::StepMotor::isEndOfUpperPosition(void) const
 {
-	auto mpos = getPosition();
-	auto rmax = getRangeMax();
-	if (mpos >= (rmax - MOTOR_END_OF_RANGE_OFFSET)) {
-		return true;
+	if (isStageMotor()) {
+		if (impl().limitStatus[1]) {
+			return true;
+		}
+	}
+	else {
+		auto mpos = getPosition();
+		auto rmax = getRangeMax();
+		if (mpos >= (rmax - MOTOR_END_OF_RANGE_OFFSET)) {
+			return true;
+		}
 	}
 	return false;
 }
@@ -618,7 +741,8 @@ bool wso_device::StepMotor::isAtCenterOfPosition(void) const
 {
 	auto mpos = getPosition();
 	auto cent = getCenterPosition();
-	return (abs(mpos - cent) <= MOTOR_CENTER_OF_POSITION_OFFSET ? true : false);
+	auto flag = (abs(mpos - cent) <= MOTOR_CENTER_OF_POSITION_OFFSET ? true : false);
+	return flag;
 }
 
 
@@ -633,18 +757,24 @@ const char* wso_device::StepMotor::getName(void) const
 		return MOTOR_OCT_POLAR_NAME;
 	case StepMotorType::OCT_REFND:
 		return MOTOR_OCT_REFND_NAME;
-	case StepMotorType::OCT_ANT_LENS:
-		return MOTOR_OCT_ANT_LENS_NAME;
 	case StepMotorType::LSO_FOCUS:
 		return MOTOR_LSO_FOCUS_NAME;
-	case StepMotorType::STAGE_Y:
-		return MOTOR_STAGE_X_NAME;
-	case StepMotorType::STAGE_X:
-		return MOTOR_STAGE_Y_NAME;
-	case StepMotorType::STAGE_Z:
-		return MOTOR_STAGE_Z_NAME;
+	case StepMotorType::RET_MIRROR:
+		return MOTOR_RET_MIRROR_NAME;
+	case StepMotorType::OCT_ANT_LENS:
+		return MOTOR_OCT_ANT_LENS_NAME;
+	case StepMotorType::LSO_FILTER:
+		return MOTOR_LSO_FILTER_NAME;
 	case StepMotorType::SWING:
 		return MOTOR_SWING_NAME;
+	case StepMotorType::STAGE_X:
+		return MOTOR_STAGE_Y_NAME;
+	case StepMotorType::STAGE_Y:
+		return MOTOR_STAGE_X_NAME;
+	case StepMotorType::STAGE_Z:
+		return MOTOR_STAGE_Z_NAME;
+	case StepMotorType::CHIN_REST:
+		return MOTOR_CHIN_REST_NAME;
 	}
 	return MOTOR_UNKNOWN_NAME;
 }
@@ -681,6 +811,22 @@ bool wso_device::StepMotor::isZStageMotor(void) const
 	return (getType() == StepMotorType::STAGE_Z);
 }
 
+bool wso_device::StepMotor::isSwingMotor(void) const
+{
+	return (getType() == StepMotorType::SWING);
+}
+
+bool wso_device::StepMotor::isStageMotor(void) const
+{
+	switch (getType()) {
+	case StepMotorType::STAGE_X:
+	case StepMotorType::STAGE_Y:
+	case StepMotorType::STAGE_Z:
+	case StepMotorType::SWING:
+		return true;
+	}
+	return false;
+}
 
 std::int32_t wso_device::StepMotor::getInitPosition(StepMotorType type)
 {
@@ -691,16 +837,26 @@ std::int32_t wso_device::StepMotor::getInitPosition(StepMotorType type)
 		return MOTOR_OCT_REFER_INIT_POS;
 	case StepMotorType::OCT_POLAR:
 		return MOTOR_OCT_POLAR_INIT_POS;
+	case StepMotorType::OCT_REFND:
+		return MOTOR_OCT_REFND_INIT_POS;
 	case StepMotorType::LSO_FOCUS:
 		return MOTOR_LSO_FOCUS_INIT_POS;
+	case StepMotorType::RET_MIRROR:
+		return MOTOR_RET_MIRROR_INIT_POS;
+	case StepMotorType::OCT_ANT_LENS:
+		return MOTOR_OCT_ANT_LENS_INIT_POS;
+	case StepMotorType::LSO_FILTER:
+		return MOTOR_LSO_FILTER_INIT_POS;
+	case StepMotorType::SWING:
+		return MOTOR_SWING_INIT_POS;
 	case StepMotorType::STAGE_X:
 		return MOTOR_STAGE_X_INIT_POS;
 	case StepMotorType::STAGE_Y:
 		return MOTOR_STAGE_Y_INIT_POS;
 	case StepMotorType::STAGE_Z:
 		return MOTOR_STAGE_Z_INIT_POS;
-	case StepMotorType::SWING:
-		return MOTOR_SWING_INIT_POS;
+	case StepMotorType::CHIN_REST:
+		return MOTOR_CHIN_REST_INIT_POS;
 	}
 	return 0;
 }

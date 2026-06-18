@@ -19,13 +19,13 @@ struct ZstageMotor::ZstageMotorImpl
 
 
 ZstageMotor::ZstageMotor() :
-	d_ptr(make_unique<ZstageMotorImpl>()), StageMotor()
+	d_ptr(make_unique<ZstageMotorImpl>()), StepMotor()
 {
 }
 
 
 wso_device::ZstageMotor::ZstageMotor(MainBoard* board) :
-	d_ptr(make_unique<ZstageMotorImpl>()), StageMotor(board, StageMotorType::STAGE_Z)
+	d_ptr(make_unique<ZstageMotorImpl>()), StepMotor(board, StepMotorType::STAGE_Z)
 {
 	setLimitRange(STAGE_Z_LIMIT_RANGE_LOW, STAGE_Z_LIMIT_RANGE_HIGH);
 }
@@ -54,6 +54,11 @@ ZstageMotor& wso_device::ZstageMotor::operator=(const ZstageMotor& rhs)
 {
 	*d_ptr = *rhs.d_ptr;
 	return *this;
+}
+
+bool wso_device::ZstageMotor::initializeZstageMotor(void)
+{
+	return StepMotor::initializeStepMotor();
 }
 
 

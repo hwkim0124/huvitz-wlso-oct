@@ -27,6 +27,12 @@ struct StageMotor::StageMotorImpl
 	int smPosMin;
 	int smPosMax;
 
+	int motorWait;
+	int piHitRefPos;
+	int piHitMargin;
+	int piHitLastPos;
+	int piHitPosError;
+
 	int centerPos;
 	int targetPos;
 	int limitRange[2];
@@ -35,7 +41,8 @@ struct StageMotor::StageMotorImpl
 	StageMotorImpl()
 		: asyncMode(true), stopped(false),
 		smPosMin(0), smPosMax(0), curPos(0), maxSpeed(0), minSpeed(0), accStep(0), 
-		centerPos(0), targetPos(0), limitRange{ 0 }, limitStatus{ false }
+		centerPos(0), targetPos(0), limitRange{ 0 }, limitStatus{ false }, 
+		motorWait(0), piHitRefPos(0), piHitMargin(0), piHitLastPos(0), piHitPosError(0)
 	{
 	}
 };
@@ -88,14 +95,7 @@ bool wso_device::StageMotor::initializeStageMotor(void)
 	}
 	else {
 		reportStatus();
-		/*
-		int value = getInitPosition();
-		if (value != getPosition()) {
-			controlMove(value);
-		}
-		*/
 	}
-
 
 	if (getMainBoard()->isMotorsNotInUse()) {
 		return true;
@@ -248,9 +248,11 @@ bool wso_device::StageMotor::updateStatus(void)
 	*/
 
 	UsbComm& usbComm = getMainBoard()->getUsbComm();
+
 	if (isStepMotor()) {
-		if (auto* hbs = getMainBoard()->getHbsDataProfile(); hbs->loadStageMotorStatus()) {
-			auto* info = hbs->getHbsStageMotorStatus(static_cast<StageMotorType>(getType()));
+		auto type = static_cast<StageMotorType>(getType());
+		if (auto* hbs = getMainBoard()->getHbsDataProfile(); hbs->loadStageMotorStatus(type)) {
+			auto* info = hbs->getHbsStageMotorStatus(type);
 			if (info) {
 				impl().curPos = info->CurPos;
 				// impl().limitStatus[0] = info.limit_sensor_state[0];

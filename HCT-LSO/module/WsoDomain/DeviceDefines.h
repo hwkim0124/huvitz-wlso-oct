@@ -34,17 +34,17 @@ namespace wso_domain
 		OCT_POLAR = 0x02,
 		OCT_REFND = 0x03,
 		LSO_FOCUS = 0x04,
-		RM = 0x05,
+		RET_MIRROR = 0x05,
 		OCT_ANT_LENS = 0x06,
-		AP1 = 0x07,
+		LSO_FILTER = 0x07,
 		AP2 = 0x08,
 		SWING = 0x09,
 		STAGE_X = 0x0A,
 		STAGE_Y = 0x0B,
 		STAGE_Z = 0x0C,
-		HEAD_REST = 0x0F,
+		CHIN_REST = 0x0F,
 		UNKNOWN = 0xFF,
-		NUM_MOTORS = (HEAD_REST + 1)
+		NUM_MOTORS = (CHIN_REST + 1)
 	};
 
 	enum class LightType : unsigned char
@@ -73,25 +73,26 @@ namespace wso_domain
 		OCT_POLAR = 0x02,
 		OCT_REFND = 0x03,
 		LSO_FOCUS = 0x04,
-		RM = 0x05,
+		RET_MIRROR = 0x05,
 		OCT_ANT_LENS = 0x06,
-		AP1 = 0x07,
+		LSO_FILTER = 0x07,
 		AP2 = 0x08,
 		SWING = 0x09,
 		STAGE_X = 0x0A,
 		STAGE_Y = 0x0B,
 		STAGE_Z = 0x0C,
-		HEAD_REST = 0x0F,
+		CHIN_REST = 0x0F,
 		UNKNOWN = 0xFF,
-		NUM_MOTORS = (HEAD_REST + 1)
+		NUM_MOTORS = (CHIN_REST + 1)
 	};
 
 	enum class StageMotorType : unsigned char
 	{
+		SWING = 0x09,
 		STAGE_X = 0x0A, // 0x09,
 		STAGE_Y = 0x0B, // 0x05, 
 		STAGE_Z = 0x0C, // 0x0B,
-		NUMBER_OF_ITEMS = 3
+		NUMBER_OF_ITEMS = 4
 	};
 
 
