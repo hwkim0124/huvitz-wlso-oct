@@ -122,10 +122,18 @@ void wso_system::Hardware::connectStepMotorPositionChanged(MotorType type, StepM
 	return;
 }
 
-void wso_system::Hardware::connectCorneaCameraImageCaptured(CorneaCameraFrameCaptured clb)
+void wso_system::Hardware::connectCorneaCameraImageCaptured(CameraType type, CorneaCameraFrameCaptured clb)
 {
 	if (auto* inst = CallbackRegistry::getInstance(); inst) {
-		inst->setCorneaCameraFrameCaptured(clb);
+		if (type == CameraType::IR_CORNEA_LEFT) {
+			inst->setCorneaLeftCameraFrameCaptured(clb);
+		}
+		else if (type == CameraType::IR_CORNEA_RIGHT) {
+			inst->setCorneaRightCameraFrameCaptured(clb);
+		}
+		else if (type == CameraType::IR_CORNEA_LOWER) {
+			inst->setCorneaLowerCameraFrameCaptured(clb);
+		}
 	}
 }
 
@@ -158,10 +166,18 @@ void wso_system::Hardware::disconnectStepMotorPositionChanged(MotorType type)
 	return;
 }
 
-void wso_system::Hardware::disconnectCorneaCameraImageCaptured(void)
+void wso_system::Hardware::disconnectCorneaCameraImageCaptured(CameraType type)
 {
 	if (auto* inst = CallbackRegistry::getInstance(); inst) {
-		inst->setCorneaCameraFrameCaptured(nullptr);
+		if (type == CameraType::IR_CORNEA_LEFT) {
+			inst->setCorneaLeftCameraFrameCaptured(nullptr);
+		}
+		else if (type == CameraType::IR_CORNEA_RIGHT) {
+			inst->setCorneaRightCameraFrameCaptured(nullptr);
+		}
+		else if (type == CameraType::IR_CORNEA_LOWER) {
+			inst->setCorneaLowerCameraFrameCaptured(nullptr);
+		}
 	}
 }
 

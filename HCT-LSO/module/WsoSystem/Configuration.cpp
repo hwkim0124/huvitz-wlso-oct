@@ -154,11 +154,13 @@ bool wso_system::Configuration::isSystemConfigurationValid(void) const
 bool wso_system::Configuration::loadSystemCalibration(bool fetch)
 {
 	if (auto* board = Hardware::getInstance()->getMainBoard(); board) {
+		/*
 		if (fetch) {
 			if (!board->pullSystemCalibFromMemory()) {
 				return false;
 			}
 		}
+		*/
 		if (auto* calib = SystemCaliber::getInstance(); calib) {
 			auto* profile = board->getHbsDataProfile();
 			calib->setupBoardProfile(profile);

@@ -45,7 +45,7 @@ void wso_config::SystemCaliber::setupBoardProfile(HbsDataProfile* profile)
 double wso_config::SystemCaliber::dispersionParameterToRetina(int index, bool isSet, double value)
 {
 	if (auto* p = getBoardProfile(); p) {
-		auto* cal = const_cast<HbsCalibration*>(p->getHbsCalibration());
+		auto* cal = const_cast<HbsCalibOctParams*>(p->getHbsCalibOctParams());
 		if (isSet) {
 			switch (index) {
 			case 0:
@@ -77,7 +77,7 @@ double wso_config::SystemCaliber::dispersionParameterToRetina(int index, bool is
 double wso_config::SystemCaliber::dispersionParameterToCornea(int index, bool isSet, double value)
 {
 	if (auto* p = getBoardProfile(); p) {
-		auto* cal = const_cast<HbsCalibration*>(p->getHbsCalibration());
+		auto* cal = const_cast<HbsCalibOctParams*>(p->getHbsCalibOctParams());
 		if (isSet) {
 			switch (index) {
 			case 0:
@@ -93,14 +93,20 @@ double wso_config::SystemCaliber::dispersionParameterToCornea(int index, bool is
 			return value;
 		}
 		else {
+			double param = 0.0;
 			switch (index) {
 			case 0:
-				return cal->CorneaDispersion.a2;
+				param = cal->CorneaDispersion.a2;
+				break;
 			case 1:
-				return cal->CorneaDispersion.a3;
+				param = cal->CorneaDispersion.a3;
+				break;
 			case 2:
-				return cal->CorneaDispersion.a4;
+				param = cal->CorneaDispersion.a4;
+				break;
 			}
+			param = std::isnan(param) ? 0.0 : param;
+			return param;
 		}
 	}
 	return 0.0;
@@ -109,7 +115,7 @@ double wso_config::SystemCaliber::dispersionParameterToCornea(int index, bool is
 double wso_config::SystemCaliber::spectrometerParameter(int index, bool isSet, double value)
 {
 	if (auto* p = getBoardProfile(); p) {
-		auto* cal = const_cast<HbsCalibration*>(p->getHbsCalibration());
+		auto* cal = const_cast<HbsCalibOctParams*>(p->getHbsCalibOctParams());
 		if (isSet) {
 			switch (index) {
 			case 0:
@@ -128,16 +134,23 @@ double wso_config::SystemCaliber::spectrometerParameter(int index, bool isSet, d
 			return value;
 		}
 		else {
+			double param = 0.0;
 			switch (index) {
 			case 0:
-				return cal->SpectroCal.a0;
+				param = cal->SpectroCal.a0;
+				break;
 			case 1:
-				return cal->SpectroCal.a1;
+				param = cal->SpectroCal.a1;
+				break;
 			case 2:
-				return cal->SpectroCal.a2;
+				param = cal->SpectroCal.a2;
+				break;
 			case 3:
-				return cal->SpectroCal.a3;
+				param = cal->SpectroCal.a3;
+				break;
 			}
+			param = std::isnan(param) ? 0.0 : param;
+			return param;
 		}
 	}
 	return 0.0;
@@ -146,13 +159,16 @@ double wso_config::SystemCaliber::spectrometerParameter(int index, bool isSet, d
 float wso_config::SystemCaliber::galvanometerOffsetX(bool isset, float value)
 {
 	if (auto* p = getBoardProfile(); p) {
-		auto* cal = const_cast<HbsCalibration*>(p->getHbsCalibration());
+		auto* cal = const_cast<HbsCalibOctGalvano*>(p->getHbsCalibOctGalvano());
 		if (isset) {
 			cal->OctGalvano_Xcal.Galvano_offset = value;
 			return value;
 		}
 		else {
-			return cal->OctGalvano_Xcal.Galvano_offset;
+			float param = 0.0f;
+			param = cal->OctGalvano_Xcal.Galvano_offset;
+			param = std::isnan(param) ? 0.0f : param;
+			return param;
 		}
 	}
 	return 0.0f;
@@ -161,13 +177,16 @@ float wso_config::SystemCaliber::galvanometerOffsetX(bool isset, float value)
 float wso_config::SystemCaliber::galvanometerOffsetY(bool isset, float value)
 {
 	if (auto* p = getBoardProfile(); p) {
-		auto* cal = const_cast<HbsCalibration*>(p->getHbsCalibration());
+		auto* cal = const_cast<HbsCalibOctGalvano*>(p->getHbsCalibOctGalvano());
 		if (isset) {
 			cal->OctGalvano_Ycal.Galvano_offset = value;
 			return value;
 		}
 		else {
-			return cal->OctGalvano_Ycal.Galvano_offset;
+			float param = 0.0f;
+			param = cal->OctGalvano_Ycal.Galvano_offset;
+			param = std::isnan(param) ? 0.0f : param;
+			return param;
 		}
 	}
 	return 0.0f;
@@ -176,13 +195,16 @@ float wso_config::SystemCaliber::galvanometerOffsetY(bool isset, float value)
 float wso_config::SystemCaliber::galvanometerScaleX(bool isset, float value)
 {
 	if (auto* p = getBoardProfile(); p) {
-		auto* cal = const_cast<HbsCalibration*>(p->getHbsCalibration());
+		auto* cal = const_cast<HbsCalibOctGalvano*>(p->getHbsCalibOctGalvano());
 		if (isset) {
 			cal->OctGalvano_Xcal.Galvano_Range = value;
 			return value;
 		}
 		else {
-			return cal->OctGalvano_Xcal.Galvano_Range;
+			float param = 0.0f;
+			param = cal->OctGalvano_Xcal.Galvano_Range;
+			param = std::isnan(param) ? 1.0f : param;
+			return param;
 		}
 	}
 	return 1.0f;
@@ -191,13 +213,16 @@ float wso_config::SystemCaliber::galvanometerScaleX(bool isset, float value)
 float wso_config::SystemCaliber::galvanometerScaleY(bool isset, float value)
 {
 	if (auto* p = getBoardProfile(); p) {
-		auto* cal = const_cast<HbsCalibration*>(p->getHbsCalibration());
+		auto* cal = const_cast<HbsCalibOctGalvano*>(p->getHbsCalibOctGalvano());
 		if (isset) {
 			cal->OctGalvano_Ycal.Galvano_Range = value;
 			return value;
 		}
 		else {
-			return cal->OctGalvano_Ycal.Galvano_Range;
+			float param = 0.0f;
+			param = cal->OctGalvano_Ycal.Galvano_Range;
+			param = std::isnan(param) ? 1.0f : param;
+			return param;
 		}
 	}
 	return 1.0f;

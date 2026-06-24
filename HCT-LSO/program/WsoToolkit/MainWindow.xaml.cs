@@ -139,13 +139,11 @@ namespace WsoToolkit
 
         private void btnOctSignalTest_Click(object sender, RoutedEventArgs e)
         {
-            /*
             var window = new OctSignalTestWindow
             {
                 Owner = this
             };
             window.ShowDialog();
-            */
         }
 
         private void BtnOctSpectroCalib_Click(object sender, RoutedEventArgs e)
@@ -183,13 +181,11 @@ namespace WsoToolkit
 
         private void BtnDeviceMotorTest_Click(object sender, RoutedEventArgs e)
         {
-            /*
-            var window = new MotorTestWindow
+            var window = new DeviceMotorWindow
             {
                 Owner = this
             };
             window.ShowDialog();
-            */
         }
 
         private void BtnOctSldControl_Click(object sender, RoutedEventArgs e)

@@ -27,8 +27,8 @@ RetinaCamera::RetinaCamera() :
 }
 
 
-RetinaCamera::RetinaCamera(MainBoard* board, CameraType type, InfraredCameraId camId, std::uint8_t epid) :
-	d_ptr(make_unique<RetinaCameraImpl>()), InfraredCamera(board, type, camId, epid)
+RetinaCamera::RetinaCamera(MainBoard* board, CameraType type, std::uint8_t epid) :
+	d_ptr(make_unique<RetinaCameraImpl>()), InfraredCamera(board, type, epid)
 {
 }
 

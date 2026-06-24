@@ -47,12 +47,12 @@ namespace oct_scan
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
 	constexpr float TRIGGER_TIME_STEP_AT_SLOWER_SPEED = 66.6f; // 78.0f;
 	constexpr float TRIGGER_TIME_STEP_AT_NORMAL_SPEED = 38.4f; // 38.6f; //  42.0;
-	constexpr float TRIGGER_TIME_STEP_AT_FASTER_SPEED = 14.8f; // 16.0; // 15.0;
+	constexpr float TRIGGER_TIME_STEP_AT_FASTER_SPEED = 12.5f; // 14.8f; 
 	constexpr float TRIGGER_TIME_STEP_AT_CUSTOM_SPEED = 14.8f; //  16.0; // 15.0;
 
 	constexpr float EXPOSURE_TIME_AT_NORMAL_SPEED_USB3 = 64.0f;
 	constexpr float EXPOSURE_TIME_AT_FASTER_SPEED_USB3 = 37.0f;
-	constexpr float EXPOSURE_TIME_AT_FASTEST_SPEED_USB3 = 13.7f;
+	constexpr float EXPOSURE_TIME_AT_FASTEST_SPEED_USB3 = 11.5f; // 13.7f;
 
 	constexpr int TRIGGER_FORE_PADDING_POINTS_AT_FASTER = 31;		// 500us // 16
 	constexpr int TRIGGER_FORE_PADDING_POINTS_AT_NORMAL = 15;		// 500us // 42

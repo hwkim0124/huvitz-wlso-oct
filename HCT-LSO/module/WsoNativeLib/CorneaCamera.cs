@@ -10,6 +10,7 @@ namespace WsoNativeLib
 {
     using static WsoNativeLib.LibraryConfig;
     using static WsoNativeLib.WsoCallback;
+    using static WsoNativeLib.WsoDevice;
 
     public static class CorneaCamera
     {
@@ -19,80 +20,65 @@ namespace WsoNativeLib
         /////////////////////////////////////////////////////////////////////////////////////////////
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool startCorneaCameraPreview(CorneaCameraFrameCaptured clb);
+        private static extern bool startCorneaCameraPreview(int type, CorneaCameraFrameCaptured clb);
 
         [DllImport(LibraryName)]
-        private static extern void closeCorneaCameraPreview();
-
-        [DllImport(LibraryName)]
-        [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool isCorneaCameraPreviewing();
-
-        [DllImport(LibraryName)]
-        private static extern float getCorneaCameraAgain();
-
-        [DllImport(LibraryName)]
-        private static extern float getCorneaCameraDgain();
-
-        [DllImport(LibraryName)]
-        private static extern int getWorkingDotIntensity(int index);
+        private static extern void closeCorneaCameraPreview(int type);
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool setCorneaCameraAgain(float value);
+        private static extern bool isCorneaCameraPreviewing(int type);
+
+        [DllImport(LibraryName)]
+        private static extern float getCorneaCameraAgain(int type);
+
+        [DllImport(LibraryName)]
+        private static extern float getCorneaCameraDgain(int type);
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool setCorneaCameraDgain(float value);
+        private static extern bool setCorneaCameraAgain(int type, float value);
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool setWorkingDotIntensity(int index, int value);
+        private static extern bool setCorneaCameraDgain(int type, float value);
 
 
         // Public methods
         /////////////////////////////////////////////////////////////////////////////////////////////
-        public static bool StartPreview(CorneaCameraFrameCaptured clb)
+        public static bool StartPreview(CameraType type, CorneaCameraFrameCaptured clb)
         {
-            return startCorneaCameraPreview(clb);
+            return startCorneaCameraPreview((int)type, clb);
         }
 
-        public static void ClosePreview()
+        public static void ClosePreview(CameraType type)
         {
-            closeCorneaCameraPreview();
+            closeCorneaCameraPreview((int)type);
         }
 
-        public static bool IsPreviewing()
+        public static bool IsPreviewing(CameraType type)
         {
-            return isCorneaCameraPreviewing();
+            return isCorneaCameraPreviewing((int)type);
         }
 
-        public static float GetAnalogGain()
+        public static float GetAnalogGain(CameraType type)
         {
-            return getCorneaCameraAgain();
+            return getCorneaCameraAgain((int)type);
         }
 
-        public static float GetDigitalGain()
+        public static float GetDigitalGain(CameraType type)
         {
-            return getCorneaCameraDgain();
+            return getCorneaCameraDgain((int)type);
         }
 
-        public static bool SetAnalogGain(float value)
+        public static bool SetAnalogGain(CameraType type, float value)
         {
-            return setCorneaCameraAgain(value);
+            return setCorneaCameraAgain((int)type, value);
         }
 
-        public static bool SetDigitalGain(float value)
+        public static bool SetDigitalGain(CameraType type, float value)
         {
-            return setCorneaCameraDgain(value);
-        }
-        public static int GetWorkingDotIntensity(int index)
-        {
-            return getWorkingDotIntensity(index);
-        }
-        public static bool SetWorkingDotIntensity(int index, int value)
-        {
-            return setWorkingDotIntensity(index, value);
+            return setCorneaCameraDgain((int)type, value);
         }
     }
 }

@@ -17,17 +17,29 @@ struct OctScanOptions::OctScanOptionsImpl
 	int enfacePreviewSlabY1 = 0;
 	int enfacePreviewSlabY2 = 767;
 
-	float corneaPatternRangeScaleX[3][5] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
-	float corneaPatternRangeScaleY[3][5] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
-	float retinaPatternRangeScaleX[3][5] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
-	float retinaPatternRangeScaleY[3][5] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
-	float corneaPatternRangeOffsetX[3] = { 0.0f };
-	float corneaPatternRangeOffsetY[3] = { 0.0f };
-	float retinaPatternRangeOffsetX[3] = { 0.0f };
-	float retinaPatternRangeOffsetY[3] = { 0.0f };
+	float corneaPatternRangeScaleX[3][5];
+	float corneaPatternRangeScaleY[3][5];
+	float retinaPatternRangeScaleX[3][5];
+	float retinaPatternRangeScaleY[3][5];
+	float corneaPatternRangeOffsetX[3];
+	float corneaPatternRangeOffsetY[3];
+	float retinaPatternRangeOffsetX[3];
+	float retinaPatternRangeOffsetY[3];
 
 	OctScanOptionsImpl()
 	{
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 5; j++) {
+				corneaPatternRangeScaleX[i][j] = 1.0f;
+				corneaPatternRangeScaleY[i][j] = 1.0f;
+				retinaPatternRangeScaleX[i][j] = 1.0f;
+				retinaPatternRangeScaleY[i][j] = 1.0f;
+			}
+			corneaPatternRangeOffsetX[i] = 0.0f;
+			corneaPatternRangeOffsetY[i] = 0.0f;
+			retinaPatternRangeOffsetX[i] = 0.0f;
+			retinaPatternRangeOffsetY[i] = 0.0f;
+		} 
 	}
 };
 

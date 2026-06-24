@@ -32,13 +32,13 @@ namespace WsoNativeLib
         // Cornea Camera
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        public delegate void CorneaCameraFrameCaptured(IntPtr data, int width, int height);
+        public delegate void CorneaCameraFrameCaptured(nint data, int width, int height);
 
         
         // OCT Scanning 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        public delegate void OctScanPreviewImageCaptured(IntPtr data, int width, int height, float quality, float snr_ratio, int ref_point, int index_image);
+        public delegate void OctScanPreviewImageCaptured(nint data, int width, int height, float quality, float snr_ratio, int ref_point, int index_image);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         public delegate void OctScanEnfaceImageCaptured(IntPtr data, int width, int height);
@@ -56,13 +56,13 @@ namespace WsoNativeLib
         public delegate void OctAutoReferOptimized([MarshalAs(UnmanagedType.I1)] bool result, float quality, int ref_point, int position);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        public delegate void OctSpectrumDataCaptured(IntPtr data, int width, int height);
+        public delegate void OctSpectrumDataCaptured(nint data, int width, int height);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        public delegate void OctResampleDataCaptured(IntPtr data, int width, int height);
+        public delegate void OctResampleDataCaptured(nint data, int width, int height);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
-        public delegate void OctIntensityDataCaptured(IntPtr data, int width, int height);
+        public delegate void OctIntensityDataCaptured(nint data, int width, int height);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         public delegate void OctScanPatternAcquired([MarshalAs(UnmanagedType.I1)] bool result);

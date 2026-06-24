@@ -27,8 +27,8 @@ CorneaCamera::CorneaCamera() :
 }
 
 
-CorneaCamera::CorneaCamera(MainBoard* board, CameraType type, InfraredCameraId camId, std::uint8_t epid) :
-	d_ptr(make_unique<CorneaCameraImpl>()), InfraredCamera(board, type, camId, epid)
+CorneaCamera::CorneaCamera(MainBoard* board, CameraType type, std::uint8_t epid) :
+	d_ptr(make_unique<CorneaCameraImpl>()), InfraredCamera(board, type, epid)
 {
 }
 

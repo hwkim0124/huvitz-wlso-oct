@@ -32,14 +32,14 @@ namespace wso_system
 		void connectAdapterLensAttached(AdapterLensAttachedCallback clb);
 		void connectStepMotorPositionChanged(MotorType type, StepMotorPositionChanged clb);
 
-		void connectCorneaCameraImageCaptured(CorneaCameraFrameCaptured clb);
+		void connectCorneaCameraImageCaptured(CameraType type, CorneaCameraFrameCaptured clb);
 
 		void releaseJoystickButtonPressed(void);
 		void releaseOptimizeButtonPressed(void);
 		void releaseAdapterLensAttached(void);
 
 		void disconnectStepMotorPositionChanged(MotorType type);
-		void disconnectCorneaCameraImageCaptured(void);
+		void disconnectCorneaCameraImageCaptured(CameraType type);
 
 		void excludeDeviceFromInit(bool mainboard, bool src_leds, bool motors, bool ir_camera);
 		void excludeGrabberFromInit(bool oct_grab);

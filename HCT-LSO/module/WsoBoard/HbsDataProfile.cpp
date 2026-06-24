@@ -51,7 +51,8 @@ struct HbsDataProfile::HbsDataProfileImpl
 	HbsStepMotorStatus	HBS_XstageMotor{};
 	HbsStepMotorStatus	HBS_ZstageMotor{};
 	HbsStepMotorStatus	HBS_YstageMotor{};
-	
+	HbsStepMotorStatus	HBS_ChinRestMotor{};
+
 	DC_CR_Motor_st 		HBS_CR_Motor{};
 
 	IRCamInfo_st 		HBS_IRCamstatus{};
@@ -120,7 +121,7 @@ bool wso_board::HbsDataProfile::loadHbsTableEntries(void)
 	if (!loadBufferDescriptor()) {
 		return false;
 	}
-	if (!loadCalibrationBlocks(false)) {
+	if (!loadCalibrationBlocks(true)) {
 		return false;
 	}
 	/*
@@ -821,6 +822,11 @@ const HbsStepMotorStatus* wso_board::HbsDataProfile::getHbsLsoFocusMotor(void) c
 	return &impl().HBS_LsoFocusMotor;
 }
 
+const HbsStepMotorStatus* wso_board::HbsDataProfile::getHbsLsoFilterMotor(void) const
+{
+	return &impl().HBS_LsoFilterMotor;
+}
+
 const HbsStepMotorStatus* wso_board::HbsDataProfile::getHbsRetMirrorMotor(void) const
 {
 	return &impl().HBS_RetMirrorMotor;
@@ -869,6 +875,11 @@ const HbsStepMotorStatus* wso_board::HbsDataProfile::getHbsZstageMotor(void) con
 const HbsStepMotorStatus* wso_board::HbsDataProfile::getHbsSwingMotor(void) const
 {
 	return &impl().HBS_SwingMotor;
+}
+
+const HbsStepMotorStatus* wso_board::HbsDataProfile::getHbsChinRestMotor(void) const
+{
+	return &impl().HBS_ChinRestMotor;
 }
 
 const HbsChinrestMotor* wso_board::HbsDataProfile::getHbsChinrestMotor(void) const
@@ -920,8 +931,12 @@ const HbsStepMotorStatus* wso_board::HbsDataProfile::getHbsStepMotorStatus(StepM
 			return getHbsOctReferNdMotor();
 		case LSO_FOCUS:
 			return getHbsLsoFocusMotor();
+		case RET_MIRROR:
+			return getHbsRetMirrorMotor();
 		case OCT_ANT_LENS:
 			return getHbsOctAntLensMotor();
+		case LSO_FILTER:
+			return getHbsLsoFilterMotor();
 		case STAGE_X:
 			return getHbsXstageMotor();
 		case STAGE_Y:
@@ -930,6 +945,8 @@ const HbsStepMotorStatus* wso_board::HbsDataProfile::getHbsStepMotorStatus(StepM
 			return getHbsZstageMotor();
 		case SWING:
 			return getHbsSwingMotor();
+		case CHIN_REST:
+			return getHbsChinRestMotor();
 	}
 	return nullptr;
 }
@@ -965,6 +982,12 @@ int wso_board::HbsDataProfile::getHbsTableMotorIndex(StepMotorType type)
 			return TBL_REF_ND_MOTOR_ID;
 		case LSO_FOCUS:
 			return TBL_LSO_FOCUS_MOTOR_ID;
+		case RET_MIRROR:
+			return TBL_RM_MOTOR_ID;
+		case OCT_ANT_LENS:
+			return TBL_ANTLENS_MOTOR_ID;
+		case LSO_FILTER:
+			return TBL_AP1_MOTOR_ID;
 		case SWING:
 			return TBL_SWING_MOTOR_ID;
 		case STAGE_X:
@@ -973,6 +996,8 @@ int wso_board::HbsDataProfile::getHbsTableMotorIndex(StepMotorType type)
 			return TBL_Y_MOTOR_ID;
 		case STAGE_Z:
 			return TBL_Z_MOTOR_ID;
+		case CHIN_REST:
+			return TBL_CR_MOTOR_ID;
 	}
 	return -1;
 }

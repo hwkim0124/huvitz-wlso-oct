@@ -436,7 +436,8 @@ bool wso_device::UsbComm::readCalibMotorSets(const HbsCalibMotorSets* data, cons
 	assert(desc != nullptr);
 	lock_guard<mutex> lock(impl().mutexControl);
 	const auto addr = desc->blocks[CALIB_IDX_MOTOR_SETS].HBS_BlkBaseAddr;
-	const auto size = desc->blocks[CALIB_IDX_MOTOR_SETS].RomBlkSize;
+	//const auto size = desc->blocks[CALIB_IDX_MOTOR_SETS].RomBlkSize;
+	const auto size = sizeof(HbsCalibMotorSets);
 
 	if (size <= 0 || !readAddress(addr, (unsigned char*)data, size)) {
 		LogD() << "Failed to read HBS motor sets calibration block, addr: " << addr << ", size: " << size;
@@ -451,7 +452,8 @@ bool wso_device::UsbComm::readCalibOctParams(const HbsCalibOctParams* data, cons
 	assert(desc != nullptr);
 	lock_guard<mutex> lock(impl().mutexControl);
 	const auto addr = desc->blocks[CALIB_IDX_OCT_PARAMS].HBS_BlkBaseAddr;
-	const auto size = desc->blocks[CALIB_IDX_OCT_PARAMS].RomBlkSize;
+	//const auto size = desc->blocks[CALIB_IDX_OCT_PARAMS].RomBlkSize;
+	const auto size = sizeof(HbsCalibOctParams);
 
 	if (size <= 0 || !readAddress(addr, (unsigned char*)data, size)) {
 		LogD() << "Failed to read HBS oct params calibration block, addr: " << addr << ", size: " << size;
@@ -466,7 +468,8 @@ bool wso_device::UsbComm::readCalibLedSource(const HbsCalibLedSource* data, cons
 	assert(desc != nullptr);
 	lock_guard<mutex> lock(impl().mutexControl);
 	const auto addr = desc->blocks[CALIB_IDX_LED_SOURCE].HBS_BlkBaseAddr;
-	const auto size = desc->blocks[CALIB_IDX_LED_SOURCE].RomBlkSize;
+	//const auto size = desc->blocks[CALIB_IDX_LED_SOURCE].RomBlkSize;
+	const auto size = sizeof(HbsCalibLedSource);
 
 	if (size <= 0 || !readAddress(addr, (unsigned char*)data, size)) {
 		LogD() << "Failed to read HBS led source calibration block, addr: " << addr << ", size: " << size;
@@ -481,7 +484,8 @@ bool wso_device::UsbComm::readCalibOctGalvano(const HbsCalibOctGalvano* data, co
 	assert(desc != nullptr);
 	lock_guard<mutex> lock(impl().mutexControl);
 	const auto addr = desc->blocks[CALIB_IDX_OCT_GALVANO].HBS_BlkBaseAddr;
-	const auto size = desc->blocks[CALIB_IDX_OCT_GALVANO].RomBlkSize;
+	//const auto size = desc->blocks[CALIB_IDX_OCT_GALVANO].RomBlkSize;
+	const auto size = sizeof(HbsCalibOctGalvano);
 
 	if (size <= 0 || !readAddress(addr, (unsigned char*)data, size)) {
 		LogD() << "Failed to read HBS oct galvano calibration block, addr: " << addr << ", size: " << size;
@@ -496,7 +500,8 @@ bool wso_device::UsbComm::readCalibDeviceCfg(const HbsCalibDeviceCfg* data, cons
 	assert(desc != nullptr);
 	lock_guard<mutex> lock(impl().mutexControl);
 	const auto addr = desc->blocks[CALIB_IDX_DEVICE_CFG].HBS_BlkBaseAddr;
-	const auto size = desc->blocks[CALIB_IDX_DEVICE_CFG].RomBlkSize;
+	//const auto size = desc->blocks[CALIB_IDX_DEVICE_CFG].RomBlkSize;
+	const auto size = sizeof(HbsCalibDeviceCfg);
 
 	if (size <= 0 || !readAddress(addr, (unsigned char*)data, size)) {
 		LogD() << "Failed to read HBS device cfg calibration block, addr: " << addr << ", size: " << size;
@@ -511,7 +516,8 @@ bool wso_device::UsbComm::readCalibStepMotors(const HbsCalibStepMotors* data, co
 	assert(desc != nullptr);
 	lock_guard<mutex> lock(impl().mutexControl);
 	const auto addr = desc->blocks[CALIB_IDX_STEP_MOTORS].HBS_BlkBaseAddr;
-	const auto size = desc->blocks[CALIB_IDX_STEP_MOTORS].RomBlkSize;
+	//const auto size = desc->blocks[CALIB_IDX_STEP_MOTORS].RomBlkSize;
+	const auto size = sizeof(HbsCalibStepMotors);
 
 	if (size <= 0 || !readAddress(addr, (unsigned char*)data, size)) {
 		LogD() << "Failed to read HBS step motors calibration block, addr: " << addr << ", size: " << size;
@@ -526,7 +532,8 @@ bool wso_device::UsbComm::readCalibFactorySet1(const HbsCalibFactorySet1* data, 
 	assert(desc != nullptr);
 	lock_guard<mutex> lock(impl().mutexControl);
 	const auto addr = desc->blocks[CALIB_IDX_FACTORY_SET1].HBS_BlkBaseAddr;
-	const auto size = desc->blocks[CALIB_IDX_FACTORY_SET1].RomBlkSize;
+	//const auto size = desc->blocks[CALIB_IDX_FACTORY_SET1].RomBlkSize;
+	const auto size = sizeof(HbsCalibFactorySet1);
 
 	if (size <= 0 || !readAddress(addr, (unsigned char*)data, size)) {
 		LogD() << "Failed to read HBS factory set1 calibration block, addr: " << addr << ", size: " << size;
@@ -541,7 +548,8 @@ bool wso_device::UsbComm::readCalibFactorySet2(const HbsCalibFactorySet2* data, 
 	assert(desc != nullptr);
 	lock_guard<mutex> lock(impl().mutexControl);
 	const auto addr = desc->blocks[CALIB_IDX_FACTORY_SET2].HBS_BlkBaseAddr;
-	const auto size = desc->blocks[CALIB_IDX_FACTORY_SET2].RomBlkSize;
+	//const auto size = desc->blocks[CALIB_IDX_FACTORY_SET2].RomBlkSize;
+	const auto size = sizeof(HbsCalibFactorySet2);
 
 	if (size <= 0 || !readAddress(addr, (unsigned char*)data, size)) {
 		LogD() << "Failed to read HBS factory set2 calibration block, addr: " << addr << ", size: " << size;

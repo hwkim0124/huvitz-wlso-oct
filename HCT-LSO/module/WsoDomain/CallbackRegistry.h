@@ -31,7 +31,6 @@ namespace wso_domain
 
 		void setStepMotorPositionChanged(MotorType type, StepMotorPositionChanged clb = nullptr);
 
-		void setCorneaCameraFrameCaptured(CorneaCameraFrameCaptured clb = nullptr);
 		void setCorneaLeftCameraFrameCaptured(CorneaCameraFrameCaptured clb = nullptr);
 		void setCorneaRightCameraFrameCaptured(CorneaCameraFrameCaptured clb = nullptr);
 		void setCorneaLowerCameraFrameCaptured(CorneaCameraFrameCaptured clb = nullptr);

@@ -20,7 +20,6 @@ struct CallbackRegistry::CallbackRegistryImpl
 
 	unordered_map<MotorType, optional<StepMotorPositionChanged>> motorPosChanged; 
 	
-	optional<CorneaCameraFrameCaptured> corneaFrameCaptured;
 	optional<CorneaCameraFrameCaptured> corneaLeftFrameCaptured;
 	optional<CorneaCameraFrameCaptured> corneaRightFrameCaptured;
 	optional<CorneaCameraFrameCaptured> corneaLowerFrameCaptured;
@@ -66,7 +65,6 @@ struct CallbackRegistry::CallbackRegistryImpl
 			motorPosChanged[static_cast<MotorType>(i)] = nullopt;
 		}
 
-		corneaFrameCaptured = nullopt;
 		corneaLeftFrameCaptured = nullopt;
 		corneaRightFrameCaptured = nullopt;
 		corneaLowerFrameCaptured = nullopt;
@@ -153,12 +151,6 @@ void wso_domain::CallbackRegistry::setStepMotorPositionChanged(MotorType type, S
 {
 	lock_guard<mutex> lock(singleMutex_);
 	impl().motorPosChanged[type] = clb;
-}
-
-void wso_domain::CallbackRegistry::setCorneaCameraFrameCaptured(CorneaCameraFrameCaptured clb)
-{
-	lock_guard<mutex> lock(singleMutex_);
-	impl().corneaFrameCaptured = clb;
 }
 
 void wso_domain::CallbackRegistry::setCorneaLeftCameraFrameCaptured(CorneaCameraFrameCaptured clb)
@@ -353,17 +345,6 @@ void wso_domain::CallbackRegistry::runStepMotorPositionChanged(MotorType type, i
 		}
 	}
 }
-
-void wso_domain::CallbackRegistry::runCorneaCameraFrameCaptured(uint8_t* bits, int32_t width, int32_t height)
-{
-	lock_guard<mutex> lock(singleMutex_);
-	if (impl().corneaFrameCaptured) {
-		if (auto func = *impl().corneaFrameCaptured; func) {
-			func(bits, width, height);
-		}
-	}
-}
-
 
 void wso_domain::CallbackRegistry::runCorneaLeftCameraFrameCaptured(uint8_t* bits, int32_t width, int32_t height)
 {

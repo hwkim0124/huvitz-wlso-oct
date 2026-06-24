@@ -81,7 +81,7 @@ bool wso_system::Bootstrapper::initializeWsoSystem(WsoLogMsgCallback clb, bool t
 	// Start with user log callback.
 	initLogMsgCallback(clb, trace_mode);
 
-	WsoLogInfo("Starting Huvitz Wide-LSO/OCT System");
+	WsoLogInfo("Starting Huvitz Wide LSO-OCT System");
 
 	establishSystemBootMode();
 

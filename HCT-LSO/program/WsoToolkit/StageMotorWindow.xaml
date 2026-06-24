@@ -1,0 +1,125 @@
+﻿<Window x:Class="WsoToolkit.StageMotorWindow"
+        Style="{StaticResource WindowStyle}"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WsoToolkit"
+        mc:Ignorable="d"
+        Title="Stage Motor Window" Height="Auto" Width="Auto" ResizeMode="NoResize" SizeToContent="WidthAndHeight" Loaded="Window_Loaded" Initialized="Window_Initialized" Closed="Window_Closed" Closing="Window_Closing">
+    <Grid  Margin="12,12,12,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="0"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="0"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="0"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="372"/>
+                <ColumnDefinition Width="8"/>
+                <ColumnDefinition Width="372"/>
+            </Grid.ColumnDefinitions>
+            <Grid Grid.Row="0" Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Label x:Name="label601" Content="X Stage" Style="{StaticResource HeaderStyle}"/>
+                <StackPanel Grid.Row="1" Orientation="Horizontal">
+                    <Slider x:Name="sliderXstage" Style="{StaticResource SliderStyle}" HorizontalAlignment="Left" Width="200" Margin="8,0,0,0" ValueChanged="SliderXstage_ValueChanged" Thumb.DragStarted="SliderXstage_DragStarted" Thumb.DragCompleted="SliderXstage_DragCompleted"/>
+                    <TextBox x:Name="editXstagePos" Style="{StaticResource TextBoxS1Style}" Margin="8,0,0,0"/>
+                    <TextBox x:Name="editXstageValue" Style="{StaticResource TextBoxS1Style}" Margin="4,0,12,0"/>
+                </StackPanel>
+                <StackPanel Grid.Row="2" Orientation="Horizontal" FlowDirection="RightToLeft" Margin="0,8,0,24">
+                    <Button x:Name="btnXstageOrigin" Content="Origin" Style="{StaticResource ButtonS1Style}" Margin="8,0,4,0" Click="BtnXstageOrigin_Click"/>
+                    <Button x:Name="btnXstageSetAs" Content="Set As" Style="{StaticResource ButtonS1Style}" Margin="0,0,16,0" Click="BtnXstageSetAs_Click"/>
+                    <Button x:Name="btnXstageBwd" Content="Step+" Style="{StaticResource ButtonS1Style}" Margin="0,0,4,0" Click="BtnXstageBwd_Click"/>
+                    <Button x:Name="btnXstageFwd" Content="Step-" Style="{StaticResource ButtonS1Style}" Margin="0,0,8,0" Click="BtnXstageFwd_Click"/>
+                </StackPanel>
+                <Border BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" BorderThickness="1" Margin="0,0,0,10" Grid.RowSpan="3"/>
+            </Grid>
+            <Grid Grid.Row="2" Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Label x:Name="label602" Content="Y Stage" Style="{StaticResource HeaderStyle}"/>
+                <StackPanel Grid.Row="1" Orientation="Horizontal">
+                    <Slider x:Name="sliderYstage" Style="{StaticResource SliderStyle}" HorizontalAlignment="Left" Width="200" Margin="8,0,0,0" ValueChanged="SliderYstage_ValueChanged" Thumb.DragStarted="SliderYstage_DragStarted" Thumb.DragCompleted="SliderYstage_DragCompleted"/>
+                    <TextBox x:Name="editYstagePos" Style="{StaticResource TextBoxS1Style}" Margin="8,0,0,0"/>
+                    <TextBox x:Name="editYstageValue" Style="{StaticResource TextBoxS1Style}" Margin="4,0,12,0"/>
+                </StackPanel>
+                <StackPanel Grid.Row="2" Orientation="Horizontal" FlowDirection="RightToLeft" Margin="0,8,0,24">
+                    <Button x:Name="btnYstageOrigin" Content="Origin" Style="{StaticResource ButtonS1Style}" Margin="8,0,4,0" Click="BtnYstageOrigin_Click"/>
+                    <Button x:Name="btnYstageSetAs" Content="Set As" Style="{StaticResource ButtonS1Style}" Margin="0,0,16,0" Click="BtnYstageSetAs_Click"/>
+                    <Button x:Name="btnYstageBwd" Content="Step+" Style="{StaticResource ButtonS1Style}" Margin="0,0,4,0" Click="BtnYstageBwd_Click"/>
+                    <Button x:Name="btnYstageFwd" Content="Step-" Style="{StaticResource ButtonS1Style}" Margin="0,0,8,0" Click="BtnYstageFwd_Click"/>
+                </StackPanel>
+                <Border BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" BorderThickness="1" Margin="0,0,0,10" Grid.RowSpan="3"/>
+            </Grid>
+            <Grid Grid.Row="4" Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Label x:Name="label603" Content="Z Stage" Style="{StaticResource HeaderStyle}"/>
+                <StackPanel Grid.Row="1" Orientation="Horizontal">
+                    <Slider x:Name="sliderZstage" Style="{StaticResource SliderStyle}" HorizontalAlignment="Left" Width="200" Margin="8,0,0,0" ValueChanged="SliderZstage_ValueChanged" Thumb.DragStarted="SliderZstage_DragStarted" Thumb.DragCompleted="SliderZstage_DragCompleted"/>
+                    <TextBox x:Name="editZstagePos" Style="{StaticResource TextBoxS1Style}" Margin="8,0,0,0"/>
+                    <TextBox x:Name="editZstageValue" Style="{StaticResource TextBoxS1Style}" Margin="4,0,12,0"/>
+                </StackPanel>
+                <StackPanel Grid.Row="2" Orientation="Horizontal" FlowDirection="RightToLeft" Margin="0,8,0,24">
+                    <Button x:Name="btnZstageOrigin" Content="Origin" Style="{StaticResource ButtonS1Style}" Margin="8,0,4,0" Click="BtnZstageOrigin_Click"/>
+                    <Button x:Name="btnZstageSetAs" Content="Set As" Style="{StaticResource ButtonS1Style}" Margin="0,0,16,0" Click="BtnZstageSetAs_Click"/>
+                    <Button x:Name="btnZstageBwd" Content="Step+" Style="{StaticResource ButtonS1Style}" Margin="0,0,4,0" Click="BtnZstageBwd_Click"/>
+                    <Button x:Name="btnZstageFwd" Content="Step-" Style="{StaticResource ButtonS1Style}" Margin="0,0,8,0" Click="BtnZstageFwd_Click"/>
+                </StackPanel>
+                <Border BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" BorderThickness="1" Margin="0,0,0,10" Grid.RowSpan="3"/>
+            </Grid>
+            <Grid Grid.Row="0" Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Label x:Name="label321" Content="Swing" Style="{StaticResource HeaderStyle}"/>
+                <StackPanel Grid.Row="1" Orientation="Horizontal">
+                    <Slider x:Name="sliderSwing" Style="{StaticResource SliderStyle}" HorizontalAlignment="Left" Width="200" Margin="8,0,0,0" ValueChanged="SliderSwing_ValueChanged" Thumb.DragStarted="SliderSwing_DragStarted" Thumb.DragCompleted="SliderSwing_DragCompleted"/>
+                    <TextBox x:Name="editSwingPos" Style="{StaticResource TextBoxS1Style}" Margin="8,0,0,0"/>
+                    <TextBox x:Name="editSwingValue" Style="{StaticResource TextBoxS1Style}" Margin="4,0,12,0"/>
+                </StackPanel>
+                <StackPanel Grid.Row="2" Orientation="Horizontal" FlowDirection="RightToLeft" Margin="0,8,0,24">
+                    <Button x:Name="btnSwingOrigin" Content="Origin" Style="{StaticResource ButtonS1Style}" Margin="8,0,4,0" Click="BtnSwingOrigin_Click"/>
+                    <Button x:Name="btnSwingSetAs" Content="Set As" Style="{StaticResource ButtonS1Style}" Margin="0,0,16,0" Click="BtnSwingSetAs_Click"/>
+                    <Button x:Name="btnSwingBwd" Content="Step+" Style="{StaticResource ButtonS1Style}" Margin="0,0,4,0" Click="BtnSwingBwd_Click"/>
+                    <Button x:Name="btnSwingFwd" Content="Step-" Style="{StaticResource ButtonS1Style}" Margin="0,0,8,0" Click="BtnSwingFwd_Click"/>
+                </StackPanel>
+                <Border BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" BorderThickness="1" Margin="0,0,0,10" Grid.RowSpan="3"/>
+            </Grid>
+            <Grid Grid.Row="2" Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Label x:Name="label331" Content="Chinrest" Style="{StaticResource HeaderStyle}"/>
+                <StackPanel Grid.Row="1" Orientation="Horizontal" FlowDirection="RightToLeft" Margin="0,8,0,24">
+                    <Button x:Name="btnChinrestStop" Content="Chinrest Stop" Style="{StaticResource ButtonM1Style}" Margin="12,0,16,0" Click="BtnChinrestStop_Click"/>
+                    <Button x:Name="btnChinrestDown" Content="Move Down" Style="{StaticResource ButtonM1Style}" Margin="0,0,4,0" Click="BtnChinrestDown_Click"/>
+                    <Button x:Name="btnChinrestUp" Content="Move Up" Style="{StaticResource ButtonM1Style}" Margin="0,0,8,0" Click="BtnChinrestUp_Click"/>
+                </StackPanel>
+                <Border BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" BorderThickness="1" Margin="0,0,0,10" Grid.RowSpan="3"/>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

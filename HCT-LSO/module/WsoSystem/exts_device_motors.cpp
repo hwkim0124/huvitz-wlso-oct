@@ -248,7 +248,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::isOctPolarMotorAtOrigin(void)
 {
 	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
 		auto result = p->isOctPolarMotorAtOrigin();
-		return result;
+		return result;  
 	}
 	return false;
 }
@@ -262,6 +262,11 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::isOctReferMotorAtOrigin(void)
 	return false;
 }
 
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isOctRefNdMotorAtOrigin(void)
+{
+	return false;
+}
+
 bool WSOSYSTEM_DLL_API __stdcall wso_system::isLsoFocusMotorAtOrigin(void)
 {
 	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
@@ -271,19 +276,82 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::isLsoFocusMotorAtOrigin(void)
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isYaxisMotorAtHighLimit(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isRetMirrorMotorAtOrigin(void)
 {
 	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
-		auto result = p->isYaxisMotorAtHighLimit();
+		auto result = p->isRetMirrorMotorAtOrigin();
 		return result;
 	}
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isYaxisMotorAtLowLimit(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isOctAntLensMotorAtOrigin(void)
 {
 	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
-		auto result = p->isYaxisMotorAtLowLimit();
+		auto result = p->isOctAntLensMotorAtOrigin();
+		return result;
+	}
+	return false;
+}
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isLsoFilterMotorAtOrigin(void)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
+		auto result = p->isLsoFilterMotorAtOrigin();
+		return result;
+	}
+	return false;
+}
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isXstageMotorAtHighLimit(void)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
+		auto result = p->isXstageMotorAtHighLimit();
+		return result;
+	}
+	return false;
+}
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isXstageMotorAtLowLimit(void)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
+		auto result = p->isXstageMotorAtLowLimit();
+		return result;
+	}
+	return false;
+}
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isYstageMotorAtHighLimit(void)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
+		auto result = p->isYstageMotorAtHighLimit();
+		return result;
+	}
+	return false;
+}
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isYstageMotorAtLowLimit(void)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
+		auto result = p->isYstageMotorAtLowLimit();
+		return result;
+	}
+	return false;
+}
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isZstageMotorAtHighLimit(void)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
+		auto result = p->isZstageMotorAtHighLimit();
+		return result;
+	}
+	return false;
+}
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isZstageMotorAtLowLimit(void)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
+		auto result = p->isZstageMotorAtLowLimit();
 		return result;
 	}
 	return false;

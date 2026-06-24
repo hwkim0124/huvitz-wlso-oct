@@ -80,6 +80,7 @@ namespace wso_board
 #define CALIB_ACTIVE_REGION             0 
 #define CALIB_BACKUP_REGION             1
 
+#pragma pack(push, 4)
 
     /////////////////////////////////////////////////////////////////////////////////////////////
     typedef struct {
@@ -504,6 +505,8 @@ namespace wso_board
         U64 chksum; // 8 bytes. => 928 bytes
         U8 reserved[6424];
     } UserSetup_st;//8192=8kbytes max
+
+#pragma pack(pop)
 }
 
 #endif /* SRC_BIO_HBS_H_ */

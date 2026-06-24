@@ -91,12 +91,14 @@ namespace wso_board
 		const HbsStepMotorStatus* getHbsOctReferNdMotor(void) const;
 		const HbsStepMotorStatus* getHbsOctAntLensMotor(void) const;
 		const HbsStepMotorStatus* getHbsLsoFocusMotor(void) const;
+		const HbsStepMotorStatus* getHbsLsoFilterMotor(void) const;
 		const HbsStepMotorStatus* getHbsRetMirrorMotor(void) const;
 
 		const HbsStepMotorStatus* getHbsXstageMotor(void) const;
 		const HbsStepMotorStatus* getHbsYstageMotor(void) const;
 		const HbsStepMotorStatus* getHbsZstageMotor(void) const;
 		const HbsStepMotorStatus* getHbsSwingMotor(void) const;
+		const HbsStepMotorStatus* getHbsChinRestMotor(void) const;
 		const HbsChinrestMotor* getHbsChinrestMotor(void) const;
 
 		const HbsInfraredCameraStatus* getHbsIrCameraStatus(void) const;

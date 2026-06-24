@@ -73,7 +73,7 @@ namespace wso_device
 
 		bool initiateBoardComponents(int* numWarns);
 		bool initiateRetinaCamera(void);
-		bool initiateCorneaCamera(InfraredCameraId camId);
+		bool initiateCorneaCamera(CameraType type);
 		bool initiateColorCamera();
 
 		void setDeviceInitFlags(unsigned int flags);
@@ -116,12 +116,22 @@ namespace wso_device
 
 		bool isSwingMotorAtHighLimit(void);
 		bool isSwingMotorAtLowLimit(void);
+		bool isXstageMotorAtHighLimit(void);
+		bool isXstageMotorAtLowLimit(void);
+		bool isYstageMotorAtHighLimit(void);
+		bool isYstageMotorAtLowLimit(void);
+		bool isZstageMotorAtHighLimit(void);
+		bool isZstageMotorAtLowLimit(void);
+
 		bool isOctFocusMotorAtOrigin(void);
 		bool isOctPolarMotorAtOrigin(void);
 		bool isOctReferMotorAtOrigin(void);
+		bool isOctRefNdMotorAtOrigin(void);
 		bool isLsoFocusMotorAtOrigin(void);
-		bool isYaxisMotorAtHighLimit(void);
-		bool isYaxisMotorAtLowLimit(void);
+		bool isRetMirrorMotorAtOrigin(void);
+		bool isOctAntLensMotorAtOrigin(void);
+		bool isLsoFilterMotorAtOrigin(void);
+
 
 		/*
 		bool isAdapterLensDetached(void);
@@ -168,10 +178,10 @@ namespace wso_device
 		ChinRestMotor* getChinRestMotor(void) const;
 
 		RetinaCamera* getRetinaCamera(void) const;
-		RetinaCamera* getCorneaLeftCamera(void) const;
-		RetinaCamera* getCorneaRightCamera(void) const;
-		RetinaCamera* getCorneaLowerCamera(void) const;
-		CorneaCamera* getCorneaCamera(InfraredCameraId eCamId) const;
+		CorneaCamera* getCorneaLeftCamera(void) const;
+		CorneaCamera* getCorneaRightCamera(void) const;
+		CorneaCamera* getCorneaLowerCamera(void) const;
+		CorneaCamera* getCorneaCamera(CameraType type) const;
 		ColorCamera* getColorCamera(void);
 
 		LsoWhiteLed* getLsoWhiteLed(void) const;

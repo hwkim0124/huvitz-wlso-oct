@@ -11,7 +11,7 @@ namespace wso_domain
 	constexpr short TRAJECT_CAMERA_TRIGGER_INTERVAL = 1;
 	constexpr short TRAJECT_TRIGGER_START_INDEX = 5;
 	constexpr short TRAJECT_SAMPLE_SIZE = (TRAJECT_TRIGGER_START_INDEX + TRAJECT_CAMERA_TRIGGER_COUNT);
-	constexpr short TRAJECT_SAMPLE_SIZE_MAX = 8192;
+	constexpr short TRAJECT_SAMPLE_SIZE_MAX = 16384; // 8192;
 
 	constexpr int TRAJECT_NUMBER_OF_PROFILES = 128; //  32;
 
@@ -113,6 +113,14 @@ namespace wso_domain
 		IR_CORNEA_LOWER = 0x03,
 		COLOR_FUNDUS = 0x04,
 		NUMBER_OF_ITEMS = (COLOR_FUNDUS + 1)
+	};
+
+	enum class IrCameraType : unsigned short
+	{
+		CORNEA_LEFT = 0x00,
+		CORNEA_RIGHT = 0x01,
+		RETINA = 0x02,
+		CORNEA_LOWER = 0x03,
 	};
 
 

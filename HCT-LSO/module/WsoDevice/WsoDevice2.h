@@ -211,12 +211,13 @@ namespace wso_device
 		RMON_RSI_CODE = 3
 	};
 
-	enum class InfraredCameraId : unsigned char
+	enum class IrCameraId : unsigned char
 	{
 		CORNEA_LEFT = 0x00,
 		CORNEA_RIGHT = 0x01,
 		RETINA = 0x02,
 		CORNEA_LOWER = 0x03,
+		UNKNOWN = 0x00
 	};
 
 	enum class PacketType : unsigned char

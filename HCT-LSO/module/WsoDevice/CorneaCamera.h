@@ -14,7 +14,7 @@ namespace wso_device
 	{
 	public:
 		CorneaCamera();
-		CorneaCamera(MainBoard* board, CameraType type, InfraredCameraId camId, std::uint8_t epid);
+		CorneaCamera(MainBoard* board, CameraType type, std::uint8_t epid);
 		virtual ~CorneaCamera();
 
 	public:

@@ -18,11 +18,11 @@ namespace WsoNativeLib
             OctFocus = 0x00,
             OctRefer = 0x01,
             OctPolar = 0x02,
-            OctReferND = 0x03,
+            OctRefNd = 0x03,
             LsoFocus = 0x04,
             RetMirror = 0x05,
             OctAntLens = 0x06,
-            Ap1 = 0x07, 
+            LsoFilter = 0x07, 
             Ap2 = 0x08, 
             Swing = 0x09,
             StageX = 0x0A,
@@ -47,6 +47,15 @@ namespace WsoNativeLib
             OctSld = 0x04,
         }
 
+        public enum CameraType : int
+        {
+            IrCorneaLeft = 0x00,
+            IrCorneaRight = 0x01,
+            IrRetina = 0x02, 
+            IrCorneaLower = 0x03, 
+            ColorFundus = 0x04 
+        }
+
         public enum QldApcMode : int
         {
             APC_MODE = 0,
@@ -65,8 +74,6 @@ namespace WsoNativeLib
         public delegate void StepMotorPositionChanged(int pos, float value);
 
 
-
-
         // Structure Definitions
         /////////////////////////////////////////////////////////////////////////////////////////////
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
@@ -78,10 +85,48 @@ namespace WsoNativeLib
             public int maxSpeed;
             public int minSpeed;
             public int accelStep;
+
+            public int motorWait;
+            public int piStatus;
+            public int piHitRefPos;
+            public int piHitMargin;
+            public int piHitLastPos;
+            public int piHitPosError;
+
+            [MarshalAs(UnmanagedType.ByValArray, ArraySubType = UnmanagedType.I4, SizeConst = 2)]
+            public int[] limitRange;
+            [MarshalAs(UnmanagedType.ByValArray, ArraySubType = UnmanagedType.I4, SizeConst = 2)]
+            public int[] limitStatus;
+
             public int sliderStepSize;
             public int sliderPageSize;
             public float rangeMinValue;
             public float rangeMaxValue;
+
+            public StepMotorStatus() 
+            {
+                rangeMin = 0;
+                rangeMax = 0;
+                currPos = 0;
+                maxSpeed = 0;
+                minSpeed = 0;
+                accelStep = 0;
+
+                motorWait = 0;
+                piStatus = 0;
+                piHitRefPos = 0;
+                piHitMargin = 0;
+                piHitLastPos = 0;
+                piHitPosError = 0;
+
+                limitRange = new int[2];
+                limitStatus = new int[2];
+
+                sliderStepSize = 0;
+                sliderPageSize = 0;
+                rangeMinValue = 0.0f;
+                rangeMaxValue = 0.0f;
+            }
         }
 
         // Struct type uses sequential layout as default, so we don't need to specify it explicitly. 

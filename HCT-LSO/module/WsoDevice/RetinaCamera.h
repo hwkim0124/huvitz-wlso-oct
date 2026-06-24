@@ -14,7 +14,7 @@ namespace wso_device
 	{
 	public:
 		RetinaCamera();
-		RetinaCamera(MainBoard* board, CameraType type, InfraredCameraId camId, std::uint8_t epid);
+		RetinaCamera(MainBoard* board, CameraType type, std::uint8_t epid);
 		virtual ~RetinaCamera();
 
 	public:

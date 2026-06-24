@@ -40,34 +40,8 @@ namespace WsoNativeLib
         /////////////////////////////////////////////////////////////////////////////////////////////
         public static bool InitializeWsoSystem(WsoLogMsgCallback clb, bool trace_mode)
         {
-            DumpDllSearchContext();
             releaseWsoLogMsgCallback();
             return initializeWsoSystem(clb, trace_mode);
-        }
-
-        static void DumpDllSearchContext()
-        {
-            Console.WriteLine($"Process:           {Environment.ProcessPath}");
-            Console.WriteLine($"Process arch:      {RuntimeInformation.ProcessArchitecture}");
-            Console.WriteLine($"AppContext.BaseDir: {AppContext.BaseDirectory}");
-            Console.WriteLine($"CurrentDirectory:  {Environment.CurrentDirectory}");
-            Console.WriteLine($"Assembly location: {Assembly.GetExecutingAssembly().Location}");
-            Console.WriteLine($"Assembly dir:      {Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)}");
-            Console.WriteLine();
-            Console.WriteLine("PATH entries:");
-            foreach (var p in (Environment.GetEnvironmentVariable("PATH") ?? "").Split(';'))
-                Console.WriteLine($"  {p}");
-            Console.WriteLine();
-            // Check the obvious candidate locations for the actual file
-            var candidates = new[]
-            {
-                Path.Combine(AppContext.BaseDirectory, "wsosystem.dll"),
-                Path.Combine(AppContext.BaseDirectory, "system_libs", "wsosystem.dll"),
-                Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "wsosystem.dll"),
-                WsoSystemDllPath
-            };
-            foreach (var c in candidates)
-                Console.WriteLine($"{(File.Exists(c) ? "FOUND " : "miss  ")} {c}");
         }
 
         public static bool IsWsoSystemInitialized()

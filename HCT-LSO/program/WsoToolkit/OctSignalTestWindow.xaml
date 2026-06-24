@@ -1,0 +1,244 @@
+﻿<Window x:Class="WsoToolkit.OctSignalTestWindow"
+        Style="{StaticResource WindowStyle}"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WsoToolkit"
+        xmlns:controls="clr-namespace:WsoToolkit.controls"
+        mc:Ignorable="d"
+        Title="OCT Signal Test" Height="1200" Width="2200" ResizeMode="NoResize" Loaded="Window_Loaded" Initialized="Window_Initialized" Closing="Window_Closing" Closed="Window_Closed">
+    <Grid Margin="12,12,12,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="392"/>
+            <ColumnDefinition Width="8"/>
+            <ColumnDefinition Width="1028"/>
+            <ColumnDefinition Width="8"/>
+            <ColumnDefinition Width="600"/>
+            <ColumnDefinition Width="164"/>
+        </Grid.ColumnDefinitions>
+        <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Vertical">
+            <controls:CorneaCameraPreview x:Name="corneaPreview1" Width="384" Height="328"/>
+            <controls:CorneaCameraPreview x:Name="corneaPreview2" Width="384" Height="328"/>
+            <controls:CorneaCameraPreview x:Name="corneaPreview3" Width="384" Height="328"/>
+            
+            <Grid Margin="0,8,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="12"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="20"/>
+                    <ColumnDefinition Width="4"/>
+                    <ColumnDefinition Width="180"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Label x:Name="label201" Content="Signal Processing Options" Style="{StaticResource HeaderStyle}" Grid.ColumnSpan="3" Margin="16,0,0,0" HorizontalAlignment="Left"/>
+                <CheckBox x:Name="checkBackgroundSubtract" Content="Background Subtraction" Style="{StaticResource CheckBoxStyle}" Grid.Row="1" Grid.Column="2" Click="CheckBackgroundSubtract_Click"/>
+                <CheckBox x:Name="checkDispersionCompensation" Content="Dispersion Compenstation" Style="{StaticResource CheckBoxStyle}" Grid.Row="1" Grid.Column="3" Click="CheckDispersionCompensation_Click"/>
+                <CheckBox x:Name="checkFixedNoiseReduction" Content="Fixed Noise Reduction" Style="{StaticResource CheckBoxStyle}" Grid.Row="2" Grid.Column="2" Click="CheckFixedNoiseReduction_Click"/>
+                <CheckBox x:Name="checkAdaptiveGrayscale" Content="Adaptive Grayscaling" Style="{StaticResource CheckBoxStyle}" Grid.Row="2" Grid.Column="3" Click="CheckAdaptiveGrayscale_Click"/>
+                <CheckBox x:Name="checkFFTWindowing" Content="FFT Windowing" Style="{StaticResource CheckBoxStyle}" Grid.Row="3" Grid.Column="2" Click="CheckFFTWindowing_Click"/>
+                <CheckBox x:Name="checkKLinearResample" Content="K-Linear Resampling" Style="{StaticResource CheckBoxStyle}" Grid.Row="3" Grid.Column="3" Click="CheckKLinearResample_Click"/>
+                <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="4" Grid.RowSpan="5"/>
+            </Grid>
+        </StackPanel>
+        <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Vertical">
+            <controls:OctSignalIntensityGraph x:Name="octIntensityGraph"/>
+            <controls:OctScanImagePreview x:Name="octScanImagePreview"/>
+        </StackPanel>
+        <StackPanel Grid.Row="0" Grid.Column="4" Orientation="Vertical">
+            <controls:OctSignalSpectrumGraph x:Name="octSpectrumGraph"/>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="16,4,0,4">
+                <Button x:Name="btnStartScan" Content="Start Scan" Style="{StaticResource ButtonM1Style}" Margin="0" Click="BtnStartScan_Click"/>
+                <Button x:Name="btnShowLights" Content="Lights..." Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0" Click="BtnShowLights_Click"/>
+                <Button x:Name="btnShowFocusM" Content="FocusM..." Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0" Click="BtnShowFocusM_Click"/>
+                <Button x:Name="btnShowStageM" Content="StageM..." Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0" Click="BtnShowStageM_Click"/>
+                <Button x:Name="btnClose" Content="Close" Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0" Click="BtnClose_Click"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="16,0,0,4">
+                <Button x:Name="btnAutoRefer" Content="Auto Refer" Style="{StaticResource ButtonM1Style}" Margin="0" Click="BtnAutoRefer_Click"/>
+                <Button x:Name="btnAutoFocus" Content="Auto Focus" Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0" Click="BtnAutoFocus_Click"/>
+                <Button x:Name="btnAutoPolar" Content="Auto Polar" Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0" Click="BtnAutoPolar_Click"/>
+                <Button x:Name="btnOptimize" Content="Optimize" Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0" Click="BtnOptimize_Click"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="16,0,0,4">
+                <Button x:Name="btnMakeBackground" Content="Background" Style="{StaticResource ButtonM1Style}" Margin="0" Click="BtnMakeBackground_Click"/>
+                <Button x:Name="btnAutoTest" Content="Auto Testing" Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0" Click="BtnAutoTest_Click"/>
+                <Button x:Name="btnReferLoop" Content="Refer. Loop" Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0" Click="BtnReferLoop_Click"/>
+                <Button x:Name="btnPolarLoop" Content="Polar. Loop" Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0" Click="BtnPolarLoop_Click"/>
+                <Button x:Name="btnFindPeak" Content="Find Peak" Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0" Click="BtnFindPeak_Click"/>
+            </StackPanel>
+
+            <Grid Margin="0,8,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="12"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="20"/>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="70"/>
+                    <ColumnDefinition Width="70"/>
+                    <ColumnDefinition Width="70"/>
+                    <ColumnDefinition Width="90"/>
+                    <ColumnDefinition Width="90"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Label x:Name="label501" Content="Intensity Graph Display" Style="{StaticResource HeaderStyle}" Grid.ColumnSpan="3" Margin="16,0,0,0" HorizontalAlignment="Left"/>
+                <Label x:Name="label502" Content="Peak Range" Style="{StaticResource LabelStyle}" Grid.Row="1" Grid.Column="1"/>
+                <Label x:Name="label503" Content="Peak Offset" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="1"/>
+                <Label x:Name="label504" Content="Data Range" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="1"/>
+                <StackPanel Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="3" Orientation="Horizontal">
+                    <ComboBox x:Name="cmbPeakRangeMin" Style="{StaticResource ComboBoxStyle}" Width="90" SelectionChanged="CmbPeakRangeMin_SelectionChanged"/>
+                    <Label x:Name="label505" Content="~" Style="{StaticResource LabelStyle}"/>
+                    <ComboBox x:Name="cmbPeakRangeMax" Style="{StaticResource ComboBoxStyle}" Width="90" SelectionChanged="CmbPeakRangeMax_SelectionChanged"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="3">
+                    <TextBox x:Name="editPeakOffset1" Style="{StaticResource TextBoxS1Style}" HorizontalAlignment="Left"/>
+                    <Label x:Name="label506" Content="~" Style="{StaticResource LabelStyle}"/>
+                    <TextBox x:Name="editPeakOffset2" Style="{StaticResource TextBoxS1Style}" HorizontalAlignment="Left" Margin="4,0,0,0"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="3">
+                    <TextBox x:Name="editDataRangeMin" Style="{StaticResource TextBoxS1Style}" HorizontalAlignment="Left" KeyDown="EditDataRangeMin_KeyDown"/>
+                    <Label x:Name="label507" Content="~" Style="{StaticResource LabelStyle}"/>
+                    <TextBox x:Name="editDataRangeMax" Style="{StaticResource TextBoxS1Style}" HorizontalAlignment="Left" KeyDown="EditDataRangeMax_KeyDown" Margin="4,0,0,0"/>
+                </StackPanel>
+                <Label x:Name="label508" Content="Average Size" Style="{StaticResource LabelStyle}" Grid.Row="1" Grid.Column="5"/>
+                <Label x:Name="label509" Content="Noise Level" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="5"/>
+                <Label x:Name="label510" Content="Zero Padding" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="5"/>
+                <TextBox x:Name="editAverageSize" Style="{StaticResource TextBoxS1Style}" HorizontalAlignment="Left" Grid.Row="1" Grid.Column="6" Margin="4,0,0,0"/>
+                <TextBox x:Name="editNoiseLevel" Style="{StaticResource TextBoxS1Style}" HorizontalAlignment="Left" Grid.Row="2" Grid.Column="6" KeyDown="EditNoiseLevel_KeyDown" Margin="4,0,0,0"/>
+                <ComboBox x:Name="cmbZeroPadding" Style="{StaticResource ComboBoxStyle}" Width="70" Grid.Row="3" Grid.Column="6" Margin="4,0,0,0"/>
+                <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="2" Grid.ColumnSpan="5">
+                    <CheckBox x:Name="checkIntensity" Content="Intensity" Style="{StaticResource CheckBoxStyle}" Margin="0,0,0,0"/>
+                    <CheckBox x:Name="checkFwhm" Content="FWHM" Style="{StaticResource CheckBoxStyle}" Margin="12,0,0,0"/>
+                    <CheckBox x:Name="checkSnrMax" Content="SNR (max)" Style="{StaticResource CheckBoxStyle}" Margin="12,0,0,0"/>
+                    <CheckBox x:Name="checkAlignGuide" Content="Align Guide" Style="{StaticResource CheckBoxStyle}" Click="CheckAlignGuide_Click" Margin="12,0,0,0"/>
+                </StackPanel>
+                <Label x:Name="label511" Content="Capture Control" Style="{StaticResource HeaderStyle}" Grid.Row="5" Grid.ColumnSpan="3" Margin="16,0,0,0" HorizontalAlignment="Left"/>
+                <Label x:Name="label512" Content="Control Mode" Style="{StaticResource LabelStyle}" Grid.Row="6" Grid.Column="1"/>
+                <Label x:Name="label513" Content="Capture Start" Style="{StaticResource LabelStyle}" Grid.Row="7" Grid.Column="1"/>
+                <StackPanel Grid.Row="6" Grid.Column="2" Grid.ColumnSpan="3" Orientation="Horizontal">
+                    <ComboBox x:Name="cmbControlMode" Style="{StaticResource ComboBoxStyle}" Width="90" SelectionChanged="CmbControlMode_SelectionChanged"/>
+                    <TextBox x:Name="editCapturePosition" Style="{StaticResource TextBoxS1Style}" HorizontalAlignment="Left" KeyDown="EditCapturePosition_KeyDown" Margin="12,0,0,0"/>
+                </StackPanel>
+                <StackPanel Grid.Row="7" Grid.Column="2" Grid.ColumnSpan="4" Orientation="Horizontal">
+                    <TextBox x:Name="editCaptureStart" Style="{StaticResource TextBoxS1Style}" HorizontalAlignment="Left"/>
+                    <ComboBox x:Name="cmbCaptureStep" Style="{StaticResource ComboBoxStyle}" Margin="8,0,0,0" Width="70"/>
+                    <ComboBox x:Name="cmbCaptureCount" Style="{StaticResource ComboBoxStyle}" Margin="8,0,0,0" Width="70"/>
+                </StackPanel>
+                <Label x:Name="label514" Content="Peak At" Style="{StaticResource LabelStyle}" Grid.Row="6" Grid.Column="5"/>
+                <ComboBox x:Name="cmbPeakAt" Style="{StaticResource ComboBoxStyle}" Width="70" Grid.Row="6" Grid.Column="6"/>
+                <Button x:Name="btnCapturePeak" Content="Take It" Style="{StaticResource ButtonS1Style}" Grid.Row="7" Grid.Column="6" HorizontalAlignment="Left" Click="BtnCapturePeak_Click"/>
+                <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="8" Grid.RowSpan="9"/>
+            </Grid>
+
+            <Grid Margin="0,8,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="12"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="20"/>
+                    <ColumnDefinition Width="70"/>
+                    <ColumnDefinition Width="80"/>
+                    <ColumnDefinition Width="70"/>
+                    <ColumnDefinition Width="80"/>
+                    <ColumnDefinition Width="70"/>
+                    <ColumnDefinition Width="90"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Label x:Name="label12" Content="Scan Pattern Control" Style="{StaticResource HeaderStyle}" Grid.ColumnSpan="3" Margin="16,0,0,0" HorizontalAlignment="Left"/>
+                <Label x:Name="label13" Content="Pattern" Style="{StaticResource LabelStyle}" Grid.Row="1" Grid.Column="1"/>
+                <Label x:Name="label14" Content="Range" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="1"/>
+                <Label x:Name="label15" Content="Points" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="3"/>
+                <Label x:Name="label21" Content="Offset XY" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="5"/>
+                <Label x:Name="label22" Content="Scale XY" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="5"/>
+                <ComboBox x:Name="cmbScanPattern" Style="{StaticResource ComboBoxStyle}" Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="3" Width="220" />
+                <ComboBox x:Name="cmbScanRange" Style="{StaticResource ComboBoxStyle}" Grid.Row="2" Grid.Column="2"/>
+                <ComboBox x:Name="cmbScanPoints" Style="{StaticResource ComboBoxStyle}" Grid.Row="2" Grid.Column="4" />
+                <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="3">
+                    <CheckBox x:Name="checkNotGrabbing" Content="Not Grabbing" Style="{StaticResource CheckBoxStyle}" />
+                    <CheckBox x:Name="checkIsAnterior" Content="Anterior Mode" Style="{StaticResource CheckBoxStyle}" Margin="12, 0, 0, 0" Click="CheckIsAnterior_Click"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="6" Grid.ColumnSpan="2">
+                    <ComboBox x:Name="cmbScanOffsetX" Style="{StaticResource ComboBoxStyle}" Width="60"/>
+                    <ComboBox x:Name="cmbScanOffsetY" Style="{StaticResource ComboBoxStyle}" Width="60" Margin="4,0,0,0"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="6" Grid.ColumnSpan="2">
+                    <TextBox x:Name="editScanScaleX" Style="{StaticResource TextBoxS1Style}" Width="60"/>
+                    <TextBox x:Name="editScanScaleY" Style="{StaticResource TextBoxS1Style}" Width="60" Margin="4,0,0,0"/>
+                </StackPanel>
+                <Label x:Name="label23" Content="Line Camera Speed" Grid.Row="4" Style="{StaticResource HeaderStyle}" Grid.ColumnSpan="3" Margin="16,0,0,0" HorizontalAlignment="Left"/>
+                <StackPanel Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="4" Orientation="Horizontal" Margin="32,0,0,0">
+                    <RadioButton x:Name="radioCameraSpeed1" Content="Slower" GroupName ="speed" Style="{StaticResource RadioButtonStyle}" Height="Auto"/>
+                    <RadioButton x:Name="radioCameraSpeed2" Content="Normal" GroupName ="speed" Style="{StaticResource RadioButtonStyle}" Margin="24,0,0,0" Height="Auto"/>
+                    <RadioButton x:Name="radioCameraSpeed3" Content="Faster" GroupName ="speed" Style="{StaticResource RadioButtonStyle}" Margin="24,0,0,0" Height="Auto"/>
+                </StackPanel>
+                <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="8" Grid.RowSpan="7"/>
+            </Grid>
+
+            <Grid Margin="0,8,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="12"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="20"/>
+                    <ColumnDefinition Width="90"/>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Label x:Name="label1" Content="Dispersion Parameters" Style="{StaticResource HeaderStyle}" Grid.ColumnSpan="3" Margin="16,0,0,0" HorizontalAlignment="Left"/>
+                <StackPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="5" Orientation="Horizontal">
+                    <TextBox x:Name="editDisperParam1" Style="{StaticResource TextBoxStyle}" KeyDown="EditDisperParam1_KeyDown" Margin="0,0,0,0" Width="90"/>
+                    <TextBox x:Name="editDisperParam2" Style="{StaticResource TextBoxStyle}" KeyDown="EditDisperParam2_KeyDown" Margin="4,0,0,0" Width="90"/>
+                    <TextBox x:Name="editDisperParam3" Style="{StaticResource TextBoxStyle}" KeyDown="EditDisperParam3_KeyDown" Margin="4,0,0,0" Width="90"/>
+                    <Button x:Name="btnApplyDisperParams" Content="Apply" Style="{StaticResource ButtonS1Style}" Margin="8,0,0,0" Click="BtnApplyDisperParams_Click"/>
+                    <Button x:Name="btnLoadDisperParams" Content="Load" Style="{StaticResource ButtonS1Style}" Margin="4,0,0,0" Click="BtnLoadDisperParams_Click"/>
+                    <Button x:Name="btnSetDisperZeros" Content="Zeros" Style="{StaticResource ButtonS1Style}" Margin="4,0,0,0" Click="BtnSetDisperZeros_Click"/>
+                </StackPanel>
+                <Label x:Name="label2" Content="Spectrometer Parameters" Style="{StaticResource HeaderStyle}" Grid.Row="2" Grid.ColumnSpan="3" Margin="16,0,0,0" HorizontalAlignment="Left"/>
+                <StackPanel Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="6" Orientation="Horizontal">
+                    <TextBox x:Name="editSpectParam1" Style="{StaticResource TextBoxStyle}" Margin="0,0,0,0" Width="120"/>
+                    <TextBox x:Name="editSpectParam2" Style="{StaticResource TextBoxStyle}" Margin="4,0,0,0" Width="120"/>
+                    <TextBox x:Name="editSpectParam3" Style="{StaticResource TextBoxStyle}" Margin="4,0,0,0" Width="120"/>
+                    <TextBox x:Name="editSpectParam4" Style="{StaticResource TextBoxStyle}" Margin="4,0,0,0" Width="120"/>
+                </StackPanel>
+                <StackPanel Grid.Row="4" FlowDirection="RightToLeft" Grid.Column="1" Grid.ColumnSpan="5" Orientation="Horizontal" Margin="0,6,0,0">
+                    <Button x:Name="btnSetSpectZeros" Content="Zeros" Style="{StaticResource ButtonS1Style}" Margin="4,0,0,0" Click="BtnSetSpectZeros_Click"/>
+                    <Button x:Name="btnLoadSpectParams" Content="Load" Style="{StaticResource ButtonS1Style}" Margin="4,0,0,0" Click="BtnLoadSpectParams_Click"/>
+                    <Button x:Name="btnApplySpectParams" Content="Apply" Style="{StaticResource ButtonS1Style}" Margin="4,0,0,0" Click="BtnApplySpectParams_Click"/>
+                </StackPanel>
+                <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="7" Grid.RowSpan="6"/>
+            </Grid>
+        </StackPanel>
+    </Grid>
+</Window>

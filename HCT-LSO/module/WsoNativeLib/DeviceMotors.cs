@@ -135,16 +135,39 @@ namespace WsoNativeLib
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool isOctRefNdMotorAtOrigin();
+
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool isRetMirrorMotorAtOrigin();
+
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
         private static extern bool isLsoFocusMotorAtOrigin();
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool isYaxisMotorAtHighLimit();
+        private static extern bool isXstageMotorAtHighLimit();
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool isYaxisMotorAtLowLimit();
+        private static extern bool isXstageMotorAtLowLimit();
 
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool isYstageMotorAtHighLimit();
+
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool isYstageMotorAtLowLimit();
+
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool isZstageMotorAtHighLimit();
+
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool isZstageMotorAtLowLimit();
 
         // Public methods
         /////////////////////////////////////////////////////////////////////////////////////////////
@@ -390,19 +413,44 @@ namespace WsoNativeLib
             return isOctReferMotorAtOrigin();
         }
 
+        public static bool IsRetMirrorMotorAtOrigin()
+        {
+            return isRetMirrorMotorAtOrigin();
+        }
+
         public static bool IsLsoFocusMotorAtOrigin()
         {
             return isLsoFocusMotorAtOrigin();
         }
 
-        public static bool IsYaxisMotorAtHighLimit()
+        public static bool IsXstageMotorAtHighLimit()
         {
-            return isYaxisMotorAtHighLimit();
+            return isXstageMotorAtHighLimit();
         }
 
-        public static bool IsYaxisMotorAtLowLimit()
+        public static bool IsXstageMotorAtLowLimit()
         {
-            return isYaxisMotorAtLowLimit();
+            return isXstageMotorAtLowLimit();
+        }
+
+        public static bool IsYstageMotorAtHighLimit()
+        {
+            return isYstageMotorAtHighLimit();
+        }
+
+        public static bool IsYstageMotorAtLowLimit()
+        {
+            return isYstageMotorAtLowLimit();
+        }
+
+        public static bool IsZstageMotorAtHighLimit()
+        {
+            return isZstageMotorAtHighLimit();
+        }
+
+        public static bool IsZstageMotorAtLowLimit()
+        {
+            return isZstageMotorAtLowLimit();
         }
 
     }

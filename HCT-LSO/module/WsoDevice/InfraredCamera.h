@@ -20,7 +20,7 @@ namespace wso_device
 	{
 	public:
 		InfraredCamera();
-		InfraredCamera(MainBoard* board, CameraType type, InfraredCameraId CamId, std::uint8_t epid);
+		InfraredCamera(MainBoard* board, CameraType type, std::uint8_t epid);
 		virtual ~InfraredCamera();
 
 		InfraredCamera(InfraredCamera&& rhs);
@@ -56,6 +56,7 @@ namespace wso_device
 		bool isRetinaCamera(void) const;
 
 		CameraType getType(void) const;
+		IrCameraId getCameraId(void) const;
 		std::string getCameraName(void) const;
 		std::uint8_t* getBuffer(void) const;
 		std::uint32_t getFrameWidth(void) const;

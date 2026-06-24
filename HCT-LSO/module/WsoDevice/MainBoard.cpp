@@ -109,10 +109,10 @@ struct MainBoard::MainBoardImpl
 MainBoard::MainBoard() :
 	d_ptr(make_unique<MainBoardImpl>())
 {
-	impl().irCameras.emplace_back(new RetinaCamera(this, CameraType::IR_RETINA, InfraredCameraId::RETINA, USB_IR1_PID)); // use Camera Id : 0
-	impl().irCameras.emplace_back(new CorneaCamera(this, CameraType::IR_CORNEA_LOWER, InfraredCameraId::CORNEA_LOWER, USB_IR2_PID)); // use Camera Id : 1
-	impl().irCameras.emplace_back(new CorneaCamera(this, CameraType::IR_CORNEA_LEFT, InfraredCameraId::CORNEA_LEFT, USB_IR1_PID));
-	impl().irCameras.emplace_back(new CorneaCamera(this, CameraType::IR_CORNEA_RIGHT, InfraredCameraId::CORNEA_RIGHT, USB_IR2_PID));
+	impl().irCameras.emplace_back(new RetinaCamera(this, CameraType::IR_RETINA, USB_IR1_PID)); // use Camera Id : 0
+	impl().irCameras.emplace_back(new CorneaCamera(this, CameraType::IR_CORNEA_LOWER, USB_IR2_PID)); // use Camera Id : 1
+	impl().irCameras.emplace_back(new CorneaCamera(this, CameraType::IR_CORNEA_LEFT, USB_IR1_PID));
+	impl().irCameras.emplace_back(new CorneaCamera(this, CameraType::IR_CORNEA_RIGHT, USB_IR2_PID));
 
 
 	impl().lightLeds.emplace(LightType::LSO_WHITE_LED, make_unique<LsoWhiteLed>(this));
@@ -319,15 +319,16 @@ bool wso_device::MainBoard::initiateBoardComponents(int* numWarns)
 		warns += 1;
 	}
 	*/
-	if (!initiateCorneaCamera(InfraredCameraId::CORNEA_LEFT)) {
+	if (!initiateCorneaCamera(CameraType::IR_CORNEA_LEFT)) {
 		warns += 1;
 	}
 
-	if (!initiateCorneaCamera(InfraredCameraId::CORNEA_RIGHT)) {
+	if (!initiateCorneaCamera(CameraType::IR_CORNEA_RIGHT)) {
 		warns += 1;
 	}
+
 	/*
-	if (!initiateCorneaCamera(InfraredCameraId::CORNEA_LOWER)) {
+	if (!initiateCorneaCamera(CameraType::IR_CORNEA_LOWER)) {
 		warns += 1;
 	}
 
@@ -392,13 +393,14 @@ bool wso_device::MainBoard::initiateRetinaCamera(void)
 	return (warns == 0);
 }
 
-bool wso_device::MainBoard::initiateCorneaCamera(InfraredCameraId camId)
+bool wso_device::MainBoard::initiateCorneaCamera(CameraType type)
 {
 	int warns = 0;
 	string strMessage = "";
 
-	auto* camera = getCorneaCamera(camId);
+	auto* camera = getCorneaCamera(type);
 	auto name = camera->getCameraName();
+	auto camId = camera->getCameraId();
 	if (!camera->initializeCorneaCamera()) {
 		strMessage = std::format("Cornea IR camera not initialized, name: {}, camId: {}", name, (int)(camId));
 		WsoLogWarn(strMessage);
@@ -797,6 +799,53 @@ bool wso_device::MainBoard::isSwingMotorAtLowLimit(void)
 	return false;
 }
 
+
+bool wso_device::MainBoard::isXstageMotorAtHighLimit(void)
+{
+	return false;
+}
+
+bool wso_device::MainBoard::isXstageMotorAtLowLimit(void)
+{
+	return false;
+}
+
+
+bool wso_device::MainBoard::isYstageMotorAtHighLimit(void)
+{
+	if (getHbsDataProfile()->loadGpioStatus()) {
+		auto* gpio = getHbsDataProfile()->getHbsGpioStatus();
+		auto status = gpio->PIstatus;
+		if (status & (0x01 << 5)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool wso_device::MainBoard::isYstageMotorAtLowLimit(void)
+{
+	if (getHbsDataProfile()->loadGpioStatus()) {
+		auto* gpio = getHbsDataProfile()->getHbsGpioStatus();
+		auto status = gpio->PIstatus;
+		if (status & (0x01 << 4)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+
+bool wso_device::MainBoard::isZstageMotorAtHighLimit(void)
+{
+	return false;
+}
+
+bool wso_device::MainBoard::isZstageMotorAtLowLimit(void)
+{
+	return false;
+}
+
 bool wso_device::MainBoard::isOctFocusMotorAtOrigin(void)
 {
 	if (getHbsDataProfile()->loadGpioStatus()) {
@@ -833,6 +882,11 @@ bool wso_device::MainBoard::isOctReferMotorAtOrigin(void)
 	return false;
 }
 
+bool wso_device::MainBoard::isOctRefNdMotorAtOrigin(void)
+{
+	return false;
+}
+
 bool wso_device::MainBoard::isLsoFocusMotorAtOrigin(void)
 {
 	/*
@@ -847,27 +901,18 @@ bool wso_device::MainBoard::isLsoFocusMotorAtOrigin(void)
 	return false;
 }
 
-bool wso_device::MainBoard::isYaxisMotorAtHighLimit(void)
+bool wso_device::MainBoard::isRetMirrorMotorAtOrigin(void)
 {
-	if (getHbsDataProfile()->loadGpioStatus()) {
-		auto* gpio = getHbsDataProfile()->getHbsGpioStatus();
-		auto status = gpio->PIstatus;
-		if (status & (0x01 << 5)) {
-			return true;
-		}
-	}
 	return false;
 }
 
-bool wso_device::MainBoard::isYaxisMotorAtLowLimit(void)
+bool wso_device::MainBoard::isOctAntLensMotorAtOrigin(void)
 {
-	if (getHbsDataProfile()->loadGpioStatus()) {
-		auto* gpio = getHbsDataProfile()->getHbsGpioStatus();
-		auto status = gpio->PIstatus;
-		if (status & (0x01 << 4)) {
-			return true;
-		}
-	}
+	return false;
+}
+
+bool wso_device::MainBoard::isLsoFilterMotorAtOrigin(void)
+{
 	return false;
 }
 
@@ -1097,34 +1142,34 @@ RetinaCamera* wso_device::MainBoard::getRetinaCamera(void) const
 	return (RetinaCamera*)getInfraredCamera(CameraType::IR_RETINA);
 }
 
-RetinaCamera* wso_device::MainBoard::getCorneaLeftCamera(void) const
+CorneaCamera* wso_device::MainBoard::getCorneaLeftCamera(void) const
 {
-	return (RetinaCamera*)getInfraredCamera(CameraType::IR_CORNEA_LEFT);
+	return (CorneaCamera*)getInfraredCamera(CameraType::IR_CORNEA_LEFT);
 }
 
-RetinaCamera* wso_device::MainBoard::getCorneaRightCamera(void) const
+CorneaCamera* wso_device::MainBoard::getCorneaRightCamera(void) const
 {
-	return (RetinaCamera*)getInfraredCamera(CameraType::IR_CORNEA_RIGHT);
+	return (CorneaCamera*)getInfraredCamera(CameraType::IR_CORNEA_RIGHT);
 }
 
-RetinaCamera* wso_device::MainBoard::getCorneaLowerCamera(void) const
+CorneaCamera* wso_device::MainBoard::getCorneaLowerCamera(void) const
 {
-	return (RetinaCamera*)getInfraredCamera(CameraType::IR_CORNEA_LOWER);
+	return (CorneaCamera*)getInfraredCamera(CameraType::IR_CORNEA_LOWER);
 }
 
-CorneaCamera* wso_device::MainBoard::getCorneaCamera(InfraredCameraId eCamId) const
+CorneaCamera* wso_device::MainBoard::getCorneaCamera(CameraType type) const
 {
 	CorneaCamera* pCamera = nullptr;
 
-	switch (eCamId)
+	switch (type)
 	{
-	case InfraredCameraId::CORNEA_LEFT:
+	case CameraType::IR_CORNEA_LEFT:
 		pCamera = (CorneaCamera*)getInfraredCamera(CameraType::IR_CORNEA_LEFT);
 		break;
-	case InfraredCameraId::CORNEA_RIGHT:
+	case CameraType::IR_CORNEA_RIGHT:
 		pCamera = (CorneaCamera*)getInfraredCamera(CameraType::IR_CORNEA_RIGHT);
 		break;
-	case InfraredCameraId::CORNEA_LOWER:
+	case CameraType::IR_CORNEA_LOWER:
 		pCamera = (CorneaCamera*)getInfraredCamera(CameraType::IR_CORNEA_LOWER);
 		break;
 	}

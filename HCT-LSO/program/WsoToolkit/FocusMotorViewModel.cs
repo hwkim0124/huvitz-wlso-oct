@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Threading;
 using WsoNativeLib;
-
 
 namespace WsoToolkit
 {
     using static WsoNativeLib.WsoDevice;
-    public partial class DeviceMotorWindow
+    public partial class FocusMotorWindow
     {
         StepMotorStatus _msOctFocus = new();
         StepMotorStatus _msOctRefer = new();
@@ -19,10 +17,6 @@ namespace WsoToolkit
         StepMotorStatus _msRetMirror = new();
         StepMotorStatus _msOctAntLens = new();
         StepMotorStatus _msLsoFilter = new();
-        StepMotorStatus _msSwing = new();
-        StepMotorStatus _msXstage = new();
-        StepMotorStatus _msYstage = new();
-        StepMotorStatus _msZstage = new();
 
         DispatcherTimer _timer = new DispatcherTimer();
 
@@ -34,10 +28,6 @@ namespace WsoToolkit
         StepMotorPositionChanged _retMirrorChanged;
         StepMotorPositionChanged _octAntLensChanged;
         StepMotorPositionChanged _lsoFilterChanged;
-        StepMotorPositionChanged _swingChanged;
-        StepMotorPositionChanged _xStageChanged;
-        StepMotorPositionChanged _yStageChanged;
-        StepMotorPositionChanged _zStageChanged;
 
         private void FetchAllMotorStatus()
         {
@@ -49,10 +39,6 @@ namespace WsoToolkit
             DeviceMotors.FetchStepMotorStatus(MotorType.RetMirror, out _msRetMirror);
             DeviceMotors.FetchStepMotorStatus(MotorType.OctAntLens, out _msOctAntLens);
             DeviceMotors.FetchStepMotorStatus(MotorType.LsoFilter, out _msLsoFilter);
-            DeviceMotors.FetchStepMotorStatus(MotorType.Swing, out _msSwing);
-            DeviceMotors.FetchStepMotorStatus(MotorType.StageX, out _msXstage);
-            DeviceMotors.FetchStepMotorStatus(MotorType.StageY, out _msYstage);
-            DeviceMotors.FetchStepMotorStatus(MotorType.StageZ, out _msZstage);
         }
 
         private void ConnectMotorCallbacks()
@@ -65,10 +51,6 @@ namespace WsoToolkit
             DeviceMotors.ConnectStepMotorPositionChanged(MotorType.RetMirror, _retMirrorChanged);
             DeviceMotors.ConnectStepMotorPositionChanged(MotorType.OctAntLens, _octAntLensChanged);
             DeviceMotors.ConnectStepMotorPositionChanged(MotorType.LsoFilter, _lsoFilterChanged);
-            DeviceMotors.ConnectStepMotorPositionChanged(MotorType.Swing, _swingChanged);
-            DeviceMotors.ConnectStepMotorPositionChanged(MotorType.StageX, _xStageChanged);
-            DeviceMotors.ConnectStepMotorPositionChanged(MotorType.StageY, _yStageChanged);
-            DeviceMotors.ConnectStepMotorPositionChanged(MotorType.StageZ, _zStageChanged);
         }
 
         private void ReleaseMotorCallbacks()
@@ -81,10 +63,6 @@ namespace WsoToolkit
             DeviceMotors.ReleaseStepMotorPositionChanged(MotorType.RetMirror);
             DeviceMotors.ReleaseStepMotorPositionChanged(MotorType.OctAntLens);
             DeviceMotors.ReleaseStepMotorPositionChanged(MotorType.LsoFilter);
-            DeviceMotors.ReleaseStepMotorPositionChanged(MotorType.Swing);
-            DeviceMotors.ReleaseStepMotorPositionChanged(MotorType.StageX);
-            DeviceMotors.ReleaseStepMotorPositionChanged(MotorType.StageY);
-            DeviceMotors.ReleaseStepMotorPositionChanged(MotorType.StageZ);
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -195,83 +173,6 @@ namespace WsoToolkit
                     _isPositionChanged = true;
                 }
             }, DispatcherPriority.Normal);
-        }
-
-        private void OnSwingPositionChanged(int pos, float value)
-        {
-            Dispatcher.BeginInvoke(() =>
-            {
-                editSwingPos.Text = pos.ToString();
-                if (pos != sliderSwing.Value)
-                {
-                    sliderSwing.Value = pos;
-                    _isPositionChanged = true;
-                }
-            }, DispatcherPriority.Normal);
-        }
-
-        private void OnXstagePositionChanged(int pos, float value)
-        {
-            Dispatcher.BeginInvoke(() =>
-            {
-                editXstagePos.Text = pos.ToString();
-                if (pos != sliderXstage.Value)
-                {
-                    sliderXstage.Value = pos;
-                    _isPositionChanged = true;
-                }
-            }, DispatcherPriority.Normal);
-        }
-
-        private void OnYstagePositionChanged(int pos, float value)
-        {
-            Dispatcher.BeginInvoke(() =>
-            {
-                editYstagePos.Text = pos.ToString();
-                if (pos != sliderYstage.Value)
-                {
-                    sliderYstage.Value = pos;
-                    _isPositionChanged = true;
-                }
-            }, DispatcherPriority.Normal);
-        }
-
-        private void OnZstagePositionChanged(int pos, float value)
-        {
-            Dispatcher.BeginInvoke(() =>
-            {
-                editZstagePos.Text = pos.ToString();
-                if (pos != sliderZstage.Value)
-                {
-                    sliderZstage.Value = pos;
-                    _isPositionChanged = true;
-                }
-            }, DispatcherPriority.Normal);
-        }
-
-        private void StartRefreshTimer()
-        {
-            _timer.Interval = TimeSpan.FromMilliseconds(100.0);
-            _timer.Tick += TimerRefreshTick;
-            _timer.Start();
-        }
-
-        private void TimerRefreshTick(object? sender, EventArgs e)
-        {
-            Func<bool, string> boolToIntStr = value => value ? "1" : "0";
-
-            // editOdOs.Text = boolToIntStr(DeviceMotors.IsOdOsStatusFlagSet());
-            editCrestPi.Text = boolToIntStr(DeviceMotors.IsChinrestAtUpperEnd()) + " | " + boolToIntStr(DeviceMotors.IsChinrestAtLowerEnd());
-            editSwingPi.Text = boolToIntStr(DeviceMotors.IsSwingMotorAtHighLimit()) + " | " + boolToIntStr(DeviceMotors.IsSwingMotorAtLowLimit());
-            editXstagePi.Text = boolToIntStr(DeviceMotors.IsXstageMotorAtHighLimit()) + " | " + boolToIntStr(DeviceMotors.IsXstageMotorAtLowLimit());
-            editYstagePi.Text = boolToIntStr(DeviceMotors.IsYstageMotorAtHighLimit()) + " | " + boolToIntStr(DeviceMotors.IsYstageMotorAtLowLimit());
-            editZstagePi.Text = boolToIntStr(DeviceMotors.IsZstageMotorAtHighLimit()) + " | " + boolToIntStr(DeviceMotors.IsZstageMotorAtLowLimit());
-
-            editLsoFocusPi.Text = boolToIntStr(DeviceMotors.IsLsoFocusMotorAtOrigin());
-            editOctFocusPi.Text = boolToIntStr(DeviceMotors.IsOctFocusMotorAtOrigin());
-            editOctReferPi.Text = boolToIntStr(DeviceMotors.IsOctReferMotorAtOrigin());
-            editOctPolarPi.Text = boolToIntStr(DeviceMotors.IsOctPolarMotorAtOrigin());
-            editMirrorPi.Text = boolToIntStr(DeviceMotors.IsRetMirrorMotorAtOrigin());
         }
     }
 }

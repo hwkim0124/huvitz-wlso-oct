@@ -108,8 +108,8 @@ namespace WsoNativeLib
                 patternCode = OctPatternCode.MACULAR_LINE;
                 previewType = OctPatternType.LINE;
 
-                scanPoints = 0;
-                scanLines = 0;
+                scanPoints = 1024;
+                scanLines = 1;
                 scanRangeX = 6.0f;
                 scanRangeY = 6.0f;
                 lineSpace = 0.0f;
@@ -124,10 +124,10 @@ namespace WsoNativeLib
                 scanScaleY = 1.0f;
                 scanAngle = 0.0f;
 
-                enfacePoints = 0;
-                enfaceLines = 0;
-                enfaceRangeX = 0.0f;
-                enfaceRangeY = 0.0f;
+                enfacePoints = 256;
+                enfaceLines = 128;
+                enfaceRangeX = 6.0f;
+                enfaceRangeY = 6.0f;
 
                 isFirstScanOnSide = true;
                 isPhasingEnface = false;

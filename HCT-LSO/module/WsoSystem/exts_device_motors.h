@@ -39,14 +39,23 @@ namespace wso_system
 
 		// PI Sensor Vaule
 		///////////////////////////////////////////////////////////////////////////////////////////
-		bool WSOSYSTEM_DLL_API __stdcall isSwingMotorAtHighLimit(void);
-		bool WSOSYSTEM_DLL_API __stdcall isSwingMotorAtLowLimit(void);
 		bool WSOSYSTEM_DLL_API __stdcall isOctFocusMotorAtOrigin(void);
 		bool WSOSYSTEM_DLL_API __stdcall isOctPolarMotorAtOrigin(void);
 		bool WSOSYSTEM_DLL_API __stdcall isOctReferMotorAtOrigin(void);
+		bool WSOSYSTEM_DLL_API __stdcall isOctRefNdMotorAtOrigin(void);
 		bool WSOSYSTEM_DLL_API __stdcall isLsoFocusMotorAtOrigin(void);
-		bool WSOSYSTEM_DLL_API __stdcall isYaxisMotorAtHighLimit(void);
-		bool WSOSYSTEM_DLL_API __stdcall isYaxisMotorAtLowLimit(void);
+		bool WSOSYSTEM_DLL_API __stdcall isRetMirrorMotorAtOrigin(void);
+		bool WSOSYSTEM_DLL_API __stdcall isOctAntLensMotorAtOrigin(void);
+		bool WSOSYSTEM_DLL_API __stdcall isLsoFilterMotorAtOrigin(void);
+
+		bool WSOSYSTEM_DLL_API __stdcall isSwingMotorAtHighLimit(void);
+		bool WSOSYSTEM_DLL_API __stdcall isSwingMotorAtLowLimit(void);
+		bool WSOSYSTEM_DLL_API __stdcall isXstageMotorAtHighLimit(void);
+		bool WSOSYSTEM_DLL_API __stdcall isXstageMotorAtLowLimit(void);
+		bool WSOSYSTEM_DLL_API __stdcall isYstageMotorAtHighLimit(void);
+		bool WSOSYSTEM_DLL_API __stdcall isYstageMotorAtLowLimit(void);
+		bool WSOSYSTEM_DLL_API __stdcall isZstageMotorAtHighLimit(void);
+		bool WSOSYSTEM_DLL_API __stdcall isZstageMotorAtLowLimit(void);
 
 	}
 
