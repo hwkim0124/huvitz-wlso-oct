@@ -43,8 +43,8 @@ namespace wso_system
 		bool saveFactorySetup1Calibration(bool write = true, int region = CALIB_ACTIVE_REGION);
 		bool saveFactorySetup2Calibration(bool write = true, int region = CALIB_ACTIVE_REGION);
 
-		bool obtainSystemCalibration(wso_board::HbsCalibration* sys_calib, bool fetch);
-		bool submitSystemCalibration(const wso_board::HbsCalibration* sys_calib, bool write);
+		bool obtainSystemCalibration(SystemCalibration* sys_calib, bool fetch);
+		bool submitSystemCalibration(const SystemCalibration* sys_calib, bool write);
 
 	private:
 		struct CalibrationImpl;

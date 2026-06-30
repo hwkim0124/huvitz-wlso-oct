@@ -17,20 +17,20 @@ namespace WsoNativeLib
         // P/Invoke declarations
         //////////////////////////////////////////////////////////////////////////
         [DllImport(LibraryName)]
-        private static extern bool fetchSystemCalibration(out HbsSysCalibration calib, [MarshalAs(UnmanagedType.I1)] bool reload);
+        private static extern bool fetchSystemCalibration(out SystemCalibration calib, [MarshalAs(UnmanagedType.I1)] bool reload);
 
         [DllImport(LibraryName)]
-        private static extern bool applySystemCalibration(ref HbsSysCalibration calib, [MarshalAs(UnmanagedType.I1)] bool write);
+        private static extern bool applySystemCalibration(ref SystemCalibration calib, [MarshalAs(UnmanagedType.I1)] bool write);
 
 
         // Public methods
         //////////////////////////////////////////////////////////////////////////
-        public static bool FetchSystemCalibration(out HbsSysCalibration calib, bool reload)
+        public static bool FetchSystemCalibration(out SystemCalibration calib, bool reload)
         {
             return fetchSystemCalibration(out calib, reload);
         }
 
-        public static bool ApplySystemCalibration(ref HbsSysCalibration calib, bool write)
+        public static bool ApplySystemCalibration(ref SystemCalibration calib, bool write)
         {
             return applySystemCalibration(ref calib, write);
         }

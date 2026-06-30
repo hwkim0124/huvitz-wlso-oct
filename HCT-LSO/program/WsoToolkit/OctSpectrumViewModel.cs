@@ -22,6 +22,7 @@ namespace WsoToolkit
         WsoCallback.CorneaCameraFrameCaptured _onCorneaLowerFrameCaptured;
 
         WsoCallback.JoystickButtonPressed _onJoystickButtonPressed;
+
         WsoCallback.OctScanPreviewImageCaptured _onOctPreviewCaptured;
         WsoCallback.OctScanProtocolCompleted _onProtocolCompleted;
         WsoCallback.OctSpectrumDataCaptured _onSpectrumDataCaptured;
@@ -75,9 +76,6 @@ namespace WsoToolkit
                 ShowError("Failed to start scan preview!");
                 return false;
             }
-
-            StartCorneaCameraPreview();
-
             octScanImagePreview.IsPreviewMode = true;
             return true;
         }

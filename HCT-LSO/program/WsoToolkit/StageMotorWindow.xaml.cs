@@ -77,10 +77,12 @@ namespace WsoToolkit
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            /*
             if (ShowQuestion("Are you sure to close this window?") == false)
             {
                 e.Cancel = true;
             }
+            */
         }
 
         private void BtnClose_Click(object sender, RoutedEventArgs e)

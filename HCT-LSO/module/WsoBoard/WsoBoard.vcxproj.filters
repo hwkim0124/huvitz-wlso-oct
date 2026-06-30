@@ -48,9 +48,6 @@
     <ClInclude Include="wso_hbs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="wso_hbs2.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="HbsDataUtil.h">
       <Filter>Header Files</Filter>
     </ClInclude>

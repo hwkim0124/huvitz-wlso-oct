@@ -84,13 +84,11 @@ namespace WsoToolkit
 
         private void CalibrationButton_Click(object sender, RoutedEventArgs e)
         {
-            /*
-            var window = new SystemCalibWindow
+            var window = new SystemCalibrationWindow
             {
                 Owner = this
             };
             window.ShowDialog();
-            */
         }
 
         private void BtnSloScanTest_Click(object sender, RoutedEventArgs e)
@@ -117,24 +115,20 @@ namespace WsoToolkit
 
         private void btnOctScanMode_Click(object sender, RoutedEventArgs e)
         {
-            /*
             var window = new OctScanModeWindow
             {
                 Owner = this
             };
             window.ShowDialog();
-            */
         }
 
         private void btnOctAngioMode_Click(object sender, RoutedEventArgs e)
         {
-            /*
             var window = new OctAngioModeWindow
             {
                 Owner = this
             };
             window.ShowDialog();
-            */
         }
 
         private void btnOctSignalTest_Click(object sender, RoutedEventArgs e)
@@ -148,13 +142,11 @@ namespace WsoToolkit
 
         private void BtnOctSpectroCalib_Click(object sender, RoutedEventArgs e)
         {
-            /*
-            var window = new OctSpectrometerWindow
+            var window = new OctSpectrumWindow
             {
                 Owner = this
             };
             window.ShowDialog();
-            */
         }
 
         private void BtnLongRunTest_Click(object sender, RoutedEventArgs e)
@@ -170,13 +162,11 @@ namespace WsoToolkit
 
         private void BtnIrCameraTest_Click(object sender, RoutedEventArgs e)
         {
-            /*
             var window = new IrCameraTestWindow
             {
                 Owner = this
             };
             window.ShowDialog();
-            */
         }
 
         private void BtnDeviceMotorTest_Click(object sender, RoutedEventArgs e)

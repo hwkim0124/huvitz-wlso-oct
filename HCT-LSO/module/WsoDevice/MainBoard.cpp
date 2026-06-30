@@ -331,11 +331,11 @@ bool wso_device::MainBoard::initiateBoardComponents(int* numWarns)
 	if (!initiateCorneaCamera(CameraType::IR_CORNEA_LOWER)) {
 		warns += 1;
 	}
+	*/
 
 	if (!initiateColorCamera()) {
 		warns += 1;
 	}
-	*/
 
 	if (!getLsoScanner()->initializeLsoScanner()) {
 		WsoLogWarn("LSO scanner init failed!");

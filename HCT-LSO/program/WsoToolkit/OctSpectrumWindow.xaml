@@ -111,9 +111,9 @@
                     </Grid.ColumnDefinitions>
                     <Label x:Name="labe201" Content="Line Camera Speed" Grid.Row="0" Style="{StaticResource HeaderStyle}" Grid.ColumnSpan="3" Margin="16,0,0,0" HorizontalAlignment="Left"/>
                     <StackPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="4" Orientation="Horizontal" Margin="32,0,0,0">
-                        <RadioButton x:Name="radioCameraSpeed1" Content="Slower" GroupName ="speed" Style="{StaticResource RadioButtonStyle}" Height="Auto"/>
+                        <RadioButton x:Name="radioCameraSpeed1" Content="Slow" GroupName ="speed" Style="{StaticResource RadioButtonStyle}" Height="Auto"/>
                         <RadioButton x:Name="radioCameraSpeed2" Content="Normal" GroupName ="speed" Style="{StaticResource RadioButtonStyle}" Margin="24,0,0,0" Height="Auto"/>
-                        <RadioButton x:Name="radioCameraSpeed3" Content="Faster" GroupName ="speed" Style="{StaticResource RadioButtonStyle}" Margin="24,0,0,0" Height="Auto"/>
+                        <RadioButton x:Name="radioCameraSpeed3" Content="Fast" GroupName ="speed" Style="{StaticResource RadioButtonStyle}" Margin="24,0,0,0" Height="Auto"/>
                     </StackPanel>
                     <StackPanel Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="4" Orientation="Horizontal" Margin="0,4,0,0">
                         <Label x:Name="label202" Content="Exposure" Style="{StaticResource LabelStyle}"/>

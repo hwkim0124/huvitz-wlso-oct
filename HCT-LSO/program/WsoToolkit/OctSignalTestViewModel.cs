@@ -538,17 +538,6 @@ namespace WsoToolkit
 
         private void OnCorneaLeftFrameCaptured(nint data, int width, int height)
         {
-            /*
-            int length = width * height;
-            byte[] buff = new byte[length];
-
-            unsafe
-            {
-                byte* pRawData = (byte*)data.ToPointer();
-                ReadOnlySpan<byte> nativeSpan = new ReadOnlySpan<byte>(pRawData, length);
-                nativeSpan.CopyTo(buff);
-            }
-            */
             if (data == 0) return;
 
             Dispatcher.BeginInvoke(() =>
@@ -559,11 +548,6 @@ namespace WsoToolkit
 
         private void OnCorneaRightFrameCaptured(IntPtr data, int width, int height)
         {
-            /*
-            int length = width * height;
-            byte[] frameData = new byte[length];
-            Marshal.Copy(data, frameData, 0, length);
-            */
             if (data == 0) return;
 
             // Update GUI preview control asynchronously.

@@ -1,5 +1,6 @@
 ﻿
 using System.Runtime.InteropServices;
+using System.Security.RightsManagement;
 
 namespace WsoNativeLib
 {
@@ -8,25 +9,27 @@ namespace WsoNativeLib
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
         public struct DispersionCalibration
         {
-            public double a1;
-            public double a2;
-            public double a3;
-        }
-
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-        public struct SpectrometerCalibration
-        {
-            public double a1;
             public double a2;
             public double a3;
             public double a4;
         }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-        public struct GalvanometerCalibration
+        public struct SpectrometerCalibration
         {
-            public float offset;
-            public float range;
+            public double a0;
+            public double a1;
+            public double a2;
+            public double a3;
+        }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+        public struct OctGalvanometerCalibration
+        {
+            public float offsetX;
+            public float offsetY;
+            public float rangeX;
+            public float rangeY;
         }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
@@ -46,11 +49,21 @@ namespace WsoNativeLib
         }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+        public struct LedCalibration
+        {
+            public ushort whiteIntensity;
+            public ushort retinaIrIntensity;
+            public ushort anteriorIrIntensity1;
+            public ushort anteriorIrIntensity2;
+            public ushort blueIntensity;
+            public ushort greenIntensity;
+        }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
         public struct DiopterCalibration
         {
             public int octFocusZeroPos;
-            public int sloFocusZeroPos;
-            public int fixFocusZeroPos;
+            public int lsoFocusZeroPos;
         }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
@@ -61,31 +74,26 @@ namespace WsoNativeLib
         }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-        public struct ApdCalibration
+        public struct MotorCalibration
         {
-            public float vbr;
-            public float vr;
+            public int referRetinaOriginPos;
+            public int referCorneaOriginPos;
+            public int polarOriginPos;
+            public FilterCalibration returnMirror;
+            public FilterCalibration octAnteriorLens;
         }
 
-
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-        public struct HbsSysCalibration
+        public struct SystemCalibration
         {
-            public int referPosRetina;
-            public int referPosCornea;
-            public int polarPos;
-
             public DispersionCalibration dispersionRetina;
             public DispersionCalibration dispersionCornea;
             public SpectrometerCalibration spectrometer;
-            public GalvanometerCalibration galvanometerX;
-            public GalvanometerCalibration galvanometerY;
+            public OctGalvanometerCalibration octGalvano;
             public SldCalibration sldParam;
+            public LedCalibration ledParam;
             public DiopterCalibration diopterParam;
-            public FilterCalibration icgaFilter;
-            public FilterCalibration octMirror;
-
-            public ulong checksum;
+            public MotorCalibration motorParam;
         }
     }
     

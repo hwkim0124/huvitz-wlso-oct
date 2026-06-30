@@ -77,7 +77,7 @@ namespace WsoToolkit.controls
             {
                 _imageWidth = width;
                 _imageHeight = height;
-                _imageMat = rawFrame;
+                _imageMat = rawFrame.Clone();
                 UpdateCameraStatusItems();
                 UpdateCameraFrameImage();
             }

@@ -23,6 +23,7 @@
 #include "LsoScanStruct.h"
 #include "LsoCameraStruct.h"
 
+#include "BoardDefines.h"
 #include "DeviceDefines.h"
 #include "DeviceStructs.h"
 #include "DeviceLights.h"

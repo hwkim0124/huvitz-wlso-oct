@@ -21,7 +21,6 @@
   </Target>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\module\WsoNativeLib2\WsoNativeLib2.csproj" />
     <ProjectReference Include="..\..\module\WsoNativeLib\WsoNativeLib.csproj" />
   </ItemGroup>
 </Project>

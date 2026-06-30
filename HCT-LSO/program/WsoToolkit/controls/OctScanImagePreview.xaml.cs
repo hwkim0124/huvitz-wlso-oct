@@ -151,11 +151,11 @@ namespace WsoToolkit.controls
             }
 
             if (data == 0) return;
-            nint step = width * 1;
+            nint step = width * sizeof(byte);
 
             using (Mat rawFrame = Mat.FromPixelData(height, width, MatType.CV_8UC1, data, step))
             {
-                _imageMat = rawFrame;
+                _imageMat = rawFrame.Clone();
                 _drawPoints.Clear();
                 UpdateFrameImage();
             }    

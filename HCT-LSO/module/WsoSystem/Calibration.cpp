@@ -338,37 +338,141 @@ bool wso_system::Calibration::saveFactorySetup2Calibration(bool write, int regio
 	return false;
 }
 
-bool wso_system::Calibration::obtainSystemCalibration(wso_board::HbsCalibration* sys_calib, bool fetch)
+bool wso_system::Calibration::obtainSystemCalibration(SystemCalibration* sys_calib, bool fetch)
 {
+	if (!loadSystemCalibration(fetch)) {
+		return false;
+	}
+
 	if (auto* board = Hardware::getInstance()->getMainBoard(); board) {
-		if (fetch) {
-			if (!board->pullSystemCalibFromMemory()) {
-				return false;
+		if (auto* profile = board->getHbsDataProfile(); profile) {
+			if (auto* param = profile->getHbsCalibMotorSets(); param) {
+				sys_calib->diopterParam.octFocusZeroPos = param->MotorCalPos.oct_focus_motor_0D_pos;
+				sys_calib->diopterParam.lsoFocusZeroPos = param->MotorCalPos.lso_focus_motor_0D_pos;
+
+				sys_calib->motorParam.referRetinaOriginPos = param->MotorCalPos.REF_RetinaPos;
+				sys_calib->motorParam.referCorneaOriginPos = param->MotorCalPos.REF_CorneaPos;
+				sys_calib->motorParam.polarOriginPos = param->MotorCalPos.PolarizationPos;
+				sys_calib->motorParam.returnMirror.inPos = param->MotorCalPos.ReturnMirrorPos.InPos;
+				sys_calib->motorParam.returnMirror.outPos = param->MotorCalPos.ReturnMirrorPos.OutPos;
+				sys_calib->motorParam.octAnteriorLens.inPos = param->MotorCalPos.OCT_AntLensPos.InPos;
+				sys_calib->motorParam.octAnteriorLens.outPos = param->MotorCalPos.OCT_AntLensPos.OutPos;
+			}
+
+			if (auto* param = profile->getHbsCalibOctParams(); param) {
+				sys_calib->dispersionRetina.a2 = param->RetinaDispersion.a2;
+				sys_calib->dispersionRetina.a3 = param->RetinaDispersion.a3;
+				sys_calib->dispersionRetina.a4 = param->RetinaDispersion.a4;
+
+				sys_calib->dispersionCornea.a2 = param->CorneaDispersion.a2;
+				sys_calib->dispersionCornea.a3 = param->CorneaDispersion.a3;
+				sys_calib->dispersionCornea.a4 = param->CorneaDispersion.a4;
+
+				sys_calib->spectrometer.a0 = param->SpectroCal.a0;
+				sys_calib->spectrometer.a1 = param->SpectroCal.a1;
+				sys_calib->spectrometer.a2 = param->SpectroCal.a2;
+				sys_calib->spectrometer.a3 = param->SpectroCal.a3;
+			}
+
+			if (auto* param = profile->getHbsCalibOctGalvano(); param) {
+				sys_calib->octGalvano.offsetX = param->OctGalvano_Xcal.Galvano_offset;
+				sys_calib->octGalvano.offsetY = param->OctGalvano_Ycal.Galvano_offset;
+				sys_calib->octGalvano.rangeX = param->OctGalvano_Xcal.Galvano_Range;
+				sys_calib->octGalvano.rangeY = param->OctGalvano_Ycal.Galvano_Range;
+			}
+
+			if (auto* param = profile->getHbsCalibLedSource(); param) {
+				sys_calib->sldParam.pdCurrMax = param->SLD_Param.IM_MAX;
+				sys_calib->sldParam.pdCurrMin = param->SLD_Param.IM_MIN;
+				sys_calib->sldParam.sldCurrMax = param->SLD_Param.IS_MAX;
+				sys_calib->sldParam.sldCurrMin = param->SLD_Param.IS_MIN;
+				sys_calib->sldParam.refEpdMax = param->SLD_Param.DN_REF_EPD_MAX;
+				sys_calib->sldParam.refEpdMin = param->SLD_Param.DN_REF_EPD_MIN;
+
+				sys_calib->sldParam.rmonHighCode = param->SLD_Param.RmonHighCode;
+				sys_calib->sldParam.rmonLowCode1 = param->SLD_Param.RmonLowCode1;
+				sys_calib->sldParam.rmonLowCode2 = param->SLD_Param.RmonLowCode2;
+				sys_calib->sldParam.rmonRsiCode = param->SLD_Param.RsiCode;
+
+				sys_calib->ledParam.anteriorIrIntensity1 = param->LED_Info.AntIR1_intensity;
+				sys_calib->ledParam.anteriorIrIntensity2 = param->LED_Info.AntIR2_intensity;
+				sys_calib->ledParam.retinaIrIntensity = param->LED_Info.RetIR_intensity;
+				sys_calib->ledParam.whiteIntensity = param->LED_Info.WLED_intensity;
+				sys_calib->ledParam.blueIntensity = param->LED_Info.Bled_intensity;
+				sys_calib->ledParam.greenIntensity = param->LED_Info.Gled_inentity;
 			}
 		}
-		if (auto* profile = board->getHbsDataProfile(); profile) {
-			memcpy(sys_calib, profile->getHbsCalibration(), sizeof(wso_board::HbsCalibration));
-		}
-		return true;
 	}
 	return false;
 }
 
-bool wso_system::Calibration::submitSystemCalibration(const wso_board::HbsCalibration* sys_calib, bool write)
+bool wso_system::Calibration::submitSystemCalibration(const SystemCalibration* sys_calib, bool write)
 {
 	if (auto* board = Hardware::getInstance()->getMainBoard(); board) {
 		if (auto* profile = board->getHbsDataProfile(); profile) {
-			auto* calib = const_cast<HbsCalibration*>(profile->getHbsCalibration());
-			memcpy(calib, sys_calib, sizeof(wso_board::HbsCalibration));
-			if (write) {
-				if (!board->pushSystemCalibToMemory()) {
-					return false;
-				}
+			if (auto* param = const_cast<HbsCalibMotorSets*>(profile->getHbsCalibMotorSets()); param) {
+				param->MotorCalPos.oct_focus_motor_0D_pos = sys_calib->diopterParam.octFocusZeroPos;
+				param->MotorCalPos.lso_focus_motor_0D_pos = sys_calib->diopterParam.lsoFocusZeroPos;
+
+				param->MotorCalPos.REF_RetinaPos = sys_calib->motorParam.referRetinaOriginPos;
+				param->MotorCalPos.REF_CorneaPos = sys_calib->motorParam.referCorneaOriginPos;
+				param->MotorCalPos.PolarizationPos = sys_calib->motorParam.polarOriginPos;
+				param->MotorCalPos.ReturnMirrorPos.InPos = sys_calib->motorParam.returnMirror.inPos;
+				param->MotorCalPos.ReturnMirrorPos.OutPos = sys_calib->motorParam.returnMirror.outPos;
+				param->MotorCalPos.OCT_AntLensPos.InPos = sys_calib->motorParam.octAnteriorLens.inPos;
+				param->MotorCalPos.OCT_AntLensPos.OutPos = sys_calib->motorParam.octAnteriorLens.outPos;
 			}
-			return true;
+
+			if (auto* param = const_cast<HbsCalibOctParams*>(profile->getHbsCalibOctParams()); param) {
+				param->RetinaDispersion.a2 = sys_calib->dispersionRetina.a2;
+				param->RetinaDispersion.a3 = sys_calib->dispersionRetina.a3;
+				param->RetinaDispersion.a4 = sys_calib->dispersionRetina.a4;
+
+				param->CorneaDispersion.a2 = sys_calib->dispersionCornea.a2;
+				param->CorneaDispersion.a3 = sys_calib->dispersionCornea.a3;
+				param->CorneaDispersion.a4 = sys_calib->dispersionCornea.a4;
+
+				param->SpectroCal.a0 = sys_calib->spectrometer.a0;
+				param->SpectroCal.a1 = sys_calib->spectrometer.a1;
+				param->SpectroCal.a2 = sys_calib->spectrometer.a2;
+				param->SpectroCal.a3 = sys_calib->spectrometer.a3;
+			}
+
+			if (auto* param = const_cast<HbsCalibOctGalvano*>(profile->getHbsCalibOctGalvano()); param) {
+				param->OctGalvano_Xcal.Galvano_offset = sys_calib->octGalvano.offsetX;
+				param->OctGalvano_Ycal.Galvano_offset = sys_calib->octGalvano.offsetY;
+				param->OctGalvano_Xcal.Galvano_Range = sys_calib->octGalvano.rangeX;
+				param->OctGalvano_Ycal.Galvano_Range = sys_calib->octGalvano.rangeY;
+			}
+
+			if (auto* param = const_cast<HbsCalibLedSource*>(profile->getHbsCalibLedSource()); param) {
+				param->SLD_Param.IM_MAX = sys_calib->sldParam.pdCurrMax;
+				param->SLD_Param.IM_MIN = sys_calib->sldParam.pdCurrMin;
+				param->SLD_Param.IS_MAX = sys_calib->sldParam.sldCurrMax;
+				param->SLD_Param.IS_MIN = sys_calib->sldParam.sldCurrMin;
+				param->SLD_Param.DN_REF_EPD_MAX = sys_calib->sldParam.refEpdMax;
+				param->SLD_Param.DN_REF_EPD_MIN = sys_calib->sldParam.refEpdMin;
+
+				param->SLD_Param.RmonHighCode = sys_calib->sldParam.rmonHighCode;
+				param->SLD_Param.RmonLowCode1 = sys_calib->sldParam.rmonLowCode1;
+				param->SLD_Param.RmonLowCode2 = sys_calib->sldParam.rmonLowCode2;
+				param->SLD_Param.RsiCode = sys_calib->sldParam.rmonRsiCode;
+
+				param->LED_Info.AntIR1_intensity = sys_calib->ledParam.anteriorIrIntensity1;
+				param->LED_Info.AntIR2_intensity = sys_calib->ledParam.anteriorIrIntensity2;
+				param->LED_Info.RetIR_intensity = sys_calib->ledParam.retinaIrIntensity;
+				param->LED_Info.WLED_intensity = sys_calib->ledParam.whiteIntensity;
+				param->LED_Info.Bled_intensity = sys_calib->ledParam.blueIntensity;
+				param->LED_Info.Gled_inentity = sys_calib->ledParam.greenIntensity;
+			}
 		}
 	}
-	return false;
+
+	if (!saveSystemCalibration(write)) {
+		return false;
+	}
+	applySystemCalibration();
+	return true;
 }
 
 

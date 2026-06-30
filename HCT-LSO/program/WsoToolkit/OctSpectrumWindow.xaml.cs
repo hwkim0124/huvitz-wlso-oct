@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -23,6 +24,7 @@ namespace WsoToolkit
         LightControlWindow? _lightControlWindow = null;
         FocusMotorWindow? _focusMotorWindow = null;
         StageMotorWindow? _stageMotorWindow = null;
+        private bool _isWindowLoaded = false;
 
         public OctSpectrumWindow()
         {
@@ -45,11 +47,12 @@ namespace WsoToolkit
         /// 
         private void Window_Initialized(object sender, EventArgs e)
         {
-
+            InitializeWindowControls();
         }
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            InitializeWindowControls();
+            StartCorneaCameraPreview();
+            _isWindowLoaded = true;
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -63,9 +66,16 @@ namespace WsoToolkit
         private void Window_Closed(object sender, EventArgs e)
         {
             Mouse.OverrideCursor = Cursors.Wait;
-            _focusMotorWindow?.Close();
             _lightControlWindow?.Close();
+            _focusMotorWindow?.Close();
             _stageMotorWindow?.Close();
+
+            BoardDevice.ReleaseJoystickButtonPressed();
+            BoardDevice.ReleaseOptimizeButtonPressed();
+
+            CancelOctScanning(false);
+            CloseCorneaCameraPreview();
+
             Thread.Sleep(500);
             Mouse.OverrideCursor = null;
         }

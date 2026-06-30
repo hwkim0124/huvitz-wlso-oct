@@ -92,8 +92,8 @@ namespace WsoToolkit
         {
             Mouse.OverrideCursor = Cursors.Wait;
             _timer.Stop();
-            _focusMotorWindow?.Close();
             _lightControlWindow?.Close();
+            _focusMotorWindow?.Close();
             _stageMotorWindow?.Close();
 
             BoardDevice.ReleaseJoystickButtonPressed();

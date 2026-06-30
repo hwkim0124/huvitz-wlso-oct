@@ -1,0 +1,268 @@
+﻿<Window x:Class="WsoToolkit.SystemCalibrationWindow"
+        Style="{StaticResource WindowStyle}"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WsoToolkit"
+        mc:Ignorable="d"
+        Title="System Calibration" ResizeMode="NoResize" Width="880" Height="680" Loaded="Window_Loaded" SizeToContent="WidthAndHeight">
+    <Grid Margin="12,12,12,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="12"/>
+            <RowDefinition Height="64"/>
+        </Grid.RowDefinitions>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="12"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="20"/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="16"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="12"/>
+                    </Grid.RowDefinitions>
+                    <Label x:Name="label" Content="Dispersion Compensation" Style="{StaticResource HeaderStyle}" Grid.Row="1" Grid.ColumnSpan="3" Margin="16,0,0,0" HorizontalAlignment="Left"/>
+                    <Label x:Name="label_Copy" Content="Retina" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="1" Margin="0,0,0,0"/>
+                    <Label x:Name="label_Copy1" Content="Cornea" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="1" Margin="0,0,0,0"/>
+                    <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="3">
+                        <TextBox x:Name="editRetinaDispComp1" Style="{StaticResource TextBoxStyle}" PreviewTextInput="FloatTextBox_PreviewTextInput"/>
+                        <TextBox x:Name="editRetinaDispComp2" Style="{StaticResource TextBoxStyle}" PreviewTextInput="FloatTextBox_PreviewTextInput" Margin="8,0,0,0"/>
+                        <TextBox x:Name="editRetinaDispComp3" Style="{StaticResource TextBoxStyle}" PreviewTextInput="FloatTextBox_PreviewTextInput" Margin="8,0,0,0"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="3">
+                        <TextBox x:Name="editCorneaDispComp1" Style="{StaticResource TextBoxStyle}" PreviewTextInput="FloatTextBox_PreviewTextInput"/>
+                        <TextBox x:Name="editCorneaDispComp2" Style="{StaticResource TextBoxStyle}" PreviewTextInput="FloatTextBox_PreviewTextInput" Margin="8,0,0,0"/>
+                        <TextBox x:Name="editCorneaDispComp3" Style="{StaticResource TextBoxStyle}" PreviewTextInput="FloatTextBox_PreviewTextInput" Margin="8,0,0,0"/>
+                    </StackPanel>
+                    <Border Style="{StaticResource BorderStyle}" BorderThickness="1" Grid.ColumnSpan="6" Grid.RowSpan="5"/>
+                </Grid>
+                <Grid Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="20"/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="8"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="12"/>
+                    </Grid.RowDefinitions>
+                    <Label x:Name="label3" Content="Spectrometer Calibration" Style="{StaticResource HeaderStyle}" Grid.Row="1" Grid.ColumnSpan="3" Margin="16,0,0,0" HorizontalAlignment="Left"/>
+                    <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="5">
+                        <TextBox x:Name="editSpectroCalib1" Style="{StaticResource TextBoxStyle}" PreviewTextInput="FloatTextBox_PreviewTextInput" Margin="12,0,0,0" Width="100"/>
+                        <TextBox x:Name="editSpectroCalib2" Style="{StaticResource TextBoxStyle}" PreviewTextInput="FloatTextBox_PreviewTextInput" Margin="4,0,0,0" Width="100"/>
+                        <TextBox x:Name="editSpectroCalib3" Style="{StaticResource TextBoxStyle}" PreviewTextInput="FloatTextBox_PreviewTextInput" Margin="4,0,0,0" Width="100"/>
+                        <TextBox x:Name="editSpectroCalib4" Style="{StaticResource TextBoxStyle}" PreviewTextInput="FloatTextBox_PreviewTextInput" Margin="4,0,0,0" Width="100"/>
+                    </StackPanel>
+                    <Border Style="{StaticResource BorderStyle}" BorderThickness="1" Grid.ColumnSpan="6" Grid.RowSpan="4"/>
+                </Grid>
+                <Grid Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="20"/>
+                        <ColumnDefinition Width="80"/>
+                        <ColumnDefinition Width="80"/>
+                        <ColumnDefinition Width="60"/>
+                        <ColumnDefinition Width="80"/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="16"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="12"/>
+                    </Grid.RowDefinitions>
+                    <Label x:Name="label4" Content="Galvanometer Calibration" Style="{StaticResource HeaderStyle}" Grid.Row="1" Grid.ColumnSpan="3" Margin="16,0,0,0" HorizontalAlignment="Left"/>
+                    <Label x:Name="label5" Content="X Offset" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="1" Margin="0,0,0,0"/>
+                    <Label x:Name="label6" Content="Y Offset" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="3" Margin="0,0,0,0"/>
+                    <Label x:Name="label7" Content="X Range" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="1" Margin="0,0,0,0"/>
+                    <Label x:Name="label8" Content="Y Range" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="3" Margin="0,0,0,0"/>
+                    <TextBox x:Name="editGalvanoOffsetX" Style="{StaticResource TextBoxStyle}" Grid.Row="2" Grid.Column="2"  PreviewTextInput="FloatTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editGalvanoOffsetY" Style="{StaticResource TextBoxStyle}" Grid.Row="2" Grid.Column="4"  PreviewTextInput="FloatTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editGalvanoRangeX" Style="{StaticResource TextBoxStyle}" Grid.Row="3" Grid.Column="2"  PreviewTextInput="FloatTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editGalvanoRangeY" Style="{StaticResource TextBoxStyle}" Grid.Row="3" Grid.Column="4"  PreviewTextInput="FloatTextBox_PreviewTextInput"/>
+                    <Border Style="{StaticResource BorderStyle}" BorderThickness="1" Grid.ColumnSpan="7" Grid.RowSpan="5"/>
+                </Grid>
+                <Grid Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="40"/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="16"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="12"/>
+                    </Grid.RowDefinitions>
+                    <Label x:Name="label9" Content="SLD Parameters" Style="{StaticResource HeaderStyle}" Grid.Row="1" Grid.ColumnSpan="3" Margin="16,0,0,0" HorizontalAlignment="Left"/>
+                    <Label x:Name="label10" Content="PD Current" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="1" Margin="0,0,0,0"/>
+                    <Label x:Name="label11" Content="SLD Current" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="1" Margin="0,0,0,0"/>
+                    <Label x:Name="label12" Content="REF EPD." Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="1" Margin="0,0,0,0"/>
+                    <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="3">
+                        <TextBox x:Name="editPdCurrentMin" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                        <Label x:Name="label13" Content="min." Style="{StaticResource LabelStyle}" Margin="0,0,16,0"/>
+                        <TextBox x:Name="editPdCurrentMax" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                        <Label x:Name="label14" Content="max." Style="{StaticResource LabelStyle}" Margin="0,0,16,0"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="3">
+                        <TextBox x:Name="editSldCurrentMin" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                        <Label x:Name="label15" Content="min." Style="{StaticResource LabelStyle}" Margin="0,0,16,0"/>
+                        <TextBox x:Name="editSldCurrentMax" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                        <Label x:Name="label16" Content="max." Style="{StaticResource LabelStyle}" Margin="0,0,16,0"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="2" Grid.ColumnSpan="3">
+                        <TextBox x:Name="editRefEpdMin" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                        <Label x:Name="label17" Content="min." Style="{StaticResource LabelStyle}" Margin="0,0,16,0"/>
+                        <TextBox x:Name="editRefEpdMax" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                        <Label x:Name="label18" Content="max." Style="{StaticResource LabelStyle}" Margin="0,0,16,0"/>
+                    </StackPanel>
+                    <Label x:Name="label19" Content="Rmon High Code" Style="{StaticResource LabelStyle}" Grid.Row="5" Grid.Column="1" Margin="0,0,0,0"/>
+                    <Label x:Name="label20" Content="Rsi Code" Style="{StaticResource LabelStyle}" Grid.Row="5" Grid.Column="3" Margin="0,0,0,0"/>
+                    <Label x:Name="label21" Content="Low Code-1" Style="{StaticResource LabelStyle}" Grid.Row="6" Grid.Column="1" Margin="0,0,0,0"/>
+                    <Label x:Name="label22" Content="Low Code-2" Style="{StaticResource LabelStyle}" Grid.Row="6" Grid.Column="3" Margin="0,0,0,0"/>
+                    <TextBox x:Name="editHighCode" Style="{StaticResource TextBoxStyle}" Grid.Row="5" Grid.Column="2"  PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editRsiCode" Style="{StaticResource TextBoxStyle}" Grid.Row="5" Grid.Column="4"  PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editLowCode1" Style="{StaticResource TextBoxStyle}" Grid.Row="6" Grid.Column="2"  PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editLowCode2" Style="{StaticResource TextBoxStyle}" Grid.Row="6" Grid.Column="4"  PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <Border Style="{StaticResource BorderStyle}" BorderThickness="1" Grid.ColumnSpan="6" Grid.RowSpan="8"/>
+                </Grid>
+            </StackPanel>
+            <StackPanel Grid.Column="2">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="40"/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="16"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="8"/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition Height="12"/>
+                    </Grid.RowDefinitions>
+                    <Label x:Name="label23" Content="Diopter Calibration" Style="{StaticResource HeaderStyle}" Grid.Row="1" Grid.ColumnSpan="3" Margin="16,0,0,0" HorizontalAlignment="Left"/>
+                    <Label x:Name="label24" Content="OCT Focus (0D)" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="1" Margin="0,0,0,0"/>
+                    <Label x:Name="label25" Content="LSO Focus (0D)" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="3" Margin="0,0,0,0"/>
+                    <TextBox x:Name="editOctFocus" Style="{StaticResource TextBoxStyle}" Grid.Row="2" Grid.Column="2"  PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editLsoFocus" Style="{StaticResource TextBoxStyle}" Grid.Row="2" Grid.Column="4"  PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <Border Style="{StaticResource BorderStyle}" BorderThickness="1" Grid.ColumnSpan="6" Grid.RowSpan="5"/>
+                </Grid>
+                <Grid Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="40"/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="16"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="8"/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition Height="12"/>
+                    </Grid.RowDefinitions>
+                    <Label x:Name="label27" Content="Motor Position Origin" Style="{StaticResource HeaderStyle}" Grid.Row="1" Grid.ColumnSpan="3" Margin="16,0,0,0" HorizontalAlignment="Left"/>
+                    <Label x:Name="label28" Content="Reference" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="1" Margin="0,0,0,0"/>
+                    <Label x:Name="label30" Content="Polarization" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="1" Margin="0,0,0,0"/>
+                    <Label x:Name="label31" Content="Return Mirror" Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="1" Margin="0,0,0,0"/>
+                    <Label x:Name="label32" Content="OCT Ant. Lens" Style="{StaticResource LabelStyle}" Grid.Row="5" Grid.Column="1" Margin="0,0,0,0"/>
+                    <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="3">
+                        <TextBox x:Name="editReferPosRetina" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                        <Label x:Name="label33" Content="(Retina)" Style="{StaticResource LabelStyle}" Margin="0,0,16,0"/>
+                        <TextBox x:Name="editReferPosCornea" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                        <Label x:Name="label34" Content="(Cornea)" Style="{StaticResource LabelStyle}" Margin="0,0,16,0"/>
+                    </StackPanel>
+                    <TextBox x:Name="editPolarPos" Style="{StaticResource TextBoxStyle}" Grid.Row="3" Grid.Column="2" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="2" Grid.ColumnSpan="3">
+                        <TextBox x:Name="editRetMirrorInPos" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                        <Label x:Name="label35" Content="(In)" Style="{StaticResource LabelStyle}" Margin="0,0,16,0"/>
+                        <TextBox x:Name="editRetMirrorOutPos" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                        <Label x:Name="label36" Content="(Out)" Style="{StaticResource LabelStyle}" Margin="0,0,16,0"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Grid.Row="5" Grid.Column="2" Grid.ColumnSpan="3">
+                        <TextBox x:Name="editAntLensInPos" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                        <Label x:Name="label37" Content="(In)" Style="{StaticResource LabelStyle}" Margin="0,0,16,0"/>
+                        <TextBox x:Name="editAntLensOutPos" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                        <Label x:Name="label38" Content="(Out)" Style="{StaticResource LabelStyle}" Margin="0,0,16,0"/>
+                    </StackPanel>
+                    <Border Style="{StaticResource BorderStyle}" BorderThickness="1" Grid.ColumnSpan="6" Grid.RowSpan="7"/>
+                </Grid>
+                <Grid Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="40"/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="16"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="8"/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition Height="12"/>
+                    </Grid.RowDefinitions>
+                    <Label x:Name="labe501" Content="LED Intensity" Style="{StaticResource HeaderStyle}" Grid.Row="1" Grid.ColumnSpan="3" Margin="16,0,0,0" HorizontalAlignment="Left"/>
+                    <Label x:Name="labe502" Content="Anterior IR1" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="1" Margin="0,0,0,0"/>
+                    <Label x:Name="labe503" Content="Anterior IR2" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="3" Margin="0,0,0,0"/>
+                    <Label x:Name="labe504" Content="White LED" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="1" Margin="0,0,0,0"/>
+                    <Label x:Name="labe505" Content="Retina IR" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="3" Margin="0,0,0,0"/>
+                    <Label x:Name="labe506" Content="Blue LED" Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="1" Margin="0,0,0,0"/>
+                    <Label x:Name="labe507" Content="Green LED" Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="3" Margin="0,0,0,0"/>
+                    <TextBox x:Name="editLedAntIr1" Style="{StaticResource TextBoxStyle}" Grid.Row="2" Grid.Column="2" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editLedAntIr2" Style="{StaticResource TextBoxStyle}" Grid.Row="2" Grid.Column="4" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editLedWhite" Style="{StaticResource TextBoxStyle}" Grid.Row="3" Grid.Column="2" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editLedRetIr" Style="{StaticResource TextBoxStyle}" Grid.Row="3" Grid.Column="4" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editLedBlue" Style="{StaticResource TextBoxStyle}" Grid.Row="4" Grid.Column="2" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editLedGreen" Style="{StaticResource TextBoxStyle}" Grid.Row="4" Grid.Column="4" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <Border Style="{StaticResource BorderStyle}" BorderThickness="1" Grid.ColumnSpan="6" Grid.RowSpan="6"/>
+                </Grid>
+            </StackPanel>
+        </Grid>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,64,0">
+            <Button x:Name="btnFetch" Content="Fetch EEPROM" Style="{StaticResource ButtonStyle}" Margin="0,0,12,0" Click="BtnFetch_Click" />
+            <Button x:Name="btnWrite" Content="Write EEPROM" Style="{StaticResource ButtonStyle}" Margin="0,0,12,0" Click="BtnWrite_Click" />
+            <Button x:Name="btnUpdate" Content="Update" Style="{StaticResource ButtonStyle}" Margin="0,0,12,0" Click="BtnUpdate_Click" />
+            <Button x:Name="btnApply" Content="Apply" Style="{StaticResource ButtonStyle}" Margin="0,0,12,0" Click="BtnApply_Click" />
+            <Button x:Name="btnClose" Content="Close" Style="{StaticResource ButtonStyle}" Click="BtnClose_Click" />
+        </StackPanel>
+    </Grid>
+</Window>

@@ -6,7 +6,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WsoToolkit"
         mc:Ignorable="d"
-        Title="Wide LSO-OCT Toolkit SW" Height="900" Width="1032" ResizeMode="NoResize" Loaded="WindowMain_Loaded" Closed="WindowMain_Closed" Closing="WindowMain_Closing" WindowStartupLocation="CenterScreen" >
+        Title="Wide OCT-LSO Toolkit SW" Height="900" Width="1032" ResizeMode="NoResize" Loaded="WindowMain_Loaded" Closed="WindowMain_Closed" Closing="WindowMain_Closing" WindowStartupLocation="CenterScreen" >
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>

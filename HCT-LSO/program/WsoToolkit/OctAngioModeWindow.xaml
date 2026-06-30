@@ -1,0 +1,275 @@
+﻿<Window x:Class="WsoToolkit.OctAngioModeWindow"
+        Style="{StaticResource WindowStyle}"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WsoToolkit"
+        xmlns:controls="clr-namespace:WsoToolkit.controls"
+        mc:Ignorable="d"
+        Title="Oct Angiography Mode" Height="1060" Width="2180" ResizeMode="NoResize" Loaded="Window_Loaded" Initialized="Window_Initialized" Closed="Window_Closed" Closing="Window_Closing" MouseWheel="Window_MouseWheel" SizeToContent="WidthAndHeight">
+    <ScrollViewer HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible">
+        <Grid Margin="12,12,12,12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="392"/>
+                <ColumnDefinition Width="8"/>
+                <ColumnDefinition Width="1028"/>
+                <ColumnDefinition Width="8"/>
+                <ColumnDefinition Width="680"/>
+                <ColumnDefinition Width="24"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Vertical">
+                <controls:CorneaCameraPreview x:Name="corneaPreview1" Width="384" Height="328"/>
+                <controls:CorneaCameraPreview x:Name="corneaPreview2" Width="384" Height="328"/>
+                <controls:CorneaCameraPreview x:Name="corneaPreview3" Width="384" Height="328"/>
+            </StackPanel>
+            <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Vertical">
+                <controls:OctScanImagePreview x:Name="octScanImagePreview"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="btnShowFocusM" Content="FocusM..." Style="{StaticResource ButtonM1Style}" Margin="0,0,4,0" Click="BtnShowFocusM_Click"/>
+                    <Button x:Name="btnShowStageM" Content="StageM..." Style="{StaticResource ButtonM1Style}" Margin="0,0,4,0" Click="BtnShowStageM_Click"/>
+                    <Button x:Name="btnShowLight" Content="Light..." Style="{StaticResource ButtonM1Style}" Margin="0,0,12,0" Click="BtnShowLight_Click"/>
+                    <Button x:Name="btnAutoFocus" Content="Auto Focus" Style="{StaticResource ButtonM1Style}" Margin="0,0,4,0" Click="BtnAutoFocus_Click"/>
+                    <Button x:Name="btnAutoRefer" Content="Auto Refer" Style="{StaticResource ButtonM1Style}" Margin="0,0,4,0" Click="BtnAutoRefer_Click"/>
+                    <Button x:Name="btnAutoPolar" Content="Auto Polar" Style="{StaticResource ButtonM1Style}" Margin="0,0,4,0" Click="BtnAutoPolar_Click"/>
+                    <Button x:Name="btnOptimize" Content="Optimize" Style="{StaticResource ButtonM1Style}" Margin="0,0,12,0" Click="BtnOptimize_Click"/>
+                    <Button x:Name="btnStartScan" Content="Start Scan" Style="{StaticResource ButtonM1Style}" Margin="0,0,4,0" Click="BtnStartScan_Click"/>
+                    <Button x:Name="btnCapture" Content="Capture" Style="{StaticResource ButtonM1Style}" Margin="0,0,4,0" Click="BtnCapture_Click"/>
+                    <Button x:Name="btnClose" Content="Close" Style="{StaticResource ButtonM1Style}" Margin="0,0,12,0" Click="BtnClose_Click"/>
+                </StackPanel>
+                <Grid Margin="0,8,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="320"/>
+                        <ColumnDefinition Width="320"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Vertical">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="8"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition Width="100"/>
+                                <ColumnDefinition Width="80"/>
+                                <ColumnDefinition Width="80"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Label x:Name="label2100" Content="LSO Preview" Style="{StaticResource HeaderStyle}" Grid.ColumnSpan="3" Margin="16,0,0,0" HorizontalAlignment="Left"/>
+                            <Label x:Name="label2101" Content="Display Mode" Style="{StaticResource LabelStyle}" Grid.Row="1" Grid.Column="1"/>
+                            <StackPanel Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2" Orientation="Horizontal">
+                                <RadioButton x:Name="radioSloModeOn" Content="On" GroupName ="sloMode" Style="{StaticResource RadioButtonStyle}" Margin="12,0,0,0"/>
+                                <RadioButton x:Name="radioSloModeOff" Content="Off" GroupName ="sloMode" Style="{StaticResource RadioButtonStyle}" Margin="12,0,0,0"/>
+                            </StackPanel>
+                            <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="5" Grid.RowSpan="3"/>
+                        </Grid>
+                        <Grid Margin="0,8,0,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="8"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition Width="100"/>
+                                <ColumnDefinition Width="80"/>
+                                <ColumnDefinition Width="80"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Label x:Name="label5" Content="Galvanometer" Style="{StaticResource HeaderStyle}" Grid.ColumnSpan="3" Margin="16,0,0,0" HorizontalAlignment="Left"/>
+                            <Label x:Name="label6" Content="Trigg. Step" Style="{StaticResource LabelStyle}" Grid.Row="1" Grid.Column="1"/>
+                            <Label x:Name="label7" Content="Trigg. Delay" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="1"/>
+                            <Label x:Name="label8" Content="Trigg. Padds" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="1"/>
+                            <Label x:Name="label9" Content="Dynamic Offset" Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="1"/>
+                            <TextBox x:Name="editTriggTimeStep" Style="{StaticResource TextBoxS1Style}" Grid.Row="1" Grid.Column="2" />
+                            <TextBox x:Name="editTriggTimeDelay" Style="{StaticResource TextBoxS1Style}" Grid.Row="2" Grid.Column="2" />
+                            <TextBox x:Name="editTriggForePadds" Style="{StaticResource TextBoxS1Style}" Grid.Row="3" Grid.Column="2" />
+                            <TextBox x:Name="editTriggPostPadds" Style="{StaticResource TextBoxS1Style}" Grid.Row="3" Grid.Column="3" HorizontalAlignment="Left"/>
+                            <TextBox x:Name="editDynamicOffset1" Style="{StaticResource TextBoxS1Style}" Grid.Row="4" Grid.Column="2" />
+                            <TextBox x:Name="editDynamicOffset2" Style="{StaticResource TextBoxS1Style}" Grid.Row="4" Grid.Column="3" HorizontalAlignment="Left"/>
+                            <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="5" Grid.RowSpan="6"/>
+                        </Grid>
+                    </StackPanel>
+                    <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Vertical" Margin="8,0,8,0">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="8"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition Width="90"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Label x:Name="label1" Content="Line Camera" Style="{StaticResource HeaderStyle}" Grid.ColumnSpan="3" Margin="16,0,0,0" HorizontalAlignment="Left"/>
+                            <Label x:Name="label2" Content="Speed" Style="{StaticResource LabelStyle}" Grid.Row="1" Grid.Column="1"/>
+                            <Label x:Name="label10" Content="Exposure" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="1"/>
+                            <StackPanel Grid.Row="1" Grid.Column="3" Orientation="Horizontal">
+                                <RadioButton x:Name="radioCameraSpeed1" Content="Slow" GroupName ="speed" Style="{StaticResource RadioButtonStyle}" Click="RadioCameraSpeed1_Click"/>
+                                <RadioButton x:Name="radioCameraSpeed2" Content="Normal" GroupName ="speed" Style="{StaticResource RadioButtonStyle}" Margin="12,0,0,0" Click="RadioCameraSpeed2_Click"/>
+                                <RadioButton x:Name="radioCameraSpeed3" Content="Fast" GroupName ="speed" Style="{StaticResource RadioButtonStyle}" Margin="12,0,0,0" Click="RadioCameraSpeed3_Click"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal">
+                                <TextBox x:Name="editExposure" Style="{StaticResource TextBoxS1Style}" HorizontalAlignment="Left"/>
+                                <Label x:Name="label1011" Content="ms" Style="{StaticResource LabelStyle}"/>
+                                <Button x:Name="btnResetExposure" Content="Reset" Style="{StaticResource ButtonS1Style}" Margin="16,0,0,0"/>
+                            </StackPanel>
+                            <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="3" Grid.RowSpan="4"/>
+                        </Grid>
+                        <Grid Margin="0,8,0,0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="8"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition Width="90"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Label x:Name="label3" Content="Target Eye" Style="{StaticResource HeaderStyle}" Grid.ColumnSpan="3" Margin="16,0,0,0" HorizontalAlignment="Left"/>
+                            <Label x:Name="label4" Content="Eye Side" Style="{StaticResource LabelStyle}" Grid.Row="1" Grid.Column="1"/>
+                            <Label x:Name="label25" Content="Refraction" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="1"/>
+                            <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal">
+                                <RadioButton x:Name="radioEyeOd" Content="OD" GroupName ="odos" Style="{StaticResource RadioButtonStyle}"/>
+                                <RadioButton x:Name="radioEyeOs" Content="OS" GroupName ="odos" Style="{StaticResource RadioButtonStyle}" Margin="12,0,0,0"/>
+                            </StackPanel>
+                            <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal">
+                                <TextBox x:Name="editDiopter" Style="{StaticResource TextBoxS1Style}" HorizontalAlignment="Left"/>
+                                <Label x:Name="label1021" Content="D" Style="{StaticResource LabelStyle}"/>
+                            </StackPanel>
+                            <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="3" Grid.RowSpan="4"/>
+                        </Grid>
+                    </StackPanel>
+                    <StackPanel Grid.Row="0" Grid.Column="3" Orientation="Vertical">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="8"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition Width="80"/>
+                                <ColumnDefinition Width="90"/>
+                                <ColumnDefinition Width="80"/>
+                                <ColumnDefinition Width="90"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Label x:Name="label12" Content="Scan Pattern" Style="{StaticResource HeaderStyle}" Grid.ColumnSpan="3" Margin="16,0,0,0" HorizontalAlignment="Left"/>
+                            <Label x:Name="label13" Content="Pattern" Style="{StaticResource LabelStyle}" Grid.Row="1" Grid.Column="1"/>
+                            <Label x:Name="label14" Content="Range X" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="1"/>
+                            <Label x:Name="label15" Content="Range Y" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="3"/>
+                            <Label x:Name="label16" Content="A-Points" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="1"/>
+                            <Label x:Name="label17" Content="B-Lines" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="3"/>
+                            <Label x:Name="label18" Content="Overlaps" Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="1"/>
+                            <Label x:Name="label19" Content="Line Space" Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="3"/>
+                            <Label x:Name="label20" Content="Direction" Style="{StaticResource LabelStyle}" Grid.Row="5" Grid.Column="1"/>
+                            <Label x:Name="label21" Content="Offset X" Style="{StaticResource LabelStyle}" Grid.Row="6" Grid.Column="1"/>
+                            <Label x:Name="label22" Content="Offset Y" Style="{StaticResource LabelStyle}" Grid.Row="6" Grid.Column="3"/>
+                            <Label x:Name="label23" Content="Scale X" Style="{StaticResource LabelStyle}" Grid.Row="7" Grid.Column="1"/>
+                            <Label x:Name="label24" Content="Scale Y" Style="{StaticResource LabelStyle}" Grid.Row="7" Grid.Column="3"/>
+                            <ComboBox x:Name="cmbScanPattern" Style="{StaticResource ComboBoxStyle}" Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="3" Width="220" SelectionChanged="CmbScanPattern_SelectionChanged"/>
+                            <ComboBox x:Name="cmbScanRangeX" Style="{StaticResource ComboBoxStyle}" Grid.Row="2" Grid.Column="2" SelectionChanged="CmbScanRangeX_SelectionChanged" />
+                            <ComboBox x:Name="cmbScanRangeY" Style="{StaticResource ComboBoxStyle}" Grid.Row="2" Grid.Column="4" />
+                            <ComboBox x:Name="cmbScanPoints" Style="{StaticResource ComboBoxStyle}" Grid.Row="3" Grid.Column="2" SelectionChanged="CmbScanPoints_SelectionChanged" />
+                            <ComboBox x:Name="cmbScanLines" Style="{StaticResource ComboBoxStyle}" Grid.Row="3" Grid.Column="4" SelectionChanged="CmbScanLines_SelectionChanged" />
+                            <ComboBox x:Name="cmbScanOverlaps" Style="{StaticResource ComboBoxStyle}" Grid.Row="4" Grid.Column="2" />
+                            <ComboBox x:Name="cmbLineSpaces" Style="{StaticResource ComboBoxStyle}" Grid.Row="4" Grid.Column="4" />
+                            <ComboBox x:Name="cmbScanDirection" Style="{StaticResource ComboBoxStyle}" Grid.Row="5" Grid.Column="2" Grid.ColumnSpan="2"/>
+                            <TextBox x:Name="editScanOffsetX" Style="{StaticResource TextBoxS1Style}" Grid.Row="6" Grid.Column="2" HorizontalAlignment="Left"/>
+                            <TextBox x:Name="editScanOffsetY" Style="{StaticResource TextBoxS1Style}" Grid.Row="6" Grid.Column="4" HorizontalAlignment="Left"/>
+                            <TextBox x:Name="editScanScaleX" Style="{StaticResource TextBoxS1Style}" Grid.Row="7" Grid.Column="2" HorizontalAlignment="Left"/>
+                            <TextBox x:Name="editScanScaleY" Style="{StaticResource TextBoxS1Style}" Grid.Row="7" Grid.Column="4" HorizontalAlignment="Left"/>
+                            <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="6" Grid.RowSpan="9"/>
+                        </Grid>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+            <StackPanel Grid.Row="0" Grid.Column="4" Orientation="Vertical">
+                <StackPanel Orientation="Horizontal">
+                    <controls:OctScanEnfacePreview x:Name="octScanEnfacePreivew"/>
+                    <controls:OctScanAngioPreview x:Name="scanAngioPreview" Margin="8,0,0,0"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                    <controls:OctReportAngioChart x:Name="reportAngioChart"/>
+                    <StackPanel Orientation="Vertical" Margin="8,0,0,0">
+                        <TextBox x:Name="textProtocolSummary" Width="288" Height="120" FontSize="14" Padding="4" Text="Scan Protocol &#x09; &#10;" Style="{StaticResource TextBoxStyle}" IsReadOnly="True" AcceptsTab="True" VerticalContentAlignment="Top" HorizontalContentAlignment="Left" TextWrapping="Wrap" />
+                        <TextBox x:Name="textReportSummary" Margin="0,8,0,0" Width="288" Height="148" FontSize="14" Padding="4" Text="Report Summary &#x09; &#10;" Style="{StaticResource TextBoxStyle}" IsReadOnly="True" AcceptsTab="True" VerticalContentAlignment="Top" HorizontalContentAlignment="Left" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <StackPanel Orientation="Vertical" Margin="24,0,0,0">
+                        <Button x:Name="btnAnalyzeResult" Content="Analyze" Style="{StaticResource ButtonM1Style}" Margin="0,0,0,0" Click="BtnAnalyzeResult_Click"/>
+                        <Button x:Name="btnExportResult" Content="Export" Style="{StaticResource ButtonM1Style}" Margin="0,8,0,0" Click="BtnExportResult_Click"/>
+                        <Button x:Name="btnImportResult" Content="Import..." Style="{StaticResource ButtonM1Style}" Margin="0,8,0,0" Click="BtnImportResult_Click"/>
+                        <Button x:Name="btnSaveAngioImage" Content="Save Angio" Style="{StaticResource ButtonM1Style}" Margin="0,8,0,0" Click="BtnSaveAngioImage_Click"/>
+                    </StackPanel>
+                </StackPanel>
+                <Grid Margin="0,8,0,8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="8"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="20"/>
+                        <ColumnDefinition Width="120"/>
+                        <ColumnDefinition Width="270"/>
+                        <ColumnDefinition Width="120"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Label x:Name="label102" Content="Upper Layer" Style="{StaticResource LabelStyle}" Grid.Row="1" Grid.Column="1"/>
+                    <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal">
+                        <ComboBox x:Name="cmbUpperLayer" Style="{StaticResource ComboBoxStyle}" Width="90"/>
+                        <Label x:Name="label103" Content="offset" Style="{StaticResource LabelStyle}" Margin="8,0,0,0"/>
+                        <TextBox x:Name="editUpperOffset" Style="{StaticResource TextBoxS1Style}" Margin="8,0,0,0"/>
+                        <Label x:Name="label104" Content="(um)" Style="{StaticResource LabelStyle}"/>
+                    </StackPanel>
+                    <Label x:Name="label105" Content="Lower Layer" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="1"/>
+                    <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal">
+                        <ComboBox x:Name="cmbLowerLayer" Style="{StaticResource ComboBoxStyle}" Width="90"/>
+                        <Label x:Name="label106" Content="offset" Style="{StaticResource LabelStyle}" Margin="8,0,0,0"/>
+                        <TextBox x:Name="editLowerOffset" Style="{StaticResource TextBoxS1Style}" Margin="8,0,0,0"/>
+                        <Label x:Name="label107" Content="(um)" Style="{StaticResource LabelStyle}"/>
+                    </StackPanel>
+                    <Label x:Name="label101" Content="Pattern Images" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="1"/>
+                    <StackPanel Grid.Row="3" Grid.Column="2" Orientation="Horizontal">
+                        <Slider x:Name="sliderPatternImage" Style="{StaticResource SliderStyle}" Thumb.DragStarted="SliderPatternImage_DragStarted" Thumb.DragCompleted="SliderPatternImage_DragCompleted"  Width="170" ValueChanged="SliderPatternImage_ValueChanged"/>
+                        <TextBox x:Name="editPatternImageNumber" Style="{StaticResource TextBoxS1Style}" KeyDown="EditPatternImageNumber_KeyDown" Margin="8,0,0,0"/>
+                    </StackPanel>
+                    <CheckBox x:Name="checkOverlayLayers" Content="Overlay Layers" Style="{StaticResource CheckBoxStyle}" Grid.Row="1" Grid.Column="3" Margin="0,0,0,0" Click="CheckOverlayLayers_Click"/>
+                    <CheckBox x:Name="checkOverlayCenter" Content="Chart Center" Style="{StaticResource CheckBoxStyle}" Grid.Row="1" Grid.Column="4" Margin="0,0,0,0" Click="CheckOverlayCenter_Click"/>
+                    <CheckBox x:Name="checkFullDepthEnface" Content="Ful-depth Enface" Style="{StaticResource CheckBoxStyle}" Grid.Row="2" Grid.Column="4" Margin="0,0,0,0"/>
+                    <CheckBox x:Name="checkFitToHeight" Content="Fit to Height" Style="{StaticResource CheckBoxStyle}" Grid.Row="3" Grid.Column="3" Click="CheckFitToHeight_Click"/>
+                    <CheckBox x:Name="checkOverlayLength" Content="Overlay Length" Style="{StaticResource CheckBoxStyle}" Grid.Row="2" Grid.Column="3" Click="CheckOverlayLength_Click"/>
+                    <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="2" FlowDirection="RightToLeft" Margin="0,4,24,0" >
+                        <Button x:Name="btnUpdateLayers" Content="Update" Style="{StaticResource ButtonM1Style}" Grid.Row="1" Grid.Column="4" Margin="0,0,0,0" Click="BtnUpdateLayers_Click"/>
+                    </StackPanel>
+                    <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="5" Grid.RowSpan="6"/>
+                </Grid>
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</Window>
