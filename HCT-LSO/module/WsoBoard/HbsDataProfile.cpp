@@ -193,6 +193,11 @@ bool wso_board::HbsDataProfile::loadCalibrationBlocks(bool fetch, int region)
 			if (!channel->readCalibsDescriptor(data, desc)) {
 				return false;
 			}
+			else {
+				for (int i = 0; i < CALIB_ENTRIES_MAX_NUM; i++) {
+					LogD() << "Block index: " << i << ", ROM base addr: " << data->blocks[i].RomBlkBaseAddr << ", size: " << data->blocks[i].RomBlkSize << ", HBS base addr: " << data->blocks[i].HBS_BlkBaseAddr;
+				}
+			}
 		}
 	}
 

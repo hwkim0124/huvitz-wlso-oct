@@ -180,8 +180,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WsoAnalytics", "module\WsoA
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WsoToolkit", "program\WsoToolkit\WsoToolkit.csproj", "{060E6E83-0D06-4720-947B-480C7C0A16E1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WsloToolkit", "..\..\hlso\HCT-LSO\program\WsloToolkit\WsloToolkit.csproj", "{B7EF18AB-7B39-A227-DD64-949C03774D81}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -480,18 +478,6 @@ Global
 		{060E6E83-0D06-4720-947B-480C7C0A16E1}.Release|x64.Build.0 = Release|Any CPU
 		{060E6E83-0D06-4720-947B-480C7C0A16E1}.Release|x86.ActiveCfg = Release|Any CPU
 		{060E6E83-0D06-4720-947B-480C7C0A16E1}.Release|x86.Build.0 = Release|Any CPU
-		{B7EF18AB-7B39-A227-DD64-949C03774D81}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B7EF18AB-7B39-A227-DD64-949C03774D81}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B7EF18AB-7B39-A227-DD64-949C03774D81}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{B7EF18AB-7B39-A227-DD64-949C03774D81}.Debug|x64.Build.0 = Debug|Any CPU
-		{B7EF18AB-7B39-A227-DD64-949C03774D81}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{B7EF18AB-7B39-A227-DD64-949C03774D81}.Debug|x86.Build.0 = Debug|Any CPU
-		{B7EF18AB-7B39-A227-DD64-949C03774D81}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B7EF18AB-7B39-A227-DD64-949C03774D81}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B7EF18AB-7B39-A227-DD64-949C03774D81}.Release|x64.ActiveCfg = Release|Any CPU
-		{B7EF18AB-7B39-A227-DD64-949C03774D81}.Release|x64.Build.0 = Release|Any CPU
-		{B7EF18AB-7B39-A227-DD64-949C03774D81}.Release|x86.ActiveCfg = Release|Any CPU
-		{B7EF18AB-7B39-A227-DD64-949C03774D81}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -521,7 +507,6 @@ Global
 		{98D0365C-A01F-4C0C-A680-4592544C191A} = {70510AB6-B338-4844-B577-16635CF49666}
 		{98E8604E-76C9-40FA-9AD2-E51001E45273} = {4FEFC41E-DFF3-49FE-99D9-F652641A174D}
 		{060E6E83-0D06-4720-947B-480C7C0A16E1} = {70510AB6-B338-4844-B577-16635CF49666}
-		{B7EF18AB-7B39-A227-DD64-949C03774D81} = {70510AB6-B338-4844-B577-16635CF49666}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {29D8D502-7FBB-4DBB-93FC-38007E2B1406}

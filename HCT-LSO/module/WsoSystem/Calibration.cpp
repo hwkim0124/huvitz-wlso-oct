@@ -59,12 +59,14 @@ bool wso_system::Calibration::loadSystemCalibration(bool fetch, int region)
 	if (!loadStepMotorsCalibration(fetch, region)) {
 		return false;
 	}
+	/*
 	if (!loadFactorySetup1Calibration(fetch, region)) {
 		return false;
 	}
 	if (!loadFactorySetup2Calibration(fetch, region)) {
 		return false;
 	}
+	*/
 	return true;
 }
 
