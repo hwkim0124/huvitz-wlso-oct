@@ -39,6 +39,7 @@ namespace wso_board
 		bool loadMainBoardVersion(void);
 		bool loadSystemInitStatus(void);
 		bool loadSystemConfigure(void);
+		bool loadLsoScannerParam(void);
 
 		bool loadGpioStatus(void);
 		bool loadSldStatus(void);

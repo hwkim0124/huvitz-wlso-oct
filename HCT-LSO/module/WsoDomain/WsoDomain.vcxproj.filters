@@ -108,7 +108,7 @@
     <ClInclude Include="SystemArchive.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="LsoScanStruct.h">
+    <ClInclude Include="LsoScanDefines.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="LsoCameraStruct.h">

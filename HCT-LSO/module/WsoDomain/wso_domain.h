@@ -20,7 +20,7 @@
 #include "OctAngioDefines.h"
 #include "OctAngioSetup.h"
 
-#include "LsoScanStruct.h"
+#include "LsoScanDefines.h"
 #include "LsoCameraStruct.h"
 
 #include "BoardDefines.h"

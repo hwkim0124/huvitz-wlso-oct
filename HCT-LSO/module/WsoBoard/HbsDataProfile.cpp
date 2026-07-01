@@ -432,6 +432,18 @@ bool wso_board::HbsDataProfile::loadSystemConfigure(void)
 	return false;
 }
 
+bool wso_board::HbsDataProfile::loadLsoScannerParam(void)
+{
+	auto* channel = getDataChannel();
+	if (auto desc = getHbsTableDescriptor(); channel) {
+		auto data = getHbsLsoScanner();
+		if (channel->readLsoScannerParam(data, desc)) {
+			return true;
+		}
+	}
+	return false;
+}
+
 bool wso_board::HbsDataProfile::loadGpioStatus(void)
 {
 	auto* channel = getDataChannel();

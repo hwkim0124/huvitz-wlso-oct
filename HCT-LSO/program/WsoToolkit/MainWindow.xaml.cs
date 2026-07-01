@@ -220,9 +220,12 @@ namespace WsoToolkit
             }
             else
             {
-                Mouse.OverrideCursor = Cursors.Wait;
-                ShutdownWsoSystem();
-                Mouse.OverrideCursor = null;
+                if (Bootstrapper.IsWsoSystemInitialized())
+                {
+                    Mouse.OverrideCursor = Cursors.Wait;
+                    ShutdownWsoSystem();
+                    Mouse.OverrideCursor = null;
+                }
             }
         }
     }
