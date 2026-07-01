@@ -104,13 +104,11 @@ namespace WsoToolkit
 
         private void BtnSloScanMode_Click(object sender, RoutedEventArgs e)
         {
-            /*
-            var window = new SloScanModeWindow
+            var window = new LsoScanModeWindow
             {
                 Owner = this
             };
-            window.ShowDialog();
-            */
+            window.ShowDialog();            
         }
 
         private void btnOctScanMode_Click(object sender, RoutedEventArgs e)
