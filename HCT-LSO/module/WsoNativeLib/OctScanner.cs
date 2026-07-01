@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using System.Reflection;
 using System.Net.Mail;
+using WsoNativeLib;
 
 namespace WsoNativeLib
 {
-    using static WsoNativeLib.LibraryConfig;
+    using static LibraryConfig;
     using static WsoOctDefs;
     using static WsoOctCalib;
 

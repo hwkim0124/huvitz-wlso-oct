@@ -30,6 +30,7 @@
 
 #include "Galvanometer.h"
 #include "ZynqXadcDriver.h"
+#include "LsoScanner.h"
 
 #include "UsbComm.h"
 #include "MainBoard.h"

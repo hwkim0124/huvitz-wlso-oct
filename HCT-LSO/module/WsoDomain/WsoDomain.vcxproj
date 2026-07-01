@@ -172,7 +172,7 @@
     <ClInclude Include="EventRegistry.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="LsoCameraStruct.h" />
-    <ClInclude Include="LsoScanStruct.h" />
+    <ClInclude Include="LsoScanDefines.h" />
     <ClInclude Include="OctAngioDefines.h" />
     <ClInclude Include="OctAngioSetup.h" />
     <ClInclude Include="OctDataDefines.h" />

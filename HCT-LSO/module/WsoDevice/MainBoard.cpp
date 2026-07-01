@@ -338,7 +338,7 @@ bool wso_device::MainBoard::initiateBoardComponents(int* numWarns)
 	*/
 
 	if (!getLsoScanner()->initializeLsoScanner()) {
-		WsoLogWarn("LSO scanner init failed!");
+		WsoLogWarn("Failed to initialize LSO scanner");
 		warns += 1;
 	}
 	getGalvanometer()->initializeGalvanometer();

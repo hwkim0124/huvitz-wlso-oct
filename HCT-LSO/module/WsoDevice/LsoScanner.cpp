@@ -55,8 +55,10 @@ bool wso_device::LsoScanner::initializeLsoScanner(void)
 		return false;
 	}
 
-	updateScannerStatus();
-	//controlSwitch(0);
+	// updateScannerStatus();
+
+	/*
+	// controlSwitch(0);
 	loadConfigFromIniFile();
 
 	if (!storeControlParameters())
@@ -64,11 +66,12 @@ bool wso_device::LsoScanner::initializeLsoScanner(void)
 		LogDebug() << "Lso scanner control parameters failed to change!";
 		return false;
 	}
-
+	*/
 	impl().initiated = true;
 	return true;
 }
 
+/*
 bool wso_device::LsoScanner::updateScannerStatus(void)
 {
 	UsbComm& usbComm = getMainBoard()->getUsbComm();
@@ -89,120 +92,124 @@ bool wso_device::LsoScanner::updateScannerStatus(void)
 
 	impl().scanProfile[0] = scan_traj_profile[0];
 	impl().scanProfile[1] = scan_traj_profile[1];
-
 	return true;
 }
+*/
 
-bool wso_device::LsoScanner::fetchControlParameters(int PatternId, LsoScannerControlParam* pParam)
+bool wso_device::LsoScanner::obtainControlParameters(int patternId, LsoScannerControlParam* param)
 {
-	if (pParam == nullptr)
-	{
+	if (patternId < 0 || patternId >= LSO_SCANNER_PATTERN_NUM_MAX || param == nullptr) {
 		return false;
 	}
 
-	int nPatternId = PatternId;
+	if (auto* data = impl().board->getHbsDataProfile(); data) {
+		if (data->loadLsoScannerParam()) {
+			if (auto* scan = data->getHbsLsoScanner(); scan) {
+				auto& traj = scan->traj_profile[patternId];
+				param->timeStepUs = traj.time_step_us;
+				param->exposureTimeUs = traj.exposure_time_us;
+				param->triggerSource = traj.TrgSrc;
+				param->acquisitionMode = traj.AcqMode;
+				param->acqFrameSize = traj.AcqFrameSize;
+				param->sampleSize = traj.sample_size;
+				param->subFrameSize = traj.subframe_size;
+				param->prescanPosRewindOffset = traj.prescan_pos_rewind_offset;
+				param->ledOffPosIndex = traj.led_off_pos_index;
+				param->ledOnPosIndex = traj.led_on_pos_index;
 
-	if (nPatternId < 0 || nPatternId > (std::size(impl().scanProfile) - 1))
-	{
-		return false;
+				param->yGalvoStartPos = 0;
+				param->yGalvoEndPos = 0;
+
+				auto size = param->sampleSize;
+				if (size > 0 && size <= LSO_SCANNER_SAMPLE_SIZE_MAX) {
+					param->yGalvoStartPos = traj.pos[0];
+					param->yGalvoEndPos = traj.pos[size - 1];
+				}
+				return true;
+			}
+		}
 	}
-
-	pParam->timeStepUs = impl().scanProfile[nPatternId].time_step_us;
-	pParam->exposureTimeUs = impl().scanProfile[nPatternId].exposure_time_us;
-	pParam->trgSrc = impl().scanProfile[nPatternId].TrgSrc;
-	pParam->acqMode = impl().scanProfile[nPatternId].AcqMode;
-	pParam->acqFrameSize = impl().scanProfile[nPatternId].AcqFrameSize;
-	pParam->sampleSize = impl().scanProfile[nPatternId].sample_size;
-	pParam->subFrameSize = impl().scanProfile[nPatternId].subframe_size;
-	pParam->prescanPosRewindOffset = impl().scanProfile[nPatternId].prescan_pos_rewind_offset;
-	pParam->yGalvoStartPos = impl().scanProfile[nPatternId].pos[0];
-	pParam->yGalvoEndPos = impl().scanProfile[nPatternId].pos[impl().scanProfile[nPatternId].sample_size-1];
-	pParam->ledOnPosIndex = impl().scanProfile[nPatternId].led_on_pos_index;
-	pParam->ledOffPosIndex = impl().scanProfile[nPatternId].led_off_pos_index;
-	return true;
+	return false;
 }
 
-bool wso_device::LsoScanner::changeControlParameters(int PatternId, const LsoScannerControlParam* pParam)
+bool wso_device::LsoScanner::submitControlParameters(int patternId, const LsoScannerControlParam* param)
 {
-	if (pParam == nullptr)
-	{
+	if (patternId < 0 || patternId >= LSO_SCANNER_PATTERN_NUM_MAX || param == nullptr) {
 		return false;
 	}
 
-	int nPatternId = PatternId;
+	if (auto* data = impl().board->getHbsDataProfile(); data) {
+		if (auto* scan = const_cast<HbsLsoScanner*>(data->getHbsLsoScanner()); scan) {
+			auto& traj = scan->traj_profile[patternId];
+			traj.time_step_us = param->timeStepUs;
+			traj.exposure_time_us = param->exposureTimeUs;
+			traj.TrgSrc = param->triggerSource;
+			traj.AcqMode = param->acquisitionMode;
+			traj.AcqFrameSize = param->acqFrameSize;
+			traj.sample_size = param->sampleSize;
+			traj.subframe_size = param->subFrameSize;
+			traj.prescan_pos_rewind_offset = param->prescanPosRewindOffset;
+			traj.led_off_pos_index = param->ledOffPosIndex;
+			traj.led_on_pos_index = param->ledOnPosIndex;
 
-	if (nPatternId < 0 || nPatternId >(std::size(impl().scanProfile) - 1))
-	{
-		return false;
+			auto startPos = param->yGalvoStartPos;;
+			auto endPos = param->yGalvoEndPos;
+			auto sampleSize = param->sampleSize;
+			generateGalvanoPositions(startPos, endPos, sampleSize, traj.pos);
+
+			if (data->saveLsoScannerParam()) {
+				return true;
+			}
+		}
 	}
-
-	impl().scanProfile[nPatternId].time_step_us = pParam->timeStepUs;
-	impl().scanProfile[nPatternId].exposure_time_us = pParam->exposureTimeUs;
-	impl().scanProfile[nPatternId].TrgSrc = pParam->trgSrc;
-	impl().scanProfile[nPatternId].AcqMode = pParam->acqMode;
-	impl().scanProfile[nPatternId].AcqFrameSize = pParam->acqFrameSize;
-	impl().scanProfile[nPatternId].sample_size = pParam->sampleSize;
-	impl().scanProfile[nPatternId].subframe_size = pParam->subFrameSize;
-	impl().scanProfile[nPatternId].prescan_pos_rewind_offset = pParam->prescanPosRewindOffset;
-	impl().scanProfile[nPatternId].led_on_pos_index = pParam->ledOnPosIndex;
-	impl().scanProfile[nPatternId].led_off_pos_index = pParam->ledOffPosIndex;
-
-	size_t count = 0;
-	int start = pParam->yGalvoStartPos;
-	int end = pParam->yGalvoEndPos;
-
-	// 구간 수 = N-1 (양 끝점을 모두 포함)
-	double delta = double(end - start);
-	double step = delta / double(pParam->sampleSize - 1);
-
-	std::fill_n(impl().scanProfile[nPatternId].pos, (int)MAX_LSO_DAC_SAMPLE_SIZE, 0); // 전체 사이즈를 0으로 초기화
-
-	for (std::size_t i = 0; i < pParam->sampleSize; ++i) {
-		double value = start + step * double(i);
-		impl().scanProfile[nPatternId].pos[i] = static_cast<short int>(std::round(value));
-	}
-
-	if (!storeControlParameters())
-	{
-		LogDebug() << "Lso scanner control parameters failed to change!";
-		return false;
-	}
-
-	updateScannerStatus();
-	saveConfigToIniFile();
-	return true;
+	return false;
 }
 
-bool wso_device::LsoScanner::storeControlParameters(void)
+bool wso_device::LsoScanner::obtainCaptureParameters(int patternId, LsoScannerCaptureParam* param)
 {
-	auto* hbs = getMainBoard()->getHbsDataProfile();
-	auto* scanner = const_cast<HbsLsoScanner*>(hbs->getHbsLsoScanner());
-
-	auto& capture_status = scanner->lso_capture_status;
-	auto& scan_traj_profile = scanner->traj_profile;
-	
-	capture_status.ctrl_status = impl().ctrlStatus;
-	capture_status.acq_cnt = impl().acqCnt;
-
-	scan_traj_profile[0] = impl().scanProfile[0];
-	scan_traj_profile[1] = impl().scanProfile[1];
-
-	if (!hbs->saveLsoScannerParam())
-	{
-		LogDebug() << "Lso scanner control parameters failed to store!";
+	if (patternId < 0 || patternId >= LSO_SCANNER_PATTERN_NUM_MAX || param == nullptr) {
 		return false;
 	}
-	return true;
+
+	if (auto* data = impl().board->getHbsDataProfile(); data) {
+		if (data->loadLsoScannerParam()) {
+			if (auto* scan = data->getHbsLsoScanner(); scan) {
+				param->controlStatus = scan->lso_capture_status.ctrl_status; 
+				param->acquisitionCount = scan->lso_capture_status.acq_cnt;
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+bool wso_device::LsoScanner::submitCaptureParameters(int patternId, const LsoScannerCaptureParam* param)
+{
+	if (patternId < 0 || patternId >= LSO_SCANNER_PATTERN_NUM_MAX || param == nullptr) {
+		return false;
+	}
+
+	if (auto* data = impl().board->getHbsDataProfile(); data) {
+		if (auto* scan = const_cast<HbsLsoScanner*>(data->getHbsLsoScanner()); scan) {
+			scan->lso_capture_status.ctrl_status = param->controlStatus;
+			scan->lso_capture_status.acq_cnt = param->acquisitionCount;
+
+			if (data->saveLsoScannerParam()) {
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 bool wso_device::LsoScanner::controlYGalvoMove(int ypos)
 {
 	UsbComm& usbComm = getMainBoard()->getUsbComm();
 	if (!usbComm.LsoGalvanoMoveY(ypos)) {
-		LogDebug() << "Lso scanner, control y galvo move failed!";
+		LogD() << "Lso scanner, control y galvo move failed!";
 		return false;
 	}
-	LogDebug() << "Lso scanner, control y galvo moved to pos: " << ypos;
+	LogD() << "Lso scanner, control y galvo moved to pos: " << ypos;
 	return true;
 }
 
@@ -215,10 +222,10 @@ bool wso_device::LsoScanner::controlCapture(int nPatternId, int onOff)
 
 	UsbComm& usbComm = getMainBoard()->getUsbComm();
 	if (!usbComm.LsoScannerControl(nPatternId, onOff)) {
-		LogDebug() << "Lso scanner, control capture failed!";
+		LogD() << "Lso scanner, control capture failed!";
 		return false;
 	}
-	LogDebug() << "Lso scanner, capture switched: " << onOff;
+	LogD() << "Lso scanner, capture switched: " << onOff;
 	return true;
 }
 
@@ -230,10 +237,10 @@ bool wso_device::LsoScanner::controlTriggerMode(int onOff)
 
 	UsbComm& usbComm = getMainBoard()->getUsbComm();
 	if (!usbComm.LsoScannerTriggerControl(onOff)) {
-		LogDebug() << "Lso scanner, control trigger mode failed!";
+		LogD() << "Lso scanner, control trigger mode failed!";
 		return false;
 	}
-	LogDebug() << "Lso scanner, control trigger mode : " << onOff;
+	LogD() << "Lso scanner, control trigger mode : " << onOff;
 	return true;
 }
 
@@ -264,6 +271,7 @@ bool wso_device::LsoScanner::pauseGrabbing(int nPatternId)
 	return true;
 }
 
+/*
 bool wso_device::LsoScanner::loadConfigFromIniFile()
 {
 	bool bRet = false;
@@ -358,7 +366,28 @@ bool wso_device::LsoScanner::saveConfigToIniFile()
 
 	return bRet;
 }
+*/
 
+bool wso_device::LsoScanner::generateGalvanoPositions(short startPos, short endPos, int sampleSize, short* coords)
+{
+	if (sampleSize <= 0 || sampleSize >= LSO_SCANNER_SAMPLE_SIZE_MAX || coords == nullptr) {
+		return false;
+	}
+
+	// 구간 수 = N-1 (양 끝점을 모두 포함)
+	double delta = double(endPos - startPos);
+	double step = delta / double(sampleSize - 1);
+
+	std::fill_n(coords, (int)LSO_SCANNER_SAMPLE_SIZE_MAX, 0); // 전체 사이즈를 0으로 초기화
+
+	for (std::size_t i = 0; i < sampleSize; ++i) {
+		double value = startPos + step * double(i);
+		coords[i] = static_cast<short int>(std::round(value));
+	}
+	return true;
+}
+
+/*
 void wso_device::LsoScanner::calcGalvanoPos(int nPatternId, int nGalvanoSampleSize)
 {
 	size_t count = 0;
@@ -376,6 +405,7 @@ void wso_device::LsoScanner::calcGalvanoPos(int nPatternId, int nGalvanoSampleSi
 		impl().scanProfile[nPatternId].pos[i] = static_cast<short int>(std::round(value));
 	}
 }
+*/
 
 MainBoard* wso_device::LsoScanner::getMainBoard(void) const
 {
