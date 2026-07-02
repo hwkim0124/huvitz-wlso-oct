@@ -27,6 +27,8 @@ namespace WsoToolkit
             initSetting_();
         }
 
+        #region Scan Mode
+
         private void myBtStartScan_Click(object sender, RoutedEventArgs e)
         {
 
@@ -46,6 +48,15 @@ namespace WsoToolkit
             StartColorCameraOriginal();
         }
 
+        private void myBtStartColorCameraLive_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        #endregion Scan Mode
+
+        #region Setting 
+
         private void myBtSettingColorCamera_Click(object sender, RoutedEventArgs e)
         {
             var window = new ColorCameraSettingWindow
@@ -54,6 +65,10 @@ namespace WsoToolkit
             };
             window.ShowDialog();
         }
+
+        #endregion Setting 
+
+        #region LSO Scanner Setting
 
         private void myCbPatternID_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -115,5 +130,7 @@ namespace WsoToolkit
             applyScannerControlParam_(nPatternId);
             _scanTestModel.SaveConfigToIniFile();
         }
+
+        #endregion  LSO Scanner Setting
     }
 }

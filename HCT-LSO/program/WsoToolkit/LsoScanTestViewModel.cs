@@ -564,8 +564,38 @@ namespace WsoToolkit
             LsoScanProfileModel profile = _scanTestModel.GetScanProfile(nPatternId);
             profile.CalcGalvanoPositions();
 
+            // Color 패턴이라면 Color Camera에도 Exposure time을 동기화해야 한다.
+            if (nPatternId == (int)LsoScannerPatternId.COLOR && myCheckBoxUseSyncExposureTime.IsChecked == true)
+            {
+                LsoCamera.GetCameraParameters(out LsoColorCameraSettingParam tempCameraParam);
+
+                tempCameraParam.exposureTime = (uint)profile.ExposureTimeUs;
+                tempCameraParam.acquisitionFrameCount = calcAcquisitionFrameCount_(nPatternId);
+
+                // 1: Single Frame, 2: Multi Frame
+                tempCameraParam.acquisitionMode = tempCameraParam.acquisitionFrameCount == 1 ? 1u : 2u;
+
+                LsoCamera.SetCameraParameters(ref tempCameraParam);
+                _scanTestModel.ColorCamera.ApplySettingParam(tempCameraParam);
+            }
+
             LsoScannerControlParam param = profile.ToControlParam();
             return LsoScanner.SubmitLsoScannerControlParam(nPatternId, param);
+        }
+
+        private uint calcAcquisitionFrameCount_(int nPatternId)
+        {
+            LsoScanProfileModel profile = _scanTestModel.GetScanProfile(nPatternId);
+
+            uint nAcqFrameCount = profile.AcqFrameSize;
+            uint nSubFrameCount = profile.SubFrameSize;
+
+            if (nAcqFrameCount > 0 && nSubFrameCount > 0)
+            {
+                return nAcqFrameCount * nSubFrameCount;
+            }
+
+            return 0;
         }
 
         private void commitScanSettingTextBox_(TextBox? textbox)

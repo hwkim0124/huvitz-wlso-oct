@@ -84,6 +84,13 @@
                     <RowDefinition/>
                     <RowDefinition/>
                 </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Grid Grid.Row="0">
+                    <Button x:Name="myBtStartColorCameraLive" Style="{StaticResource ButtonM1Style}" Content="Start Color Live" HorizontalAlignment="Center" VerticalAlignment="Center" Click="myBtStartColorCameraLive_Click"/>
+                </Grid>
             </Grid>
             <Grid Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="2">
                 <GroupBox Header="Scan Setting">
