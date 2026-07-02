@@ -85,6 +85,110 @@
                     <RowDefinition/>
                 </Grid.RowDefinitions>
             </Grid>
+            <Grid Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="2">
+                <GroupBox Header="Scan Setting">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="130"/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <Grid Grid.Row="0" Grid.Column="0">
+                            <Label x:Name="myLbPatternID" Content="Pattern ID :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
+                        </Grid>
+                        <Grid Grid.Row="0" Grid.Column="1">
+                            <ComboBox x:Name="myCbPatternID" Style="{StaticResource ComboBoxStyle}" HorizontalAlignment="Center" SelectionChanged="myCbPatternID_SelectionChanged"/>
+                        </Grid>
+                        <Grid Grid.Row="1" Grid.Column="0">
+                            <Label x:Name="myLbTriggerSrc" Content="Trigger src :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
+                        </Grid>
+                        <Grid Grid.Row="1" Grid.Column="1">
+                            <ComboBox x:Name="myCbTriggerSrc" Style="{StaticResource ComboBoxStyle}" HorizontalAlignment="Center" SelectionChanged="myCbTriggerSrc_SelectionChanged"/>
+                        </Grid>
+                        <Grid Grid.Row="0" Grid.Column="3">
+                            <CheckBox x:Name="myCheckBoxFixedFrame" Content="Fixed Frame" Style="{StaticResource CheckBoxStyle}" HorizontalAlignment="Center" Checked="myCheckBoxFixedFrame_CheckedNUnchecked" Unchecked="myCheckBoxFixedFrame_CheckedNUnchecked"/>
+                        </Grid>
+                        <Grid Grid.Row="1" Grid.Column="3">
+                            <CheckBox x:Name="myCheckBoxUseSyncExposureTime" Content="Sync Exposure" Style="{StaticResource CheckBoxStyle}" HorizontalAlignment="Center" IsChecked="True"/>
+                        </Grid>
+                        <Grid Grid.Row="2" Grid.Column="0">
+                            <Label x:Name="myLbCameraTimeStep" Content="Time Step(us):" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
+                        </Grid>
+                        <Grid Grid.Row="2" Grid.Column="1">
+                            <TextBox x:Name="myTbCameraTimeStep" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
+                        </Grid>
+                        <Grid Grid.Row="2" Grid.Column="2">
+                            <Label x:Name="myLbCameraExposureTime" Content="Exposure Time(us):" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
+                        </Grid>
+                        <Grid Grid.Row="2" Grid.Column="3">
+                            <TextBox x:Name="myTbCameraExposureTime" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
+                        </Grid>
+                        <Grid Grid.Row="3" Grid.Column="0">
+                            <Label x:Name="myLbAcqFrame" Content="Acq Frame :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
+                        </Grid>
+                        <Grid Grid.Row="3" Grid.Column="1">
+                            <TextBox x:Name="myTbAcqFrame" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
+                        </Grid>
+                        <Grid Grid.Row="3" Grid.Column="2">
+                            <Label x:Name="myLbSubFrame" Content="Sub Frame Count :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
+                        </Grid>
+                        <Grid Grid.Row="3" Grid.Column="3">
+                            <TextBox x:Name="myTbSubFrame" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
+                        </Grid>
+                        <Grid Grid.Row="4" Grid.Column="0">
+                            <Label x:Name="myLbGalvoPatternSize" Content="Galvo. Pattern Size :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
+                        </Grid>
+                        <Grid Grid.Row="4" Grid.Column="1">
+                            <TextBox x:Name="myTbGalvoPatternSize" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
+                        </Grid>
+                        <Grid Grid.Row="5" Grid.Column="0">
+                            <Label x:Name="myLbLightIndexOn" Content="Light Index On :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
+                        </Grid>
+                        <Grid Grid.Row="5" Grid.Column="1">
+                            <TextBox x:Name="myTbLightIndexOn" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
+                        </Grid>
+                        <Grid Grid.Row="5" Grid.Column="2">
+                            <Label x:Name="myLbLightIndexOff" Content="Light Index Off :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
+                        </Grid>
+                        <Grid Grid.Row="5" Grid.Column="3">
+                            <TextBox x:Name="myTbLightIndexOff" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
+                        </Grid>
+                        <Grid Grid.Row="6" Grid.Column="0">
+                            <Label x:Name="myLbGalvoStartPos" Content="Galvo. Start Pos :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
+                        </Grid>
+                        <Grid Grid.Row="6" Grid.Column="1">
+                            <TextBox x:Name="myTbGalvoStartPos" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
+                        </Grid>
+                        <Grid Grid.Row="6" Grid.Column="2">
+                            <Label x:Name="myLbGalvoEndPos" Content="Galvo. End Pos :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
+                        </Grid>
+                        <Grid Grid.Row="6" Grid.Column="3">
+                            <TextBox x:Name="myTbGalvoEndPos" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
+                        </Grid>
+                        <Grid Grid.Row="7" Grid.Column="0">
+                            <Label x:Name="myLbGalvoRewindOffset" Content="Galvo. Rewind Offset :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
+                        </Grid>
+                        <Grid Grid.Row="7" Grid.Column="1">
+                            <TextBox x:Name="myTbGalvoRewindOffset" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
+                        </Grid>
+                        <Grid Grid.Row="8" Grid.Column="3">
+                            <Button x:Name="myBtApply" Content="Apply" Style="{StaticResource ButtonS1Style}" Click="myBtApply_Click"/>
+                        </Grid>
+                    </Grid>
+                </GroupBox>
+            </Grid>
         </Grid>
         <Grid Grid.Row="0" Grid.Column="3" Background="#E0E0E0"/>
     </Grid>

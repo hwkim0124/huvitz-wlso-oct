@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Threading;
 using WsoNativeLib;
 using WsoToolkit.utils;
@@ -10,6 +12,7 @@ using static WsoNativeLib.LsoCamera;
 using static WsoNativeLib.WsoLsoDefs;
 using static WsoNativeLib.WsoLsoScan;
 using static WsoToolkit.controls.LsoScanImagePreview;
+using static WsoToolkit.utils.NumberUtil;
 
 namespace WsoToolkit
 {
@@ -304,6 +307,7 @@ namespace WsoToolkit
 
         WsoCallback.ColorCameraImageCaptured _onColorCaptureImageCaptured;
 
+        #region Captrue - Review
         // Capture - Review
         private void readyToCapture_(PreviewDisplayMode mode)
         {
@@ -497,7 +501,126 @@ namespace WsoToolkit
             // Color Camera
             var paramColorCamera = _scanTestModel.ColorCamera.ToSettingParam();
             LsoCamera.SetCameraParameters(ref paramColorCamera);
+
+            // Scan Setting
+            initScannerControls_();
         }
+
+        #endregion Captrue - Review
+
+        #region Scan Setting
+
+        private bool _isUpdatingScannerControls;
+
+        private void initScannerControls_()
+        {
+            _isUpdatingScannerControls = true;
+
+            myCbPatternID.Items.Clear();
+            myCbPatternID.Items.Add("Color");
+            myCbPatternID.Items.Add("IR");
+
+            myCbTriggerSrc.Items.Clear();
+            myCbTriggerSrc.Items.Add("Color Camera");
+            myCbTriggerSrc.Items.Add("IR Camera");
+
+            myCbPatternID.SelectedIndex = 0;
+
+            _isUpdatingScannerControls = false;
+
+            updateScannerControls_();
+        }
+
+        private void updateScannerControls_()
+        {
+            int nPatternId = myCbPatternID.SelectedIndex;
+            if (nPatternId < 0)
+            {
+                return;
+            }
+
+            LsoScanProfileModel profile = _scanTestModel.GetScanProfile(nPatternId);
+
+            _isUpdatingScannerControls = true;
+
+            myCbTriggerSrc.SelectedIndex = profile.TriggerSource;
+            myCheckBoxFixedFrame.IsChecked = profile.AcquisitionMode != 0;
+            myTbCameraTimeStep.Text = profile.TimeStepUs.ToString();
+            myTbCameraExposureTime.Text = profile.ExposureTimeUs.ToString();
+            myTbAcqFrame.Text = profile.AcqFrameSize.ToString();
+            myTbSubFrame.Text = profile.SubFrameSize.ToString();
+            myTbGalvoPatternSize.Text = profile.GalvoPatternSize.ToString();
+            myTbLightIndexOn.Text = profile.LedOnPosIndex.ToString();
+            myTbLightIndexOff.Text = profile.LedOffPosIndex.ToString();
+            myTbGalvoStartPos.Text = profile.GalvoStartPos.ToString();
+            myTbGalvoEndPos.Text = profile.GalvoEndPos.ToString();
+            myTbGalvoRewindOffset.Text = profile.GalvanoRewindOffset.ToString();
+
+            _isUpdatingScannerControls = false;
+        }
+
+        private bool applyScannerControlParam_(int nPatternId)
+        {
+            LsoScanProfileModel profile = _scanTestModel.GetScanProfile(nPatternId);
+            profile.CalcGalvanoPositions();
+
+            LsoScannerControlParam param = profile.ToControlParam();
+            return LsoScanner.SubmitLsoScannerControlParam(nPatternId, param);
+        }
+
+        private void commitScanSettingTextBox_(TextBox? textbox)
+        {
+            if (_isUpdatingScannerControls || textbox == null)
+            {
+                return;
+            }
+
+            int nPatternId = myCbPatternID.SelectedIndex;
+            if (nPatternId < 0)
+            {
+                return;
+            }
+
+            LsoScanProfileModel profile = _scanTestModel.GetScanProfile(nPatternId);
+
+            switch (textbox.Name)
+            {
+                case "myTbCameraTimeStep":
+                    profile.TimeStepUs = ToFloat(textbox.Text);
+                    break;
+                case "myTbCameraExposureTime":
+                    profile.ExposureTimeUs = ToFloat(textbox.Text);
+                    break;
+                case "myTbAcqFrame":
+                    profile.AcqFrameSize = (uint)ToInt(textbox.Text);
+                    break;
+                case "myTbSubFrame":
+                    profile.SubFrameSize = ToUshort(textbox.Text);
+                    break;
+                case "myTbGalvoPatternSize":
+                    profile.GalvoPatternSize = ToUshort(textbox.Text);
+                    break;
+                case "myTbLightIndexOn":
+                    profile.LedOnPosIndex = ToUshort(textbox.Text);
+                    break;
+                case "myTbLightIndexOff":
+                    profile.LedOffPosIndex = ToUshort(textbox.Text);
+                    break;
+                case "myTbGalvoStartPos":
+                    profile.GalvoStartPos = ToShort(textbox.Text);
+                    break;
+                case "myTbGalvoEndPos":
+                    profile.GalvoEndPos = ToShort(textbox.Text);
+                    break;
+                case "myTbGalvoRewindOffset":
+                    profile.GalvanoRewindOffset = ToShort(textbox.Text);
+                    break;
+            }
+
+            applyScannerControlParam_(nPatternId);
+        }
+
+        #endregion Scan Setting
 
         #region Callbacks
         private void OnColorCameraCaptureFrameCaptured(IntPtr data, int width, int height, int frameCount, int totalFrameCount, int nFlipMode, int nPixelFormat, int nBytesPerPixel)

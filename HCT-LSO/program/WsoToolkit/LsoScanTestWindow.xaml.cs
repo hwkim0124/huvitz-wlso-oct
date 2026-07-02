@@ -10,6 +10,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using static WsoToolkit.controls.LsoScanImagePreview;
+using static WsoToolkit.utils.NumberUtil;
 
 namespace WsoToolkit
 {
@@ -52,6 +53,67 @@ namespace WsoToolkit
                 Owner = this
             };
             window.ShowDialog();
+        }
+
+        private void myCbPatternID_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_isUpdatingScannerControls)
+            {
+                return;
+            }
+
+            updateScannerControls_();
+        }
+
+        private void myCbTriggerSrc_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_isUpdatingScannerControls)
+            {
+                return;
+            }
+
+            int nPatternId = myCbPatternID.SelectedIndex;
+            _scanTestModel.GetScanProfile(nPatternId).TriggerSource = (ushort)myCbTriggerSrc.SelectedIndex;
+            applyScannerControlParam_(nPatternId);
+        }
+
+        private void myCheckBoxFixedFrame_CheckedNUnchecked(object sender, RoutedEventArgs e)
+        {
+            if (_isUpdatingScannerControls)
+            {
+                return;
+            }
+
+            int nPatternId = myCbPatternID.SelectedIndex;
+            _scanTestModel.GetScanProfile(nPatternId).AcquisitionMode = (ushort)(myCheckBoxFixedFrame.IsChecked == true ? 1 : 0);
+            applyScannerControlParam_(nPatternId);
+        }
+
+        private void myTbScanSettings_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Enter)
+            {
+                return;
+            }
+
+            commitScanSettingTextBox_(sender as TextBox);
+        }
+
+        private void myTbScanSettings_LostFocus(object sender, RoutedEventArgs e)
+        {
+            commitScanSettingTextBox_(sender as TextBox);
+        }
+
+        private void myBtApply_Click(object sender, RoutedEventArgs e)
+        {
+            int nPatternId = myCbPatternID.SelectedIndex;
+            if (nPatternId < 0)
+            {
+                return;
+            }
+
+            applyScannerControlParam_(nPatternId);
+            _scanTestModel.SaveConfigToIniFile();
         }
     }
 }
