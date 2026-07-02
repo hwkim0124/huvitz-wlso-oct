@@ -9,6 +9,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using WsoNativeLib;
 using static WsoToolkit.controls.LsoScanImagePreview;
 using static WsoToolkit.utils.NumberUtil;
 
@@ -152,5 +153,24 @@ namespace WsoToolkit
         }
 
         #endregion  LSO Scanner Setting
+
+        #region Galvano Move
+
+        private void myTbGalvanoYPos_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Enter)
+            {
+                return;
+            }
+
+            moveGalvanoPositionY_();
+        }
+
+        private void myBtGalvanoYPosMove_Click(object sender, RoutedEventArgs e)
+        {
+            moveGalvanoPositionY_();
+        }
+
+        #endregion Galvano Move
     }
 }

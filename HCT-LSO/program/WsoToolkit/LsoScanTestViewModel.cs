@@ -683,8 +683,29 @@ namespace WsoToolkit
 
         #endregion Scan Setting
 
+        #region Galvano Move
+
+        private void moveGalvanoPositionY_()
+        {
+            Mouse.OverrideCursor = Cursors.Wait;
+            try
+            {
+                int pos = ToInt(myTbGalvanoYPos.Text);
+                if (!LsoScanner.MoveLsoScannerYposition(pos))
+                {
+                    MessageBox.Show("Move galvano position Y failed!");
+                }
+            }
+            finally
+            {
+                Mouse.OverrideCursor = null;
+            }
+        }
+
+        #endregion Galvano Move
+
         #region Callbacks
-        
+
         // Color Live 
         private void OnColorCameraFrameCaptured(IntPtr data, int width, int height, int frameCount, int nFlipMode, int nPixelFormat, int nBytesPerPixel)
         {

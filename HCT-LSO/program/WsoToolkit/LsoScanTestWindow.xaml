@@ -22,7 +22,7 @@
             <controls:CorneaCameraPreview x:Name="corneaPreview2" Width="384" Height="328"/>
             <controls:CorneaCameraPreview x:Name="corneaPreview3" Width="384" Height="328"/>
         </StackPanel>
-        <Grid Grid.Row="0" Grid.Column="1" Background="#E0E0E0"/>
+        <!--<Grid Grid.Row="0" Grid.Column="1" Background="#E0E0E0"/>-->
         <Grid Grid.Row="0" Grid.Column="2">
             <Grid.RowDefinitions>
                 <RowDefinition/>
@@ -92,7 +92,7 @@
                     </Grid>
                 </GroupBox>-->
             </Grid>
-            <Grid Grid.Row="2" Grid.Column="3" Margin="5">
+            <Grid Grid.Row="0" Grid.Column="3" Margin="5">
                 <GroupBox Header="Setting">
                     <Grid>
                         <Grid.RowDefinitions>
@@ -119,6 +119,26 @@
                         </Grid>
                     </Grid>
                 </GroupBox>
+            </Grid>
+            <Grid Grid.Row="2" Grid.Column="3" Margin="5">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0">
+                    <GroupBox Header="Galvano" VerticalAlignment="Top">
+                        <StackPanel Orientation="Horizontal">
+                            <Label Content="Galvano.Y Pos :" Style="{StaticResource LabelStyle}"/>
+                            <TextBox x:Name="myTbGalvanoYPos" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbGalvanoYPos_KeyDown"/>
+                            <Button x:Name="myBtGalvanoYPosMove" Content="Move" Style="{StaticResource ButtonS1Style}" Margin="8,0,0,0" Click="myBtGalvanoYPosMove_Click"/>
+                        </StackPanel>
+                    </GroupBox>
+                </Grid>
+                <Grid Grid.Row="1" Grid.RowSpan="3">
+                    
+                </Grid>
             </Grid>
             <Grid Grid.Row="3" Grid.Column="0">
                 <Grid.RowDefinitions>
@@ -261,6 +281,6 @@
                 </GroupBox>
             </Grid>
         </Grid>
-        <Grid Grid.Row="0" Grid.Column="3" Background="#E0E0E0"/>
+        <!--<Grid Grid.Row="0" Grid.Column="3" Background="#E0E0E0"/>-->
     </Grid>
 </Window>
