@@ -40,6 +40,25 @@
             <Grid Grid.Row="0" Grid.Column="0" Grid.RowSpan="3" Grid.ColumnSpan="3">
                 <controls:LsoScanImagePreview x:Name="myColorPreview" Width="750" Height="740" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Grid>
+            <Grid Grid.Row="2" Grid.Column="3" Margin="5">
+                <GroupBox Header="Setting">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <Grid Grid.Row="0">
+                            <Button x:Name="myBtSettingColorCamera" Style="{StaticResource ButtonM1Style}" Content="Color Camera" HorizontalAlignment="Center" VerticalAlignment="Center" Click="myBtSettingColorCamera_Click"/>
+                        </Grid>
+                    </Grid>
+                </GroupBox>
+            </Grid>
             <Grid Grid.Row="3" Grid.Column="0">
                 <Grid.RowDefinitions>
                     <RowDefinition/>
@@ -47,8 +66,15 @@
                     <RowDefinition/>
                     <RowDefinition/>
                 </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
                 <Grid Grid.Row="0">
                     <Button x:Name="myBtStartScan" Style="{StaticResource ButtonM1Style}" Content="Start Scan" HorizontalAlignment="Center" VerticalAlignment="Center" Click="myBtStartScan_Click"/>
+                </Grid>
+                <Grid Grid.Row="0" Grid.Column="1">
+                    <Button x:Name="myBtCapture" Style="{StaticResource ButtonM1Style}" Content="Capture" HorizontalAlignment="Center" VerticalAlignment="Center" Click="myBtCapture_Click"/>
                 </Grid>
             </Grid>
             <Grid Grid.Row="3" Grid.Column="1">
@@ -58,9 +84,6 @@
                     <RowDefinition/>
                     <RowDefinition/>
                 </Grid.RowDefinitions>
-                <Grid Grid.Row="0">
-                    <Button x:Name="myBtCapture" Style="{StaticResource ButtonM1Style}" Content="Capture" HorizontalAlignment="Center" VerticalAlignment="Center" Click="myBtCapture_Click"/>
-                </Grid>
             </Grid>
         </Grid>
         <Grid Grid.Row="0" Grid.Column="3" Background="#E0E0E0"/>

@@ -27,6 +27,15 @@ namespace WsoToolkit.utils
             return 0;
         }
 
+        public static uint ToUInt(string str)
+        {
+            if (uint.TryParse(str, out uint result))
+            {
+                return result;
+            }
+            return 0;
+        }
+
         public static double ToDouble(string str)
         {
             if (double.TryParse(str, out double result))

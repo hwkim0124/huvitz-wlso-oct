@@ -3797,7 +3797,6 @@ namespace WsoToolkit.controls
             // 3) 스레드 안전하게 교체
             lock (_matLock)
             {
-                //makeReviewImage(mat, nPixelFormat);
                 makeReviewImage(ref _captureImageList, mat, nPixelFormat);
             }
 

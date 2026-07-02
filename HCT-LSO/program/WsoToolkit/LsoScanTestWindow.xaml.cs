@@ -44,5 +44,14 @@ namespace WsoToolkit
 
             StartColorCameraOriginal();
         }
+
+        private void myBtSettingColorCamera_Click(object sender, RoutedEventArgs e)
+        {
+            var window = new ColorCameraSettingWindow
+            {
+                Owner = this
+            };
+            window.ShowDialog();
+        }
     }
 }
