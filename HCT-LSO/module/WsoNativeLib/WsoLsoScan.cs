@@ -15,6 +15,7 @@ namespace WsoNativeLib
         ////////////////////////////////////////////////////////////////////////////////////////////
         public const int LSO_SCANNER_SAMPLE_SIZE_MAX = 8192;
         public const int LSO_SCANNER_PATTERN_NUM_MAX = 8;
+        public const int LSO_CAPTURE_FRAME_ROI_MAX = 255;
 
 
         // Structure Definitions
@@ -47,7 +48,7 @@ namespace WsoNativeLib
         }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-        public struct LsoColorCameraParam
+        public struct LsoColorCameraSettingParam
         {
             public uint roiMaxWidth;
             public uint roiMaxHeight;
@@ -63,6 +64,65 @@ namespace WsoNativeLib
             public uint binningVertical;
             public float gain;
             public uint adcDepthIndex;
+        }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+        public struct LsoCaptureFrameROI
+        {
+            public int width;
+            public int height;
+            public int offsetX;
+            public int offsetY;
+            public int startY;
+            public int endY ;
+        }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+        public struct LsoCaptureFrameSeqROIPreset
+        {
+            public int frameCount;
+            public LsoCaptureFrameROI[] frameROIs;
+
+            public LsoCaptureFrameSeqROIPreset()
+            {
+                frameCount = 0;
+                frameROIs = new LsoCaptureFrameROI[LSO_CAPTURE_FRAME_ROI_MAX];
+            }
+        }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+        public struct LsoCaptureFrameOffsetROIPreset
+        {
+            public int frameCount;
+            public int roiWidth;
+            public int roiHeight;
+            public LsoCaptureFrameROI[] frameROIs;
+
+            public LsoCaptureFrameOffsetROIPreset()
+            {
+                frameCount = 0;
+                roiWidth = 0;
+                roiHeight = 0;
+                frameROIs = new LsoCaptureFrameROI[LSO_CAPTURE_FRAME_ROI_MAX];
+            }
+        }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+        public struct LsoCaptureFrameRollSwTrigOverlap
+        {
+            public int frameWidth ;
+            public int frameHeight;
+            public int offsetX ;
+            public int offsetY ;
+            public int overlapFrameCount ;
+            public int triggerIntervalMs ;
+            public int brightness ;
+        }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+        public struct LsoCaptureFrameRollSwTrigOverlapPreset
+        {
+            public LsoCaptureFrameRollSwTrigOverlap overlap;
         }
     }
 }   

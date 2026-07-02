@@ -34,7 +34,25 @@ namespace WsoNativeLib
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         public delegate void CorneaCameraFrameCaptured(nint data, int width, int height);
 
-        
+
+        // Color Camera
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate void ColorCameraFrameCaptured(IntPtr data, int width, int height, int frameCount, int flipMode, int nPixelFormat, int nBytesPerPixel);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate void ColorCameraSeqROIFrameCaptured(IntPtr data, int width, int height, int offsetX, int offsetY, int frameCount, int totalframeCount, int flipMode, int nPixelFormat, int nBytesPerPixel);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate void ColorCameraOffsetROIFrameCaptured(IntPtr data, int width, int height, int offsetX, int offsetY, int frameCount, int totalframeCount, int flipMode, int nPixelFormat, int nBytesPerPixel);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate void ColorCameraRollSwTrigOverlapFrameCaptured(IntPtr data, int width, int height, int frameCount, int totalframeCount, int flipMode, int nPixelFormat, int nBytesPerPixel);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate void ColorCameraImageCaptured(IntPtr data, int width, int height, int frameCount, int totalFrameCount, int flipMode, int nPixelFormat, int nBytesPerPixel);
+
+
         // OCT Scanning 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
