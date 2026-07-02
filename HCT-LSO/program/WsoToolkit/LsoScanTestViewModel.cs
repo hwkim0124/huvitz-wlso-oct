@@ -18,6 +18,7 @@ namespace WsoToolkit
         public const string DefaultConfigIniPath = ".//WsoDeviceCfg.ini";
         public LsoScanProfileModel ScanProfile0 { get; } = new LsoScanProfileModel();
         public LsoScanProfileModel ScanProfile1 { get; } = new LsoScanProfileModel();
+        public LsoColorCameraModel ColorCamera { get; } = new LsoColorCameraModel();
         public LsoScanProfileModel GetScanProfile(int patternId)
         {
             return patternId switch
@@ -35,6 +36,7 @@ namespace WsoToolkit
                 var ini = new IniFileUtil(configIniPath ?? DefaultConfigIniPath);
                 ScanProfile0.LoadFromIni(ini, 0);
                 ScanProfile1.LoadFromIni(ini, 1);
+                ColorCamera.LoadFromIni(ini);
                 return true;
             }
             catch (Exception)
@@ -50,6 +52,7 @@ namespace WsoToolkit
                 var ini = new IniFileUtil(configIniPath ?? DefaultConfigIniPath);
                 ScanProfile0.SaveToIni(ini, 0);
                 ScanProfile1.SaveToIni(ini, 1);
+                ColorCamera.SaveToIni(ini);
                 return true;
             }
             catch (Exception)
@@ -192,6 +195,106 @@ namespace WsoToolkit
             GalvoEndPos = param.yGalvoEndPos;
 
             CalcGalvanoPositions();
+        }
+    }
+
+    public sealed class LsoColorCameraModel
+    {
+        public const string IniSectionName = "COLOR_CAMERA";
+
+        public uint RoiXWidth { get; set; }
+
+        public uint RoiYHeight { get; set; }
+
+        public uint RoiXOffset { get; set; }
+
+        public uint RoiYOffset { get; set; }
+
+        public uint ExposureTime { get; set; }
+
+        public uint AcquisitionMode { get; set; }
+
+        public uint AcquisitionFrameCount { get; set; }
+
+        public uint PixelFormat { get; set; }
+
+        public float Gain { get; set; }
+
+        public uint AdcDepthIndex { get; set; }
+
+        internal void LoadFromIni(IniFileUtil ini)
+        {
+            RoiXWidth = ini.ReadUInt(IniSectionName, "RoiXWidth");
+            RoiYHeight = ini.ReadUInt(IniSectionName, "RoiYHeight");
+            RoiXOffset = ini.ReadUInt(IniSectionName, "RoiXOffset");
+            RoiYOffset = ini.ReadUInt(IniSectionName, "RoiYOffset");
+            ExposureTime = ini.ReadUInt(IniSectionName, "ExposureTime");
+            AcquisitionMode = ini.ReadUInt(IniSectionName, "AcqusitionMode");
+            AcquisitionFrameCount = ini.ReadUInt(IniSectionName, "AcqusitionFrameCount");
+            PixelFormat = ini.ReadUInt(IniSectionName, "PixelFormat");
+            Gain = ini.ReadFloat(IniSectionName, "Gain");
+            AdcDepthIndex = ini.ReadUInt(IniSectionName, "AdcDepth");
+        }
+
+        internal void SaveToIni(IniFileUtil ini)
+        {
+            ini.WriteInt(IniSectionName, "RoiXWidth", (int)RoiXWidth);
+            ini.WriteInt(IniSectionName, "RoiYHeight", (int)RoiYHeight);
+            ini.WriteInt(IniSectionName, "RoiXOffset", (int)RoiXOffset);
+            ini.WriteInt(IniSectionName, "RoiYOffset", (int)RoiYOffset);
+            ini.WriteInt(IniSectionName, "ExposureTime", (int)ExposureTime);
+            ini.WriteInt(IniSectionName, "AcqusitionMode", (int)AcquisitionMode);
+            ini.WriteInt(IniSectionName, "AcqusitionFrameCount", (int)AcquisitionFrameCount);
+            ini.WriteInt(IniSectionName, "PixelFormat", (int)PixelFormat);
+            ini.WriteFloat(IniSectionName, "Gain", Gain);
+            ini.WriteInt(IniSectionName, "AdcDepth", (int)AdcDepthIndex);
+        }
+
+        public LsoColorCameraSettingParam ToSettingParam()
+        {
+            return new LsoColorCameraSettingParam
+            {
+                roiXWidth = RoiXWidth,
+                roiYHeight = RoiYHeight,
+                roiXOffset = RoiXOffset,
+                roiYOffset = RoiYOffset,
+                exposureTime = ExposureTime,
+                acquisitionMode = AcquisitionMode,
+                acquisitionFrameCount = AcquisitionFrameCount,
+                pixelFormat = PixelFormat,
+                gain = Gain,
+                adcDepthIndex = AdcDepthIndex,
+            };
+        }
+
+        public LsoColorCameraSettingParam ToSettingParam(LsoColorCameraSettingParam baseParam)
+        {
+            LsoColorCameraSettingParam param = baseParam;
+            param.roiXWidth = RoiXWidth;
+            param.roiYHeight = RoiYHeight;
+            param.roiXOffset = RoiXOffset;
+            param.roiYOffset = RoiYOffset;
+            param.exposureTime = ExposureTime;
+            param.acquisitionMode = AcquisitionMode;
+            param.acquisitionFrameCount = AcquisitionFrameCount;
+            param.pixelFormat = PixelFormat;
+            param.gain = Gain;
+            param.adcDepthIndex = AdcDepthIndex;
+            return param;
+        }
+
+        public void ApplySettingParam(LsoColorCameraSettingParam param)
+        {
+            RoiXWidth = param.roiXWidth;
+            RoiYHeight = param.roiYHeight;
+            RoiXOffset = param.roiXOffset;
+            RoiYOffset = param.roiYOffset;
+            ExposureTime = param.exposureTime;
+            AcquisitionMode = param.acquisitionMode;
+            AcquisitionFrameCount = param.acquisitionFrameCount;
+            PixelFormat = param.pixelFormat;
+            Gain = param.gain;
+            AdcDepthIndex = param.adcDepthIndex;
         }
     }
 
@@ -381,12 +484,22 @@ namespace WsoToolkit
             LsoCamera.StartOriginalMode(_onColorCaptureImageCaptured);
         }
 
-        public void initCallbacks_()
+        private void initCallbacks_()
         {
             _onColorCaptureImageCaptured = new WsoCallback.ColorCameraImageCaptured(this.OnColorCameraCaptureFrameCaptured);
         }
 
-        //Callbacks///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        private void initSetting_()
+        {
+            // Load INI
+            _scanTestModel.LoadConfigFromIniFile();
+
+            // Color Camera
+            var paramColorCamera = _scanTestModel.ColorCamera.ToSettingParam();
+            LsoCamera.SetCameraParameters(ref paramColorCamera);
+        }
+
+        #region Callbacks
         private void OnColorCameraCaptureFrameCaptured(IntPtr data, int width, int height, int frameCount, int totalFrameCount, int nFlipMode, int nPixelFormat, int nBytesPerPixel)
         {
             int totalBytes = width * height * nBytesPerPixel;
@@ -409,5 +522,6 @@ namespace WsoToolkit
             }
             return;
         }
+        #endregion Callbacks
     }
 }

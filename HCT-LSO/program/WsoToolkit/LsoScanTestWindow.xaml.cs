@@ -22,8 +22,8 @@ namespace WsoToolkit
         {
             InitializeComponent();
 
-            _scanTestModel.LoadConfigFromIniFile();
             initCallbacks_();
+            initSetting_();
         }
 
         private void myBtStartScan_Click(object sender, RoutedEventArgs e)
