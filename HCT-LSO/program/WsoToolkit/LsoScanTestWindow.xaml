@@ -6,7 +6,7 @@
         xmlns:controls="clr-namespace:WsoToolkit.controls"
         xmlns:local="clr-namespace:WsoToolkit"
         mc:Ignorable="d"
-        Title="Lso Scan Test" Height="1060" Width="1920" ResizeMode="NoResize" WindowStartupLocation="Manual" Left="1" Top="1">
+        Title="Lso Scan Test" Height="1060" Width="1920" ResizeMode="NoResize" WindowStartupLocation="Manual" Left="1" Top="1" Closed="Window_Closed">
     <Grid Margin="12,12,12,12">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
@@ -14,7 +14,7 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="392"/>
             <ColumnDefinition Width="8"/>
-            <ColumnDefinition Width="1028"/>
+            <ColumnDefinition Width="1200"/>
             <ColumnDefinition Width="8"/>
         </Grid.ColumnDefinitions>
         <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Vertical">
@@ -37,7 +37,7 @@
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
             <Grid Grid.Row="0" Grid.Column="0" Grid.RowSpan="3" Grid.ColumnSpan="3">
-                <controls:LsoScanImagePreview x:Name="myColorPreview" Width="750" Height="740" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <controls:LsoScanImagePreview x:Name="myColorPreview" Width="850" Height="740" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Grid>
             <!--fixation Group-->
             <Grid Grid.Row="1" Grid.Column="3">
@@ -127,7 +127,7 @@
                     <RowDefinition/>
                     <RowDefinition/>
                 </Grid.RowDefinitions>
-                <Grid Grid.Row="0">
+                <Grid Grid.Row="1">
                     <GroupBox Header="Galvano" VerticalAlignment="Top">
                         <StackPanel Orientation="Horizontal">
                             <Label Content="Galvano.Y Pos :" Style="{StaticResource LabelStyle}"/>
@@ -136,8 +136,31 @@
                         </StackPanel>
                     </GroupBox>
                 </Grid>
-                <Grid Grid.Row="1" Grid.RowSpan="3">
-                    
+                <Grid Grid.Row="2" Grid.RowSpan="2">
+                    <GroupBox Header="LSO Focus Motor">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                                <ColumnDefinition/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                            </Grid.RowDefinitions>
+                            <Label x:Name="myLbLsoFocusMin" Grid.Row="0" Grid.Column="0" Content="" Style="{StaticResource LabelStyle}"/>
+                            <Slider x:Name="mySliderLsoFocus" Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" VerticalAlignment="Center" TickFrequency="1" LargeChange="3" SmallChange="3" IsSnapToTickEnabled="True" AutoToolTipPlacement="BottomRight" Thumb.DragStarted="mySliderLsoFocus_DragStarted" Thumb.DragCompleted="mySliderLsoFocus_DragCompleted" ValueChanged="mySliderLsoFocus_ValueChanged"/>
+                            <Label x:Name="myLbLsoFocusMax" Grid.Row="0" Grid.Column="3" Content="" Style="{StaticResource LabelStyle}"/>
+                            <TextBox x:Name="myTbLsoFocusPos" Grid.Row="0" Grid.Column="4" Style="{StaticResource TextBoxS1Style}" Width="45" ToolTip="Pos" KeyDown="myTbLsoFocusPos_KeyDown"/>
+                            <TextBox x:Name="myTbLsoFocusValue" Grid.Row="0" Grid.Column="5" Style="{StaticResource TextBoxS1Style}" Width="45" ToolTip="Diopter" KeyDown="myTbLsoFocusValue_KeyDown"/>
+                            <Button x:Name="myBtLsoFocusBwd" Grid.Row="1" Grid.Column="3" Content="-1D" Style="{StaticResource ButtonS1Style}" Width="45" Click="myBtLsoFocusBwd_Click"/>
+                            <Button x:Name="myBtLsoFocusFwd" Grid.Row="1" Grid.Column="4" Content="+1D" Style="{StaticResource ButtonS1Style}" Width="45" Click="myBtLsoFocusFwd_Click"/>
+                            <Button x:Name="myBtLsoFocusZero" Grid.Row="1" Grid.Column="5" Content="0D" Style="{StaticResource ButtonS1Style}" Width="45" Click="myBtLsoFocusZero_Click"/>
+                        </Grid>
+                    </GroupBox>
                 </Grid>
             </Grid>
             <Grid Grid.Row="3" Grid.Column="0">

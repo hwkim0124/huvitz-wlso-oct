@@ -9,7 +9,9 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 using WsoNativeLib;
+using static WsoNativeLib.WsoDevice;
 using static WsoToolkit.controls.LsoScanImagePreview;
 using static WsoToolkit.utils.NumberUtil;
 
@@ -26,6 +28,12 @@ namespace WsoToolkit
 
             initCallbacks_();
             initSetting_();
+            initLsoFocusMotor_();
+        }
+
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            releaseLsoFocusMotor_();
         }
 
         #region Scan Mode
@@ -172,5 +180,134 @@ namespace WsoToolkit
         }
 
         #endregion Galvano Move
+
+        #region LSO Focus Motor
+
+        private StepMotorStatus _lsoFocusMotorStatus = new();
+
+        private StepMotorPositionChanged _onLsoFocusPositionChanged;
+
+        // 콜백에서 슬라이더 값을 갱신할 때 발생하는 ValueChanged가 모터를 다시 이동시키는 것을 막는 플래그.
+        private bool _isLsoFocusSliderDragging;
+        private bool _isLsoFocusPositionChanged;
+
+        private void initLsoFocusMotor_()
+        {
+            DeviceMotors.FetchStepMotorStatus(MotorType.LsoFocus, out _lsoFocusMotorStatus);
+
+            mySliderLsoFocus.Minimum = _lsoFocusMotorStatus.rangeMin;
+            mySliderLsoFocus.Maximum = _lsoFocusMotorStatus.rangeMax;
+            mySliderLsoFocus.TickFrequency = 100;
+
+            myLbLsoFocusMin.Content = _lsoFocusMotorStatus.rangeMin.ToString();
+            myLbLsoFocusMax.Content = _lsoFocusMotorStatus.rangeMax.ToString();
+
+            _onLsoFocusPositionChanged = new StepMotorPositionChanged(this.OnLsoFocusPositionChanged);
+            DeviceMotors.ConnectStepMotorPositionChanged(MotorType.LsoFocus, _onLsoFocusPositionChanged);
+
+            DeviceMotors.MoveStepMotorPosition(MotorType.LsoFocus, _lsoFocusMotorStatus.currPos);
+        }
+
+        private void releaseLsoFocusMotor_()
+        {
+            DeviceMotors.ReleaseStepMotorPositionChanged(MotorType.LsoFocus);
+        }
+
+        private void OnLsoFocusPositionChanged(int pos, float value)
+        {
+            Dispatcher.BeginInvoke(() =>
+            {
+                myTbLsoFocusPos.Text = pos.ToString();
+                myTbLsoFocusValue.Text = value.ToString("N1");
+
+                if (pos != mySliderLsoFocus.Value)
+                {
+                    mySliderLsoFocus.Value = pos;
+                    _isLsoFocusPositionChanged = true;
+                }
+            }, DispatcherPriority.Normal);
+        }
+
+        private void mySliderLsoFocus_DragStarted(object sender, System.Windows.Controls.Primitives.DragStartedEventArgs e)
+        {
+            _isLsoFocusSliderDragging = true;
+        }
+
+        private void mySliderLsoFocus_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+        {
+            _isLsoFocusSliderDragging = false;
+            DeviceMotors.MoveStepMotorPositionAsync(MotorType.LsoFocus, (int)mySliderLsoFocus.Value);
+        }
+
+        private void mySliderLsoFocus_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (!_isLsoFocusSliderDragging && !_isLsoFocusPositionChanged)
+            {
+                DeviceMotors.MoveStepMotorPositionAsync(MotorType.LsoFocus, (int)mySliderLsoFocus.Value);
+            }
+            _isLsoFocusPositionChanged = false;
+        }
+
+        private void myTbLsoFocusPos_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Enter)
+            {
+                return;
+            }
+
+            int value = ToInt(myTbLsoFocusPos.Text);
+            DeviceMotors.MoveStepMotorPositionAsync(MotorType.LsoFocus, value);
+        }
+
+        private void myTbLsoFocusValue_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Enter)
+            {
+                return;
+            }
+
+            double diopter = ToFloat(myTbLsoFocusValue.Text);
+            DeviceMotors.MoveStepMotorPositionAsync(MotorType.LsoFocus, mapLsoFocusValueToPosition_(diopter));
+        }
+
+        private void myBtLsoFocusBwd_Click(object sender, RoutedEventArgs e)
+        {
+            double diopter = ToFloat(myTbLsoFocusValue.Text) - 1.0;
+            DeviceMotors.MoveStepMotorPositionAsync(MotorType.LsoFocus, mapLsoFocusValueToPosition_(diopter));
+        }
+
+        private void myBtLsoFocusFwd_Click(object sender, RoutedEventArgs e)
+        {
+            double diopter = ToFloat(myTbLsoFocusValue.Text) + 1.0;
+            DeviceMotors.MoveStepMotorPositionAsync(MotorType.LsoFocus, mapLsoFocusValueToPosition_(diopter));
+        }
+
+        private void myBtLsoFocusZero_Click(object sender, RoutedEventArgs e)
+        {
+            DeviceMotors.MoveStepMotorPositionAsync(MotorType.LsoFocus, mapLsoFocusValueToPosition_(0.0));
+        }
+
+        // 디옵터 값을 모터 위치로 선형 변환한다. (rangeMinValue~rangeMaxValue -> rangeMin~rangeMax)
+        private int mapLsoFocusValueToPosition_(double diopter)
+        {
+            return (int)mappingRangeToValue_(
+                diopter,
+                _lsoFocusMotorStatus.rangeMinValue, _lsoFocusMotorStatus.rangeMaxValue,
+                _lsoFocusMotorStatus.rangeMin, _lsoFocusMotorStatus.rangeMax);
+        }
+
+        private static double mappingRangeToValue_(double x, double fromMin, double fromMax, double toMin, double toMax)
+        {
+            if (Math.Abs(fromMax - fromMin) < double.Epsilon)
+            {
+                return toMin;
+            }
+
+            double normalized = (x - fromMin) / (fromMax - fromMin);
+            double mapped = normalized * (toMax - toMin) + toMin;
+            return Math.Round(mapped, 2);
+        }
+
+        #endregion LSO Focus Motor
     }
 }
