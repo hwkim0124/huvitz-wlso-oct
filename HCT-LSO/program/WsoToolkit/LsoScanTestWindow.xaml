@@ -40,7 +40,28 @@
             <Grid Grid.Row="0" Grid.Column="0" Grid.RowSpan="3" Grid.ColumnSpan="3">
                 <controls:LsoScanImagePreview x:Name="myColorPreview" Width="750" Height="740" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Grid>
-            <!--<Button x:Name="myBtStartScan" Content="Start Scan" HorizontalAlignment="Left" Margin="20,21,0,0" Grid.Row="3" VerticalAlignment="Top" Width="108" Height="33" Click="myBtStartScan_Click"/>-->
+            <Grid Grid.Row="3" Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0">
+                    <Button x:Name="myBtStartScan" Style="{StaticResource ButtonM1Style}" Content="Start Scan" HorizontalAlignment="Center" VerticalAlignment="Center" Click="myBtStartScan_Click"/>
+                </Grid>
+            </Grid>
+            <Grid Grid.Row="3" Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0">
+                    <Button x:Name="myBtCapture" Style="{StaticResource ButtonM1Style}" Content="Capture" HorizontalAlignment="Center" VerticalAlignment="Center" Click="myBtCapture_Click"/>
+                </Grid>
+            </Grid>
         </Grid>
         <Grid Grid.Row="0" Grid.Column="3" Background="#E0E0E0"/>
     </Grid>

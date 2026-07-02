@@ -9,6 +9,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using static WsoToolkit.controls.LsoScanImagePreview;
 
 namespace WsoToolkit
 {
@@ -20,6 +21,27 @@ namespace WsoToolkit
         public LsoScanTestWindow()
         {
             InitializeComponent();
+
+            _scanTestModel.LoadConfigFromIniFile();
+        }
+
+        private void myBtStartScan_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void myBtCapture_Click(object sender, RoutedEventArgs e)
+        {
+            //if (IsRetinaCameraPreviewing())
+            //{
+            //    CloseRetinaCameraPreview();
+            //    closeCorneaCameraPreview_();
+            //    myBtStartScan.Content = "Start Scan";
+            //}
+
+            readyToCapture_(PreviewDisplayMode.REVIEW);
+
+            StartColorCameraOriginal();
         }
     }
 }

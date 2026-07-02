@@ -67,16 +67,16 @@ namespace WsoToolkit.controls
         //public int DivideLine = 0;
 
         //// Review Mode
-        //public bool IsReviewMode { get; set; } = true;
-        //List<Mat> _captureImageList = new List<Mat>();
+        public bool IsReviewMode { get; set; } = true;
+        List<Mat> _captureImageList = new List<Mat>();
         //List<Tuple<Mat, ImageAdjustParam>> _captureImageAndParamList = new();
 
         //// Review Slice Mode
         //public bool IsReviewSliceMode { get; set; } = false;
         //List<Mat> _captureSliceImageList = new List<Mat>();
         //List<List<Tuple<Mat, ImageAdjustParam>>> _captureSliceAcqImageList = new List<List<Tuple<Mat, ImageAdjustParam>>>();
-        //public int AcqFrameCount = 0;
-        //public int SubFrameCount = 0;
+        public int AcqFrameCount = 0;
+        public int SubFrameCount = 0;
 
         //// Review ROI Mode
         //public bool IsReviewROIMode { get; set; } = false;
@@ -491,15 +491,15 @@ namespace WsoToolkit.controls
         //    IsReviewSliceMode = false;
         //}
 
-        //public void ClearReviewImages()
-        //{
-        //    _captureImageList.Clear();
-        //    _captureSliceImageList.Clear();
-        //    _captureSliceAcqImageList.Clear();
+        public void ClearReviewImages()
+        {
+            _captureImageList.Clear();
+            //_captureSliceImageList.Clear();
+            //_captureSliceAcqImageList.Clear();
 
-        //    _captureImageAndParamList.Clear();
-        //    _captureShootImageList.Clear();
-        //}
+            //_captureImageAndParamList.Clear();
+            //_captureShootImageList.Clear();
+        }
 
         //public void makeReviewImage(Mat originMat, int nPixelFormat)
         //{
