@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Windows;
@@ -13,11 +13,11 @@ using System.Windows.Shapes;
 namespace WsoToolkit
 {
     /// <summary>
-    /// Interaction logic for LsoScanModeWindow.xaml
+    /// Interaction logic for LsoScanTestWindow.xaml
     /// </summary>
-    public partial class LsoScanModeWindow : Window
+    public partial class LsoScanTestWindow : Window
     {
-        public LsoScanModeWindow()
+        public LsoScanTestWindow()
         {
             InitializeComponent();
         }

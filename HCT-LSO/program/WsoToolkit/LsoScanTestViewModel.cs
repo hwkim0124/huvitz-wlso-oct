@@ -4,7 +4,8 @@ using System.Text;
 
 namespace WsoToolkit
 {
-    internal class LsoScanModeViewModel
+    public partial class LsoScanTestWindow
     {
+
     }
 }

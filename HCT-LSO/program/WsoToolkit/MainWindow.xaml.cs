@@ -104,7 +104,7 @@ namespace WsoToolkit
 
         private void BtnSloScanMode_Click(object sender, RoutedEventArgs e)
         {
-            var window = new LsoScanModeWindow
+            var window = new LsoScanTestWindow
             {
                 Owner = this
             };
