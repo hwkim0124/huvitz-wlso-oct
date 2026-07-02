@@ -93,22 +93,16 @@ namespace WsoToolkit
 
         private void BtnSloScanTest_Click(object sender, RoutedEventArgs e)
         {
-            /*
-            var window = new SloScanTestWindow
-            {
-                Owner = this
-            };
-            window.ShowDialog();
-            */
-        }
-
-        private void BtnSloScanMode_Click(object sender, RoutedEventArgs e)
-        {
             var window = new LsoScanTestWindow
             {
                 Owner = this
             };
-            window.ShowDialog();            
+            window.ShowDialog();
+        }
+
+        private void BtnSloScanMode_Click(object sender, RoutedEventArgs e)
+        {
+          
         }
 
         private void btnOctScanMode_Click(object sender, RoutedEventArgs e)

@@ -68,6 +68,11 @@ namespace WsoToolkit
             }
         }
 
+        private void myBtCorneaStart_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
         #endregion Scan Mode
 
         #region Setting 
