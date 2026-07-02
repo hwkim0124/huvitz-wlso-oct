@@ -32,13 +32,14 @@ using static WsoNativeLib.WsoConfig;
 using System.Dynamic;
 using static System.Net.Mime.MediaTypeNames;
 using WsoNativeLib;
+using static WsoNativeLib.WsoLsoDefs;
 
 namespace WsoToolkit.controls
 {
     
     public partial class LsoScanImagePreview : UserControl
     {
-        //private readonly object _matLock = new object();
+        private readonly object _matLock = new object();
 
         //Mat _imageMat = new();
         //Mat _frameMat = new();
@@ -47,16 +48,16 @@ namespace WsoToolkit.controls
         //Mat _imageIrMat = new();
         //Mat _frameIrMat = new();
 
-        //int _imageWidth = 0;
-        //int _imageHeight = 0;
-        //int _imageChannels = 0;
-        //float _imageQuality = 0.0f;
+        int _imageWidth = 0;
+        int _imageHeight = 0;
+        int _imageChannels = 0;
+        float _imageQuality = 0.0f;
 
         //const int AVERAGE_SIZE = 8;
         //private const int NUM_CHANNELS = 3;
 
         ////Frame Rate ///////////////////////////////////
-        //private readonly FrameRateCalculator _fpsCalc = new();
+        private readonly FrameRateCalculator _fpsCalc = new();
         //// /////////////////////////////////////////////
 
         //public bool IsPreviewMode { get; set; } = true;
@@ -249,11 +250,11 @@ namespace WsoToolkit.controls
         //    imageViewport.Source = OpenCvSharp.WpfExtensions.BitmapSourceConverter.ToBitmapSource(_frameIrMat);
         //}
 
-        //public void UpdateFramerate() => _fpsCalc.Tick();
+        public void UpdateFramerate() => _fpsCalc.Tick();
 
-        //public void StartTimer() => _fpsCalc.Start();
+        public void StartTimer() => _fpsCalc.Start();
 
-        //public void StopTimer() => _fpsCalc.Stop();
+        public void StopTimer() => _fpsCalc.Stop();
 
         //private void DrawOverlayAlignGuide(ref Mat image)
         //{
@@ -501,70 +502,67 @@ namespace WsoToolkit.controls
             //_captureShootImageList.Clear();
         }
 
-        //public void makeReviewImage(Mat originMat, int nPixelFormat)
-        //{
-        //    if (originMat.Empty())
-        //    {
-        //        return;
-        //    }
+        public void makeReviewImage(Mat originMat, int nPixelFormat)
+        {
+            if (originMat.Empty())
+            {
+                return;
+            }
 
-        //    ColorConversionCodes eConversionCodes = new ColorConversionCodes();
-        //    ColorPixelFormat eFormat = (ColorPixelFormat)nPixelFormat;
-        //    switch (eFormat)
-        //    {
-        //        case ColorPixelFormat.Mono8:
-        //        case ColorPixelFormat.Mono16:
-        //            //eConversionCodes = ColorConversionCodes.2Gray
-        //            return;
-        //        case ColorPixelFormat.BayerRG8:
-        //        case ColorPixelFormat.BayerRG16:
-        //            eConversionCodes = ColorConversionCodes.BayerRG2RGB;
-        //            break;
-        //        case ColorPixelFormat.RGB8Packed:
-        //            return;
-        //        case ColorPixelFormat.BGR8:
-        //            return;
-        //    }
+            ColorConversionCodes eConversionCodes = new ColorConversionCodes();
+            ColorPixelFormat eFormat = (ColorPixelFormat)nPixelFormat;
+            switch (eFormat)
+            {
+                case ColorPixelFormat.Mono8:
+                case ColorPixelFormat.Mono16:
+                    //eConversionCodes = ColorConversionCodes.2Gray
+                    return;
+                case ColorPixelFormat.BayerRG8:
+                case ColorPixelFormat.BayerRG16:
+                    eConversionCodes = ColorConversionCodes.BayerRG2RGB;
+                    break;
+                case ColorPixelFormat.RGB8Packed:
+                    return;
+                case ColorPixelFormat.BGR8:
+                    return;
+            }
 
-        //    Mat _resultMat = new();
-        //    Cv2.CvtColor(originMat, _resultMat, eConversionCodes);
+            Mat _resultMat = new();
+            Cv2.CvtColor(originMat, _resultMat, eConversionCodes);
 
-        //    _captureImageList.Add(_resultMat);
-        //}
+            _captureImageList.Add(_resultMat);
+        }
 
-        //public void makeReviewImage(ref List<Tuple<Mat, ImageAdjustParam>> ImageList, Mat originMat, int nPixelFormat)
-        //{
-        //    if (originMat.Empty())
-        //    {
-        //        return;
-        //    }
+        public void makeReviewImage(ref List<Mat> ImageList, Mat originMat, int nPixelFormat)
+        {
+            if (originMat.Empty())
+            {
+                return;
+            }
 
-        //    ColorConversionCodes eConversionCodes = new ColorConversionCodes();
-        //    ColorPixelFormat eFormat = (ColorPixelFormat)nPixelFormat;
-        //    switch (eFormat)
-        //    {
-        //        case ColorPixelFormat.Mono8:
-        //        case ColorPixelFormat.Mono16:
-        //            //eConversionCodes = ColorConversionCodes.2Gray
-        //            return;
-        //        case ColorPixelFormat.BayerRG8:
-        //        case ColorPixelFormat.BayerRG16:
-        //            eConversionCodes = ColorConversionCodes.BayerRG2RGB;
-        //            break;
-        //        case ColorPixelFormat.RGB8Packed:
-        //            return;
-        //        case ColorPixelFormat.BGR8:
-        //            return;
-        //    }
+            ColorConversionCodes eConversionCodes = new ColorConversionCodes();
+            ColorPixelFormat eFormat = (ColorPixelFormat)nPixelFormat;
+            switch (eFormat)
+            {
+                case ColorPixelFormat.Mono8:
+                case ColorPixelFormat.Mono16:
+                    //eConversionCodes = ColorConversionCodes.2Gray
+                    return;
+                case ColorPixelFormat.BayerRG8:
+                case ColorPixelFormat.BayerRG16:
+                    eConversionCodes = ColorConversionCodes.BayerRG2RGB;
+                    break;
+                case ColorPixelFormat.RGB8Packed:
+                    return;
+                case ColorPixelFormat.BGR8:
+                    return;
+            }
 
-        //    Mat _resultMat = new();
-        //    Cv2.CvtColor(originMat, _resultMat, eConversionCodes);
+            Mat _resultMat = new();
+            Cv2.CvtColor(originMat, _resultMat, eConversionCodes);
 
-        //    ImageAdjustParam param = new(ImageAdjustBrightness, _resultMat.Depth());
-        //    Tuple<Mat, ImageAdjustParam> ImageSet = new Tuple<Mat, ImageAdjustParam>(_resultMat, param);
-
-        //    ImageList.Add(ImageSet);
-        //}
+            ImageList.Add(_resultMat);
+        }
 
         ///// <summary>
         ///// List를 chunkSize만큼 잘라서 List<List<T>> 형태로 반환하는 메서드
@@ -586,197 +584,201 @@ namespace WsoToolkit.controls
         //    return result;
         //}
 
-        //private void showDisplayMenu_(PreviewDisplayMode mode)
-        //{
-        //    myGridLive.Visibility = Visibility.Hidden;
-        //    myGridReview.Visibility = Visibility.Hidden;
-        //    myGridReviewSliceMode.Visibility = Visibility.Hidden;
-        //    myGridReviewROIMode.Visibility = Visibility.Hidden;
-        //    myGridReviewOffsetROI.Visibility = Visibility.Hidden;
-        //    myGridReviewRollSWTrigOverlap.Visibility = Visibility.Hidden;
-        //    myGridReviewRollSWTrigManual.Visibility = Visibility.Hidden;
+        private void showDisplayMenu_(PreviewDisplayMode mode)
+        {
+            myGridLive.Visibility = Visibility.Hidden;
+            myGridReview.Visibility = Visibility.Hidden;
+            //myGridReviewSliceMode.Visibility = Visibility.Hidden;
+            //myGridReviewROIMode.Visibility = Visibility.Hidden;
+            //myGridReviewOffsetROI.Visibility = Visibility.Hidden;
+            //myGridReviewRollSWTrigOverlap.Visibility = Visibility.Hidden;
+            //myGridReviewRollSWTrigManual.Visibility = Visibility.Hidden;
 
-        //    switch (mode)
-        //    {
-        //        case PreviewDisplayMode.LIVE:
-        //            {
-        //                myGridLive.Visibility = Visibility.Visible;
-        //            }
-        //            break;
-        //        case PreviewDisplayMode.REVIEW:
-        //            {
-        //                myGridReview.Visibility = Visibility.Visible;
-        //            }
-        //            break;
-        //        case PreviewDisplayMode.REVIEW_SLICE:
-        //            {
-        //                myGridReviewSliceMode.Visibility = Visibility.Visible;
-        //            }
-        //            break;
-        //        case PreviewDisplayMode.REVIEW_ROI:
-        //            {
-        //                myGridReviewROIMode.Visibility = Visibility.Visible;
-        //            }
-        //            break;
-        //        case PreviewDisplayMode.REVIEW_OFFSET_ROI:
-        //            {
-        //                myGridReviewOffsetROI.Visibility = Visibility.Visible;
-        //            }
-        //            break;
-        //        case PreviewDisplayMode.REVIEW_ROLLING_SW_TRIGGER_OVERLAP:
-        //            {
-        //                myGridReviewRollSWTrigOverlap.Visibility = Visibility.Visible;
-        //            }
-        //            break;
-        //        case PreviewDisplayMode.REVIEW_ROLLING_SW_TRIGGER_MANUAL:
-        //            {
-        //                myGridReviewRollSWTrigManual.Visibility = Visibility.Visible;
-        //            }
-        //            break;
-        //        default:
-        //            {
-        //                myGridLive.Visibility = Visibility.Visible;
-        //            }
-        //            break;
-        //    }
-        //}
+            switch (mode)
+            {
+                case PreviewDisplayMode.LIVE:
+                    {
+                        myGridLive.Visibility = Visibility.Visible;
+                    }
+                    break;
+                case PreviewDisplayMode.REVIEW:
+                    {
+                        myGridReview.Visibility = Visibility.Visible;
+                    }
+                    break;
+                //case PreviewDisplayMode.REVIEW_SLICE:
+                //    {
+                //        myGridReviewSliceMode.Visibility = Visibility.Visible;
+                //    }
+                //    break;
+                //case PreviewDisplayMode.REVIEW_ROI:
+                //    {
+                //        myGridReviewROIMode.Visibility = Visibility.Visible;
+                //    }
+                //    break;
+                //case PreviewDisplayMode.REVIEW_OFFSET_ROI:
+                //    {
+                //        myGridReviewOffsetROI.Visibility = Visibility.Visible;
+                //    }
+                //    break;
+                //case PreviewDisplayMode.REVIEW_ROLLING_SW_TRIGGER_OVERLAP:
+                //    {
+                //        myGridReviewRollSWTrigOverlap.Visibility = Visibility.Visible;
+                //    }
+                //    break;
+                //case PreviewDisplayMode.REVIEW_ROLLING_SW_TRIGGER_MANUAL:
+                //    {
+                //        myGridReviewRollSWTrigManual.Visibility = Visibility.Visible;
+                //    }
+                //    break;
+                default:
+                    {
+                        myGridLive.Visibility = Visibility.Visible;
+                    }
+                    break;
+            }
+        }
 
-        //private void resetDisplayMenu_(PreviewDisplayMode mode, int nTotalFrameCount)
-        //{
-        //    switch (mode)
-        //    {
-        //        case PreviewDisplayMode.LIVE:
-        //            break;
-        //        case PreviewDisplayMode.REVIEW:
-        //            {
-        //                mySliderReviewImageIndex.Maximum = nTotalFrameCount;
-        //                myTbCurIndex.Text = "1";
-        //                myTbTotalCount.Text = nTotalFrameCount.ToString();
-        //            }
-        //            break;
-        //        case PreviewDisplayMode.REVIEW_SLICE:
-        //            {
-        //                mySliderReviewSliceImageIndex.Minimum = 1;
-        //                mySliderReviewSliceImageIndex.Maximum = _captureSliceAcqImageList.Count;
-        //                myTbSliceAcqCurIndex.Text = "1";
-        //                myTbSliceAcqTotalCount.Text = _captureSliceAcqImageList.Count.ToString();
+        private void resetDisplayMenu_(PreviewDisplayMode mode, int nTotalFrameCount)
+        {
+            switch (mode)
+            {
+                case PreviewDisplayMode.LIVE:
+                    break;
+                case PreviewDisplayMode.REVIEW:
+                    {
+                        mySliderReviewImageIndex.Maximum = nTotalFrameCount;
+                        myTbCurIndex.Text = "1";
+                        myTbTotalCount.Text = nTotalFrameCount.ToString();
+                    }
+                    break;
+                //case PreviewDisplayMode.REVIEW_SLICE:
+                //    {
+                //        mySliderReviewSliceImageIndex.Minimum = 1;
+                //        mySliderReviewSliceImageIndex.Maximum = _captureSliceAcqImageList.Count;
+                //        myTbSliceAcqCurIndex.Text = "1";
+                //        myTbSliceAcqTotalCount.Text = _captureSliceAcqImageList.Count.ToString();
 
-        //                mySliderReviewSliceSubImageIndex.Minimum = 1;
-        //                mySliderReviewSliceSubImageIndex.Maximum = _captureSliceAcqImageList[0].Count;
-        //                myTbSliceSubCurIndex.Text = "1";
-        //                myTbSliceSubTotalCount.Text = _captureSliceAcqImageList[0].Count.ToString();
-        //            }
-        //            break;
-        //        case PreviewDisplayMode.REVIEW_ROI:
-        //            {
-        //                mySliderReviewROIImageIndex.Minimum = 1;
-        //                mySliderReviewROIImageIndex.Maximum = _captureSliceAcqImageList.Count;
-        //                myTbROIAcqCurIndex.Text = "1";
-        //                myTbROIAcqTotalCount.Text = _captureSliceAcqImageList.Count.ToString();
+                //        mySliderReviewSliceSubImageIndex.Minimum = 1;
+                //        mySliderReviewSliceSubImageIndex.Maximum = _captureSliceAcqImageList[0].Count;
+                //        myTbSliceSubCurIndex.Text = "1";
+                //        myTbSliceSubTotalCount.Text = _captureSliceAcqImageList[0].Count.ToString();
+                //    }
+                //    break;
+                //case PreviewDisplayMode.REVIEW_ROI:
+                //    {
+                //        mySliderReviewROIImageIndex.Minimum = 1;
+                //        mySliderReviewROIImageIndex.Maximum = _captureSliceAcqImageList.Count;
+                //        myTbROIAcqCurIndex.Text = "1";
+                //        myTbROIAcqTotalCount.Text = _captureSliceAcqImageList.Count.ToString();
 
-        //                mySliderReviewROISubImageIndex.Minimum = 1;
-        //                mySliderReviewROISubImageIndex.Maximum = _captureSliceAcqImageList[0].Count;
-        //                myTbROISubCurIndex.Text = "1";
-        //                myTbROISubTotalCount.Text = _captureSliceAcqImageList[0].Count.ToString();
-        //            }
-        //            break;
-        //        case PreviewDisplayMode.REVIEW_ROLLING_SW_TRIGGER_OVERLAP:
-        //            {
-        //                //mySliderReviewRollSWTrigOverlapImageIndex.Minimum = 1;
-        //                mySliderReviewRollSWTrigOverlapImageIndex.Maximum = _captureImageList.Count;
-        //                myTbReviewRollSWTrigOverlapCurIndex.Text = "1";
-        //                myTbReviewRollSWTrigOverlapTotalCount.Text = _captureImageList.Count.ToString();
-        //            }
-        //            break;
-        //        case PreviewDisplayMode.REVIEW_ROLLING_SW_TRIGGER_MANUAL:
-        //            {
-        //            }
-        //            break;
-        //    }
-        //}
+                //        mySliderReviewROISubImageIndex.Minimum = 1;
+                //        mySliderReviewROISubImageIndex.Maximum = _captureSliceAcqImageList[0].Count;
+                //        myTbROISubCurIndex.Text = "1";
+                //        myTbROISubTotalCount.Text = _captureSliceAcqImageList[0].Count.ToString();
+                //    }
+                //    break;
+                //case PreviewDisplayMode.REVIEW_ROLLING_SW_TRIGGER_OVERLAP:
+                //    {
+                //        //mySliderReviewRollSWTrigOverlapImageIndex.Minimum = 1;
+                //        mySliderReviewRollSWTrigOverlapImageIndex.Maximum = _captureImageList.Count;
+                //        myTbReviewRollSWTrigOverlapCurIndex.Text = "1";
+                //        myTbReviewRollSWTrigOverlapTotalCount.Text = _captureImageList.Count.ToString();
+                //    }
+                //    break;
+                //case PreviewDisplayMode.REVIEW_ROLLING_SW_TRIGGER_MANUAL:
+                //    {
+                //    }
+                //    break;
+            }
+        }
 
         //#region Method - Review
 
-        //public void SetReviewMode(int nTotalFrameCount)
-        //{
-        //    showDisplayMenu_(PreviewDisplayMode.REVIEW);
-        //    resetDisplayMenu_(PreviewDisplayMode.REVIEW, nTotalFrameCount);
+        public void SetReviewMode(int nTotalFrameCount)
+        {
+            showDisplayMenu_(PreviewDisplayMode.REVIEW);
+            resetDisplayMenu_(PreviewDisplayMode.REVIEW, nTotalFrameCount);
 
-        //    if (_captureImageAndParamList.Count > 0)
-        //    {
-        //        mySliderReviewImageIndex.Value = 1;
-        //        //Mat matDisplay = _captureImageAndParamList[0].Item1.Clone();
-        //        //DrawColorMask(ref matDisplay, _maskColorRadius);
-        //        //imageViewport.Source = OpenCvSharp.WpfExtensions.BitmapSourceConverter.ToBitmapSource(matDisplay);
-        //        //matDisplay.Dispose();
+            if (_captureImageList.Count > 0)
+            {
+                mySliderReviewImageIndex.Value = 1;
+                var nImageIndex = 0;
 
-        //        try
-        //        {
-        //            // 원본 이미지를 복사하여 조정 적용
-        //            Mat adjustedMat = _captureImageAndParamList[0].Item1.Clone();
-        //            ImageAdjustParam adjustParam = _captureImageAndParamList[0].Item2;
+                try
+                {
+                    //// 원본 이미지를 복사하여 조정 적용
+                    //Mat adjustedMat = _captureImageAndParamList[0].Item1.Clone();
+                    //ImageAdjustParam adjustParam = _captureImageAndParamList[0].Item2;
 
-        //            // 1. 반사광 제거 적용 (원본에서 먼저 적용)
-        //            if (adjustParam.IsRemoveReflectedLight == true)
-        //            {
-        //                Mat tempMat = applyRemoveReflectedLight(adjustedMat);
-        //                adjustedMat.Dispose();
-        //                adjustedMat = tempMat;
-        //            }
+                    //// 1. 반사광 제거 적용 (원본에서 먼저 적용)
+                    //if (adjustParam.IsRemoveReflectedLight == true)
+                    //{
+                    //    Mat tempMat = applyRemoveReflectedLight(adjustedMat);
+                    //    adjustedMat.Dispose();
+                    //    adjustedMat = tempMat;
+                    //}
 
-        //            // 1. Brightness 조정
-        //            if (adjustParam.Brightness != 0)
-        //            {
-        //                Mat tempMat = adjustBrightnessWinStyle(adjustedMat, adjustParam.Brightness);
-        //                adjustedMat.Dispose();
-        //                adjustedMat = tempMat;
-        //            }
+                    //// 1. Brightness 조정
+                    //if (adjustParam.Brightness != 0)
+                    //{
+                    //    Mat tempMat = adjustBrightnessWinStyle(adjustedMat, adjustParam.Brightness);
+                    //    adjustedMat.Dispose();
+                    //    adjustedMat = tempMat;
+                    //}
 
-        //            // 2. Radial Correction 적용 (곡선 기반)
-        //            if (adjustParam.IsRadialCorrection == true)
-        //            {
-        //                Mat correctedMat;
+                    //// 2. Radial Correction 적용 (곡선 기반)
+                    //if (adjustParam.IsRadialCorrection == true)
+                    //{
+                    //    Mat correctedMat;
 
-        //                // 곡선 데이터가 있으면 곡선 기반 보정, 없으면 기존 강도 기반 보정
-        //                if (adjustParam.RadialCorrectionCurve != null && adjustParam.RadialCorrectionCurve.Length > 0)
-        //                {
-        //                    correctedMat = RadialCorrection.ApplyCustomCurveRadialCorrection(
-        //                        adjustedMat, adjustParam.RadialCorrectionCurve);
-        //                }
-        //                else
-        //                {
-        //                    correctedMat = RadialCorrection.ApplyRadialBrightnessCorrection(
-        //                        adjustedMat, adjustParam.RadialCorIntensity);
-        //                }
+                    //    // 곡선 데이터가 있으면 곡선 기반 보정, 없으면 기존 강도 기반 보정
+                    //    if (adjustParam.RadialCorrectionCurve != null && adjustParam.RadialCorrectionCurve.Length > 0)
+                    //    {
+                    //        correctedMat = RadialCorrection.ApplyCustomCurveRadialCorrection(
+                    //            adjustedMat, adjustParam.RadialCorrectionCurve);
+                    //    }
+                    //    else
+                    //    {
+                    //        correctedMat = RadialCorrection.ApplyRadialBrightnessCorrection(
+                    //            adjustedMat, adjustParam.RadialCorIntensity);
+                    //    }
 
-        //                adjustedMat.Dispose();
-        //                adjustedMat = correctedMat;
-        //            }
+                    //    adjustedMat.Dispose();
+                    //    adjustedMat = correctedMat;
+                    //}
 
 
-        //            // 4. 마스크 적용
-        //            DrawColorMask(ref adjustedMat, _maskColorRadius);
+                    //// 4. 마스크 적용
+                    //DrawColorMask(ref adjustedMat, _maskColorRadius);
 
-        //            // 5. UI 업데이트 (UI 스레드에서)
-        //            Dispatcher.Invoke(() =>
-        //            {
-        //                imageViewport.Source = OpenCvSharp.WpfExtensions.BitmapSourceConverter.ToBitmapSource(adjustedMat);
-        //            });
+                    //// 5. UI 업데이트 (UI 스레드에서)
+                    //Dispatcher.Invoke(() =>
+                    //{
+                    //    imageViewport.Source = OpenCvSharp.WpfExtensions.BitmapSourceConverter.ToBitmapSource(adjustedMat);
+                    //});
 
-        //            adjustedMat.Dispose();
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            System.Diagnostics.Debug.WriteLine($"Image adjustment error: {ex.Message}");
-        //        }
-        //    }
-        //}
+                    //adjustedMat.Dispose();
 
-        //private void UpdateReviewStatusItems(int nWidth, int nHeight)
-        //{
-        //    string s = string.Format("{0} x {1}", nWidth, nHeight);
-        //    lblImageStatusReview.Content = s;
-        //}
+                    Mat adjustedMat = _captureImageList[nImageIndex].Clone();
+
+                    Dispatcher.Invoke(() =>
+                    {
+                        imageViewport.Source = OpenCvSharp.WpfExtensions.BitmapSourceConverter.ToBitmapSource(adjustedMat);
+                    });
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Image adjustment error: {ex.Message}");
+                }
+            }
+        }
+
+        private void UpdateReviewStatusItems(int nWidth, int nHeight)
+        {
+            string s = string.Format("{0} x {1}", nWidth, nHeight);
+            lblImageStatusReview.Content = s;
+        }
 
         //private async Task saveSingleImage_()
         //{
@@ -3758,67 +3760,153 @@ namespace WsoToolkit.controls
         //    UpdateColorFrameImage(nPixelFormat);
         //}
 
-        //public void CallbackLsoScanCaptureFrameImage(byte[] data, int width, int height, int frameCount, int totalFrameCount, int channels, float quality, int nPixelFormat, int nBytesPerPixel)
-        //{
-        //    _imageWidth = width;
-        //    _imageHeight = height;
-        //    _imageChannels = channels;
-        //    _imageQuality = quality;
+        public void CallbackLsoScanCaptureFrameImage(byte[] data, int width, int height, int frameCount, int totalFrameCount, int channels, float quality, int nPixelFormat, int nBytesPerPixel)
+        {
+            _imageWidth = width;
+            _imageHeight = height;
+            _imageChannels = channels;
+            _imageQuality = quality;
 
-        //    MatType matType = -1;
+            MatType matType = -1;
 
-        //    switch (nBytesPerPixel)
-        //    {
-        //        case 1:
-        //            matType = MatType.CV_8UC1;
-        //            break;
-        //        case 2:
-        //            matType = MatType.CV_16UC1;
-        //            break;
-        //        case 3:
-        //            matType = MatType.CV_8UC3;
-        //            break;
-        //        default:
-        //            return;
-        //    }
+            switch (nBytesPerPixel)
+            {
+                case 1:
+                    matType = MatType.CV_8UC1;
+                    break;
+                case 2:
+                    matType = MatType.CV_16UC1;
+                    break;
+                case 3:
+                    matType = MatType.CV_8UC3;
+                    break;
+                default:
+                    return;
+            }
 
-        //    // 1) 새 Mat 생성 (언매니지드 메모리 할당)
-        //    var mat = new Mat(height, width, matType);
+            // 1) 새 Mat 생성 (언매니지드 메모리 할당)
+            var mat = new Mat(height, width, matType);
 
-        //    // 2) managed 배열 → Mat.Data(IntPtr)로 복사
+            // 2) managed 배열 → Mat.Data(IntPtr)로 복사
 
-        //    int byteCount = height * width * channels * sizeof(byte) * nBytesPerPixel;
+            int byteCount = height * width * channels * sizeof(byte) * nBytesPerPixel;
 
-        //    // CV_16U 이므로 ushort(2바이트) 사용
-        //    Marshal.Copy(data, 0, mat.Data, byteCount);
+            // CV_16U 이므로 ushort(2바이트) 사용
+            Marshal.Copy(data, 0, mat.Data, byteCount);
 
-        //    // 3) 스레드 안전하게 교체
-        //    lock (_matLock)
-        //    {
-        //        //makeReviewImage(mat, nPixelFormat);
-        //        makeReviewImage(ref _captureImageAndParamList, mat, nPixelFormat);
-        //    }
+            // 3) 스레드 안전하게 교체
+            lock (_matLock)
+            {
+                //makeReviewImage(mat, nPixelFormat);
+                makeReviewImage(ref _captureImageList, mat, nPixelFormat);
+            }
 
-        //    if (frameCount == totalFrameCount - 1)
-        //    {
-        //        _adjustmentWindow?.ForceClose();
-        //        _adjustmentWindow = null;
+            if (frameCount == totalFrameCount - 1)
+            {
+                //_adjustmentWindow?.ForceClose();
+                //_adjustmentWindow = null;
 
-        //        if (IsReviewSliceMode == true)
-        //        {
-        //            SetReviewSliceMode();
-        //        }
-        //        else if (IsReviewROIMode == true)
-        //        {
-        //            SetReviewROIMode();
-        //        }
-        //        else
-        //        {
-        //            UpdateReviewStatusItems(width, height);
-        //            SetReviewMode(totalFrameCount);
-        //        }
-        //    }
-        //}
+                //if (IsReviewSliceMode == true)
+                //{
+                //    SetReviewSliceMode();
+                //}
+                //else if (IsReviewROIMode == true)
+                //{
+                //    SetReviewROIMode();
+                //}
+                //else
+                //{
+                //    UpdateReviewStatusItems(width, height);
+                //    SetReviewMode(totalFrameCount);
+                //}
+
+                UpdateReviewStatusItems(width, height);
+                SetReviewMode(totalFrameCount);
+            }
+        }
+
+        private void mySliderReviewImageIndex_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (_captureImageList.Count() <= 0)
+            {
+                return;
+            }
+
+            int nImageIndex = (int)mySliderReviewImageIndex.Value - 1;
+
+            // UI 스레드에서 실행되므로 비동기 처리
+            _ = Task.Run(() =>
+            {
+                try
+                {
+                    //// 원본 이미지를 복사하여 조정 적용
+                    //Mat adjustedMat = _captureImageAndParamList[nImageIndex].Item1.Clone();
+                    //ImageAdjustParam adjustParam = _captureImageAndParamList[nImageIndex].Item2;
+
+                    //// 1. 반사광 제거 적용 (원본에서 먼저 적용)
+                    //if (adjustParam.IsRemoveReflectedLight == true)
+                    //{
+                    //    Mat tempMat = applyRemoveReflectedLight(adjustedMat);
+                    //    adjustedMat.Dispose();
+                    //    adjustedMat = tempMat;
+                    //}
+
+                    //// 1. Brightness 조정
+                    //if (adjustParam.Brightness != 0)
+                    //{
+                    //    Mat tempMat = adjustBrightnessWinStyle(adjustedMat, adjustParam.Brightness);
+                    //    adjustedMat.Dispose();
+                    //    adjustedMat = tempMat;
+                    //}
+
+                    ////_captureImageAndParamList[nImageIndex].Item2.Brightness = adjustParam.Brightness;
+
+                    //// 2. Radial Correction 적용 (곡선 기반)
+                    //if (adjustParam.IsRadialCorrection == true)
+                    //{
+                    //    Mat correctedMat;
+
+                    //    // 곡선 데이터가 있으면 곡선 기반 보정, 없으면 기존 강도 기반 보정
+                    //    if (adjustParam.RadialCorrectionCurve != null && adjustParam.RadialCorrectionCurve.Length > 0)
+                    //    {
+                    //        correctedMat = RadialCorrection.ApplyCustomCurveRadialCorrection(
+                    //            adjustedMat, adjustParam.RadialCorrectionCurve);
+                    //    }
+                    //    else
+                    //    {
+                    //        correctedMat = RadialCorrection.ApplyRadialBrightnessCorrection(
+                    //            adjustedMat, adjustParam.RadialCorIntensity);
+                    //    }
+
+                    //    adjustedMat.Dispose();
+                    //    adjustedMat = correctedMat;
+                    //}
+
+
+                    //// 4. 마스크 적용
+                    //DrawColorMask(ref adjustedMat, _maskColorRadius);
+
+                    //// 5. UI 업데이트 (UI 스레드에서)
+                    //Dispatcher.Invoke(() =>
+                    //{
+                    //    imageViewport.Source = OpenCvSharp.WpfExtensions.BitmapSourceConverter.ToBitmapSource(adjustedMat);
+                    //});
+
+                    //adjustedMat.Dispose();
+
+                    Mat adjustedMat = _captureImageList[nImageIndex].Clone();
+
+                    Dispatcher.Invoke(() =>
+                    {
+                        imageViewport.Source = OpenCvSharp.WpfExtensions.BitmapSourceConverter.ToBitmapSource(adjustedMat);
+                    });
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Image adjustment error: {ex.Message}");
+                }
+            });
+        }
 
         //public void CallbackLsoScanSeqLiveFrameImage(byte[] data, int width, int height, int offsetX, int offsetY, int frameCount, int totalFrameCount, int channels, float quality, int nPixelFormat, int nBytesPerPixel)
         //{

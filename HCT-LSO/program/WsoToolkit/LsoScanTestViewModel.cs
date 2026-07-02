@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
+using System.Windows.Threading;
 using WsoNativeLib;
 using WsoToolkit.utils;
+using static WsoNativeLib.LsoCamera;
 using static WsoNativeLib.WsoLsoDefs;
 using static WsoNativeLib.WsoLsoScan;
 using static WsoToolkit.controls.LsoScanImagePreview;
@@ -196,6 +199,8 @@ namespace WsoToolkit
     {
         private readonly LsoScanTestModel _scanTestModel = new LsoScanTestModel();
 
+        WsoCallback.ColorCameraImageCaptured _onColorCaptureImageCaptured;
+
         // Capture - Review
         private void readyToCapture_(PreviewDisplayMode mode)
         {
@@ -373,7 +378,36 @@ namespace WsoToolkit
         public void StartColorCameraOriginal()
         {
             LsoScanner.StartLsoScannerGrabbing((int)LsoScannerPatternId.COLOR);
-            //ColorCamera.StartOriginalMode(_onColorCaptureImageCaptured);
+            LsoCamera.StartOriginalMode(_onColorCaptureImageCaptured);
+        }
+
+        public void initCallbacks_()
+        {
+            _onColorCaptureImageCaptured = new WsoCallback.ColorCameraImageCaptured(this.OnColorCameraCaptureFrameCaptured);
+        }
+
+        //Callbacks///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        private void OnColorCameraCaptureFrameCaptured(IntPtr data, int width, int height, int frameCount, int totalFrameCount, int nFlipMode, int nPixelFormat, int nBytesPerPixel)
+        {
+            int totalBytes = width * height * nBytesPerPixel;
+
+            byte[] frameData = new byte[totalBytes];
+            Marshal.Copy(data, frameData, 0, totalBytes);
+
+            int channel = 1;
+
+            // Update GUI preview control asynchronously.
+            Dispatcher.BeginInvoke(() =>
+            {
+                myColorPreview.UpdateFramerate();
+                myColorPreview.CallbackLsoScanCaptureFrameImage(frameData, width, height, frameCount, totalFrameCount, channel, nFlipMode, nPixelFormat, nBytesPerPixel);
+            }, DispatcherPriority.Background);
+
+            if (frameCount == totalFrameCount - 1)
+            {
+                LsoScanner.PauseLsoScannerGrabbing((int)LsoScannerPatternId.COLOR);
+            }
+            return;
         }
     }
 }
