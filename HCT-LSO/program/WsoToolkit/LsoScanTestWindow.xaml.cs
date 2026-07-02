@@ -50,7 +50,22 @@ namespace WsoToolkit
 
         private void myBtStartColorCameraLive_Click(object sender, RoutedEventArgs e)
         {
+            myColorPreview.ClearReviewImages();
 
+            if (IsColorCameraLive())
+            {
+                myBtStartColorCameraLive.Content = "Start Color Live";
+                PauseColorCameraLive();
+
+                applyScannerControlParam_((int)WsoNativeLib.WsoLsoDefs.LsoScannerPatternId.COLOR); // Color Camera Galvano Setting 다시 복원
+            }
+            else
+            {
+                updateScannerControls_();
+
+                myBtStartColorCameraLive.Content = "Pause Color Live";
+                StartColorCameraLive();
+            }
         }
 
         #endregion Scan Mode

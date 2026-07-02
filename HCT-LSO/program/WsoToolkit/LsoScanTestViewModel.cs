@@ -307,6 +307,11 @@ namespace WsoToolkit
 
         WsoCallback.ColorCameraImageCaptured _onColorCaptureImageCaptured;
 
+        WsoCallback.ColorCameraFrameCaptured _onColorLiveFrameCaptured;
+
+        // Live 프레임이 UI 렌더링보다 빠르게 도착할 때 Dispatcher 큐가 쌓여 메모리가 증가하는 것을 막는 드롭 플래그.
+        private volatile bool _isColorLiveFramePending;
+
         #region Captrue - Review
         // Capture - Review
         private void readyToCapture_(PreviewDisplayMode mode)
@@ -491,6 +496,32 @@ namespace WsoToolkit
         private void initCallbacks_()
         {
             _onColorCaptureImageCaptured = new WsoCallback.ColorCameraImageCaptured(this.OnColorCameraCaptureFrameCaptured);
+            _onColorLiveFrameCaptured = new WsoCallback.ColorCameraFrameCaptured(this.OnColorCameraFrameCaptured);
+        }
+
+        public void StartColorCameraLive()
+        {
+            _isColorLiveFramePending = false;
+
+            myColorPreview.SetLiveMode();
+
+            LsoScanner.StartLsoScannerGrabbing((int)LsoScannerPatternId.COLOR);
+            LsoCamera.StartLiveMode(_onColorLiveFrameCaptured);
+            myColorPreview.StartTimer();
+        }
+
+        public void PauseColorCameraLive()
+        {
+            LsoScanner.PauseLsoScannerGrabbing((int)LsoScannerPatternId.COLOR);
+            LsoScanner.SetLsoScannerTriggerMode((int)LsoScannerTriggerMode.RollingShutter);
+
+            LsoCamera.PauseLiveMode();
+            myColorPreview.StopTimer();
+        }
+
+        public bool IsColorCameraLive()
+        {
+            return LsoCamera.IsLiveMode();
         }
 
         private void initSetting_()
@@ -653,6 +684,42 @@ namespace WsoToolkit
         #endregion Scan Setting
 
         #region Callbacks
+        
+        // Color Live 
+        private void OnColorCameraFrameCaptured(IntPtr data, int width, int height, int frameCount, int nFlipMode, int nPixelFormat, int nBytesPerPixel)
+        {
+            // 이전 프레임이 아직 UI에서 처리 중이면 이번 프레임은 버려서 Dispatcher 큐 적체를 방지한다.
+            if (_isColorLiveFramePending)
+            {
+                return;
+            }
+
+            int totalBytes = width * height * nBytesPerPixel;
+
+            byte[] frameData = new byte[totalBytes];
+            Marshal.Copy(data, frameData, 0, totalBytes);
+
+            int channel = 1;
+
+            _isColorLiveFramePending = true;
+
+            // Update GUI preview control asynchronously.
+            Dispatcher.BeginInvoke(() =>
+            {
+                try
+                {
+                    myColorPreview.UpdateFramerate();
+                    myColorPreview.CallbackLsoScanFrameImage(frameData, width, height, channel, nFlipMode, nPixelFormat, nBytesPerPixel);
+                }
+                finally
+                {
+                    _isColorLiveFramePending = false;
+                }
+            }, DispatcherPriority.Background);
+            return;
+        }
+
+        // Color Capture
         private void OnColorCameraCaptureFrameCaptured(IntPtr data, int width, int height, int frameCount, int totalFrameCount, int nFlipMode, int nPixelFormat, int nBytesPerPixel)
         {
             int totalBytes = width * height * nBytesPerPixel;

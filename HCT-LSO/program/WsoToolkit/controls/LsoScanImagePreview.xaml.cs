@@ -41,8 +41,8 @@ namespace WsoToolkit.controls
     {
         private readonly object _matLock = new object();
 
-        //Mat _imageMat = new();
-        //Mat _frameMat = new();
+        Mat _imageMat = new();
+        Mat _frameMat = new();
         //Mat _previewMat = new();
 
         //Mat _imageIrMat = new();
@@ -167,29 +167,11 @@ namespace WsoToolkit.controls
             InitializeComponent();
         }
 
-        //private void UpdatePreviewStatusItems()
-        //{
-        //    if (IsPreviewMode)
-        //    {
-        //        //_stopwatch.Stop();
-        //        //float frate = (1000.0f / _stopwatch.ElapsedMilliseconds);
-        //        //frate = _frameCount == 1 ? 0 : frate;
-        //        //_stopwatch.Restart();
-
-        //        //if (_frameCount > 1 && _frameCount % AVERAGE_SIZE != 0)
-        //        //{
-        //        //    return;
-        //        //}
-
-        //        string s = string.Format("{0} x {1}, {2} channels, {3:F1} fps, IQS: {4:F2}", _imageWidth, _imageHeight, _imageChannels, _fpsCalc.FrameRate, _imageQuality);
-        //        lblImageStatusLive.Content = s;
-        //    }
-        //    else
-        //    {
-        //        string s = string.Format("{0} x {1}, {2} channels, IQS: {3:F2}", _imageWidth, _imageHeight, _imageChannels, _imageQuality);
-        //        lblImageStatusLive.Content = s;
-        //    }
-        //}
+        private void UpdatePreviewStatusItems()
+        {
+            string s = string.Format("{0} x {1}, {2} channels, {3:F1} fps, IQS: {4:F2}", _imageWidth, _imageHeight, _imageChannels, _fpsCalc.FrameRate, _imageQuality);
+            lblImageStatusLive.Content = s;
+        }
 
         //private void UpdateReviewOffsetROIStatusItems()
         //{
@@ -197,40 +179,39 @@ namespace WsoToolkit.controls
         //    lblImageStatusReviewOffsetROI.Content = s;
         //}
 
-        //public void UpdateColorFrameImage(int nPixelFormat)
-        //{
-        //    if (_imageMat.Empty())
-        //    {
-        //        return;
-        //    }
+        public void UpdateColorFrameImage(int nPixelFormat)
+        {
+            if (_imageMat.Empty())
+            {
+                return;
+            }
 
-        //    ColorConversionCodes eConversionCodes = new ColorConversionCodes();
-        //    ColorPixelFormat eFormat = (ColorPixelFormat)nPixelFormat;
-        //    switch (eFormat)
-        //    {
-        //        case ColorPixelFormat.Mono8:
-        //        case ColorPixelFormat.Mono16:
-        //            eConversionCodes = ColorConversionCodes.GRAY2RGB;
-        //            break;
-        //        case ColorPixelFormat.BayerRG8 : 
-        //        case ColorPixelFormat.BayerRG16 :
-        //            eConversionCodes = ColorConversionCodes.BayerRG2RGB;
-        //            break;
-        //        case ColorPixelFormat.RGB8Packed:
-        //            return;
-        //        case ColorPixelFormat.BGR8:
-        //            //eConversionCodes = ColorConversionCodes.BGR2RGB;
-        //            return;
-        //    }
+            ColorConversionCodes eConversionCodes;
+            ColorPixelFormat eFormat = (ColorPixelFormat)nPixelFormat;
+            switch (eFormat)
+            {
+                case ColorPixelFormat.Mono8:
+                case ColorPixelFormat.Mono16:
+                    eConversionCodes = ColorConversionCodes.GRAY2RGB;
+                    break;
+                case ColorPixelFormat.BayerRG8 : 
+                case ColorPixelFormat.BayerRG16 :
+                    eConversionCodes = ColorConversionCodes.BayerRG2RGB;
+                    break;
+                case ColorPixelFormat.RGB8Packed:
+                case ColorPixelFormat.BGR8:
+                //eConversionCodes = ColorConversionCodes.BGR2RGB;
+                default:
+                    // 지원하지 않는 포맷은 잘못된 변환으로 메모리 오류를 유발하므로 그대로 반환한다.
+                    return;
+            }
 
-        //    Cv2.CvtColor(_imageMat, _frameMat, eConversionCodes);
+            Cv2.CvtColor(_imageMat, _frameMat, eConversionCodes);
 
-        //    DrawOverlayAlignGuide(ref _frameMat);
-        //    DrawOverlayDivideGuide(ref _frameMat, DivideLine);
-        //    DrawColorMask(ref _frameMat, _maskColorRadius);
-
-        //    imageViewport.Source = OpenCvSharp.WpfExtensions.BitmapSourceConverter.ToBitmapSource(_frameMat);
-        //}
+            var bitmapSource = OpenCvSharp.WpfExtensions.BitmapSourceConverter.ToBitmapSource(_frameMat);
+            bitmapSource.Freeze();
+            imageViewport.Source = bitmapSource;
+        }
 
         //public void UpdateIrFrameImage()
         //{
@@ -483,14 +464,14 @@ namespace WsoToolkit.controls
         //    _colorMaskCache.Invalidate();
         //}
 
-        //public void SetLiveMode()
-        //{
-        //    showDisplayMenu_(PreviewDisplayMode.LIVE);
+        public void SetLiveMode()
+        {
+            showDisplayMenu_(PreviewDisplayMode.LIVE);
 
-        //    ClearReviewImages();
-        //    IsReviewMode = false;
-        //    IsReviewSliceMode = false;
-        //}
+            ClearReviewImages();
+            IsReviewMode = false;
+            //IsReviewSliceMode = false;
+        }
 
         public void ClearReviewImages()
         {
@@ -3759,6 +3740,48 @@ namespace WsoToolkit.controls
         //    UpdatePreviewStatusItems();
         //    UpdateColorFrameImage(nPixelFormat);
         //}
+
+        public void CallbackLsoScanFrameImage(byte[] data, int width, int height, int channels, float quality, int nPixelFormat, int nBytesPerPixel)
+        {
+            _imageWidth = width;
+            _imageHeight = height;
+            _imageChannels = channels;
+            _imageQuality = quality;
+
+            MatType matType = -1;
+
+            switch (nBytesPerPixel)
+            {
+                case 1:
+                    matType = MatType.CV_8UC1;
+                    break;
+                case 2:
+                    matType = MatType.CV_16UC1;
+                    break;
+                case 3:
+                    matType = MatType.CV_8UC3;
+                    break;
+                default:
+                    return;
+            }
+
+            // 1) 새 Mat 생성 (언매니지드 메모리 할당)
+            var mat = new Mat(height, width, matType);
+
+            // 2) managed 배열 → Mat.Data(IntPtr)로 복사
+            int byteCount = height * width * channels * sizeof(byte) * nBytesPerPixel;
+            Marshal.Copy(data, 0, mat.Data, byteCount);
+
+            // 3) 스레드 안전하게 교체 (이전 프레임 Mat을 해제해 언매니지드 메모리 누수를 막는다)
+            lock (_matLock)
+            {
+                _imageMat?.Dispose();
+                _imageMat = mat;
+            }
+
+            UpdatePreviewStatusItems();
+            UpdateColorFrameImage(nPixelFormat);
+        }
 
         public void CallbackLsoScanCaptureFrameImage(byte[] data, int width, int height, int frameCount, int totalFrameCount, int channels, float quality, int nPixelFormat, int nBytesPerPixel)
         {
