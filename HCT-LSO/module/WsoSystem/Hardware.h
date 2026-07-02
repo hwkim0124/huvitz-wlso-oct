@@ -34,12 +34,26 @@ namespace wso_system
 
 		void connectCorneaCameraImageCaptured(CameraType type, CorneaCameraFrameCaptured clb);
 
+		void connectColorCameraFrameCaptured(ColorCameraFrameCaptured clb);
+	    void connectColorCameraSeqROIFrameCaptured(ColorCameraSeqROIFrameCaptured clb);
+		void connectColorCameraOffsetROIFrameCaptured(ColorCameraOffsetROIFrameCaptured clb);
+		void connectColorCameraRollSwTrigOverlapFrameCaptured(ColorCameraRollSwTrigOverlapFrameCaptured clb);
+		void connectColorCameraImageCaptured(ColorCameraImageCaptured clb);
+		void connectColorCameraSwTriggerFrameCaptured(ColorCameraFrameCaptured clb);
+
+
 		void releaseJoystickButtonPressed(void);
 		void releaseOptimizeButtonPressed(void);
 		void releaseAdapterLensAttached(void);
 
 		void disconnectStepMotorPositionChanged(MotorType type);
 		void disconnectCorneaCameraImageCaptured(CameraType type);
+
+		void disconnectColorCameraFrameCaptured(void);
+		void disconnectColorCameraSeqROIFrameCaptured(void);
+		void disconnectColorCameraOffsetROIFrameCaptured(void);
+		void disconnectColorCameraImageCaptured(void);
+		void disconnectColorCameraSWTriggerFrameCaptured(void);
 
 		void excludeDeviceFromInit(bool mainboard, bool src_leds, bool motors, bool ir_camera);
 		void excludeGrabberFromInit(bool oct_grab);

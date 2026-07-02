@@ -28,7 +28,7 @@ struct CallbackRegistry::CallbackRegistryImpl
 	optional<ColorCameraFrameCaptured> colorFrameCaptured;
 	optional<ColorCameraSeqROIFrameCaptured> colorSeqROIFrameCaptured;
 	optional<ColorCameraOffsetROIFrameCaptured> colorOffsetROIFrameCaptured;
-	optional<ColorCameraRollSWTrigOverlapFrameCaptured> colorRollSWTrigOverlapFrameCaptured;
+	optional<ColorCameraRollSwTrigOverlapFrameCaptured> colorRollSwTrigOverlapFrameCaptured;
 	optional<ColorCameraImageCaptured> colorImageCaptured;
 	optional<ColorCameraFrameCaptured> colorSWTriggerFrameCaptured;
 	
@@ -73,7 +73,7 @@ struct CallbackRegistry::CallbackRegistryImpl
 		colorFrameCaptured = nullopt;
 		colorSeqROIFrameCaptured = nullopt;
 		colorOffsetROIFrameCaptured = nullopt;
-		colorRollSWTrigOverlapFrameCaptured = nullopt;
+		colorRollSwTrigOverlapFrameCaptured = nullopt;
 		colorImageCaptured = nullopt;
 		colorSWTriggerFrameCaptured = nullopt;
 
@@ -195,10 +195,10 @@ void wso_domain::CallbackRegistry::setColorCameraOffsetROIFrameCaptured(ColorCam
 	impl().colorOffsetROIFrameCaptured = clb;
 }
 
-void wso_domain::CallbackRegistry::setColorCameraRollSWTrigOverlapFrameCaptured(ColorCameraRollSWTrigOverlapFrameCaptured clb)
+void wso_domain::CallbackRegistry::setColorCameraRollSwTrigOverlapFrameCaptured(ColorCameraRollSwTrigOverlapFrameCaptured clb)
 {
 	lock_guard<mutex> lock(singleMutex_);
-	impl().colorRollSWTrigOverlapFrameCaptured = clb;
+	impl().colorRollSwTrigOverlapFrameCaptured = clb;
 }
 
 void wso_domain::CallbackRegistry::setColorCameraImageCaptured(ColorCameraImageCaptured clb)
@@ -207,7 +207,7 @@ void wso_domain::CallbackRegistry::setColorCameraImageCaptured(ColorCameraImageC
 	impl().colorImageCaptured = clb;
 }
 
-void wso_domain::CallbackRegistry::setColorCameraSWTriggerFrameCaptured(ColorCameraFrameCaptured clb)
+void wso_domain::CallbackRegistry::setColorCameraSwTriggerFrameCaptured(ColorCameraFrameCaptured clb)
 {
 	lock_guard<mutex> lock(singleMutex_);
 	impl().colorSWTriggerFrameCaptured = clb;
@@ -420,8 +420,8 @@ void wso_domain::CallbackRegistry::runColorCameraOffsetROIFrameCaptured(uint8_t*
 void wso_domain::CallbackRegistry::runColorCameraRollSWTrigOverlapFrameCaptured(uint8_t* bits, int32_t width, int32_t height, int32_t frameCount, int32_t totalframeCount, int32_t flipMode, int32_t nPixelFormat, int32_t nBytesPerPixel)
 {
 	lock_guard<mutex> lock(singleMutex_);
-	if (impl().colorRollSWTrigOverlapFrameCaptured) {
-		if (auto func = *impl().colorRollSWTrigOverlapFrameCaptured; func) {
+	if (impl().colorRollSwTrigOverlapFrameCaptured) {
+		if (auto func = *impl().colorRollSwTrigOverlapFrameCaptured; func) {
 			func(bits, width, height, frameCount, totalframeCount, flipMode, nPixelFormat, nBytesPerPixel);
 		}
 	}

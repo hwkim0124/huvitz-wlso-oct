@@ -102,6 +102,9 @@
     <ClInclude Include="exts_lso_scanner.h">
       <Filter>Header Files\externs</Filter>
     </ClInclude>
+    <ClInclude Include="exts_lso_camera.h">
+      <Filter>Header Files\externs</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -174,6 +177,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="exts_lso_scanner.cpp">
+      <Filter>Source Files\externs</Filter>
+    </ClCompile>
+    <ClCompile Include="exts_lso_camera.cpp">
       <Filter>Source Files\externs</Filter>
     </ClCompile>
   </ItemGroup>

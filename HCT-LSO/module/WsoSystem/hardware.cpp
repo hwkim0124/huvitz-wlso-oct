@@ -137,6 +137,48 @@ void wso_system::Hardware::connectCorneaCameraImageCaptured(CameraType type, Cor
 	}
 }
 
+void wso_system::Hardware::connectColorCameraFrameCaptured(ColorCameraFrameCaptured clb)
+{
+	if (auto* inst = CallbackRegistry::getInstance(); inst) {
+		inst->setColorCameraFrameCaptured(clb);
+	}
+}
+
+void wso_system::Hardware::connectColorCameraSeqROIFrameCaptured(ColorCameraSeqROIFrameCaptured clb)
+{
+	if (auto* inst = CallbackRegistry::getInstance(); inst) {
+		inst->setColorCameraSeqROIFrameCaptured(clb);
+	}
+}
+
+void wso_system::Hardware::connectColorCameraOffsetROIFrameCaptured(ColorCameraOffsetROIFrameCaptured clb)
+{
+	if (auto* inst = CallbackRegistry::getInstance(); inst) {
+		inst->setColorCameraOffsetROIFrameCaptured(clb);
+	}
+}
+
+void wso_system::Hardware::connectColorCameraRollSwTrigOverlapFrameCaptured(ColorCameraRollSwTrigOverlapFrameCaptured clb)
+{
+	if (auto* inst = CallbackRegistry::getInstance(); inst) {
+		inst->setColorCameraRollSwTrigOverlapFrameCaptured(clb);
+	}
+}
+
+void wso_system::Hardware::connectColorCameraImageCaptured(ColorCameraImageCaptured clb)
+{
+	if (auto* inst = CallbackRegistry::getInstance(); inst) {
+		inst->setColorCameraImageCaptured(clb);
+	}
+}
+
+void wso_system::Hardware::connectColorCameraSwTriggerFrameCaptured(ColorCameraFrameCaptured clb)
+{
+	if (auto* inst = CallbackRegistry::getInstance(); inst) {
+		inst->setColorCameraSwTriggerFrameCaptured(clb);
+	}
+}
+
 void wso_system::Hardware::releaseJoystickButtonPressed(void)
 {
 	if (auto* inst = CallbackRegistry::getInstance(); inst) {
@@ -178,6 +220,41 @@ void wso_system::Hardware::disconnectCorneaCameraImageCaptured(CameraType type)
 		else if (type == CameraType::IR_CORNEA_LOWER) {
 			inst->setCorneaLowerCameraFrameCaptured(nullptr);
 		}
+	}
+}
+
+void wso_system::Hardware::disconnectColorCameraFrameCaptured(void)
+{
+	if (auto* inst = CallbackRegistry::getInstance(); inst) {
+		inst->setColorCameraFrameCaptured(nullptr);
+	}
+}
+
+void wso_system::Hardware::disconnectColorCameraSeqROIFrameCaptured(void)
+{
+	if (auto* inst = CallbackRegistry::getInstance(); inst) {
+		inst->setColorCameraSeqROIFrameCaptured(nullptr);
+	}
+}
+
+void wso_system::Hardware::disconnectColorCameraOffsetROIFrameCaptured(void)
+{
+	if (auto* inst = CallbackRegistry::getInstance(); inst) {
+		inst->setColorCameraOffsetROIFrameCaptured(nullptr);
+	}
+}
+
+void wso_system::Hardware::disconnectColorCameraImageCaptured(void)
+{
+	if (auto* inst = CallbackRegistry::getInstance(); inst) {
+		inst->setColorCameraImageCaptured(nullptr);
+	}
+}
+
+void wso_system::Hardware::disconnectColorCameraSWTriggerFrameCaptured(void)
+{
+	if (auto* inst = CallbackRegistry::getInstance(); inst) {
+		inst->setColorCameraSwTriggerFrameCaptured(nullptr);
 	}
 }
 

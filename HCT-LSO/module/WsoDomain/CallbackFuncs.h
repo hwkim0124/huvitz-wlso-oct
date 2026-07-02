@@ -81,7 +81,7 @@ namespace wso_domain
 		int32_t				// bytes Per Pixel
 		)>::type;
 
-	using ColorCameraRollSWTrigOverlapFrameCaptured = std::add_pointer<void(__stdcall)(
+	using ColorCameraRollSwTrigOverlapFrameCaptured = std::add_pointer<void(__stdcall)(
 		unsigned char*,     // Image bits data
 		int32_t,			// width
 		int32_t,			// height

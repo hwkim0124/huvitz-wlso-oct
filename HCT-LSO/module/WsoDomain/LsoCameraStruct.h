@@ -4,7 +4,7 @@ namespace wso_domain
 {
 	constexpr int LSO_CAPTURE_FRAME_ROI_MAX = 255;
 
-	struct ColorCameraSettings
+	struct ColorCameraSettingParam
 	{
 	public:
 		unsigned int roi_max_width;
@@ -23,7 +23,7 @@ namespace wso_domain
 		unsigned int adcDepthIndex;
 
 	public:
-		ColorCameraSettings() {
+		ColorCameraSettingParam() {
 			roi_max_width = 0;
 			roi_max_Height = 0;
 			roi_x_width = 0;

@@ -162,6 +162,7 @@
     <ClInclude Include="exts_device_lights.h" />
     <ClInclude Include="exts_device_motors.h" />
     <ClInclude Include="exts_fixation.h" />
+    <ClInclude Include="exts_lso_camera.h" />
     <ClInclude Include="exts_lso_scanner.h" />
     <ClInclude Include="exts_oct_analysis.h" />
     <ClInclude Include="exts_oct_archive.h" />
@@ -192,6 +193,7 @@
     <ClCompile Include="exts_device_lights.cpp" />
     <ClCompile Include="exts_device_motors.cpp" />
     <ClCompile Include="exts_fixation.cpp" />
+    <ClCompile Include="exts_lso_camera.cpp" />
     <ClCompile Include="exts_lso_scanner.cpp" />
     <ClCompile Include="exts_oct_analysis.cpp" />
     <ClCompile Include="exts_oct_archive.cpp" />

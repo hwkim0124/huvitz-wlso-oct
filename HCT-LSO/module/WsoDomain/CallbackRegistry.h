@@ -39,9 +39,9 @@ namespace wso_domain
 		void setColorCameraFrameCaptured(ColorCameraFrameCaptured clb = nullptr);
 		void setColorCameraSeqROIFrameCaptured(ColorCameraSeqROIFrameCaptured clb = nullptr);
 		void setColorCameraOffsetROIFrameCaptured(ColorCameraOffsetROIFrameCaptured clb = nullptr);
-		void setColorCameraRollSWTrigOverlapFrameCaptured(ColorCameraRollSWTrigOverlapFrameCaptured clb = nullptr);
+		void setColorCameraRollSwTrigOverlapFrameCaptured(ColorCameraRollSwTrigOverlapFrameCaptured clb = nullptr);
 		void setColorCameraImageCaptured(ColorCameraImageCaptured clb = nullptr);
-		void setColorCameraSWTriggerFrameCaptured(ColorCameraFrameCaptured clb = nullptr);
+		void setColorCameraSwTriggerFrameCaptured(ColorCameraFrameCaptured clb = nullptr);
 
 		void setOctSpectrumDataCaptured(OctSpectrumDataCaptured clb = nullptr);
 		void setOctResampledDataCaptured(OctResampleDataCaptured clb = nullptr);

@@ -2,14 +2,20 @@
 
 #include "WsoDevice2.h"
 #include "BoardComponent.h"
-#include "Spinnaker.h"
+
 
 
 namespace wso_device
 {
 	class MainBoard;
 
-	class WSODEVICE_DLL_API ColorCamera : public BoardComponent
+	class SpinnakerCamera
+	{
+	public:
+		virtual void OnSpinnakerCameraEvent(std::string eventName) = 0;
+	};
+
+	class WSODEVICE_DLL_API ColorCamera : public BoardComponent, SpinnakerCamera
 	{
 	public:
 		ColorCamera(MainBoard* board);
@@ -53,8 +59,8 @@ namespace wso_device
 		int getFrameSizeInBytes(void) const;
 		int getFrameSizeForBpp(int nBytesPerPixel) const; 
 
-		ColorCameraSettings& getCameraSettings(void);
-		void setCameraSettings(ColorCameraSettings params);
+		ColorCameraSettingParam& getCameraSettings(void);
+		void setCameraSettings(ColorCameraSettingParam params);
 
 		unsigned int getROI_Max_Width();
 		unsigned int getROI_Max_Height();
@@ -102,13 +108,12 @@ namespace wso_device
 
 		virtual bool loadConfigFromIniFile(void) override;
 		virtual bool saveConfigToIniFile(void) override;
+		void OnSpinnakerCameraEvent(std::string eventName) override;
 
 	private:
 		struct ColorCameraImpl;
 		std::unique_ptr<ColorCameraImpl> d_ptr;
 		ColorCameraImpl& impl(void) const;
-
-		Spinnaker::CameraPtr getCamera(void) const;
 
 		void acquireCameraData(void);
 		void acquireCameraSingleFrameData(void);
@@ -134,21 +139,6 @@ namespace wso_device
 		int getBytesPerPixel();
 
 	private :
-		class ColorCameraDeviceEventHandler : public Spinnaker::DeviceEventHandler
-		{
-		public:
-			ColorCameraDeviceEventHandler(ColorCamera* camera) : m_camera(camera) {}
-			virtual ~ColorCameraDeviceEventHandler() {}
-
-			// DeviceEventHandler의 순수 가상 함수 구현
-			virtual void OnDeviceEvent(Spinnaker::GenICam::gcstring eventName) override;
-
-		private:
-			ColorCamera* m_camera;
-		};
-
-		void HandleDeviceEvent(const Spinnaker::GenICam::gcstring& eventName);
-		std::unique_ptr<ColorCameraDeviceEventHandler> m_deviceEventHandler;
 		void SetEventMode(bool enableEvents);
 	};
 }

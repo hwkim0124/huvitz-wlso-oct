@@ -27,6 +27,7 @@
 #include "InfraredCamera.h"
 #include "CorneaCamera.h"
 #include "RetinaCamera.h"
+#include "ColorCamera.h"
 
 #include "Galvanometer.h"
 #include "ZynqXadcDriver.h"
