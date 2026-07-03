@@ -92,7 +92,7 @@
                             <Button x:Name="myBtSettingLeds" Content="LED" Style="{StaticResource ButtonM1Style}"/>
                         </Grid>
                         <Grid Grid.Row="1" Grid.Column="1">
-                            <Button x:Name="myBtSettingFixation" Content="Fixation" Style="{StaticResource ButtonM1Style}"/>
+                            <Button x:Name="myBtSettingFixation" Content="Fixation" Style="{StaticResource ButtonM1Style}" Click="myBtSettingFixation_Click"/>
                         </Grid>
                     </Grid>
                 </GroupBox>

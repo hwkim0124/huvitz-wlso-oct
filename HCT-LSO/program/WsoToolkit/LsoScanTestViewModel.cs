@@ -9,6 +9,8 @@ using System.Windows.Threading;
 using WsoNativeLib;
 using WsoToolkit.utils;
 using static WsoNativeLib.LsoCamera;
+using static WsoNativeLib.WsoDevice;
+using static WsoNativeLib.WsoDomain;
 using static WsoNativeLib.WsoLsoDefs;
 using static WsoNativeLib.WsoLsoScan;
 using static WsoToolkit.controls.LsoScanImagePreview;
@@ -703,6 +705,46 @@ namespace WsoToolkit
         }
 
         #endregion Galvano Move
+
+        #region Internal Fixation
+
+        private void initFixation_()
+        {
+            mySliderFixationRow.Minimum = FIXATION_ROW_MIN;
+            mySliderFixationRow.Maximum = FIXATION_ROW_MAX;
+            mySliderFixationCol.Minimum = FIXATION_COL_MIN;
+            mySliderFixationCol.Maximum = FIXATION_COL_MAX;
+
+            setPresetInternalFixation_(FixationTarget.FUNDUS);
+        }
+
+        private void getCurrentInternalFixation_()
+        {
+            if (Fixation.GetCurrentInternalFixation(out int row, out int col))
+            {
+                mySliderFixationRow.Value = row;
+                mySliderFixationCol.Value = col;
+                myTbFixationRow.Text = row.ToString();
+                myTbFixationCol.Text = col.ToString();
+            }
+        }
+
+        private void setCurrentInternalFixation_()
+        {
+            int row = (int)mySliderFixationRow.Value;
+            int col = (int)mySliderFixationCol.Value;
+            Fixation.TurnOnInternalFixation(row, col);
+            getCurrentInternalFixation_();
+        }
+
+        private void setPresetInternalFixation_(FixationTarget target)
+        {
+            EyeSide side = myRbSideOD.IsChecked == true ? EyeSide.OD : EyeSide.OS;
+            Fixation.TurnOnInternalFixationWithTarget(side, target);
+            getCurrentInternalFixation_();
+        }
+
+        #endregion Internal Fixation
 
         #region Callbacks
 

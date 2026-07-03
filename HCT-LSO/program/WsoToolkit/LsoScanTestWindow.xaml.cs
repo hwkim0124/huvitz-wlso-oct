@@ -86,14 +86,17 @@ namespace WsoToolkit
 
         #endregion Scan Mode
 
-        #region Setting 
+        #region Settings 
 
         private void myBtSettingColorCamera_Click(object sender, RoutedEventArgs e)
         {
-            var window = new ColorCameraSettingWindow
-            {
-                Owner = this
-            };
+            var window = new ColorCameraSettingWindow { Owner = this };
+            window.ShowDialog();
+        }
+
+        private void myBtSettingFixation_Click(object sender, RoutedEventArgs e)
+        {
+            var window = new FixationSettingWindow { Owner = this };
             window.ShowDialog();
         }
 
@@ -313,42 +316,6 @@ namespace WsoToolkit
         #endregion LSO Focus Motor
 
         #region Internal Fixation
-
-        private void initFixation_()
-        {
-            mySliderFixationRow.Minimum = FIXATION_ROW_MIN;
-            mySliderFixationRow.Maximum = FIXATION_ROW_MAX;
-            mySliderFixationCol.Minimum = FIXATION_COL_MIN;
-            mySliderFixationCol.Maximum = FIXATION_COL_MAX;
-
-            setPresetInternalFixation_(FixationTarget.FUNDUS);
-        }
-
-        private void getCurrentInternalFixation_()
-        {
-            if (Fixation.GetCurrentInternalFixation(out int row, out int col))
-            {
-                mySliderFixationRow.Value = row;
-                mySliderFixationCol.Value = col;
-                myTbFixationRow.Text = row.ToString();
-                myTbFixationCol.Text = col.ToString();
-            }
-        }
-
-        private void setCurrentInternalFixation_()
-        {
-            int row = (int)mySliderFixationRow.Value;
-            int col = (int)mySliderFixationCol.Value;
-            Fixation.TurnOnInternalFixation(row, col);
-            getCurrentInternalFixation_();
-        }
-
-        private void setPresetInternalFixation_(FixationTarget target)
-        {
-            EyeSide side = myRbSideOD.IsChecked == true ? EyeSide.OD : EyeSide.OS;
-            Fixation.TurnOnInternalFixationWithTarget(side, target);
-            getCurrentInternalFixation_();
-        }
 
         private void mySliderFixationRow_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
