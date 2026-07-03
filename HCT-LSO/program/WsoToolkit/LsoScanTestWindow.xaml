@@ -160,6 +160,9 @@
                 <Grid Grid.Row="1" Grid.Column="0">
                     <Button x:Name="myBtCorneaStart" Content="Start Cornea" Style="{StaticResource ButtonM1Style}" Margin="8,0,0,0" Click="myBtCorneaStart_Click"/>
                 </Grid>
+                <Grid Grid.Row="1" Grid.Column="1">
+                    <Button x:Name="myBtStartColorCameraLive" Style="{StaticResource ButtonM1Style}" Content="Start Color Live" HorizontalAlignment="Center" VerticalAlignment="Center" Click="myBtStartColorCameraLive_Click"/>
+                </Grid>
             </Grid>
             <Grid Grid.Row="3" Grid.Column="1">
                 <Grid.RowDefinitions>
@@ -172,8 +175,8 @@
                     <ColumnDefinition/>
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
-                <Grid Grid.Row="0">
-                    <Button x:Name="myBtStartColorCameraLive" Style="{StaticResource ButtonM1Style}" Content="Start Color Live" HorizontalAlignment="Center" VerticalAlignment="Center" Click="myBtStartColorCameraLive_Click"/>
+                <Grid Grid.Row="0" Grid.Column="0">
+                    <Button x:Name="myBtCaptureSlide" Style="{StaticResource ButtonM1Style}" Content="Capture(Slide)" HorizontalAlignment="Center" VerticalAlignment="Center" Click="myBtCaptureSlide_Click"/>
                 </Grid>
             </Grid>
             <Grid Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="2">

@@ -59,6 +59,20 @@ namespace WsoToolkit
             StartColorCameraOriginal();
         }
 
+        private void myBtCaptureSlide_Click(object sender, RoutedEventArgs e)
+        {
+            //if (IsRetinaCameraPreviewing())
+            //{
+            //    CloseRetinaCameraPreview();
+            //    closeCorneaCameraPreview_();
+            //    myBtStartScan.Content = "Start Scan";
+            //}
+
+            readyToCapture_(PreviewDisplayMode.REVIEW_SLICE);
+
+            StartColorCameraOriginal();
+        }
+
         private void myBtStartColorCameraLive_Click(object sender, RoutedEventArgs e)
         {
             myColorPreview.ClearReviewImages();

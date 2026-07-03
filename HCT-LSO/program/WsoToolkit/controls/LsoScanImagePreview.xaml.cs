@@ -59,6 +59,10 @@ namespace WsoToolkit.controls
         public int AcqFrameCount = 0;
         public int SubFrameCount = 0;
 
+        // Review Slice
+        public bool IsReviewSliceMode { get; set; } = false;
+        List<List<Mat>> _captureSliceAcqImageList = new ();
+
         public LsoScanImagePreview()
         {
             InitializeComponent();
@@ -102,9 +106,7 @@ namespace WsoToolkit.controls
         }
 
         public void UpdateFramerate() => _fpsCalc.Tick();
-
         public void StartTimer() => _fpsCalc.Start();
-
         public void StopTimer() => _fpsCalc.Stop();
 
         public void SetLiveMode()
@@ -118,37 +120,6 @@ namespace WsoToolkit.controls
         public void ClearReviewImages()
         {
             _captureImageList.Clear();
-        }
-
-        public void makeReviewImage(Mat originMat, int nPixelFormat)
-        {
-            if (originMat.Empty())
-            {
-                return;
-            }
-
-            ColorConversionCodes eConversionCodes = new ColorConversionCodes();
-            ColorPixelFormat eFormat = (ColorPixelFormat)nPixelFormat;
-            switch (eFormat)
-            {
-                case ColorPixelFormat.Mono8:
-                case ColorPixelFormat.Mono16:
-                    //eConversionCodes = ColorConversionCodes.2Gray
-                    return;
-                case ColorPixelFormat.BayerRG8:
-                case ColorPixelFormat.BayerRG16:
-                    eConversionCodes = ColorConversionCodes.BayerRG2RGB;
-                    break;
-                case ColorPixelFormat.RGB8Packed:
-                    return;
-                case ColorPixelFormat.BGR8:
-                    return;
-            }
-
-            Mat _resultMat = new();
-            Cv2.CvtColor(originMat, _resultMat, eConversionCodes);
-
-            _captureImageList.Add(_resultMat);
         }
 
         public void makeReviewImage(ref List<Mat> ImageList, Mat originMat, int nPixelFormat)
@@ -186,6 +157,7 @@ namespace WsoToolkit.controls
         {
             myGridLive.Visibility = Visibility.Hidden;
             myGridReview.Visibility = Visibility.Hidden;
+            myGridReviewSliceMode.Visibility = Visibility.Hidden;
 
             switch (mode)
             {
@@ -197,6 +169,11 @@ namespace WsoToolkit.controls
                 case PreviewDisplayMode.REVIEW:
                     {
                         myGridReview.Visibility = Visibility.Visible;
+                    }
+                    break;
+                case PreviewDisplayMode.REVIEW_SLICE:
+                    {
+                        myGridReviewSliceMode.Visibility = Visibility.Visible;
                     }
                     break;
                 default:
@@ -220,8 +197,22 @@ namespace WsoToolkit.controls
                         myTbTotalCount.Text = nTotalFrameCount.ToString();
                     }
                     break;
+                case PreviewDisplayMode.REVIEW_SLICE:
+                    {
+                        mySliderReviewSliceImageIndex.Minimum = 1;
+                        mySliderReviewSliceImageIndex.Maximum = _captureSliceAcqImageList.Count;
+                        myTbSliceAcqCurIndex.Text = "1";
+                        myTbSliceAcqTotalCount.Text = _captureSliceAcqImageList.Count.ToString();
+
+                        mySliderReviewSliceSubImageIndex.Minimum = 1;
+                        mySliderReviewSliceSubImageIndex.Maximum = _captureSliceAcqImageList[0].Count;
+                        myTbSliceSubCurIndex.Text = "1";
+                        myTbSliceSubTotalCount.Text = _captureSliceAcqImageList[0].Count.ToString();
+                    }
+                    break;
             }
         }
+
         public void SetReviewMode(int nTotalFrameCount)
         {
             showDisplayMenu_(PreviewDisplayMode.REVIEW);
@@ -246,6 +237,117 @@ namespace WsoToolkit.controls
                     System.Diagnostics.Debug.WriteLine($"Image adjustment error: {ex.Message}");
                 }
             }
+        }
+
+        public void SetReviewSliceMode()
+        {
+            showDisplayMenu_(PreviewDisplayMode.REVIEW_SLICE);
+
+            if (_captureImageList.Count > 0)
+            {
+                if (SubFrameCount == 1)
+                {
+                    if (AcqFrameCount == 1)
+                    {
+                        List<Mat> tempSubFrameList = new List<Mat>() { _captureImageList[0] };
+                        _captureSliceAcqImageList.Add(tempSubFrameList);
+                    }
+                    else
+                    {
+                        int nFrameCount = _captureImageList.Count();
+                        for (int i = 0; i < nFrameCount; ++i)
+                        {
+                            List<Mat> tempSubFrameList = new (){ _captureImageList[i] };
+                            _captureSliceAcqImageList.Add(tempSubFrameList);
+                        }
+                    }
+                }
+                else
+                {
+                    int nAcqFrameCount = AcqFrameCount;
+                    int nSubFrameCount = SubFrameCount;
+                    int nFrameCount = _captureImageList.Count();
+
+                    if (nAcqFrameCount * nSubFrameCount != nFrameCount)
+                    {
+                        MessageBox.Show("Total frame count is invalid.");
+                        return;
+                    }
+
+                    int chunkSize = nFrameCount / nAcqFrameCount; // 한 acq frame 당 요소 개수
+                    List<List<Mat>> tempAcqFrameList = SplitListBySize(_captureImageList, chunkSize);
+
+                    // 3) 기본 이미지 크기 (모두 동일하다고 가정)
+                    int height = _captureImageList[0].Rows;
+                    int width = _captureImageList[0].Cols;
+
+                    // 4) 분할 높이 계산 (정수 나누기)
+                    int segH = height / nSubFrameCount;
+
+                    for (int i = 0; i < tempAcqFrameList.Count; ++i)
+                    {
+                        // 5) 각 이미지에서 해당 분할 영역만큼 잘라내기
+                        List<Mat> tempSubFrameList = new List<Mat>();
+                        Mat[] Sliced = new Mat[nSubFrameCount];
+
+                        for (int j = 0; j < nSubFrameCount; ++j)
+                        {
+                            int y0 = j * segH;
+                            int h = (j < nSubFrameCount) ? segH : (height - y0);  // 마지막은 남은 만큼 모두
+                            OpenCvSharp.Rect roi = new OpenCvSharp.Rect(X: 0, Y: y0, Width: width, Height: h);
+                            Sliced[j] = new Mat(tempAcqFrameList[i][j], roi).Clone();  // Clone()으로 메모리 분리
+                            tempSubFrameList.Add(Sliced[j]);
+                        }
+
+                        // 6) 세로 방향으로 붙이기
+                        Mat mergedMat = new Mat();
+                        Cv2.VConcat(Sliced, mergedMat);
+                        tempSubFrameList.Insert(0, mergedMat);
+
+                        _captureSliceAcqImageList.Add(tempSubFrameList);
+                    }
+                }
+
+                mySliderReviewSliceImageIndex.Value = 1;
+                mySliderReviewSliceSubImageIndex.Value = 1;
+
+                try
+                {
+                    // 원본 이미지를 복사하여 조정 적용
+                    Mat adjustedMat = _captureSliceAcqImageList[0][0].Clone();
+
+                    // 5. UI 업데이트 (UI 스레드에서)
+                    Dispatcher.Invoke(() =>
+                    {
+                        imageViewport.Source = OpenCvSharp.WpfExtensions.BitmapSourceConverter.ToBitmapSource(adjustedMat);
+                    });
+
+                    adjustedMat.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Image adjustment error: {ex.Message}");
+                }
+            }
+
+            resetDisplayMenu_(PreviewDisplayMode.REVIEW_SLICE, _captureSliceAcqImageList.Count());
+        }
+
+        static List<List<Mat>> SplitListBySize(List<Mat> source, int chunkSize)
+        {
+            var result = new List<List<Mat>>();
+            if (chunkSize <= 0)
+                throw new ArgumentException("chunkSize는 1 이상의 값이어야 합니다.", nameof(chunkSize));
+
+            int count = source.Count;
+            for (int i = 0; i < count; i += chunkSize)
+            {
+                // (i부터 chunkSize 개수)만큼 잘라서 새로운 List로 만든다.
+                int size = Math.Min(chunkSize, count - i);
+                List<Mat> chunk = source.GetRange(i, size);
+                result.Add(chunk);
+            }
+            return result;
         }
 
         private void UpdateReviewStatusItems(int nWidth, int nHeight)
@@ -336,10 +438,18 @@ namespace WsoToolkit.controls
                 makeReviewImage(ref _captureImageList, mat, nPixelFormat);
             }
 
-            if (frameCount == totalFrameCount - 1)
+            if (frameCount == totalFrameCount - 1) // Capture
             {
-                UpdateReviewStatusItems(width, height);
-                SetReviewMode(totalFrameCount);
+                if (IsReviewMode == true)
+                {
+                    UpdateReviewStatusItems(width, height);
+                    SetReviewMode(totalFrameCount);
+                }
+                else if (IsReviewSliceMode == true) // Captrue (Slice)
+                {
+                    UpdateReviewStatusItems(width, height);
+                    SetReviewSliceMode();
+                }
             }
         }
 
@@ -369,6 +479,78 @@ namespace WsoToolkit.controls
                     System.Diagnostics.Debug.WriteLine($"Image adjustment error: {ex.Message}");
                 }
             });
+        }
+
+        private void mySliderReviewSliceImageIndex_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (sender is Slider slider)
+            {
+                int nIndex = (int)slider.Value;
+                if (nIndex > 0)
+                {
+                    if (_captureSliceAcqImageList.Count() > 0)
+                    {
+                        int oldSubImageIndex = (int)mySliderReviewSliceSubImageIndex.Value;
+
+                        mySliderReviewSliceSubImageIndex.Value = mySliderReviewSliceSubImageIndex.Minimum;
+
+                        if (oldSubImageIndex == mySliderReviewSliceSubImageIndex.Minimum)
+                        {
+                            var args = new RoutedPropertyChangedEventArgs<double>(1, 1)
+                            {
+                                RoutedEvent = Slider.ValueChangedEvent
+                            };
+
+                            // RaiseEvent로 이벤트를 강제로 발생시킨다.
+                            mySliderReviewSliceSubImageIndex.RaiseEvent(args);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void mySliderReviewSliceSubImageIndex_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (sender is Slider slider)
+            {
+                int nIndex = (int)slider.Value;
+                if (nIndex > 0)
+                {
+                    if (_captureSliceAcqImageList.Count() > 0)
+                    {
+                        int nAcqFrameIndex = (int)mySliderReviewSliceImageIndex.Value;
+
+                        if (nIndex == 1)
+                        {
+                            _ = Task.Run(() =>
+                            {
+                                try
+                                {
+                                    // 원본 이미지를 복사하여 조정 적용
+                                    Mat adjustedMat = _captureSliceAcqImageList[nAcqFrameIndex - 1][nIndex - 1].Clone();
+
+                                    // 5. UI 업데이트 (UI 스레드에서)
+                                    Dispatcher.Invoke(() =>
+                                    {
+                                        imageViewport.Source = OpenCvSharp.WpfExtensions.BitmapSourceConverter.ToBitmapSource(adjustedMat);
+                                    });
+
+                                    adjustedMat.Dispose();
+                                }
+                                catch (Exception ex)
+                                {
+                                    System.Diagnostics.Debug.WriteLine($"Image error: {ex.Message}");
+                                }
+                            });
+                        }
+                        else
+                        {
+                            UpdateReviewStatusItems(_captureSliceAcqImageList[nAcqFrameIndex - 1][nIndex - 1].Width, _captureSliceAcqImageList[nAcqFrameIndex - 1][nIndex - 1].Height);
+                            imageViewport.Source = OpenCvSharp.WpfExtensions.BitmapSourceConverter.ToBitmapSource(_captureSliceAcqImageList[nAcqFrameIndex - 1][nIndex - 1]);
+                        }
+                    }
+                }
+            }
         }
     }
 }

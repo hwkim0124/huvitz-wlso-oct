@@ -324,7 +324,7 @@ namespace WsoToolkit
                     {
                         myColorPreview.ClearReviewImages();
                         myColorPreview.IsReviewMode = true;
-                        //myColorPreview.IsReviewSliceMode = false;
+                        myColorPreview.IsReviewSliceMode = false;
                         //myColorPreview.IsReviewROIMode = false;
                         myColorPreview.AcqFrameCount = 0;
                         myColorPreview.SubFrameCount = 0;
@@ -340,135 +340,135 @@ namespace WsoToolkit
 
                     }
                     break;
-                //case PreviewDisplayMode.REVIEW_SLICE:
-                //    {
-                //        myColorPreview.ClearReviewImages();
-                //        myColorPreview.IsReviewMode = false;
-                //        myColorPreview.IsReviewSliceMode = true;
-                //        myColorPreview.IsReviewROIMode = false;
-                //        myColorPreview.AcqFrameCount = ToInt(myTbAcqFrame.Text);
-                //        myColorPreview.SubFrameCount = ToInt(myTbSubFrame.Text);
+                case PreviewDisplayMode.REVIEW_SLICE:
+                    {
+                        myColorPreview.ClearReviewImages();
+                        myColorPreview.IsReviewMode = false;
+                        myColorPreview.IsReviewSliceMode = true;
+                        //myColorPreview.IsReviewROIMode = false;
+                        myColorPreview.AcqFrameCount = ToInt(myTbAcqFrame.Text);
+                        myColorPreview.SubFrameCount = ToInt(myTbSubFrame.Text);
 
-                //        LsoConfig.ImageAdjustPreset param = new();
-                //        if (!Configuration.ObtainImageAdjustPreset(out param))
-                //        {
-                //            MessageBox.Show("Image Adjust Preset을 가져오지 못함.", "오류", MessageBoxButton.OK, MessageBoxImage.Warning);
-                //            return;
-                //        }
+                        //LsoConfig.ImageAdjustPreset param = new();
+                        //if (!Configuration.ObtainImageAdjustPreset(out param))
+                        //{
+                        //    MessageBox.Show("Image Adjust Preset을 가져오지 못함.", "오류", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        //    return;
+                        //}
 
-                //        myColorPreview.ImageAdjustBrightness = param.Brightness;
-                //    }
-                //    break;
-                //case PreviewDisplayMode.REVIEW_ROI:
-                //    {
-                //        myColorPreview.ClearReviewImages();
-                //        myColorPreview.IsReviewMode = false;
-                //        myColorPreview.IsReviewSliceMode = false;
-                //        myColorPreview.IsReviewROIMode = true;
-                //        myColorPreview.AcqFrameCount = ToInt(myTbAcqFrame.Text);
-                //        myColorPreview.SubFrameCount = ToInt(myTbSubFrame.Text);
+                        //myColorPreview.ImageAdjustBrightness = param.Brightness;
+                    }
+                    break;
+                    //case PreviewDisplayMode.REVIEW_ROI:
+                    //    {
+                    //        myColorPreview.ClearReviewImages();
+                    //        myColorPreview.IsReviewMode = false;
+                    //        myColorPreview.IsReviewSliceMode = false;
+                    //        myColorPreview.IsReviewROIMode = true;
+                    //        myColorPreview.AcqFrameCount = ToInt(myTbAcqFrame.Text);
+                    //        myColorPreview.SubFrameCount = ToInt(myTbSubFrame.Text);
 
 
-                //        LsoConfig.CaptureFrameROIPreset param = new LsoConfig.CaptureFrameROIPreset();
-                //        if (!Configuration.ObtainCaptureFrameROIPreset(out param))
-                //        {
-                //            return;
-                //        }
+                    //        LsoConfig.CaptureFrameROIPreset param = new LsoConfig.CaptureFrameROIPreset();
+                    //        if (!Configuration.ObtainCaptureFrameROIPreset(out param))
+                    //        {
+                    //            return;
+                    //        }
 
-                //        CaptureFrameROIPresetCS presetCS = StructCaptureFrameROIConverter.ToManaged(in param);
-                //        myColorPreview.FrameROIs = presetCS.FrameROIPositionArray;
+                    //        CaptureFrameROIPresetCS presetCS = StructCaptureFrameROIConverter.ToManaged(in param);
+                    //        myColorPreview.FrameROIs = presetCS.FrameROIPositionArray;
 
-                //        LsoConfig.ImageAdjustPreset ImageParam = new();
-                //        if (!Configuration.ObtainImageAdjustPreset(out ImageParam))
-                //        {
-                //            MessageBox.Show("Image Adjust Preset을 가져오지 못함.", "오류", MessageBoxButton.OK, MessageBoxImage.Warning);
-                //            return;
-                //        }
+                    //        LsoConfig.ImageAdjustPreset ImageParam = new();
+                    //        if (!Configuration.ObtainImageAdjustPreset(out ImageParam))
+                    //        {
+                    //            MessageBox.Show("Image Adjust Preset을 가져오지 못함.", "오류", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    //            return;
+                    //        }
 
-                //        myColorPreview.ImageAdjustBrightness = ImageParam.Brightness;
-                //    }
-                //    break;
-                //case PreviewDisplayMode.LIVE_SEQ_ROI:
-                //    {
-                //        myColorPreview.ClearReviewImages();
-                //        myColorPreview.IsReviewMode = false;
-                //        myColorPreview.IsReviewSliceMode = false;
-                //        myColorPreview.IsReviewROIMode = false;
-                //        myColorPreview.IsLiveSeqROIMode = true;
+                    //        myColorPreview.ImageAdjustBrightness = ImageParam.Brightness;
+                    //    }
+                    //    break;
+                    //case PreviewDisplayMode.LIVE_SEQ_ROI:
+                    //    {
+                    //        myColorPreview.ClearReviewImages();
+                    //        myColorPreview.IsReviewMode = false;
+                    //        myColorPreview.IsReviewSliceMode = false;
+                    //        myColorPreview.IsReviewROIMode = false;
+                    //        myColorPreview.IsLiveSeqROIMode = true;
 
-                //        LsoConfig.CaptureFrameSeqROIPreset param = new LsoConfig.CaptureFrameSeqROIPreset();
-                //        if (!Configuration.ObtainCaptureFrameSeqROIPreset(out param))
-                //        {
-                //            return;
-                //        }
+                    //        LsoConfig.CaptureFrameSeqROIPreset param = new LsoConfig.CaptureFrameSeqROIPreset();
+                    //        if (!Configuration.ObtainCaptureFrameSeqROIPreset(out param))
+                    //        {
+                    //            return;
+                    //        }
 
-                //        CaptureFrameSeqROIPresetCS presetCS = StructCaptureFrameSeqROIConverter.ToManaged(in param);
-                //        myColorPreview.FrameSeqROIs = presetCS.FrameSeqROIParamArray;
-                //        myColorPreview.SeqTargetImageMaxWidth = (int)_colorCameraParam.roiMaxWidth;
-                //        myColorPreview.SeqTargetImageMaxHeight = (int)_colorCameraParam.roiMaxHeight;
-                //    }
-                //    break;
-                //case PreviewDisplayMode.REVIEW_OFFSET_ROI:
-                //    {
-                //        myColorPreview.ClearReviewImages();
-                //        myColorPreview.IsReviewMode = false;
-                //        myColorPreview.IsReviewSliceMode = false;
-                //        myColorPreview.IsReviewROIMode = false;
-                //        myColorPreview.IsLiveSeqROIMode = false;
-                //        myColorPreview.IsLiveOffsetROIMode = true;
+                    //        CaptureFrameSeqROIPresetCS presetCS = StructCaptureFrameSeqROIConverter.ToManaged(in param);
+                    //        myColorPreview.FrameSeqROIs = presetCS.FrameSeqROIParamArray;
+                    //        myColorPreview.SeqTargetImageMaxWidth = (int)_colorCameraParam.roiMaxWidth;
+                    //        myColorPreview.SeqTargetImageMaxHeight = (int)_colorCameraParam.roiMaxHeight;
+                    //    }
+                    //    break;
+                    //case PreviewDisplayMode.REVIEW_OFFSET_ROI:
+                    //    {
+                    //        myColorPreview.ClearReviewImages();
+                    //        myColorPreview.IsReviewMode = false;
+                    //        myColorPreview.IsReviewSliceMode = false;
+                    //        myColorPreview.IsReviewROIMode = false;
+                    //        myColorPreview.IsLiveSeqROIMode = false;
+                    //        myColorPreview.IsLiveOffsetROIMode = true;
 
-                //        LsoConfig.CaptureFrameOffsetROIPreset param = new LsoConfig.CaptureFrameOffsetROIPreset();
-                //        if (!Configuration.ObtainCaptureFrameOffsetROIPreset(out param))
-                //        {
-                //            return;
-                //        }
+                    //        LsoConfig.CaptureFrameOffsetROIPreset param = new LsoConfig.CaptureFrameOffsetROIPreset();
+                    //        if (!Configuration.ObtainCaptureFrameOffsetROIPreset(out param))
+                    //        {
+                    //            return;
+                    //        }
 
-                //        CaptureFrameOffsetROIPresetCS presetCS = StructCaptureFrameOffsetROIConverter.ToManaged(in param);
-                //        myColorPreview.FrameOffsetROIs = presetCS.FrameOffsetROIParamArray;
-                //        myColorPreview.OffsetRoiImageWidth = presetCS.RoiWidth;
-                //        myColorPreview.OffsetRoiImageHeight = presetCS.RoiHeight;
-                //        myColorPreview.OffsetRoiTargetImageMaxWidth = (int)_colorCameraParam.roiMaxWidth;
-                //        myColorPreview.OffsetRoiTargetImageMaxHeight = (int)_colorCameraParam.roiMaxHeight;
-                //    }
-                //    break;
-                //case PreviewDisplayMode.REVIEW_ROLLING_SW_TRIGGER_OVERLAP:
-                //    {
-                //        myColorPreview.ClearReviewImages();
-                //        myColorPreview.IsReviewMode = false;
-                //        myColorPreview.IsReviewSliceMode = false;
-                //        myColorPreview.IsReviewROIMode = false;
-                //        myColorPreview.IsLiveSeqROIMode = false;
-                //        myColorPreview.IsLiveOffsetROIMode = false;
-                //        myColorPreview.IsReviewRollSWTrigOverlapMode = true;
+                    //        CaptureFrameOffsetROIPresetCS presetCS = StructCaptureFrameOffsetROIConverter.ToManaged(in param);
+                    //        myColorPreview.FrameOffsetROIs = presetCS.FrameOffsetROIParamArray;
+                    //        myColorPreview.OffsetRoiImageWidth = presetCS.RoiWidth;
+                    //        myColorPreview.OffsetRoiImageHeight = presetCS.RoiHeight;
+                    //        myColorPreview.OffsetRoiTargetImageMaxWidth = (int)_colorCameraParam.roiMaxWidth;
+                    //        myColorPreview.OffsetRoiTargetImageMaxHeight = (int)_colorCameraParam.roiMaxHeight;
+                    //    }
+                    //    break;
+                    //case PreviewDisplayMode.REVIEW_ROLLING_SW_TRIGGER_OVERLAP:
+                    //    {
+                    //        myColorPreview.ClearReviewImages();
+                    //        myColorPreview.IsReviewMode = false;
+                    //        myColorPreview.IsReviewSliceMode = false;
+                    //        myColorPreview.IsReviewROIMode = false;
+                    //        myColorPreview.IsLiveSeqROIMode = false;
+                    //        myColorPreview.IsLiveOffsetROIMode = false;
+                    //        myColorPreview.IsReviewRollSWTrigOverlapMode = true;
 
-                //        LsoConfig.CaptureFrameRollSWTrigOverlapPreset param = new LsoConfig.CaptureFrameRollSWTrigOverlapPreset();
-                //        if (!Configuration.ObtainCaptureFrameRollSWTrigOverlapPreset(out param))
-                //        {
-                //            return;
-                //        }
+                    //        LsoConfig.CaptureFrameRollSWTrigOverlapPreset param = new LsoConfig.CaptureFrameRollSWTrigOverlapPreset();
+                    //        if (!Configuration.ObtainCaptureFrameRollSWTrigOverlapPreset(out param))
+                    //        {
+                    //            return;
+                    //        }
 
-                //        myColorPreview.ReviewRollSWTrigOverlapBrightness = param.Brightness;
-                //    }
-                //    break;
-                //case PreviewDisplayMode.REVIEW_ROLLING_SW_TRIGGER_MANUAL:
-                //    {
-                //        myColorPreview.ClearReviewImages();
-                //        myColorPreview.IsReviewMode = true;
-                //        myColorPreview.IsReviewSliceMode = false;
-                //        myColorPreview.IsReviewROIMode = false;
-                //        myColorPreview.AcqFrameCount = 0;
-                //        myColorPreview.SubFrameCount = 0;
+                    //        myColorPreview.ReviewRollSWTrigOverlapBrightness = param.Brightness;
+                    //    }
+                    //    break;
+                    //case PreviewDisplayMode.REVIEW_ROLLING_SW_TRIGGER_MANUAL:
+                    //    {
+                    //        myColorPreview.ClearReviewImages();
+                    //        myColorPreview.IsReviewMode = true;
+                    //        myColorPreview.IsReviewSliceMode = false;
+                    //        myColorPreview.IsReviewROIMode = false;
+                    //        myColorPreview.AcqFrameCount = 0;
+                    //        myColorPreview.SubFrameCount = 0;
 
-                //        LsoConfig.ImageAdjustPreset ImageParam = new();
-                //        if (!Configuration.ObtainImageAdjustPreset(out ImageParam))
-                //        {
-                //            MessageBox.Show("Image Adjust Preset을 가져오지 못함.", "오류", MessageBoxButton.OK, MessageBoxImage.Warning);
-                //            return;
-                //        }
+                    //        LsoConfig.ImageAdjustPreset ImageParam = new();
+                    //        if (!Configuration.ObtainImageAdjustPreset(out ImageParam))
+                    //        {
+                    //            MessageBox.Show("Image Adjust Preset을 가져오지 못함.", "오류", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    //            return;
+                    //        }
 
-                //        myColorPreview.ImageAdjustBrightness = ImageParam.Brightness;
-                //    }
-                //    break;
+                    //        myColorPreview.ImageAdjustBrightness = ImageParam.Brightness;
+                    //    }
+                    //    break;
             }
 
             //if (IsRetinaCameraPreviewing())
