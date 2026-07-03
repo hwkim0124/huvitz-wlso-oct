@@ -12,6 +12,7 @@ using System.Windows.Shapes;
 using System.Windows.Threading;
 using WsoNativeLib;
 using static WsoNativeLib.WsoDevice;
+using static WsoNativeLib.WsoDomain;
 using static WsoToolkit.controls.LsoScanImagePreview;
 using static WsoToolkit.utils.NumberUtil;
 
@@ -29,6 +30,7 @@ namespace WsoToolkit
             initCallbacks_();
             initSetting_();
             initLsoFocusMotor_();
+            initFixation_();
         }
 
         private void Window_Closed(object sender, EventArgs e)
@@ -309,5 +311,98 @@ namespace WsoToolkit
         }
 
         #endregion LSO Focus Motor
+
+        #region Internal Fixation
+
+        private void initFixation_()
+        {
+            mySliderFixationRow.Minimum = FIXATION_ROW_MIN;
+            mySliderFixationRow.Maximum = FIXATION_ROW_MAX;
+            mySliderFixationCol.Minimum = FIXATION_COL_MIN;
+            mySliderFixationCol.Maximum = FIXATION_COL_MAX;
+
+            setPresetInternalFixation_(FixationTarget.FUNDUS);
+        }
+
+        private void getCurrentInternalFixation_()
+        {
+            if (Fixation.GetCurrentInternalFixation(out int row, out int col))
+            {
+                mySliderFixationRow.Value = row;
+                mySliderFixationCol.Value = col;
+                myTbFixationRow.Text = row.ToString();
+                myTbFixationCol.Text = col.ToString();
+            }
+        }
+
+        private void setCurrentInternalFixation_()
+        {
+            int row = (int)mySliderFixationRow.Value;
+            int col = (int)mySliderFixationCol.Value;
+            Fixation.TurnOnInternalFixation(row, col);
+            getCurrentInternalFixation_();
+        }
+
+        private void setPresetInternalFixation_(FixationTarget target)
+        {
+            EyeSide side = myRbSideOD.IsChecked == true ? EyeSide.OD : EyeSide.OS;
+            Fixation.TurnOnInternalFixationWithTarget(side, target);
+            getCurrentInternalFixation_();
+        }
+
+        private void mySliderFixationRow_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            setCurrentInternalFixation_();
+        }
+
+        private void mySliderFixationCol_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            setCurrentInternalFixation_();
+        }
+
+        private void myTbFixationRow_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Enter)
+            {
+                return;
+            }
+
+            int value = ToInt(myTbFixationRow.Text);
+            if (value >= mySliderFixationRow.Minimum && value <= mySliderFixationRow.Maximum)
+            {
+                mySliderFixationRow.Value = value;
+            }
+        }
+
+        private void myTbFixationCol_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Enter)
+            {
+                return;
+            }
+
+            int value = ToInt(myTbFixationCol.Text);
+            if (value >= mySliderFixationCol.Minimum && value <= mySliderFixationCol.Maximum)
+            {
+                mySliderFixationCol.Value = value;
+            }
+        }
+
+        private void myBtFixationFundus_Click(object sender, RoutedEventArgs e)
+        {
+            setPresetInternalFixation_(FixationTarget.FUNDUS);
+        }
+
+        private void myBtFixationMarcular_Click(object sender, RoutedEventArgs e)
+        {
+            setPresetInternalFixation_(FixationTarget.CENTER);
+        }
+
+        private void myBtFixationDisc_Click(object sender, RoutedEventArgs e)
+        {
+            setPresetInternalFixation_(FixationTarget.OPTIC_DISC);
+        }
+
+        #endregion Internal Fixation
     }
 }

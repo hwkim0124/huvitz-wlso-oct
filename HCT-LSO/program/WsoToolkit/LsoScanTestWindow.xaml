@@ -40,11 +40,10 @@
                 <controls:LsoScanImagePreview x:Name="myColorPreview" Width="850" Height="740" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Grid>
             <!--fixation Group-->
-            <Grid Grid.Row="1" Grid.Column="3">
-                <!--<GroupBox Header="Internal Fixation" Grid.Row="6" Grid.RowSpan="2" Grid.Column="3" Grid.ColumnSpan="2" Visibility="Visible">
+            <Grid Grid.Row="1" Grid.Column="3" Margin="5">
+                <GroupBox Header="Internal Fixation" VerticalAlignment="Top">
                     <Grid>
                         <Grid.RowDefinitions>
-                            <RowDefinition/>
                             <RowDefinition/>
                             <RowDefinition/>
                             <RowDefinition/>
@@ -56,41 +55,19 @@
                             <ColumnDefinition/>
                             <ColumnDefinition/>
                         </Grid.ColumnDefinitions>
-                        <Grid Grid.Row="0" Grid.Column="0">
-                            <Label Content="Row :" Style="{StaticResource LabelStyle}"/>
-                        </Grid>
-                        <Grid Grid.Row="0" Grid.Column="2" Grid.ColumnSpan="2">
-                            <Slider x:Name="mySliderFixationRow" VerticalAlignment="Center" TickFrequency="1" LargeChange="1" SmallChange="1" IsSnapToTickEnabled="True" AutoToolTipPlacement="BottomRight" ValueChanged="mySliderFixationRow_ValueChanged"/>
-                        </Grid>
-                        <Grid Grid.Row="0" Grid.Column="5">
-                            <TextBox x:Name="myTbFixationRow" Style="{StaticResource TextBoxS1Style}" HorizontalAlignment="Center" KeyDown="myTbFixationRow_KeyDown"/>
-                        </Grid>
-                        <Grid Grid.Row="1" Grid.Column="0">
-                            <Label Content="Col :" Style="{StaticResource LabelStyle}"/>
-                        </Grid>
-                        <Grid Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2">
-                            <Slider x:Name="mySliderFixationCol" VerticalAlignment="Center" TickFrequency="1" LargeChange="1" SmallChange="1" IsSnapToTickEnabled="True" AutoToolTipPlacement="BottomRight" ValueChanged="mySliderFixationCol_ValueChanged"/>
-                        </Grid>
-                        <Grid Grid.Row="1" Grid.Column="5">
-                            <TextBox x:Name="myTbFixationCol" Style="{StaticResource TextBoxS1Style}" HorizontalAlignment="Center" KeyDown="myTbFixationCol_KeyDown"/>
-                        </Grid>
-                        <Grid Grid.Row="2" Grid.Column="0" Visibility="Visible">
-                            <RadioButton x:Name="myRbSideOD" GroupName="groupFixationEyeSide" Content="OD" Style="{StaticResource RadioButtonStyle}" IsChecked="True"/>
-                        </Grid>
-                        <Grid Grid.Row="2" Grid.Column="1" Visibility="Visible">
-                            <RadioButton x:Name="myRbSideOS" GroupName="groupFixationEyeSide" Content="OS" Style="{StaticResource RadioButtonStyle}"/>
-                        </Grid>
-                        <Grid Grid.Row="2" Grid.Column="2" Visibility="Visible">
-                            <Button x:Name="myBtFixationFundus" Content="Fundus" Style="{StaticResource ButtonS1Style}" Width="50" Click="myBtFixationFundus_Click"/>
-                        </Grid>
-                        <Grid Grid.Row="2" Grid.Column="3" Visibility="Visible">
-                            <Button x:Name="myBtFixationMarcular" Content="Macular" Style="{StaticResource ButtonS1Style}" Width="50" Click="myBtFixationMarcular_Click"/>
-                        </Grid>
-                        <Grid Grid.Row="2" Grid.Column="4" Visibility="Visible">
-                            <Button x:Name="myBtFixationDisc" Content="Disc" Style="{StaticResource ButtonS1Style}" Width="50" Click="myBtFixationDisc_Click"/>
-                        </Grid>
+                        <Label Grid.Row="0" Grid.Column="0" Content="Row :" Style="{StaticResource LabelStyle}"/>
+                        <Slider x:Name="mySliderFixationRow" Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" VerticalAlignment="Center" TickFrequency="1" LargeChange="1" SmallChange="1" IsSnapToTickEnabled="True" AutoToolTipPlacement="BottomRight" ValueChanged="mySliderFixationRow_ValueChanged"/>
+                        <TextBox x:Name="myTbFixationRow" Grid.Row="0" Grid.Column="4" Style="{StaticResource TextBoxS2Style}" HorizontalAlignment="Center" KeyDown="myTbFixationRow_KeyDown"/>
+                        <Label Grid.Row="1" Grid.Column="0" Content="Col :" Style="{StaticResource LabelStyle}"/>
+                        <Slider x:Name="mySliderFixationCol" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" VerticalAlignment="Center" TickFrequency="1" LargeChange="1" SmallChange="1" IsSnapToTickEnabled="True" AutoToolTipPlacement="BottomRight" ValueChanged="mySliderFixationCol_ValueChanged"/>
+                        <TextBox x:Name="myTbFixationCol" Grid.Row="1" Grid.Column="4" Style="{StaticResource TextBoxS2Style}" HorizontalAlignment="Center" KeyDown="myTbFixationCol_KeyDown"/>
+                        <RadioButton x:Name="myRbSideOD" Grid.Row="2" Grid.Column="0" GroupName="groupFixationEyeSide" Content="OD" Style="{StaticResource RadioButtonStyle}" IsChecked="True"/>
+                        <RadioButton x:Name="myRbSideOS" Grid.Row="2" Grid.Column="1" GroupName="groupFixationEyeSide" Content="OS" Style="{StaticResource RadioButtonStyle}"/>
+                        <Button x:Name="myBtFixationFundus" Grid.Row="2" Grid.Column="2" Content="Fundus" Style="{StaticResource ButtonS1Style}" Width="50" Click="myBtFixationFundus_Click"/>
+                        <Button x:Name="myBtFixationMarcular" Grid.Row="2" Grid.Column="3" Content="Macular" Style="{StaticResource ButtonS1Style}" Width="50" Click="myBtFixationMarcular_Click"/>
+                        <Button x:Name="myBtFixationDisc" Grid.Row="2" Grid.Column="4" Content="Disc" Style="{StaticResource ButtonS1Style}" Width="50" Click="myBtFixationDisc_Click"/>
                     </Grid>
-                </GroupBox>-->
+                </GroupBox>
             </Grid>
             <Grid Grid.Row="0" Grid.Column="3" Margin="5">
                 <GroupBox Header="Setting">
@@ -298,7 +275,7 @@
                             <TextBox x:Name="myTbGalvoRewindOffset" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
                         </Grid>
                         <Grid Grid.Row="8" Grid.Column="3">
-                            <Button x:Name="myBtApply" Content="Apply" Style="{StaticResource ButtonS1Style}" Click="myBtApply_Click"/>
+                            <Button x:Name="myBtApply" Content="Apply" Style="{StaticResource ButtonM1Style}" Click="myBtApply_Click"/>
                         </Grid>
                     </Grid>
                 </GroupBox>
