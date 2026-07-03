@@ -68,6 +68,89 @@ namespace WsoToolkit.controls
             InitializeComponent();
         }
 
+        public bool IsOverlayAlignGuide
+        {
+            get => myAlignGuideOverlay.Visibility == Visibility.Visible;
+            set
+            {
+                myAlignGuideOverlay.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
+                if (value)
+                {
+                    DrawAlignGuide();
+                }
+            }
+        }
+
+        private void myAlignGuideOverlay_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (IsOverlayAlignGuide)
+            {
+                DrawAlignGuide();
+            }
+        }
+
+        private void DrawAlignGuide()
+        {
+            var canvas = myAlignGuideOverlay;
+            canvas.Children.Clear();
+
+            double w = canvas.ActualWidth;
+            double h = canvas.ActualHeight;
+            if (w <= 0 || h <= 0)
+            {
+                return;
+            }
+
+            var brush = System.Windows.Media.Brushes.Yellow;
+            double cx = w / 2;
+            double cy = h / 2;
+
+            // 주 십자선 (viewport 전체)
+            AddGuideLine(brush, cx, 0, cx, h);
+            AddGuideLine(brush, 0, cy, w, cy);
+
+            // Major tick
+            double unit = 80, size = 7;
+            for (int i = 1; i < 4; i++)
+            {
+                AddGuideLine(brush, cx - unit * i, cy - size, cx - unit * i, cy + size);
+                AddGuideLine(brush, cx + unit * i, cy - size, cx + unit * i, cy + size);
+            }
+            for (int i = 1; i < 3; i++)
+            {
+                AddGuideLine(brush, cx - size, cy - unit * i, cx + size, cy - unit * i);
+                AddGuideLine(brush, cx - size, cy + unit * i, cx + size, cy + unit * i);
+            }
+
+            // Minor tick
+            unit = 10; size = 3;
+            for (int i = 1; i < 32; i++)
+            {
+                AddGuideLine(brush, cx - unit * i, cy - size, cx - unit * i, cy + size);
+                AddGuideLine(brush, cx + unit * i, cy - size, cx + unit * i, cy + size);
+            }
+            for (int i = 1; i < 24; i++)
+            {
+                AddGuideLine(brush, cx - size, cy - unit * i, cx + size, cy - unit * i);
+                AddGuideLine(brush, cx - size, cy + unit * i, cx + size, cy + unit * i);
+            }
+        }
+
+        private void AddGuideLine(System.Windows.Media.Brush brush, double x1, double y1, double x2, double y2)
+        {
+            var line = new System.Windows.Shapes.Line
+            {
+                X1 = x1,
+                Y1 = y1,
+                X2 = x2,
+                Y2 = y2,
+                Stroke = brush,
+                StrokeThickness = 1,
+                SnapsToDevicePixels = true,
+            };
+            myAlignGuideOverlay.Children.Add(line);
+        }
+
         private void UpdatePreviewStatusItems()
         {
             string s = string.Format("{0} x {1}, {2} channels, {3:F1} fps, IQS: {4:F2}", _imageWidth, _imageHeight, _imageChannels, _fpsCalc.FrameRate, _imageQuality);

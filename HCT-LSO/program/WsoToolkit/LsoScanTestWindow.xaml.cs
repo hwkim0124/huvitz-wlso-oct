@@ -95,7 +95,14 @@ namespace WsoToolkit
 
         private void myBtCorneaStart_Click(object sender, RoutedEventArgs e)
         {
-
+            if (isCorneaCameraPreviewing_())
+            {
+                CloseCorneaCameraPreview();
+            }
+            else
+            {
+                StartCorneaCameraPreview();
+            }
         }
 
         #endregion Scan Mode
@@ -385,5 +392,14 @@ namespace WsoToolkit
         }
 
         #endregion Internal Fixation
+
+        #region Align Guide
+
+        private void myCheckAlignGuide_CheckedNUnchecked(object sender, RoutedEventArgs e)
+        {
+            myColorPreview.IsOverlayAlignGuide = myCheckAlignGuide.IsChecked == true;
+        }
+
+        #endregion Align Guide
     }
 }

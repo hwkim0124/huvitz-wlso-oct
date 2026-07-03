@@ -18,6 +18,8 @@
                 </Grid.RowDefinitions>
                 <Grid Grid.Row="0" Grid.Column="0" Background="LightGray" IsHitTestVisible="False">
                     <Image x:Name="imageViewport" Grid.Row="0" Style="{StaticResource ImageStyle}" Stretch="Uniform"/>
+                    <!--Align Guide Overlay (viewport 기준 노란색 십자선 + tick mark)-->
+                    <Canvas x:Name="myAlignGuideOverlay" Visibility="Collapsed" IsHitTestVisible="False" ClipToBounds="True" SizeChanged="myAlignGuideOverlay_SizeChanged"/>
                 </Grid>
                 <!--Live Menu-->
                 <Grid Grid.Row="1" x:Name="myGridLive" Visibility="Visible">

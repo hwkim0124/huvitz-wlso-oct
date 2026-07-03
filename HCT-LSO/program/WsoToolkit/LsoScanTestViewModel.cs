@@ -308,8 +308,11 @@ namespace WsoToolkit
         private readonly LsoScanTestModel _scanTestModel = new LsoScanTestModel();
 
         WsoCallback.ColorCameraImageCaptured _onColorCaptureImageCaptured;
-
         WsoCallback.ColorCameraFrameCaptured _onColorLiveFrameCaptured;
+
+        WsoCallback.CorneaCameraFrameCaptured _onCorneaLeftFrameCaptured;
+        WsoCallback.CorneaCameraFrameCaptured _onCorneaRightFrameCaptured;
+        WsoCallback.CorneaCameraFrameCaptured _onCorneaLowerFrameCaptured;
 
         // Live 프레임이 UI 렌더링보다 빠르게 도착할 때 Dispatcher 큐가 쌓여 메모리가 증가하는 것을 막는 드롭 플래그.
         private volatile bool _isColorLiveFramePending;
@@ -499,6 +502,10 @@ namespace WsoToolkit
         {
             _onColorCaptureImageCaptured = new WsoCallback.ColorCameraImageCaptured(this.OnColorCameraCaptureFrameCaptured);
             _onColorLiveFrameCaptured = new WsoCallback.ColorCameraFrameCaptured(this.OnColorCameraFrameCaptured);
+
+            _onCorneaLeftFrameCaptured = new WsoCallback.CorneaCameraFrameCaptured(this.OnCorneaCameraLeftFrameCaptured);
+            _onCorneaRightFrameCaptured = new WsoCallback.CorneaCameraFrameCaptured(this.OnCorneaCameraRightFrameCaptured);
+            _onCorneaLowerFrameCaptured = new WsoCallback.CorneaCameraFrameCaptured(this.OnCorneaCameraLowerFrameCaptured);
         }
 
         public void StartColorCameraLive()
@@ -538,6 +545,32 @@ namespace WsoToolkit
             // Scan Setting
             initScannerControls_();
         }
+
+        #region Cornea Camera
+
+        private bool isCorneaCameraPreviewing_()
+        {
+            if (CorneaCamera.IsPreviewing(CameraType.IrCorneaLeft) || CorneaCamera.IsPreviewing(CameraType.IrCorneaRight))
+                return true;
+
+            return false;
+        }
+
+        public void StartCorneaCameraPreview()
+        {
+            CorneaCamera.StartPreview(CameraType.IrCorneaLeft, _onCorneaLeftFrameCaptured);
+            CorneaCamera.StartPreview(CameraType.IrCorneaRight, _onCorneaRightFrameCaptured);
+            // CorneaCamera.StartPreview(CameraType.IrCorneaLower, _onCorneaLowerFrameCaptured);
+        }
+
+        public void CloseCorneaCameraPreview()
+        {
+            CorneaCamera.ClosePreview(CameraType.IrCorneaLeft);
+            CorneaCamera.ClosePreview(CameraType.IrCorneaRight);
+            // CorneaCamera.ClosePreview(CameraType.IrCorneaLower);
+        }
+
+        #endregion Cornea Camera 
 
         #endregion Captrue - Review
 
@@ -804,6 +837,38 @@ namespace WsoToolkit
                 LsoScanner.PauseLsoScannerGrabbing((int)LsoScannerPatternId.COLOR);
             }
             return;
+        }
+
+        // Cornea Cameras
+
+        private void OnCorneaCameraLeftFrameCaptured(nint data, int width, int height)
+        {
+            if (data == 0) return;
+
+            // Update GUI preview control asynchronously.
+            Dispatcher.BeginInvoke(() => {
+                corneaPreview1.CallbackCorneaCameraFrame(data, width, height);
+            }, DispatcherPriority.Background);
+        }
+
+        private void OnCorneaCameraRightFrameCaptured(nint data, int width, int height)
+        {
+            if (data == 0) return;
+
+            // Update GUI preview control asynchronously.
+            Dispatcher.BeginInvoke(() => {
+                corneaPreview2.CallbackCorneaCameraFrame(data, width, height);
+            }, DispatcherPriority.Background);
+        }
+
+        private void OnCorneaCameraLowerFrameCaptured(nint data, int width, int height)
+        {
+            if (data == 0) return;
+
+            // Update GUI preview control asynchronously.
+            Dispatcher.BeginInvoke(() => {
+                corneaPreview3.CallbackCorneaCameraFrame(data, width, height);
+            }, DispatcherPriority.Background);
         }
         #endregion Callbacks
     }

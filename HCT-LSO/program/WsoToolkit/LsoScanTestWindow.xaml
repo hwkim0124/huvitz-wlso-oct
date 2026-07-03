@@ -163,6 +163,9 @@
                 <Grid Grid.Row="1" Grid.Column="1">
                     <Button x:Name="myBtStartColorCameraLive" Style="{StaticResource ButtonM1Style}" Content="Start Color Live" HorizontalAlignment="Center" VerticalAlignment="Center" Click="myBtStartColorCameraLive_Click"/>
                 </Grid>
+                <Grid Grid.Row="2" Grid.Column="0">
+                    <CheckBox x:Name="myCheckAlignGuide" Style="{StaticResource CheckBoxStyle}" Content="Align Guide" HorizontalAlignment="Center" VerticalAlignment="Center"  IsChecked="False" Checked="myCheckAlignGuide_CheckedNUnchecked" Unchecked="myCheckAlignGuide_CheckedNUnchecked"/>
+                </Grid>
             </Grid>
             <Grid Grid.Row="3" Grid.Column="1">
                 <Grid.RowDefinitions>
