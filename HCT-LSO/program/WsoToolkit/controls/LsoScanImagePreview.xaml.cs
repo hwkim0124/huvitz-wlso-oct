@@ -120,6 +120,7 @@ namespace WsoToolkit.controls
         public void ClearReviewImages()
         {
             _captureImageList.Clear();
+            _captureSliceAcqImageList.Clear();
         }
 
         public void makeReviewImage(ref List<Mat> ImageList, Mat originMat, int nPixelFormat)
@@ -356,6 +357,12 @@ namespace WsoToolkit.controls
             lblImageStatusReview.Content = s;
         }
 
+        private void UpdateReviewSliceStatusItems(int nWidth, int nHeight)
+        {
+            string s = string.Format("{0} x {1}", nWidth, nHeight);
+            lblImageStatusReviewSlice.Content = s;
+        }
+
         public void CallbackLsoScanFrameImage(byte[] data, int width, int height, int channels, float quality, int nPixelFormat, int nBytesPerPixel)
         {
             _imageWidth = width;
@@ -447,7 +454,7 @@ namespace WsoToolkit.controls
                 }
                 else if (IsReviewSliceMode == true) // Captrue (Slice)
                 {
-                    UpdateReviewStatusItems(width, height);
+                    UpdateReviewSliceStatusItems(width, height);
                     SetReviewSliceMode();
                 }
             }

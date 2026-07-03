@@ -37,8 +37,6 @@ namespace WsoToolkit.controls
             {
                 Mask?.Dispose();
                 InvertedMask?.Dispose();
-                Mask = null;
-                InvertedMask = null;
             }
 
             public void Invalidate()
