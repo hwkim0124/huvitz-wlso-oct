@@ -18,6 +18,13 @@ using static WsoToolkit.utils.NumberUtil;
 
 namespace WsoToolkit
 {
+    public sealed class FrameRoiPosition
+    {
+        public int StartY { get; set; }
+
+        public int EndY { get; set; }
+    }
+
     public sealed class LsoScanTestModel
     {
         public const string DefaultConfigIniPath = ".//WsoDeviceCfg.ini";
@@ -231,6 +238,10 @@ namespace WsoToolkit
 
         public uint AdcDepthIndex { get; set; }
 
+        public int CaptureFrameRoiCount { get; set; }
+
+        public List<FrameRoiPosition> CaptureFrameRois { get; } = new List<FrameRoiPosition>();
+
         internal void LoadFromIni(IniFileUtil ini)
         {
             RoiXWidth = ini.ReadUInt(IniSectionName, "RoiXWidth");
@@ -245,6 +256,17 @@ namespace WsoToolkit
             BinningVertical = ini.ReadUInt(IniSectionName, "BinningVertical", 1);
             Gain = ini.ReadFloat(IniSectionName, "Gain");
             AdcDepthIndex = ini.ReadUInt(IniSectionName, "AdcDepth");
+
+            CaptureFrameRoiCount = ini.ReadInt(IniSectionName, "CaptureFrameRoiCount");
+            CaptureFrameRois.Clear();
+            for (int i = 0; i < CaptureFrameRoiCount; ++i)
+            {
+                CaptureFrameRois.Add(new FrameRoiPosition
+                {
+                    StartY = ini.ReadInt(IniSectionName, $"CaptureFrameRoi{i}_StartY"),
+                    EndY = ini.ReadInt(IniSectionName, $"CaptureFrameRoi{i}_EndY"),
+                });
+            }
         }
 
         internal void SaveToIni(IniFileUtil ini)
@@ -261,6 +283,34 @@ namespace WsoToolkit
             ini.WriteInt(IniSectionName, "BinningVertical", (int)BinningVertical);
             ini.WriteFloat(IniSectionName, "Gain", Gain);
             ini.WriteInt(IniSectionName, "AdcDepth", (int)AdcDepthIndex);
+
+            CaptureFrameRoiCount = CaptureFrameRois.Count;
+            ini.WriteInt(IniSectionName, "CaptureFrameRoiCount", CaptureFrameRoiCount);
+            for (int i = 0; i < CaptureFrameRoiCount; ++i)
+            {
+                ini.WriteInt(IniSectionName, $"CaptureFrameRoi{i}_StartY", CaptureFrameRois[i].StartY);
+                ini.WriteInt(IniSectionName, $"CaptureFrameRoi{i}_EndY", CaptureFrameRois[i].EndY);
+            }
+        }
+
+        public FrameRoiPosition[] GetCaptureFrameRoisArray()
+        {
+            return CaptureFrameRois.ToArray();
+        }
+
+        public void SetCaptureFrameRois(IReadOnlyList<FrameRoiPosition> rois)
+        {
+            CaptureFrameRois.Clear();
+            foreach (FrameRoiPosition roi in rois)
+            {
+                CaptureFrameRois.Add(new FrameRoiPosition
+                {
+                    StartY = roi.StartY,
+                    EndY = roi.EndY,
+                });
+            }
+
+            CaptureFrameRoiCount = CaptureFrameRois.Count;
         }
 
         public LsoColorCameraSettingParam ToSettingParam()
@@ -342,7 +392,7 @@ namespace WsoToolkit
                         myColorPreview.ClearReviewImages();
                         myColorPreview.IsReviewMode = true;
                         myColorPreview.IsReviewSliceMode = false;
-                        //myColorPreview.IsReviewROIMode = false;
+                        myColorPreview.IsReviewROIMode = false;
                         myColorPreview.AcqFrameCount = 0;
                         myColorPreview.SubFrameCount = 0;
 
@@ -362,7 +412,7 @@ namespace WsoToolkit
                         myColorPreview.ClearReviewImages();
                         myColorPreview.IsReviewMode = false;
                         myColorPreview.IsReviewSliceMode = true;
-                        //myColorPreview.IsReviewROIMode = false;
+                        myColorPreview.IsReviewROIMode = false;
                         myColorPreview.AcqFrameCount = ToInt(myTbAcqFrame.Text);
                         myColorPreview.SubFrameCount = ToInt(myTbSubFrame.Text);
 
@@ -376,35 +426,17 @@ namespace WsoToolkit
                         //myColorPreview.ImageAdjustBrightness = param.Brightness;
                     }
                     break;
-                    //case PreviewDisplayMode.REVIEW_ROI:
-                    //    {
-                    //        myColorPreview.ClearReviewImages();
-                    //        myColorPreview.IsReviewMode = false;
-                    //        myColorPreview.IsReviewSliceMode = false;
-                    //        myColorPreview.IsReviewROIMode = true;
-                    //        myColorPreview.AcqFrameCount = ToInt(myTbAcqFrame.Text);
-                    //        myColorPreview.SubFrameCount = ToInt(myTbSubFrame.Text);
-
-
-                    //        LsoConfig.CaptureFrameROIPreset param = new LsoConfig.CaptureFrameROIPreset();
-                    //        if (!Configuration.ObtainCaptureFrameROIPreset(out param))
-                    //        {
-                    //            return;
-                    //        }
-
-                    //        CaptureFrameROIPresetCS presetCS = StructCaptureFrameROIConverter.ToManaged(in param);
-                    //        myColorPreview.FrameROIs = presetCS.FrameROIPositionArray;
-
-                    //        LsoConfig.ImageAdjustPreset ImageParam = new();
-                    //        if (!Configuration.ObtainImageAdjustPreset(out ImageParam))
-                    //        {
-                    //            MessageBox.Show("Image Adjust Preset을 가져오지 못함.", "오류", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    //            return;
-                    //        }
-
-                    //        myColorPreview.ImageAdjustBrightness = ImageParam.Brightness;
-                    //    }
-                    //    break;
+                case PreviewDisplayMode.REVIEW_ROI:
+                    {
+                        myColorPreview.ClearReviewImages();
+                        myColorPreview.IsReviewMode = false;
+                        myColorPreview.IsReviewSliceMode = false;
+                        myColorPreview.IsReviewROIMode = true;
+                        myColorPreview.AcqFrameCount = ToInt(myTbAcqFrame.Text);
+                        myColorPreview.SubFrameCount = ToInt(myTbSubFrame.Text);
+                        myColorPreview.FrameROIs = _scanTestModel.ColorCamera.GetCaptureFrameRoisArray();
+                    }
+                    break;
                     //case PreviewDisplayMode.LIVE_SEQ_ROI:
                     //    {
                     //        myColorPreview.ClearReviewImages();

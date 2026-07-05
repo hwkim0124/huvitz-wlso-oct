@@ -429,5 +429,35 @@ namespace WsoToolkit
 
             LsoScanner.StartLsoScannerGrabbing((int)LsoScannerPatternId.COLOR);
         }
+
+        private void myBtCaptureROI_Click(object sender, RoutedEventArgs e)
+        {
+            if (IsColorCameraLive())
+            {
+                PauseColorCameraLive();
+            }
+
+            readyToCapture_(PreviewDisplayMode.REVIEW_ROI);
+
+            StartColorCameraOriginal();
+        }
+
+        private void myBtCaptureROISetting_Click(object sender, RoutedEventArgs e)
+        {
+            var window = new CaptureROISettingWindow(_scanTestModel)
+            {
+                Owner = this
+            };
+
+            System.Windows.Point pt = myBtCaptureROISetting.PointToScreen(new System.Windows.Point(0, 0));
+            window.WindowStartupLocation = WindowStartupLocation.Manual;
+            window.Left = pt.X + (myBtCaptureROISetting.ActualWidth / 2) - (window.Width / 2);
+            window.Top = pt.Y + myBtCaptureROISetting.ActualHeight;
+
+            int nFrameCount = ToInt(myTbSubFrame.Text);
+            window.FrameCount = nFrameCount;
+
+            window.ShowDialog();
+        }
     }
 }

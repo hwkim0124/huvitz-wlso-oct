@@ -33,6 +33,7 @@ using System.Dynamic;
 using static System.Net.Mime.MediaTypeNames;
 using WsoNativeLib;
 using static WsoNativeLib.WsoLsoDefs;
+using WsoToolkit;
 
 namespace WsoToolkit.controls
 {
@@ -62,6 +63,10 @@ namespace WsoToolkit.controls
         // Review Slice
         public bool IsReviewSliceMode { get; set; } = false;
         List<List<Mat>> _captureSliceAcqImageList = new ();
+
+        // Review ROI
+        public bool IsReviewROIMode { get; set; } = false;
+        public FrameRoiPosition[] FrameROIs = Array.Empty<FrameRoiPosition>();
 
         public LsoScanImagePreview()
         {
@@ -242,6 +247,7 @@ namespace WsoToolkit.controls
             myGridLive.Visibility = Visibility.Hidden;
             myGridReview.Visibility = Visibility.Hidden;
             myGridReviewSliceMode.Visibility = Visibility.Hidden;
+            myGridReviewROIMode.Visibility = Visibility.Hidden;
 
             switch (mode)
             {
@@ -258,6 +264,11 @@ namespace WsoToolkit.controls
                 case PreviewDisplayMode.REVIEW_SLICE:
                     {
                         myGridReviewSliceMode.Visibility = Visibility.Visible;
+                    }
+                    break;
+                case PreviewDisplayMode.REVIEW_ROI:
+                    {
+                        myGridReviewROIMode.Visibility = Visibility.Visible;
                     }
                     break;
                 default:
@@ -292,6 +303,19 @@ namespace WsoToolkit.controls
                         mySliderReviewSliceSubImageIndex.Maximum = _captureSliceAcqImageList[0].Count;
                         myTbSliceSubCurIndex.Text = "1";
                         myTbSliceSubTotalCount.Text = _captureSliceAcqImageList[0].Count.ToString();
+                    }
+                    break;
+                case PreviewDisplayMode.REVIEW_ROI:
+                    {
+                        mySliderReviewROIImageIndex.Minimum = 1;
+                        mySliderReviewROIImageIndex.Maximum = _captureSliceAcqImageList.Count;
+                        myTbROIAcqCurIndex.Text = "1";
+                        myTbROIAcqTotalCount.Text = _captureSliceAcqImageList.Count.ToString();
+
+                        mySliderReviewROISubImageIndex.Minimum = 1;
+                        mySliderReviewROISubImageIndex.Maximum = _captureSliceAcqImageList[0].Count;
+                        myTbROISubCurIndex.Text = "1";
+                        myTbROISubTotalCount.Text = _captureSliceAcqImageList[0].Count.ToString();
                     }
                     break;
             }
@@ -417,6 +441,105 @@ namespace WsoToolkit.controls
             resetDisplayMenu_(PreviewDisplayMode.REVIEW_SLICE, _captureSliceAcqImageList.Count());
         }
 
+        public void SetReviewROIMode()
+        {
+            showDisplayMenu_(PreviewDisplayMode.REVIEW_ROI);
+
+            if (_captureImageList.Count > 0)
+            {
+                int nAcqFrameCount = AcqFrameCount;
+                int nSubFrameCount = SubFrameCount;
+                int nFrameCount = _captureImageList.Count;
+
+                FrameRoiPosition[] frameROIs = FrameROIs;
+
+                if (nAcqFrameCount != 1 && nSubFrameCount != 1 && nFrameCount != 2)
+                {
+                    if (nAcqFrameCount * nSubFrameCount != nFrameCount)
+                    {
+                        MessageBox.Show("Total frame count is invalid.");
+                        return;
+                    }
+                }
+
+                int chunkSize = nFrameCount / nAcqFrameCount;
+                List<List<Mat>> tempAcqFrameList = SplitListBySize(_captureImageList, chunkSize);
+
+                int height = _captureImageList[0].Rows;
+                int width = _captureImageList[0].Cols;
+
+                for (int i = 0; i < tempAcqFrameList.Count; ++i)
+                {
+                    List<Mat> tempSubFrameList = new List<Mat>();
+                    Mat[] sliced = new Mat[nSubFrameCount];
+
+                    for (int j = 0; j < nSubFrameCount; ++j)
+                    {
+                        if (j > frameROIs.Length - 1)
+                        {
+                            sliced[j] = tempAcqFrameList[i][j].Clone();
+                            tempSubFrameList.Add(sliced[j]);
+                        }
+                        else
+                        {
+                            int startY = Math.Clamp(frameROIs[j].StartY, 0, height);
+                            int endY = Math.Clamp(frameROIs[j].EndY, 0, height);
+                            OpenCvSharp.Rect roi = new OpenCvSharp.Rect(0, startY, width, endY - startY);
+                            sliced[j] = new Mat(tempAcqFrameList[i][j], roi).Clone();
+                            tempSubFrameList.Add(sliced[j]);
+                        }
+                    }
+
+                    Mat baseImg = new Mat(height, width, MatType.CV_8UC3, Scalar.All(0));
+
+                    for (int index = 0; index < nSubFrameCount; ++index)
+                    {
+                        if (index > frameROIs.Length - 1)
+                        {
+                            sliced[index].CopyTo(baseImg);
+                            continue;
+                        }
+
+                        int startY = Math.Clamp(frameROIs[index].StartY, 0, height);
+                        int endY = Math.Clamp(frameROIs[index].EndY, 0, height);
+                        int roiHeight = endY - startY;
+                        if (roiHeight <= 0)
+                        {
+                            continue;
+                        }
+
+                        OpenCvSharp.Rect roiRect = new OpenCvSharp.Rect(0, startY, width, roiHeight);
+                        using Mat baseROI = new Mat(baseImg, roiRect);
+                        sliced[index].CopyTo(baseROI);
+                    }
+
+                    tempSubFrameList.Insert(0, baseImg);
+                    _captureSliceAcqImageList.Add(tempSubFrameList);
+                }
+
+                mySliderReviewROIImageIndex.Value = 1;
+                mySliderReviewROISubImageIndex.Value = 1;
+
+                try
+                {
+                    Mat adjustedMat = _captureSliceAcqImageList[0][0].Clone();
+
+                    Dispatcher.Invoke(() =>
+                    {
+                        imageViewport.Source = OpenCvSharp.WpfExtensions.BitmapSourceConverter.ToBitmapSource(adjustedMat);
+                    });
+
+                    adjustedMat.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Image adjustment error: {ex.Message}");
+                }
+            }
+
+            resetDisplayMenu_(PreviewDisplayMode.REVIEW_ROI, _captureSliceAcqImageList.Count());
+        }
+
         static List<List<Mat>> SplitListBySize(List<Mat> source, int chunkSize)
         {
             var result = new List<List<Mat>>();
@@ -444,6 +567,125 @@ namespace WsoToolkit.controls
         {
             string s = string.Format("{0} x {1}", nWidth, nHeight);
             lblImageStatusReviewSlice.Content = s;
+        }
+
+        private void UpdateReviewROIStatusItems(int nWidth, int nHeight)
+        {
+            string s = string.Format("{0} x {1}", nWidth, nHeight);
+            lblImageStatusReviewROI.Content = s;
+        }
+
+        private async Task saveAllImages_()
+        {
+            if (_captureImageList.Count <= 0)
+            {
+                return;
+            }
+
+            await Task.Run(() =>
+            {
+                string strFolderPath = AppDomain.CurrentDomain.BaseDirectory + "_Capture" + "//" + DateTime.Now.ToString("yyyyMMdd_HHmmss");
+
+                if (!Directory.Exists(strFolderPath))
+                {
+                    Directory.CreateDirectory(strFolderPath);
+                }
+
+                for (int i = 0; i < _captureImageList.Count; ++i)
+                {
+                    using Mat mat = _captureImageList[i].Clone();
+                    string strFileName = strFolderPath + "//" + $"Index_{i + 1}" + ".png";
+                    mat.SaveImage(strFileName);
+                }
+            });
+        }
+
+        private async Task saveSliceImage_()
+        {
+            if (_captureSliceAcqImageList.Count <= 0)
+            {
+                return;
+            }
+
+            await Task.Run(() =>
+            {
+                string strFolderPath = AppDomain.CurrentDomain.BaseDirectory + "_Capture" + "//" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + "_Slice";
+
+                if (!Directory.Exists(strFolderPath))
+                {
+                    Directory.CreateDirectory(strFolderPath);
+                }
+
+                int nAcqFrameCount = _captureSliceAcqImageList.Count;
+
+                if (nAcqFrameCount == 1 && _captureSliceAcqImageList[0].Count == 1)
+                {
+                    string strFileName = strFolderPath + "//" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + "_Merged.png";
+                    using Mat mat = _captureSliceAcqImageList[0][0].Clone();
+                    mat.SaveImage(strFileName);
+                }
+                else
+                {
+                    for (int nAcqIndex = 0; nAcqIndex < nAcqFrameCount; ++nAcqIndex)
+                    {
+                        int nSubFrameCount = _captureSliceAcqImageList[nAcqIndex].Count;
+
+                        for (int nSubFrameIndex = 1; nSubFrameIndex < nSubFrameCount; ++nSubFrameIndex)
+                        {
+                            string strSlicedFileName = strFolderPath + "//" + $"Sliced_{nAcqIndex}_{nSubFrameIndex}" + ".png";
+                            _captureSliceAcqImageList[nAcqIndex][nSubFrameIndex].SaveImage(strSlicedFileName);
+                        }
+
+                        string strFileName = strFolderPath + "//" + $"Merged_{nAcqIndex}" + ".png";
+                        using Mat mat = _captureSliceAcqImageList[nAcqIndex][0].Clone();
+                        mat.SaveImage(strFileName);
+                    }
+                }
+            });
+        }
+
+        private async Task saveROICaptureImage_()
+        {
+            if (_captureSliceAcqImageList.Count <= 0)
+            {
+                return;
+            }
+
+            await Task.Run(() =>
+            {
+                string strFolderPath = AppDomain.CurrentDomain.BaseDirectory + "_Capture" + "//" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + "_ROI";
+
+                if (!Directory.Exists(strFolderPath))
+                {
+                    Directory.CreateDirectory(strFolderPath);
+                }
+
+                int nAcqFrameCount = _captureSliceAcqImageList.Count;
+
+                if (nAcqFrameCount == 1 && _captureSliceAcqImageList[0].Count == 1)
+                {
+                    string strFileName = strFolderPath + "//" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + "_Merged.png";
+                    using Mat mat = _captureSliceAcqImageList[0][0].Clone();
+                    mat.SaveImage(strFileName);
+                }
+                else
+                {
+                    for (int nAcqIndex = 0; nAcqIndex < nAcqFrameCount; ++nAcqIndex)
+                    {
+                        int nSubFrameCount = _captureSliceAcqImageList[nAcqIndex].Count;
+
+                        for (int nSubFrameIndex = 1; nSubFrameIndex < nSubFrameCount; ++nSubFrameIndex)
+                        {
+                            string strSlicedFileName = strFolderPath + "//" + $"Sliced_{nAcqIndex}_{nSubFrameIndex}" + ".png";
+                            _captureSliceAcqImageList[nAcqIndex][nSubFrameIndex].SaveImage(strSlicedFileName);
+                        }
+
+                        string strFileName = strFolderPath + "//" + $"Merged_{nAcqIndex}" + ".png";
+                        using Mat mat = _captureSliceAcqImageList[nAcqIndex][0].Clone();
+                        mat.SaveImage(strFileName);
+                    }
+                }
+            });
         }
 
         public void CallbackLsoScanFrameImage(byte[] data, int width, int height, int channels, float quality, int nPixelFormat, int nBytesPerPixel)
@@ -535,10 +777,15 @@ namespace WsoToolkit.controls
                     UpdateReviewStatusItems(width, height);
                     SetReviewMode(totalFrameCount);
                 }
-                else if (IsReviewSliceMode == true) // Captrue (Slice)
+                else if (IsReviewSliceMode == true)
                 {
                     UpdateReviewSliceStatusItems(width, height);
                     SetReviewSliceMode();
+                }
+                else if (IsReviewROIMode == true)
+                {
+                    UpdateReviewROIStatusItems(width, height);
+                    SetReviewROIMode();
                 }
             }
         }
@@ -642,5 +889,114 @@ namespace WsoToolkit.controls
                 }
             }
         }
+
+        private void mySliderReviewROIImageIndex_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (sender is Slider slider)
+            {
+                int nIndex = (int)slider.Value;
+                if (nIndex > 0)
+                {
+                    if (_captureSliceAcqImageList.Count() > 0)
+                    {
+                        int oldSubImageIndex = (int)mySliderReviewROISubImageIndex.Value;
+
+                        mySliderReviewROISubImageIndex.Value = mySliderReviewROISubImageIndex.Minimum;
+
+                        if (oldSubImageIndex == mySliderReviewROISubImageIndex.Minimum)
+                        {
+                            var args = new RoutedPropertyChangedEventArgs<double>(1, 1)
+                            {
+                                RoutedEvent = Slider.ValueChangedEvent
+                            };
+
+                            mySliderReviewROISubImageIndex.RaiseEvent(args);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void mySliderReviewROISubImageIndex_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (sender is Slider slider)
+            {
+                int nIndex = (int)slider.Value;
+                if (nIndex > 0)
+                {
+                    if (_captureSliceAcqImageList.Count() > 0)
+                    {
+                        int nAcqFrameIndex = (int)mySliderReviewROIImageIndex.Value;
+
+                        if (nIndex == 1)
+                        {
+                            _ = Task.Run(() =>
+                            {
+                                try
+                                {
+                                    Mat adjustedMat = _captureSliceAcqImageList[nAcqFrameIndex - 1][nIndex - 1].Clone();
+
+                                    Dispatcher.Invoke(() =>
+                                    {
+                                        imageViewport.Source = OpenCvSharp.WpfExtensions.BitmapSourceConverter.ToBitmapSource(adjustedMat);
+                                    });
+
+                                    adjustedMat.Dispose();
+                                }
+                                catch (Exception ex)
+                                {
+                                    System.Diagnostics.Debug.WriteLine($"Image error: {ex.Message}");
+                                }
+                            });
+                        }
+                        else
+                        {
+                            UpdateReviewROIStatusItems(_captureSliceAcqImageList[nAcqFrameIndex - 1][nIndex - 1].Width, _captureSliceAcqImageList[nAcqFrameIndex - 1][nIndex - 1].Height);
+                            imageViewport.Source = OpenCvSharp.WpfExtensions.BitmapSourceConverter.ToBitmapSource(_captureSliceAcqImageList[nAcqFrameIndex - 1][nIndex - 1]);
+                        }
+                    }
+                }
+            }
+        }
+
+        #region EventHandler - Save
+
+        private void myBtReviewSaveAll_Click(object sender, RoutedEventArgs e)
+        {
+            if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+            {
+                string strFolderPath = AppDomain.CurrentDomain.BaseDirectory + "_Capture";
+                Process.Start("explorer.exe", strFolderPath);
+                return;
+            }
+
+            _ = saveAllImages_();
+        }
+
+        private void myBtReviewSliceSaveAll_Click(object sender, RoutedEventArgs e)
+        {
+            if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+            {
+                string strFolderPath = AppDomain.CurrentDomain.BaseDirectory + "_Capture";
+                Process.Start("explorer.exe", strFolderPath);
+                return;
+            }
+
+            _ = saveSliceImage_();
+        }
+
+        private void myBtReviewROISaveAll_Click(object sender, RoutedEventArgs e)
+        {
+            if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
+            {
+                string strFolderPath = AppDomain.CurrentDomain.BaseDirectory + "_Capture";
+                Process.Start("explorer.exe", strFolderPath);
+                return;
+            }
+
+            _ = saveROICaptureImage_();
+        }
+
+        #endregion EventHandler - Save
     }
 }

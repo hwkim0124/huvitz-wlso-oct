@@ -178,6 +178,12 @@
                 <Grid Grid.Row="0" Grid.Column="0">
                     <Button x:Name="myBtCaptureSlide" Style="{StaticResource ButtonM1Style}" Content="Capture(Slide)" HorizontalAlignment="Center" VerticalAlignment="Center" Click="myBtCaptureSlide_Click"/>
                 </Grid>
+                <Grid Grid.Row="0" Grid.Column="3">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <Button x:Name="myBtCaptureROI" Content="Capture(ROI)" Style="{StaticResource ButtonM1Style}" Width="80" Margin="5,0,0,0" Click="myBtCaptureROI_Click"/>
+                        <Button x:Name="myBtCaptureROISetting" Content="Set" Style="{StaticResource ButtonM1Style}" Width="30" Margin="5,0,0,0" Click="myBtCaptureROISetting_Click"/>
+                    </StackPanel>
+                </Grid>
                 <Grid Grid.Row="1" Grid.Column="0">
                     <Button x:Name="myBtCorneaStart" Content="Start Cornea" Style="{StaticResource ButtonM1Style}" Margin="8,0,0,0" Click="myBtCorneaStart_Click"/>
                 </Grid>
