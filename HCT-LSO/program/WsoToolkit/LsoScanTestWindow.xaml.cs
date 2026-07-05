@@ -126,6 +126,19 @@ namespace WsoToolkit
 
         #endregion Setting 
 
+        private void BtnShowStageM_Click(object sender, RoutedEventArgs e)
+        {
+            if (_stageMotorWindow == null || !_stageMotorWindow.IsLoaded)
+            {
+                _stageMotorWindow = new();
+                _stageMotorWindow.Show();
+            }
+            else
+            {
+                _stageMotorWindow?.Focus();
+            }
+        }
+
         #region LSO Scanner Setting
 
         private void myCbPatternID_SelectionChanged(object sender, SelectionChangedEventArgs e)

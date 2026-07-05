@@ -104,6 +104,9 @@
                     <RowDefinition/>
                     <RowDefinition/>
                 </Grid.RowDefinitions>
+                <Grid Grid.Row="0">
+                    <Button x:Name="btnShowStageM" Content="StageM..." Style="{StaticResource ButtonM1Style}" HorizontalAlignment="Left" Click="BtnShowStageM_Click"/>
+                </Grid>
                 <Grid Grid.Row="1">
                     <GroupBox Header="Galvano" VerticalAlignment="Top">
                         <StackPanel Orientation="Horizontal">

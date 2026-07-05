@@ -381,6 +381,8 @@ namespace WsoToolkit
         // Live 프레임이 UI 렌더링보다 빠르게 도착할 때 Dispatcher 큐가 쌓여 메모리가 증가하는 것을 막는 드롭 플래그.
         private volatile bool _isColorLiveFramePending;
 
+        StageMotorWindow? _stageMotorWindow = null;
+
         #region Captrue - Review
         // Capture - Review
         private void readyToCapture_(PreviewDisplayMode mode)
