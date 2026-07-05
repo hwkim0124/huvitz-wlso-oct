@@ -23,9 +23,11 @@ namespace WsoToolkit
     /// </summary>
     public partial class ColorCameraSettingWindow : Window
     {
-        
-        public ColorCameraSettingWindow()
+        private readonly LsoScanTestModel _scanTestModel;
+
+        public ColorCameraSettingWindow(LsoScanTestModel scanTestModel)
         {
+            _scanTestModel = scanTestModel;
             InitializeComponent();
         }
 

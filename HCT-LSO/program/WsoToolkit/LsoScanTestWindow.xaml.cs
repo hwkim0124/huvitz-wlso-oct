@@ -54,13 +54,6 @@ namespace WsoToolkit
 
         private void myBtCapture_Click(object sender, RoutedEventArgs e)
         {
-            //if (IsRetinaCameraPreviewing())
-            //{
-            //    CloseRetinaCameraPreview();
-            //    closeCorneaCameraPreview_();
-            //    myBtStartScan.Content = "Start Scan";
-            //}
-
             if (IsColorCameraLive())
             {
                 PauseColorCameraLive();
@@ -73,13 +66,6 @@ namespace WsoToolkit
 
         private void myBtCaptureSlide_Click(object sender, RoutedEventArgs e)
         {
-            //if (IsRetinaCameraPreviewing())
-            //{
-            //    CloseRetinaCameraPreview();
-            //    closeCorneaCameraPreview_();
-            //    myBtStartScan.Content = "Start Scan";
-            //}
-
             if (IsColorCameraLive())
             {
                 PauseColorCameraLive();
@@ -128,7 +114,7 @@ namespace WsoToolkit
 
         private void myBtSettingColorCamera_Click(object sender, RoutedEventArgs e)
         {
-            var window = new ColorCameraSettingWindow { Owner = this };
+            var window = new ColorCameraSettingWindow(_scanTestModel) { Owner = this };
             window.ShowDialog();
         }
 

@@ -22,6 +22,13 @@ namespace WsoToolkit
         private List<TextBox> _imageFormatInputBoxsList = new List<TextBox>();
         private LsoColorCameraSettingParam _colorCameraParam = new LsoColorCameraSettingParam();
 
+        private void syncModelAndIni_()
+        {
+            LsoCamera.GetCameraParameters(out LsoColorCameraSettingParam param);
+            _scanTestModel.ColorCamera.ApplySettingParam(param);
+            _scanTestModel.SaveConfigToIniFile();
+        }
+
         private List<string> _AcqModeList = new List<string>() { "Continuous", "Single Frame", "Multi Frame"};
         private SortedDictionary<string, uint> _PixelFormatList = new SortedDictionary<string, uint>() 
         {
@@ -153,7 +160,7 @@ namespace WsoToolkit
 
             try
             {
-                LsoColorCameraSettingParam colorCameraParam = new   ();
+                LsoColorCameraSettingParam colorCameraParam = new LsoColorCameraSettingParam();
 
                 colorCameraParam.roiXWidth = ToUInt(myTbROIXWidth.Text);
                 colorCameraParam.roiYHeight = ToUInt(myTbROIYHeight.Text);
@@ -191,6 +198,8 @@ namespace WsoToolkit
                 }
 
                 LsoCamera.SetCameraParameters(ref colorCameraParam);
+                syncModelAndIni_();
+                bRet = true;
             }
             catch (Exception ex)
             {
@@ -221,6 +230,8 @@ namespace WsoToolkit
                 colorCameraParam.adcDepthIndex = 2;
 
                 LsoCamera.SetCameraParameters(ref colorCameraParam);
+                syncModelAndIni_();
+                bRet = true;
             }
             catch (Exception ex)
             {

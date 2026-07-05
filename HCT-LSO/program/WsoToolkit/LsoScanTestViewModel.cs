@@ -223,6 +223,10 @@ namespace WsoToolkit
 
         public uint PixelFormat { get; set; }
 
+        public uint BinningHorizontal { get; set; }
+
+        public uint BinningVertical { get; set; }
+
         public float Gain { get; set; }
 
         public uint AdcDepthIndex { get; set; }
@@ -237,6 +241,8 @@ namespace WsoToolkit
             AcquisitionMode = ini.ReadUInt(IniSectionName, "AcqusitionMode");
             AcquisitionFrameCount = ini.ReadUInt(IniSectionName, "AcqusitionFrameCount");
             PixelFormat = ini.ReadUInt(IniSectionName, "PixelFormat");
+            BinningHorizontal = ini.ReadUInt(IniSectionName, "BinningHorizontal", 1);
+            BinningVertical = ini.ReadUInt(IniSectionName, "BinningVertical", 1);
             Gain = ini.ReadFloat(IniSectionName, "Gain");
             AdcDepthIndex = ini.ReadUInt(IniSectionName, "AdcDepth");
         }
@@ -251,6 +257,8 @@ namespace WsoToolkit
             ini.WriteInt(IniSectionName, "AcqusitionMode", (int)AcquisitionMode);
             ini.WriteInt(IniSectionName, "AcqusitionFrameCount", (int)AcquisitionFrameCount);
             ini.WriteInt(IniSectionName, "PixelFormat", (int)PixelFormat);
+            ini.WriteInt(IniSectionName, "BinningHorizontal", (int)BinningHorizontal);
+            ini.WriteInt(IniSectionName, "BinningVertical", (int)BinningVertical);
             ini.WriteFloat(IniSectionName, "Gain", Gain);
             ini.WriteInt(IniSectionName, "AdcDepth", (int)AdcDepthIndex);
         }
@@ -267,6 +275,8 @@ namespace WsoToolkit
                 acquisitionMode = AcquisitionMode,
                 acquisitionFrameCount = AcquisitionFrameCount,
                 pixelFormat = PixelFormat,
+                binningHorizontal = BinningHorizontal,
+                binningVertical = BinningVertical,
                 gain = Gain,
                 adcDepthIndex = AdcDepthIndex,
             };
@@ -283,6 +293,8 @@ namespace WsoToolkit
             param.acquisitionMode = AcquisitionMode;
             param.acquisitionFrameCount = AcquisitionFrameCount;
             param.pixelFormat = PixelFormat;
+            param.binningHorizontal = BinningHorizontal;
+            param.binningVertical = BinningVertical;
             param.gain = Gain;
             param.adcDepthIndex = AdcDepthIndex;
             return param;
@@ -298,6 +310,8 @@ namespace WsoToolkit
             AcquisitionMode = param.acquisitionMode;
             AcquisitionFrameCount = param.acquisitionFrameCount;
             PixelFormat = param.pixelFormat;
+            BinningHorizontal = param.binningHorizontal;
+            BinningVertical = param.binningVertical;
             Gain = param.gain;
             AdcDepthIndex = param.adcDepthIndex;
         }
