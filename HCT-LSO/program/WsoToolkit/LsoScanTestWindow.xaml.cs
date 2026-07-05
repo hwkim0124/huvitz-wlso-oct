@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -13,6 +14,7 @@ using System.Windows.Threading;
 using WsoNativeLib;
 using static WsoNativeLib.WsoDevice;
 using static WsoNativeLib.WsoDomain;
+using static WsoNativeLib.WsoLsoDefs;
 using static WsoToolkit.controls.LsoScanImagePreview;
 using static WsoToolkit.utils.NumberUtil;
 
@@ -35,6 +37,11 @@ namespace WsoToolkit
 
         private void Window_Closed(object sender, EventArgs e)
         {
+            if (IsColorCameraLive())
+            {
+                PauseColorCameraLive();
+            }
+
             releaseLsoFocusMotor_();
         }
 
@@ -54,6 +61,11 @@ namespace WsoToolkit
             //    myBtStartScan.Content = "Start Scan";
             //}
 
+            if (IsColorCameraLive())
+            {
+                PauseColorCameraLive();
+            }
+
             readyToCapture_(PreviewDisplayMode.REVIEW);
 
             StartColorCameraOriginal();
@@ -67,6 +79,11 @@ namespace WsoToolkit
             //    closeCorneaCameraPreview_();
             //    myBtStartScan.Content = "Start Scan";
             //}
+
+            if (IsColorCameraLive())
+            {
+                PauseColorCameraLive();
+            }
 
             readyToCapture_(PreviewDisplayMode.REVIEW_SLICE);
 
@@ -401,5 +418,30 @@ namespace WsoToolkit
         }
 
         #endregion Align Guide
+
+        private void myBtCaptureHWTrig_Click(object sender, RoutedEventArgs e)
+        {
+            readyToCapture_(PreviewDisplayMode.REVIEW);
+
+            if (IsColorCameraLive())
+            {
+                StopColorCameraHWTriggerLive();
+            }
+
+            StartColorCameraHWTriggerLive();
+
+            bool bBegin = false;
+            for (int i = 0; i < 20; ++i)
+            {
+                bBegin = LsoCamera.IsColorCameraStreaming(); // Color Camera가 Acqusition 중인지 확인
+                if (bBegin)
+                {
+                    break;
+                }
+                Thread.Sleep(10);
+            }
+
+            LsoScanner.StartLsoScannerGrabbing((int)LsoScannerPatternId.COLOR);
+        }
     }
 }

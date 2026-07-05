@@ -498,6 +498,17 @@ namespace WsoToolkit
             LsoCamera.StartOriginalMode(_onColorCaptureImageCaptured);
         }
 
+        public void StartColorCameraHWTriggerLive()
+        {
+            //myColorPreview.SetLiveMode();
+            LsoCamera.StartColorCameraHwTriggerLive(_onColorCaptureImageCaptured);
+        }
+
+        public void StopColorCameraHWTriggerLive()
+        {
+            LsoCamera.StopColorCameraHwTriggerLive();
+        }
+
         private void initCallbacks_()
         {
             _onColorCaptureImageCaptured = new WsoCallback.ColorCameraImageCaptured(this.OnColorCameraCaptureFrameCaptured);
