@@ -135,3 +135,35 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::loadOctSldCalibration(void)
 	}
 	return false;
 }
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::setLightMode(LightType type, unsigned short mode)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getLightLed(type); p) {
+		return p->setLightMode(mode);
+	}
+	return false;
+}
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::setLightIntensity(LightType type, unsigned short value)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getLightLed(type); p) {
+		return p->setIntensity(value);
+	}
+	return false;
+}
+
+unsigned short WSOSYSTEM_DLL_API __stdcall wso_system::getLightMode(LightType type)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getLightLed(type); p) {
+		return p->getLightMode();
+	}
+	return 0;
+}
+
+unsigned short WSOSYSTEM_DLL_API __stdcall wso_system::getLightIntensity(LightType type)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getLightLed(type); p) {
+		return p->getIntensity();
+	}
+	return 0;
+}

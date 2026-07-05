@@ -42,6 +42,13 @@ namespace WsoNativeLib
             GreenLed = 0x06
         }
 
+        public enum LightMode : int
+        {
+            Trigger = 0x00, 
+            Continuous = 0x01,
+            Unknown = 0xFF
+        }
+
         public enum LaserType : int
         {
             OctSld = 0x04,

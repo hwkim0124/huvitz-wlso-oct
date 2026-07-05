@@ -80,6 +80,21 @@ namespace WsoNativeLib
         [return: MarshalAs(UnmanagedType.I1)]
         private static extern bool loadOctSldCalibration();
 
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool setLightMode(int type, ushort mode);
+
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool setLightIntensity(int type, ushort value);
+
+        [DllImport(LibraryName)]
+        private static extern ushort getLightMode(int type);
+
+        [DllImport(LibraryName)]
+        private static extern ushort getLightIntensity(int type);
+
+
         public static bool TurnOnLight(LightType type)
         {
             return turnOnLight((int)type);
@@ -153,6 +168,25 @@ namespace WsoNativeLib
         public static bool LoadOctSldCalibration()
         {
             return loadOctSldCalibration();
+        }
+
+        public static bool SetLightMode(LightType type, LightMode mode)
+        {
+            return setLightMode((int)type, (ushort)mode);
+        }
+        public static bool SetLightIntensity(LightType type, ushort value)
+        {
+            return setLightIntensity((int)type, value);
+        }
+
+        public static LightMode GetLightMode(LightType type)
+        {
+            return (LightMode)getLightMode((int)type);
+        }
+
+        public static ushort GetLightIntensity(LightType type)
+        {
+            return getLightIntensity((int)type);
         }
     }
 }

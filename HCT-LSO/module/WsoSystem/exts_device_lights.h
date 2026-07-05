@@ -35,6 +35,13 @@ namespace wso_system
 		bool WSOSYSTEM_DLL_API __stdcall saveOctSldCalibration(void);
 		bool WSOSYSTEM_DLL_API __stdcall loadOctSldCalibration(void);
 
+		// Light Leds
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////
+		bool WSOSYSTEM_DLL_API __stdcall setLightMode(LightType type, unsigned short mode);
+		bool WSOSYSTEM_DLL_API __stdcall setLightIntensity(LightType type, unsigned short value);
+
+		unsigned short WSOSYSTEM_DLL_API __stdcall getLightMode(LightType type);
+		unsigned short WSOSYSTEM_DLL_API __stdcall getLightIntensity(LightType type);
 
 	}
 }

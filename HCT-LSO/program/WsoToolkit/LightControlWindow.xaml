@@ -6,65 +6,96 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WsoToolkit"
         mc:Ignorable="d"
-        Title="Light Leds Control" Height="336" Width="412" Initialized="Window_Initialized" Loaded="Window_Loaded" Closed="Window_Closed" ResizeMode="NoResize">
+        Title="Light Leds Control" Height="Auto" Width="Auto" Initialized="Window_Initialized" Loaded="Window_Loaded" Closed="Window_Closed" ResizeMode="NoResize">
     <Grid  Margin="12,12,12,12">
         <Grid.RowDefinitions>
-            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-        </Grid.ColumnDefinitions>
-        <Grid Grid.Row="0" Grid.Column="0">
+        <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="0"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="0"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="0"/>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="24"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="32"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="8"/>
+                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <Label x:Name="label_s1" Content="SLD" Style="{StaticResource HeaderStyle}" Grid.ColumnSpan="4"/>
-            <Label x:Name="label_s2" Content="LD SN." Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="0"/>
-            <TextBox x:Name="editSldSerialName"  Style="{StaticResource TextBoxStyle}" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Width="120"/>
-            <Label x:Name="label_s3" Content="Profile" Style="{StaticResource LabelStyle}" Grid.Row="1" Grid.Column="0"/>
-            <ComboBox x:Name="cmbSldProfile" Style="{StaticResource ComboBoxStyle}" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Width="120" Margin="0,0,0,0"/>
-            <StackPanel Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2" Orientation="Horizontal" FlowDirection="RightToLeft">
-                <Button x:Name="btnSldOff" Content="OFF" Style="{StaticResource ButtonS1Style}" Grid.Row="1" Grid.Column="1" Margin="12,0,0,0" Click="BtnSldOff_Click"/>
-                <Button x:Name="btnSldOn" Content="ON" Style="{StaticResource ButtonS1Style}" Grid.Row="1" Grid.Column="0" Margin="4,0,0,0" Click="BtnSldOn_Click"/>
-            </StackPanel>
-            <Label x:Name="label_s4" Content="High Code" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="0"/>
-            <Label x:Name="label_s5" Content="Low Code1" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="2"/>
-            <Label x:Name="label_s6" Content="Rsi Code" Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="0"/>
-            <Label x:Name="label_s7" Content="Low Code2" Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="2"/>
-            <Label x:Name="label_s10" Content="SLD Current" Style="{StaticResource LabelStyle}" Grid.Row="6" Grid.Column="0"/>
-            <Label x:Name="label_s11" Content="IPD Current" Style="{StaticResource LabelStyle}" Grid.Row="7" Grid.Column="0"/>
-            <Label x:Name="label_s12" Content="External PD" Style="{StaticResource LabelStyle}" Grid.Row="6" Grid.Column="2"/>
-            <Label x:Name="label_s13" Content="Temperature" Style="{StaticResource LabelStyle}" Grid.Row="7" Grid.Column="2"/>
-            <TextBox x:Name="editSldHighCode" Style="{StaticResource TextBoxStyle}" Grid.Row="3" Grid.Column="1" KeyDown="EditSldHighCode_KeyDown"/>
-            <TextBox x:Name="editSldLowCode1" Style="{StaticResource TextBoxStyle}" Grid.Row="3" Grid.Column="3" KeyDown="EditSldLowCode1_KeyDown"/>
-            <TextBox x:Name="editSldRsiCode" Style="{StaticResource TextBoxStyle}" Grid.Row="4" Grid.Column="1" KeyDown="EditSldRsiCode_KeyDown"/>
-            <TextBox x:Name="editSldLowCode2" Style="{StaticResource TextBoxStyle}" Grid.Row="4" Grid.Column="3" KeyDown="EditSldLowCode2_KeyDown"/>
-            <TextBox x:Name="editSldSldCurrent" Style="{StaticResource TextBoxStyle}" Grid.Row="6" Grid.Column="1" IsReadOnly="True"/>
-            <TextBox x:Name="editSldIpdCurrent" Style="{StaticResource TextBoxStyle}" Grid.Row="7" Grid.Column="1" IsReadOnly="True"/>
-            <TextBox x:Name="editSldExternPd" Style="{StaticResource TextBoxStyle}" Grid.Row="6" Grid.Column="3" IsReadOnly="True"/>
-            <TextBox x:Name="editSldTemperature" Style="{StaticResource TextBoxStyle}" Grid.Row="7" Grid.Column="3" IsReadOnly="True"/>
-            <StackPanel Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="4" Orientation="Horizontal" FlowDirection="RightToLeft">
-                <Button x:Name="btnSldSave" Content="Save" Style="{StaticResource ButtonS1Style}" Margin="16,0,0,0" Click="BtnSldSave_Click"/>
-                <Button x:Name="btnSldApply" Content="Apply" Style="{StaticResource ButtonS1Style}" Margin="8,0,0,0" Click="BtnSldApply_Click"/>
-                <Button x:Name="btnSldGet" Content="Get" Style="{StaticResource ButtonS1Style}" Margin="8,0,0,0" Click="BtnSldGet_Click"/>
-            </StackPanel>
-            <Border BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" BorderThickness="1" Grid.ColumnSpan="4" Grid.RowSpan="11"/>
+            <Grid Grid.Row="0" Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Label x:Name="label101" Content="LSO White" Style="{StaticResource HeaderStyle}"/>
+                <StackPanel Grid.Row="1" Orientation="Horizontal">
+                    <Slider x:Name="sliderWhite" Style="{StaticResource SliderStyle}" HorizontalAlignment="Left" Width="200" Margin="8,0,0,0" ValueChanged="SliderWhite_ValueChanged" Thumb.DragStarted="SliderWhite_DragStarted" Thumb.DragCompleted="SliderWhite_DragCompleted"/>
+                    <TextBox x:Name="editWhite" Style="{StaticResource TextBoxS1Style}" Margin="8,0,12,0" KeyDown="EditWhite_KeyDown"/>
+                </StackPanel>
+                <StackPanel Grid.Row="2" Orientation="Horizontal" FlowDirection="RightToLeft" Margin="0,8,0,24">
+                    <Button x:Name="btnWhiteOff" Content="Off" Style="{StaticResource ButtonS1Style}" Margin="8,0,4,0" Click="BtnWhiteOff_Click"/>
+                    <Button x:Name="btnWhiteOn" Content="On" Style="{StaticResource ButtonS1Style}" Margin="0,0,16,0" Click="BtnWhiteOn_Click"/>
+                    <CheckBox x:Name="checkWhiteMode" Content="Continuous" Style="{StaticResource CheckBoxStyle}" Margin="0,0,12,0" FlowDirection="LeftToRight" Click="CheckWhiteMode_Click"/>
+                </StackPanel>
+                <Border BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" BorderThickness="1" Margin="0,0,0,10" Grid.RowSpan="3"/>
+            </Grid>
+            <Grid Grid.Row="2" Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Label x:Name="label201" Content="Cornea IR (L)" Style="{StaticResource HeaderStyle}"/>
+                <StackPanel Grid.Row="1" Orientation="Horizontal">
+                    <Slider x:Name="sliderCornea1" Style="{StaticResource SliderStyle}" HorizontalAlignment="Left" Width="200" Margin="8,0,0,0" ValueChanged="SliderCornea1_ValueChanged" Thumb.DragStarted="SliderCornea1_DragStarted" Thumb.DragCompleted="SliderCornea1_DragCompleted"/>
+                    <TextBox x:Name="editCornea1" Style="{StaticResource TextBoxS1Style}" Margin="8,0,12,0"/>
+                </StackPanel>
+                <StackPanel Grid.Row="2" Orientation="Horizontal" FlowDirection="RightToLeft" Margin="0,8,0,24">
+                    <Button x:Name="btnCorneaOff1" Content="Off" Style="{StaticResource ButtonS1Style}" Margin="8,0,4,0" Click="BtnCorneaOff1_Click"/>
+                    <Button x:Name="btnCorneaOn1" Content="On" Style="{StaticResource ButtonS1Style}" Margin="0,0,16,0" Click="BtnCorneaOn1_Click"/>
+                </StackPanel>
+                <Border BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" BorderThickness="1" Margin="0,0,0,10" Grid.RowSpan="3"/>
+            </Grid>
+            <Grid Grid.Row="0" Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Label x:Name="label301" Content="Retina IR" Style="{StaticResource HeaderStyle}"/>
+                <StackPanel Grid.Row="1" Orientation="Horizontal">
+                    <Slider x:Name="sliderRetina" Style="{StaticResource SliderStyle}" HorizontalAlignment="Left" Width="200" Margin="8,0,0,0" ValueChanged="SliderRetina_ValueChanged" Thumb.DragStarted="SliderRetina_DragStarted" Thumb.DragCompleted="SliderRetina_DragCompleted"/>
+                    <TextBox x:Name="editRetina" Style="{StaticResource TextBoxS1Style}" Margin="8,0,12,0"/>
+                </StackPanel>
+                <StackPanel Grid.Row="2" Orientation="Horizontal" FlowDirection="RightToLeft" Margin="0,8,0,24">
+                    <Button x:Name="btnRetinaOff" Content="Off" Style="{StaticResource ButtonS1Style}" Margin="8,0,4,0" Click="BtnWhiteOff_Click"/>
+                    <Button x:Name="btnRetinaOn" Content="On" Style="{StaticResource ButtonS1Style}" Margin="0,0,16,0" Click="BtnWhiteOn_Click"/>
+                    <CheckBox x:Name="checkRetinaMode" Content="Continuous" Style="{StaticResource CheckBoxStyle}" Margin="0,0,12,0" FlowDirection="LeftToRight" Click="CheckRetinaMode_Click"/>
+                </StackPanel>
+                <Border BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" BorderThickness="1" Margin="0,0,0,10" Grid.RowSpan="3"/>
+            </Grid>
+            <Grid Grid.Row="2" Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Label x:Name="label401" Content="Cornea IR (R)" Style="{StaticResource HeaderStyle}"/>
+                <StackPanel Grid.Row="1" Orientation="Horizontal">
+                    <Slider x:Name="sliderCornea2" Style="{StaticResource SliderStyle}" HorizontalAlignment="Left" Width="200" Margin="8,0,0,0" ValueChanged="SliderCornea2_ValueChanged" Thumb.DragStarted="SliderCornea2_DragStarted" Thumb.DragCompleted="SliderCornea2_DragCompleted"/>
+                    <TextBox x:Name="editCornea2" Style="{StaticResource TextBoxS1Style}" Margin="8,0,12,0"/>
+                </StackPanel>
+                <StackPanel Grid.Row="2" Orientation="Horizontal" FlowDirection="RightToLeft" Margin="0,8,0,24">
+                    <Button x:Name="btnCorneaOff2" Content="Off" Style="{StaticResource ButtonS1Style}" Margin="8,0,4,0" Click="BtnCorneaOff2_Click"/>
+                    <Button x:Name="btnCorneaOn2" Content="On" Style="{StaticResource ButtonS1Style}" Margin="0,0,16,0" Click="BtnCorneaOn2_Click"/>
+                </StackPanel>
+                <Border BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" BorderThickness="1" Margin="0,0,0,10" Grid.RowSpan="3"/>
+            </Grid>
         </Grid>
     </Grid>
 </Window>
