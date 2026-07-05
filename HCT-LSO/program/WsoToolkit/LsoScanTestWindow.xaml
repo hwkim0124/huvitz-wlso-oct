@@ -6,23 +6,21 @@
         xmlns:controls="clr-namespace:WsoToolkit.controls"
         xmlns:local="clr-namespace:WsoToolkit"
         mc:Ignorable="d"
-        Title="Lso Scan Test" Height="1060" Width="1920" ResizeMode="NoResize" WindowStartupLocation="Manual" Left="1" Top="1" Closed="Window_Closed">
+        Title="Lso Scan Test" Height="1060" Width="1920" WindowStartupLocation="Manual" Left="1" Top="1" Closed="Window_Closed">
     <Grid Margin="12,12,12,12">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="392"/>
+            <ColumnDefinition Width="342"/>
             <ColumnDefinition Width="8"/>
-            <ColumnDefinition Width="1200"/>
-            <ColumnDefinition Width="8"/>
+            <ColumnDefinition Width="1540"/>
         </Grid.ColumnDefinitions>
         <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Vertical">
-            <controls:CorneaCameraPreview x:Name="corneaPreview1" Width="384" Height="328"/>
-            <controls:CorneaCameraPreview x:Name="corneaPreview2" Width="384" Height="328"/>
-            <controls:CorneaCameraPreview x:Name="corneaPreview3" Width="384" Height="328"/>
+            <controls:CorneaCameraPreview x:Name="corneaPreview1" Width="334" Height="328"/>
+            <controls:CorneaCameraPreview x:Name="corneaPreview2" Width="334" Height="328"/>
+            <controls:CorneaCameraPreview x:Name="corneaPreview3" Width="334" Height="328"/>
         </StackPanel>
-        <!--<Grid Grid.Row="0" Grid.Column="1" Background="#E0E0E0"/>-->
         <Grid Grid.Row="0" Grid.Column="2">
             <Grid.RowDefinitions>
                 <RowDefinition/>
@@ -35,12 +33,15 @@
                 <ColumnDefinition/>
                 <ColumnDefinition/>
                 <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+
             </Grid.ColumnDefinitions>
-            <Grid Grid.Row="0" Grid.Column="0" Grid.RowSpan="3" Grid.ColumnSpan="3">
-                <controls:LsoScanImagePreview x:Name="myColorPreview" Width="850" Height="740" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <Grid Grid.Row="0" Grid.Column="0" Grid.RowSpan="4" Grid.ColumnSpan="4">
+                <controls:LsoScanImagePreview x:Name="myColorPreview" Width="980" Height="980" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Grid>
             <!--fixation Group-->
-            <Grid Grid.Row="1" Grid.Column="3" Margin="5">
+            <Grid Grid.Row="1" Grid.Column="5" Margin="5">
                 <Grid.RowDefinitions>
                     <RowDefinition/>
                     <RowDefinition/>
@@ -107,7 +108,7 @@
                     </GroupBox>
                 </Grid>
             </Grid>
-            <Grid Grid.Row="2" Grid.Column="3" Margin="5">
+            <Grid Grid.Row="1" Grid.Column="4" Margin="5">
                 <Grid.RowDefinitions>
                     <RowDefinition/>
                     <RowDefinition/>
@@ -153,7 +154,7 @@
                     </GroupBox>
                 </Grid>
             </Grid>
-            <Grid Grid.Row="3" Grid.Column="0">
+            <Grid Grid.Row="2" Grid.Column="4">
                 <Grid.RowDefinitions>
                     <RowDefinition/>
                     <RowDefinition/>
@@ -177,7 +178,7 @@
                     <CheckBox x:Name="myCheckAlignGuide" Style="{StaticResource CheckBoxStyle}" Content="Align Guide" HorizontalAlignment="Center" VerticalAlignment="Center"  IsChecked="False" Checked="myCheckAlignGuide_CheckedNUnchecked" Unchecked="myCheckAlignGuide_CheckedNUnchecked"/>
                 </Grid>
             </Grid>
-            <Grid Grid.Row="3" Grid.Column="1">
+            <Grid Grid.Row="2" Grid.Column="5">
                 <Grid.RowDefinitions>
                     <RowDefinition/>
                     <RowDefinition/>
@@ -205,6 +206,9 @@
                 </Grid>
             </Grid>
             <Grid Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="2">
+                
+            </Grid>
+            <Grid Grid.Row="3" Grid.Column="4" Grid.ColumnSpan="2">
                 <GroupBox Header="Scan Setting">
                     <Grid>
                         <Grid.RowDefinitions>
