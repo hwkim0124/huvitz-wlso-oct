@@ -382,6 +382,8 @@ namespace WsoToolkit
         private volatile bool _isColorLiveFramePending;
 
         StageMotorWindow? _stageMotorWindow = null;
+        LightControlWindow? _lightControlWindow = null;
+
 
         #region Captrue - Review
         // Capture - Review

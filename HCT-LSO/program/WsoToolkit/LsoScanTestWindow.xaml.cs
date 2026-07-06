@@ -472,5 +472,18 @@ namespace WsoToolkit
 
             window.ShowDialog();
         }
+
+        private void myBtSettingLeds_Click(object sender, RoutedEventArgs e)
+        {
+            if (_lightControlWindow == null || !_lightControlWindow.IsLoaded)
+            {
+                _lightControlWindow = new();
+                _lightControlWindow.Show();
+            }
+            else
+            {
+                _lightControlWindow.Focus();
+            }
+        }
     }
 }
