@@ -29,7 +29,6 @@ struct BoardComponent::BoardComponentImpl
 	void initializeBoardComponentImpl(void) {
 		board = nullptr;
 		initiated = false;
-		openConfigIniFile(CONFIG_INI_DEFAULT_PATH);
 	}
 };
 
