@@ -9,7 +9,6 @@ namespace WsoNativeLib
     using static WsoCallback;
     using static WsoLsoDefs;
     using static WsoLsoScan;
-    using static WsoNativeLib.WsoCallback;
 
     public static class LsoCamera
     {
