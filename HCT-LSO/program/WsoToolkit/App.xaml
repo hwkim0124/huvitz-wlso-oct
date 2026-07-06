@@ -45,6 +45,17 @@
             <Setter Property="Height" Value="24"/>
             <Setter Property="Width" Value="72"/>
         </Style>
+        <Style x:Key="TextBoxM1Style" TargetType="{x:Type TextBox}">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="TextWrapping" Value="NoWrap"/>
+            <Setter Property="AcceptsReturn" Value="False"/>
+            <Setter Property="AcceptsTab" Value="False"/>
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="Width" Value="96"/>
+        </Style>
         <Style x:Key="TextBoxS1Style" TargetType="{x:Type TextBox}">
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
@@ -55,6 +66,16 @@
             <Setter Property="Height" Value="24"/>
             <Setter Property="Width" Value="64"/>
         </Style>
+        <Style x:Key="TextBoxS2Style" TargetType="{x:Type TextBox}">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="TextWrapping" Value="NoWrap"/>
+            <Setter Property="AcceptsReturn" Value="False"/>
+            <Setter Property="AcceptsTab" Value="False"/>
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="Width" Value="34"/>
+        </Style>
         <Style x:Key="ComboBoxStyle" TargetType="{x:Type ComboBox}">
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="HorizontalAlignment" Value="Left"/>
@@ -62,6 +83,14 @@
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
             <Setter Property="Height" Value="24"/>
             <Setter Property="Width" Value="72"/>
+        </Style>
+        <Style x:Key="ComboBoxM1Style" TargetType="{x:Type ComboBox}">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="Width" Value="96"/>
         </Style>
         <Style x:Key="CheckBoxStyle" TargetType="{x:Type CheckBox}">
             <Setter Property="VerticalAlignment" Value="Center"/>

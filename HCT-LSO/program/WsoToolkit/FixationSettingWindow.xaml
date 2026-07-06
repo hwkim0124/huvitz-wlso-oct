@@ -1,0 +1,162 @@
+<Window x:Class="WsoToolkit.FixationSettingWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WsoToolkit"
+        mc:Ignorable="d"
+        Title="FixationSettingWindow" Height="350" Width="650" WindowStartupLocation="CenterOwner" Loaded="Window_Loaded">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="4*"/>
+            <RowDefinition Height="2*"/>
+            <RowDefinition Height="1*"/>
+        </Grid.RowDefinitions>
+        <GroupBox Grid.Row="0" Header="Internal Fixation Point" Margin="5">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Grid Grid.Row="0" Grid.Column="0">
+                    <Label Content="[ OD ]" Style="{StaticResource LabelStyle}" FontWeight="Bold" VerticalAlignment="Bottom"/>
+                </Grid>
+                <Grid Grid.Row="0" Grid.Column="1">
+                    <Label Content="Row" Style="{StaticResource LabelStyle}" VerticalAlignment="Bottom"/>
+                </Grid>
+                <Grid Grid.Row="0" Grid.Column="2">
+                    <Label Content="col" Style="{StaticResource LabelStyle}" VerticalAlignment="Bottom"/>
+                </Grid>
+                <Grid Grid.Row="1" Grid.Column="0">
+                    <Label Content="Fundus : " Style="{StaticResource LabelStyle}"/>
+                </Grid>
+                <Grid Grid.Row="1" Grid.Column="1">
+                    <TextBox x:Name="myTbFixationODFundusRow" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center"/>
+                </Grid>
+                <Grid Grid.Row="1" Grid.Column="2">
+                    <TextBox x:Name="myTbFixationODFundusCol" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center"/>
+                </Grid>
+                <Grid Grid.Row="2" Grid.Column="0">
+                    <Label Content="Center(Marcular):" Style="{StaticResource LabelStyle}"/>
+                </Grid>
+                <Grid Grid.Row="2" Grid.Column="1">
+                    <TextBox x:Name="myTbFixationODCenterRow" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center"/>
+                </Grid>
+                <Grid Grid.Row="2" Grid.Column="2">
+                    <TextBox x:Name="myTbFixationODCenterCol" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center"/>
+                </Grid>
+                <Grid Grid.Row="3" Grid.Column="0">
+                    <Label Content="Optic Disc :" Style="{StaticResource LabelStyle}"/>
+                </Grid>
+                <Grid Grid.Row="3" Grid.Column="1">
+                    <TextBox x:Name="myTbFixationODDiscRow" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center"/>
+                </Grid>
+                <Grid Grid.Row="3" Grid.Column="2">
+                    <TextBox x:Name="myTbFixationODDiscCol" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center"/>
+                </Grid>
+                <Grid Grid.Row="0" Grid.Column="3">
+                    <Label Content="[ OS ]" Style="{StaticResource LabelStyle}" FontWeight="Bold" VerticalAlignment="Bottom"/>
+                </Grid>
+                <Grid Grid.Row="0" Grid.Column="4">
+                    <Label Content="Row" Style="{StaticResource LabelStyle}" VerticalAlignment="Bottom"/>
+                </Grid>
+                <Grid Grid.Row="0" Grid.Column="5">
+                    <Label Content="col" Style="{StaticResource LabelStyle}" VerticalAlignment="Bottom"/>
+                </Grid>
+                <Grid Grid.Row="1" Grid.Column="3">
+                    <Label Content="Fundus : " Style="{StaticResource LabelStyle}"/>
+                </Grid>
+                <Grid Grid.Row="1" Grid.Column="4">
+                    <TextBox x:Name="myTbFixationOSFundusRow" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center"/>
+                </Grid>
+                <Grid Grid.Row="1" Grid.Column="5">
+                    <TextBox x:Name="myTbFixationOSFundusCol" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center"/>
+                </Grid>
+                <Grid Grid.Row="2" Grid.Column="3">
+                    <Label Content="Center(Marcular):" Style="{StaticResource LabelStyle}"/>
+                </Grid>
+                <Grid Grid.Row="2" Grid.Column="4">
+                    <TextBox x:Name="myTbFixationOSCenterRow" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center"/>
+                </Grid>
+                <Grid Grid.Row="2" Grid.Column="5">
+                    <TextBox x:Name="myTbFixationOSCenterCol" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center"/>
+                </Grid>
+                <Grid Grid.Row="3" Grid.Column="3">
+                    <Label Content="Optic Disc :" Style="{StaticResource LabelStyle}"/>
+                </Grid>
+                <Grid Grid.Row="3" Grid.Column="4">
+                    <TextBox x:Name="myTbFixationOSDiscRow" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center"/>
+                </Grid>
+                <Grid Grid.Row="3" Grid.Column="5">
+                    <TextBox x:Name="myTbFixationOSDiscCol" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center"/>
+                </Grid>
+            </Grid>
+        </GroupBox>
+        <GroupBox Grid.Row="1" Header="Internal Fixation LED" Margin="5">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Grid Grid.Row="0" Grid.Column="0">
+                    <Label Content="Brightness :" Style="{StaticResource LabelStyle}"/>
+                </Grid>
+                <Grid Grid.Row="0" Grid.Column="1">
+                    <TextBox x:Name="myTbFixationBrightness" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center"/>
+                </Grid>
+                <Grid Grid.Row="1" Grid.Column="1">
+                    <CheckBox x:Name="myCheckFixationBlinkMode" Content="Blink Mode" Style="{StaticResource CheckBoxStyle}" HorizontalAlignment="Center"/>
+                </Grid>
+                <Grid Grid.Row="0" Grid.Column="3">
+                    <Label Content="Period/On Time :" Style="{StaticResource LabelStyle}"/>
+                </Grid>
+                <Grid Grid.Row="0" Grid.Column="4">
+                    <TextBox x:Name="myTbFixationPeriod" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center"/>
+                </Grid>
+                <Grid Grid.Row="0" Grid.Column="5">
+                    <TextBox x:Name="myTbFixationOnTime" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center"/>
+                </Grid>
+                <Grid Grid.Row="1" Grid.Column="3">
+                    <Label Content="Fixation Type :" Style="{StaticResource LabelStyle}"/>
+                </Grid>
+                <Grid Grid.Row="1" Grid.Column="4">
+                    <TextBox x:Name="myTbFixationType" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center"/>
+                </Grid>
+            </Grid>
+        </GroupBox>
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Grid Grid.Column="4">
+                <Button x:Name="myBtFixationApply" Content="Apply" Style="{StaticResource ButtonM1Style}" Click="myBtFixationApply_Click"/>
+            </Grid>
+            <Grid Grid.Column="5">
+                <Button x:Name="myBtFixationClose" Content="Close" Style="{StaticResource ButtonM1Style}" Click="myBtFixationClose_Click"/>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

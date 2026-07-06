@@ -22,12 +22,13 @@ namespace wso_device
 	
 	public:
 		virtual bool initializeLsoScanner(void);
-		// bool updateScannerStatus(void);
+		bool updateScannerStatus(void);
 
 		bool obtainControlParameters(int patternId, LsoScannerControlParam* param);
 		bool submitControlParameters(int patternId, const LsoScannerControlParam* param);
 		bool obtainCaptureParameters(int patternId, LsoScannerCaptureParam* param);
 		bool submitCaptureParameters(int patternId, const LsoScannerCaptureParam* param);
+		//bool storeControlParameters(void);
 
 		bool controlYGalvoMove(int ypos);
 		bool controlCapture(int nPatternId, int onOff);
@@ -35,11 +36,11 @@ namespace wso_device
 		bool startGrabbing(int nPatternId);
 		bool pauseGrabbing(int nPatternId);
 
-		// virtual bool loadConfigFromIniFile(void) override;
-		// virtual bool saveConfigToIniFile(void) override;
+		//virtual bool loadConfigFromIniFile(void) override;
+		//virtual bool saveConfigToIniFile(void) override;
 
 		bool generateGalvanoPositions(short startPos, short endPos, int sampleSize, short* coords);
-		// void calcGalvanoPos(int nPatternId, int nGalvanoSampleSize);
+		void calcGalvanoPos(int nPatternId, int nGalvanoSampleSize);
 
 	protected:
 		MainBoard* getMainBoard(void) const;

@@ -1,0 +1,130 @@
+﻿<Window x:Class="WsoToolkit.ColorCameraSettingWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WsoToolkit"
+        mc:Ignorable="d"
+        Title="ColorCameraSettingWindow" Height="450" Width="635" WindowStartupLocation="CenterOwner" Loaded="Window_Loaded">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="9*"/>
+            <RowDefinition Height="50"/>
+        </Grid.RowDefinitions>
+        <GroupBox Header="Camera Setting" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="5">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Grid Grid.Row="0" Grid.Column="0">
+                    <Label Content="ROI X Width : " Style="{StaticResource LabelStyle}"/>
+                </Grid>
+                <Grid Grid.Row="0" Grid.Column="1">
+                    <TextBox x:Name="myTbROIXWidth" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTb_KeyDown" Margin="0,0,0,5" VerticalAlignment="Bottom"/>
+                </Grid>
+                <Grid Grid.Row="0" Grid.Column="2">
+                    <Label Content="Exposure Time (us) : " Style="{StaticResource LabelStyle}"/>
+                </Grid>
+                <Grid Grid.Row="0" Grid.Column="3">
+                    <TextBox x:Name="myTbExposureTime" Style="{StaticResource TextBoxM1Style}" HorizontalAlignment="Center" KeyDown="myTb_KeyDown"/>
+                </Grid>
+                <Grid Grid.Row="1" Grid.Column="0">
+                    <Label Content="ROI Y Height : " Style="{StaticResource LabelStyle}"/>
+                </Grid>
+                <Grid Grid.Row="1" Grid.Column="1">
+                    <TextBox x:Name="myTbROIYHeight" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTb_KeyDown"/>
+                </Grid>
+                <Grid Grid.Row="1" Grid.Column="2">
+                    <Label Content="Acquisition Mode : " Style="{StaticResource LabelStyle}"/>
+                </Grid>
+                <Grid Grid.Row="1" Grid.Column="3">
+                    <ComboBox x:Name="myComboAcquisitionMode" Style="{StaticResource ComboBoxM1Style}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
+                </Grid>
+
+                <Grid Grid.Row="2" Grid.Column="0">
+                    <Label Content="ROI X Offset : " Style="{StaticResource LabelStyle}"/>
+                </Grid>
+                <Grid Grid.Row="2" Grid.Column="1">
+                    <TextBox x:Name="myTbROIXOffset" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTb_KeyDown"/>
+                </Grid>
+                <Grid Grid.Row="2" Grid.Column="2">
+                    <Label Content="Acquisition Frame Count :" Style="{StaticResource LabelStyle}"/>
+                </Grid>
+                <Grid Grid.Row="2" Grid.Column="3">
+                    <TextBox x:Name="myTbAcquisitionFrmaeCount" Style="{StaticResource TextBoxM1Style}" HorizontalAlignment="Center" KeyDown="myTb_KeyDown"/>
+                </Grid>
+                <Grid Grid.Row="3" Grid.Column="2">
+                    <Label Content="Pixel Format :" Style="{StaticResource LabelStyle}"/>
+                </Grid>
+                <Grid Grid.Row="3" Grid.Column="3">
+                    <ComboBox x:Name="myComboPixelFormat" Style="{StaticResource ComboBoxM1Style}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
+                </Grid>
+                <Grid Grid.Row="3" Grid.Column="0">
+                    <Label Content="ROI Y Offset : " Style="{StaticResource LabelStyle}"/>
+                </Grid>
+                <Grid Grid.Row="3" Grid.Column="1">
+                    <TextBox x:Name="myTbROIYOffset" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTb_KeyDown"/>
+                </Grid>
+
+                <Grid Grid.Row="4" Grid.Column="0">
+                    <Button x:Name="myBtCenterROI" Content="Center ROI" Style="{StaticResource ButtonS1Style}" HorizontalAlignment="Center" Click="myBtCenterROI_Click"/>
+                </Grid>
+                <Grid Grid.Row="4" Grid.Column="1">
+                    <Button x:Name="myBtMaxSize" Content="Max Size" Style="{StaticResource ButtonS1Style}" HorizontalAlignment="Center" Click="myBtMaxSize_Click"/>
+                </Grid>
+                <Grid Grid.Row="4" Grid.Column="2">
+                    <Label Content="Binning Horizontal : " Style="{StaticResource LabelStyle}"/>
+                </Grid>
+                <Grid Grid.Row="4" Grid.Column="3">
+                    <ComboBox x:Name="myComboBinningHorizontal" Style="{StaticResource ComboBoxM1Style}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
+                </Grid>
+                <Grid Grid.Row="5" Grid.Column="2">
+                    <Label Content="Binning Vertical : " Style="{StaticResource LabelStyle}"/>
+                </Grid>
+                <Grid Grid.Row="5" Grid.Column="3">
+                    <ComboBox x:Name="myComboBinningVertical" Style="{StaticResource ComboBoxM1Style}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
+                </Grid>
+                <Grid Grid.Row="6" Grid.Column="0" >
+                    <Button x:Name="myBtColorMode" Content="Color Mode" Style="{StaticResource ButtonS1Style}" Click="myBtColorMode_Click"/>
+                </Grid>
+                <Grid Grid.Row="6" Grid.Column="1" >
+                    <Button x:Name="myBtMonoMode" Content="Mono Mode" Style="{StaticResource ButtonS1Style}" Click="myBtMonoMode_Click"/>
+                </Grid>
+                <Grid Grid.Row="6" Grid.Column="2">
+                    <Label Content="Gain (dB) : " Style="{StaticResource LabelStyle}"/>
+                </Grid>
+                <Grid Grid.Row="6" Grid.Column="3">
+                    <TextBox x:Name="myTbGain" Style="{StaticResource TextBoxM1Style}" HorizontalAlignment="Center" KeyDown="myTb_KeyDown"/>
+                </Grid>
+                <Grid Grid.Row="7" Grid.Column="2">
+                    <Label Content="ADC Bit Depth : " Style="{StaticResource LabelStyle}"/>
+                </Grid>
+                <Grid Grid.Row="7" Grid.Column="3">
+                    <ComboBox x:Name="myComboADCBitDepth" Style="{StaticResource ComboBoxM1Style}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
+                </Grid>
+            </Grid>
+        </GroupBox>
+        <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">
+            <StackPanel Orientation="Horizontal" FlowDirection="RightToLeft">
+                <Button x:Name="myBtClose" Content="Close" Style="{StaticResource ButtonM1Style}" Margin="8" Click="myBtClose_Click"/>
+                <Button x:Name="myBtApply" Content="Apply" Style="{StaticResource ButtonM1Style}" Margin="8" Click="myBtApply_Click"/>
+                <Button x:Name="myBtDefault" Content="Default" Style="{StaticResource ButtonM1Style}" Margin="8" Click="myBtDefault_Click"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

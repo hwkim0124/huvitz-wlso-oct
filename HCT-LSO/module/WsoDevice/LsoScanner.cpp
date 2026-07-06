@@ -55,23 +55,23 @@ bool wso_device::LsoScanner::initializeLsoScanner(void)
 		return false;
 	}
 
-	// updateScannerStatus();
+	updateScannerStatus();
 
-	/*
+	
 	// controlSwitch(0);
-	loadConfigFromIniFile();
+	//loadConfigFromIniFile();
 
-	if (!storeControlParameters())
-	{
-		LogDebug() << "Lso scanner control parameters failed to change!";
-		return false;
-	}
-	*/
+	//if (!storeControlParameters())
+	//{
+	//	LogDebug() << "Lso scanner control parameters failed to change!";
+	//	return false;
+	//}
+	
 	impl().initiated = true;
 	return true;
 }
 
-/*
+
 bool wso_device::LsoScanner::updateScannerStatus(void)
 {
 	UsbComm& usbComm = getMainBoard()->getUsbComm();
@@ -94,7 +94,7 @@ bool wso_device::LsoScanner::updateScannerStatus(void)
 	impl().scanProfile[1] = scan_traj_profile[1];
 	return true;
 }
-*/
+
 
 bool wso_device::LsoScanner::obtainControlParameters(int patternId, LsoScannerControlParam* param)
 {
@@ -202,6 +202,29 @@ bool wso_device::LsoScanner::submitCaptureParameters(int patternId, const LsoSca
 	return false;
 }
 
+//bool wso_device::LsoScanner::storeControlParameters(void)
+//{
+//	auto* hbs = getMainBoard()->getHbsDataProfile();
+//	auto* scanner = const_cast<HbsLsoScanner*>(hbs->getHbsLsoScanner());
+//
+//	auto& capture_status = scanner->lso_capture_status;
+//	auto& scan_traj_profile = scanner->traj_profile;
+//
+//	capture_status.ctrl_status = impl().ctrlStatus;
+//	capture_status.acq_cnt = impl().acqCnt;
+//
+//	scan_traj_profile[0] = impl().scanProfile[0];
+//	scan_traj_profile[1] = impl().scanProfile[1];
+//
+//	if (!hbs->saveLsoScannerParam())
+//	{
+//		LogDebug() << "Lso scanner control parameters failed to store!";
+//		return false;
+//	}
+//
+//	return true;
+//}
+
 bool wso_device::LsoScanner::controlYGalvoMove(int ypos)
 {
 	UsbComm& usbComm = getMainBoard()->getUsbComm();
@@ -271,102 +294,102 @@ bool wso_device::LsoScanner::pauseGrabbing(int nPatternId)
 	return true;
 }
 
-/*
-bool wso_device::LsoScanner::loadConfigFromIniFile()
-{
-	bool bRet = false;
 
-	try
-	{
-		IniFile* ini = getConfigIniFile();
-		if (!ini) {
-			return false;
-		}
+//bool wso_device::LsoScanner::loadConfigFromIniFile()
+//{
+//	bool bRet = false;
+//
+//	try
+//	{
+//		IniFile* ini = getConfigIniFile();
+//		if (!ini) {
+//			return false;
+//		}
+//
+//		impl().scanProfile[0].exposure_time_us = (float)ini->ReadInt(L"LSO_SCANNER_0", L"ExposureTime");
+//		impl().scanProfile[0].TrgSrc = ini->ReadInt(L"LSO_SCANNER_0", L"TrgSrc");
+//		impl().scanProfile[0].AcqMode = ini->ReadInt(L"LSO_SCANNER_0", L"AcqMode");
+//		impl().scanProfile[0].AcqFrameSize = ini->ReadInt(L"LSO_SCANNER_0", L"AcqFrameSize");
+//		impl().scanProfile[0].subframe_size = ini->ReadInt(L"LSO_SCANNER_0", L"SubFrameSize");
+//		impl().scanProfile[0].led_on_pos_index = ini->ReadInt(L"LSO_SCANNER_0", L"LedOnPosIndex");
+//		impl().scanProfile[0].led_off_pos_index = ini->ReadInt(L"LSO_SCANNER_0", L"LedOffPosIndex");
+//		impl().scanProfile[0].prescan_pos_rewind_offset = ini->ReadInt(L"LSO_SCANNER_0", L"GalvanoRewindOffset");
+//		impl().scanProfile[0].sample_size = ini->ReadInt(L"LSO_SCANNER_0", L"GalvoPatternSize");
+//		impl().scanProfile[0].time_step_us = (float)ini->ReadInt(L"LSO_SCANNER_0", L"TimeStep");
+//		impl().scanProfile[0].pos[0] = ini->ReadInt(L"LSO_SCANNER_0", L"GalvoStartPos");
+//		impl().scanProfile[0].pos[impl().scanProfile[0].sample_size - 1] = ini->ReadInt(L"LSO_SCANNER_0", L"GalvoEndPos");
+//		calcGalvanoPos(0, impl().scanProfile[0].sample_size);
+//
+//		impl().scanProfile[1].exposure_time_us = (float)ini->ReadInt(L"LSO_SCANNER_1", L"ExposureTime");
+//		impl().scanProfile[1].TrgSrc = ini->ReadInt(L"LSO_SCANNER_1", L"TrgSrc");
+//		impl().scanProfile[1].AcqMode = ini->ReadInt(L"LSO_SCANNER_1", L"AcqMode");
+//		impl().scanProfile[1].AcqFrameSize = ini->ReadInt(L"LSO_SCANNER_1", L"AcqFrameSize");
+//		impl().scanProfile[1].subframe_size = ini->ReadInt(L"LSO_SCANNER_1", L"SubFrameSize");
+//		impl().scanProfile[1].led_on_pos_index = ini->ReadInt(L"LSO_SCANNER_1", L"LedOnPosIndex");
+//		impl().scanProfile[1].led_off_pos_index = ini->ReadInt(L"LSO_SCANNER_1", L"LedOffPosIndex");
+//		impl().scanProfile[1].prescan_pos_rewind_offset = ini->ReadInt(L"LSO_SCANNER_1", L"GalvanoRewindOffset");
+//		impl().scanProfile[1].sample_size = ini->ReadInt(L"LSO_SCANNER_1", L"GalvoPatternSize");
+//		impl().scanProfile[1].time_step_us = (float)ini->ReadInt(L"LSO_SCANNER_1", L"TimeStep");
+//		impl().scanProfile[1].pos[0] = ini->ReadInt(L"LSO_SCANNER_1", L"GalvoStartPos");
+//		impl().scanProfile[1].pos[impl().scanProfile[1].sample_size - 1] = ini->ReadInt(L"LSO_SCANNER_1", L"GalvoEndPos");
+//		calcGalvanoPos(1, impl().scanProfile[1].sample_size);
+//
+//		bRet = true;
+//	}
+//	catch (exception ex)
+//	{
+//		bRet = false;
+//	}
+//	return bRet;
+//}
+//
+//bool wso_device::LsoScanner::saveConfigToIniFile()
+//{
+//	bool bRet = false;
+//
+//	try
+//	{
+//		IniFile* ini = getConfigIniFile();
+//		if (!ini) {
+//			return false;
+//		}
+//
+//		ini->WriteInt(L"LSO_SCANNER_0", L"ExposureTime", (int)impl().scanProfile[0].exposure_time_us);
+//		ini->WriteInt(L"LSO_SCANNER_0", L"TrgSrc", impl().scanProfile[0].TrgSrc);
+//		ini->WriteInt(L"LSO_SCANNER_0", L"AcqMode", impl().scanProfile[0].AcqMode);
+//		ini->WriteInt(L"LSO_SCANNER_0", L"AcqFrameSize", impl().scanProfile[0].AcqFrameSize);
+//		ini->WriteInt(L"LSO_SCANNER_0", L"SubFrameSize", impl().scanProfile[0].subframe_size);
+//		ini->WriteInt(L"LSO_SCANNER_0", L"LedOnPosIndex", impl().scanProfile[0].led_on_pos_index);
+//		ini->WriteInt(L"LSO_SCANNER_0", L"LedOffPosIndex", impl().scanProfile[0].led_off_pos_index);
+//		ini->WriteInt(L"LSO_SCANNER_0", L"GalvanoRewindOffset", impl().scanProfile[0].prescan_pos_rewind_offset);
+//		ini->WriteInt(L"LSO_SCANNER_0", L"GalvoPatternSize", impl().scanProfile[0].sample_size);
+//		ini->WriteInt(L"LSO_SCANNER_0", L"TimeStep", (int)impl().scanProfile[0].time_step_us);
+//		ini->WriteInt(L"LSO_SCANNER_0", L"GalvoStartPos", impl().scanProfile[0].pos[0]);
+//		ini->WriteInt(L"LSO_SCANNER_0", L"GalvoEndPos", impl().scanProfile[0].pos[impl().scanProfile[0].sample_size - 1]);
+//
+//		ini->WriteInt(L"LSO_SCANNER_1", L"ExposureTime", (int)impl().scanProfile[1].exposure_time_us);
+//		ini->WriteInt(L"LSO_SCANNER_1", L"TrgSrc", impl().scanProfile[1].TrgSrc);
+//		ini->WriteInt(L"LSO_SCANNER_1", L"AcqMode", impl().scanProfile[1].AcqMode);
+//		ini->WriteInt(L"LSO_SCANNER_1", L"AcqFrameSize", impl().scanProfile[1].AcqFrameSize);
+//		ini->WriteInt(L"LSO_SCANNER_1", L"SubFrameSize", impl().scanProfile[1].subframe_size);
+//		ini->WriteInt(L"LSO_SCANNER_1", L"LedOnPosIndex", impl().scanProfile[1].led_on_pos_index);
+//		ini->WriteInt(L"LSO_SCANNER_1", L"LedOffPosIndex", impl().scanProfile[1].led_off_pos_index);
+//		ini->WriteInt(L"LSO_SCANNER_1", L"GalvanoRewindOffset", impl().scanProfile[1].prescan_pos_rewind_offset);
+//		ini->WriteInt(L"LSO_SCANNER_1", L"GalvoPatternSize", impl().scanProfile[1].sample_size);
+//		ini->WriteInt(L"LSO_SCANNER_1", L"TimeStep", (int)impl().scanProfile[1].time_step_us);
+//		ini->WriteInt(L"LSO_SCANNER_1", L"GalvoStartPos", impl().scanProfile[1].pos[0]);
+//		ini->WriteInt(L"LSO_SCANNER_1", L"GalvoEndPos", impl().scanProfile[1].pos[impl().scanProfile[1].sample_size - 1]);
+//
+//		bRet = true;
+//	}
+//	catch (exception ex)
+//	{
+//		bRet = false;
+//	}
+//
+//	return bRet;
+//}
 
-		impl().scanProfile[0].exposure_time_us = (float)ini->ReadInt(L"LSO_SCANNER_0", L"ExposureTime");
-		impl().scanProfile[0].TrgSrc = ini->ReadInt(L"LSO_SCANNER_0", L"TrgSrc");
-		impl().scanProfile[0].AcqMode = ini->ReadInt(L"LSO_SCANNER_0", L"AcqMode");
-		impl().scanProfile[0].AcqFrameSize = ini->ReadInt(L"LSO_SCANNER_0", L"AcqFrameSize");
-		impl().scanProfile[0].subframe_size = ini->ReadInt(L"LSO_SCANNER_0", L"SubFrameSize");
-		impl().scanProfile[0].led_on_pos_index = ini->ReadInt(L"LSO_SCANNER_0", L"LedOnPosIndex");
-		impl().scanProfile[0].led_off_pos_index = ini->ReadInt(L"LSO_SCANNER_0", L"LedOffPosIndex");
-		impl().scanProfile[0].prescan_pos_rewind_offset = ini->ReadInt(L"LSO_SCANNER_0", L"GalvanoRewindOffset");
-		impl().scanProfile[0].sample_size = ini->ReadInt(L"LSO_SCANNER_0", L"GalvoPatternSize");
-		impl().scanProfile[0].time_step_us = (float)ini->ReadInt(L"LSO_SCANNER_0", L"TimeStep");
-		impl().scanProfile[0].pos[0] = ini->ReadInt(L"LSO_SCANNER_0", L"GalvoStartPos");
-		impl().scanProfile[0].pos[impl().scanProfile[0].sample_size - 1] = ini->ReadInt(L"LSO_SCANNER_0", L"GalvoEndPos");
-		calcGalvanoPos(0, impl().scanProfile[0].sample_size);
-
-		impl().scanProfile[1].exposure_time_us = (float)ini->ReadInt(L"LSO_SCANNER_1", L"ExposureTime");
-		impl().scanProfile[1].TrgSrc = ini->ReadInt(L"LSO_SCANNER_1", L"TrgSrc");
-		impl().scanProfile[1].AcqMode = ini->ReadInt(L"LSO_SCANNER_1", L"AcqMode");
-		impl().scanProfile[1].AcqFrameSize = ini->ReadInt(L"LSO_SCANNER_1", L"AcqFrameSize");
-		impl().scanProfile[1].subframe_size = ini->ReadInt(L"LSO_SCANNER_1", L"SubFrameSize");
-		impl().scanProfile[1].led_on_pos_index = ini->ReadInt(L"LSO_SCANNER_1", L"LedOnPosIndex");
-		impl().scanProfile[1].led_off_pos_index = ini->ReadInt(L"LSO_SCANNER_1", L"LedOffPosIndex");
-		impl().scanProfile[1].prescan_pos_rewind_offset = ini->ReadInt(L"LSO_SCANNER_1", L"GalvanoRewindOffset");
-		impl().scanProfile[1].sample_size = ini->ReadInt(L"LSO_SCANNER_1", L"GalvoPatternSize");
-		impl().scanProfile[1].time_step_us = (float)ini->ReadInt(L"LSO_SCANNER_1", L"TimeStep");
-		impl().scanProfile[1].pos[0] = ini->ReadInt(L"LSO_SCANNER_1", L"GalvoStartPos");
-		impl().scanProfile[1].pos[impl().scanProfile[1].sample_size - 1] = ini->ReadInt(L"LSO_SCANNER_1", L"GalvoEndPos");
-		calcGalvanoPos(1, impl().scanProfile[1].sample_size);
-
-		bRet = true;
-	}
-	catch (exception ex)
-	{
-		bRet = false;
-	}
-	return bRet;
-}
-
-bool wso_device::LsoScanner::saveConfigToIniFile()
-{
-	bool bRet = false;
-
-	try
-	{
-		IniFile* ini = getConfigIniFile();
-		if (!ini) {
-			return false;
-		}
-
-		ini->WriteInt(L"LSO_SCANNER_0", L"ExposureTime", (int)impl().scanProfile[0].exposure_time_us);
-		ini->WriteInt(L"LSO_SCANNER_0", L"TrgSrc", impl().scanProfile[0].TrgSrc);
-		ini->WriteInt(L"LSO_SCANNER_0", L"AcqMode", impl().scanProfile[0].AcqMode);
-		ini->WriteInt(L"LSO_SCANNER_0", L"AcqFrameSize", impl().scanProfile[0].AcqFrameSize);
-		ini->WriteInt(L"LSO_SCANNER_0", L"SubFrameSize", impl().scanProfile[0].subframe_size);
-		ini->WriteInt(L"LSO_SCANNER_0", L"LedOnPosIndex", impl().scanProfile[0].led_on_pos_index);
-		ini->WriteInt(L"LSO_SCANNER_0", L"LedOffPosIndex", impl().scanProfile[0].led_off_pos_index);
-		ini->WriteInt(L"LSO_SCANNER_0", L"GalvanoRewindOffset", impl().scanProfile[0].prescan_pos_rewind_offset);
-		ini->WriteInt(L"LSO_SCANNER_0", L"GalvoPatternSize", impl().scanProfile[0].sample_size);
-		ini->WriteInt(L"LSO_SCANNER_0", L"TimeStep", (int)impl().scanProfile[0].time_step_us);
-		ini->WriteInt(L"LSO_SCANNER_0", L"GalvoStartPos", impl().scanProfile[0].pos[0]);
-		ini->WriteInt(L"LSO_SCANNER_0", L"GalvoEndPos", impl().scanProfile[0].pos[impl().scanProfile[0].sample_size - 1]);
-
-		ini->WriteInt(L"LSO_SCANNER_1", L"ExposureTime", (int)impl().scanProfile[1].exposure_time_us);
-		ini->WriteInt(L"LSO_SCANNER_1", L"TrgSrc", impl().scanProfile[1].TrgSrc);
-		ini->WriteInt(L"LSO_SCANNER_1", L"AcqMode", impl().scanProfile[1].AcqMode);
-		ini->WriteInt(L"LSO_SCANNER_1", L"AcqFrameSize", impl().scanProfile[1].AcqFrameSize);
-		ini->WriteInt(L"LSO_SCANNER_1", L"SubFrameSize", impl().scanProfile[1].subframe_size);
-		ini->WriteInt(L"LSO_SCANNER_1", L"LedOnPosIndex", impl().scanProfile[1].led_on_pos_index);
-		ini->WriteInt(L"LSO_SCANNER_1", L"LedOffPosIndex", impl().scanProfile[1].led_off_pos_index);
-		ini->WriteInt(L"LSO_SCANNER_1", L"GalvanoRewindOffset", impl().scanProfile[1].prescan_pos_rewind_offset);
-		ini->WriteInt(L"LSO_SCANNER_1", L"GalvoPatternSize", impl().scanProfile[1].sample_size);
-		ini->WriteInt(L"LSO_SCANNER_1", L"TimeStep", (int)impl().scanProfile[1].time_step_us);
-		ini->WriteInt(L"LSO_SCANNER_1", L"GalvoStartPos", impl().scanProfile[1].pos[0]);
-		ini->WriteInt(L"LSO_SCANNER_1", L"GalvoEndPos", impl().scanProfile[1].pos[impl().scanProfile[1].sample_size - 1]);
-
-		bRet = true;
-	}
-	catch (exception ex)
-	{
-		bRet = false;
-	}
-
-	return bRet;
-}
-*/
 
 bool wso_device::LsoScanner::generateGalvanoPositions(short startPos, short endPos, int sampleSize, short* coords)
 {
@@ -387,7 +410,7 @@ bool wso_device::LsoScanner::generateGalvanoPositions(short startPos, short endP
 	return true;
 }
 
-/*
+
 void wso_device::LsoScanner::calcGalvanoPos(int nPatternId, int nGalvanoSampleSize)
 {
 	size_t count = 0;
@@ -405,7 +428,7 @@ void wso_device::LsoScanner::calcGalvanoPos(int nPatternId, int nGalvanoSampleSi
 		impl().scanProfile[nPatternId].pos[i] = static_cast<short int>(std::round(value));
 	}
 }
-*/
+
 
 MainBoard* wso_device::LsoScanner::getMainBoard(void) const
 {

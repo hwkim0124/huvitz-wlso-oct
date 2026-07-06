@@ -114,6 +114,7 @@ MainBoard::MainBoard() :
 	impl().irCameras.emplace_back(new CorneaCamera(this, CameraType::IR_CORNEA_LEFT, USB_IR1_PID));
 	impl().irCameras.emplace_back(new CorneaCamera(this, CameraType::IR_CORNEA_RIGHT, USB_IR2_PID));
 
+	impl().colorCamera = make_unique<ColorCamera>(this);
 
 	impl().lightLeds.emplace(LightType::LSO_WHITE_LED, make_unique<LsoWhiteLed>(this));
 	impl().lightLeds.emplace(LightType::RETINA_IR_LED, make_unique<RetinaIrLed>(this));
@@ -205,7 +206,6 @@ void wso_device::MainBoard::releaseMainBoard(void)
 {
 	try {
 		/*
-		getColorCamera()->uninitialize();
 
 		//save Led Setting
 		getLsoWhiteLed()->saveConfigToIniFile();
@@ -213,6 +213,8 @@ void wso_device::MainBoard::releaseMainBoard(void)
 		getCorneaIrLeftLed()->saveConfigToIniFile();
 		getCorneaIrRightLed()->saveConfigToIniFile();
 		*/
+
+		getColorCamera()->uninitialize();
 
 		getUsbComm().releaseChannel();
 		getSubComm().releaseChannel();
@@ -326,16 +328,14 @@ bool wso_device::MainBoard::initiateBoardComponents(int* numWarns)
 	if (!initiateCorneaCamera(CameraType::IR_CORNEA_RIGHT)) {
 		warns += 1;
 	}
-
-	/*
-	if (!initiateCorneaCamera(CameraType::IR_CORNEA_LOWER)) {
-		warns += 1;
-	}
+	
+	//if (!initiateCorneaCamera(CameraType::IR_CORNEA_LOWER)) {
+	//	warns += 1;
+	//}
 
 	if (!initiateColorCamera()) {
 		warns += 1;
 	}
-	*/
 
 	if (!getLsoScanner()->initializeLsoScanner()) {
 		WsoLogWarn("Failed to initialize LSO scanner");
