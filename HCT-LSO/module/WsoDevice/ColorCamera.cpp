@@ -122,10 +122,7 @@ bool wso_device::ColorCamera::initialize(void)
 	impl().pCam = impl().camList.GetByIndex(0);
 	impl().pCam->Init();
 
-	loadConfigFromIniFile();
-
-	setInitParameters();
-	//saveUserSet_(1);
+	//setInitParameters();
 
 	impl().initiated = true;
 	return true;
@@ -962,8 +959,6 @@ void wso_device::ColorCamera::setCameraSettings(ColorCameraSettingParam params)
 		camsets.binningVertical = params.binningVertical;
 		camsets.gain = params.gain;
 		camsets.adcDepthIndex = params.adcDepthIndex;
-
-		saveConfigToIniFile();
 	}
 	catch (const std::exception& e)
 	{
@@ -1221,6 +1216,8 @@ bool wso_device::ColorCamera::loadConfigFromIniFile()
 		camsets.acqusitionMode = ini->ReadUInt(L"COLOR_CAMERA", L"AcqusitionMode");
 		camsets.acqusitionFrameCount = ini->ReadUInt(L"COLOR_CAMERA", L"AcqusitionFrameCount");
 		camsets.pixelFormat = ini->ReadUInt(L"COLOR_CAMERA", L"PixelFormat");
+		camsets.binningHorizontal = ini->ReadUInt(L"COLOR_CAMERA", L"BinningHorizontal", 1);
+		camsets.binningVertical = ini->ReadUInt(L"COLOR_CAMERA", L"BinningVertical", 1);
 		camsets.gain = ini->ReadFloat(L"COLOR_CAMERA", L"Gain");
 		camsets.adcDepthIndex = ini->ReadUInt(L"COLOR_CAMERA", L"AdcDepth");
 
@@ -1252,6 +1249,8 @@ bool wso_device::ColorCamera::saveConfigToIniFile()
 		ini->WriteInt(L"COLOR_CAMERA", L"AcqusitionMode", camsets.acqusitionMode);
 		ini->WriteInt(L"COLOR_CAMERA", L"AcqusitionFrameCount", camsets.acqusitionFrameCount);
 		ini->WriteInt(L"COLOR_CAMERA", L"PixelFormat", camsets.pixelFormat);
+		ini->WriteInt(L"COLOR_CAMERA", L"BinningHorizontal", camsets.binningHorizontal);
+		ini->WriteInt(L"COLOR_CAMERA", L"BinningVertical", camsets.binningVertical);
 		ini->WriteFloat(L"COLOR_CAMERA", L"Gain", camsets.gain);
 		ini->WriteInt(L"COLOR_CAMERA", L"AdcDepth", camsets.adcDepthIndex);
 
