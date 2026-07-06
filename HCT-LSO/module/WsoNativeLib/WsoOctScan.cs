@@ -116,7 +116,7 @@ namespace WsoNativeLib
 
                 scanOverlaps = 1;
                 scanDirection = OctScanDirection.X_TO_Y;
-                scanSpeed = OctScanSpeed.FASTER;
+                scanSpeed = OctScanSpeed.FAST;
 
                 scanOffsetX = 0.0f;
                 scanOffsetY = 0.0f;

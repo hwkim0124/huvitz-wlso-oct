@@ -33,13 +33,13 @@ namespace WsoNativeLib
 
         public enum LightType : int
         {
-            LsoWhiteLed = 0x00,
-            RetinaIrLed = 0x01,
-            CorneaIrLedLeft = 0x02, 
-            CorneaIrLedRight = 0x03,
-            ExtFixationLed = 0x04, 
-            BlueLed = 0x05, 
-            GreenLed = 0x06
+            LsoWhite = 0x00,
+            RetinaIr = 0x01,
+            CorneaIrLeft = 0x02, 
+            CorneaIrRight = 0x03,
+            ExtFixation = 0x04, 
+            LsoBlue = 0x05, 
+            LsoGreen = 0x06
         }
 
         public enum LightMode : int

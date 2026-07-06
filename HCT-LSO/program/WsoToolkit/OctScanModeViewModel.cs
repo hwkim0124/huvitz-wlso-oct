@@ -382,7 +382,7 @@ namespace WsoToolkit
             _octInitParam.lineSpace = ToFloat(cmbLineSpaces.SelectedItem?.ToString() ?? "0.0");
 
             _octInitParam.scanDirection = cmbScanDirection.SelectedIndex == 0 ? WsoOctDefs.OctScanDirection.X_TO_Y : WsoOctDefs.OctScanDirection.Y_TO_X;
-            _octInitParam.scanSpeed = radioCameraSpeed1.IsChecked == true ? WsoOctDefs.OctScanSpeed.SLOWER : radioCameraSpeed2.IsChecked == true ? WsoOctDefs.OctScanSpeed.NORMAL : WsoOctDefs.OctScanSpeed.FASTER;
+            _octInitParam.scanSpeed = radioCameraSpeed1.IsChecked == true ? WsoOctDefs.OctScanSpeed.SLOW : radioCameraSpeed2.IsChecked == true ? WsoOctDefs.OctScanSpeed.NORMAL : WsoOctDefs.OctScanSpeed.FAST;
 
             _octInitParam.scanOffsetX = ToFloat(editScanOffsetX.Text);
             _octInitParam.scanOffsetY = ToFloat(editScanOffsetY.Text);

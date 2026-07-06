@@ -6,7 +6,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WsoToolkit"
         mc:Ignorable="d"
-        Title="Light Leds Control" Height="Auto" Width="Auto" Initialized="Window_Initialized" Loaded="Window_Loaded" Closed="Window_Closed" ResizeMode="NoResize">
+        Title="Light Leds Control" Height="Auto" Width="Auto" Initialized="Window_Initialized" Loaded="Window_Loaded" Closed="Window_Closed" ResizeMode="NoResize" SizeToContent="WidthAndHeight">
     <Grid  Margin="12,12,12,12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>

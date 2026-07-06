@@ -78,8 +78,9 @@ namespace WsoNativeLib
         [DllImport(LibraryName)]
         private static extern void setColorCameraSettingParam(ref LsoColorCameraSettingParam param);
 
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        ///
+
+        // Public methods
+        /////////////////////////////////////////////////////////////////////////////////////////////
         public static void StartLiveMode(ColorCameraFrameCaptured clbFrame)
         {
             startColorCameraLive(clbFrame);

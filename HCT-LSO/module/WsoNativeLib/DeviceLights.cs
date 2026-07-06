@@ -10,7 +10,6 @@ namespace WsoNativeLib
 {
     using static WsoNativeLib.LibraryConfig;
     using static WsoNativeLib.WsoDevice;
-    using static WsoNativeLib.WsoLights;
 
     public static class DeviceLights
     {
@@ -95,6 +94,8 @@ namespace WsoNativeLib
         private static extern ushort getLightIntensity(int type);
 
 
+        // Public methods
+        /////////////////////////////////////////////////////////////////////////////////////////////
         public static bool TurnOnLight(LightType type)
         {
             return turnOnLight((int)type);

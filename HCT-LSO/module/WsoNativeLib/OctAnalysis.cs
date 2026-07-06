@@ -290,8 +290,7 @@ namespace WsoNativeLib
             }
             return false;
         }
-
-
+        
         public static bool GetEnfaceImage(int reportId, OctStratumParam param, ref OctEnfaceImageDescript desc)
         {
             return getOctReportEnfaceImage(reportId, param, ref desc);

@@ -169,6 +169,8 @@ namespace WsoNativeLib
         [return: MarshalAs(UnmanagedType.I1)]
         private static extern bool isZstageMotorAtLowLimit();
 
+
+
         // Public methods
         /////////////////////////////////////////////////////////////////////////////////////////////
         public static bool FetchStepMotorStatus(MotorType type, out StepMotorStatus status)

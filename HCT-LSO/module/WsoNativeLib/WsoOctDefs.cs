@@ -75,9 +75,9 @@ namespace WsoNativeLib
         public enum OctScanSpeed : int
         {
             UNKNOWN = 0,
-            SLOWER = 1,
+            SLOW = 1,
             NORMAL = 2,
-            FASTER = 3,
+            FAST = 3,
             CUSTOM = 4
         }
     }

@@ -36,6 +36,7 @@ namespace WsoNativeLib
         [DllImport(LibraryName)]
         private static extern void releaseWsoLogMsgCallback();
 
+
         // Public methods
         /////////////////////////////////////////////////////////////////////////////////////////////
         public static bool InitializeWsoSystem(WsoLogMsgCallback clb, bool trace_mode)

@@ -39,6 +39,7 @@ namespace WsoNativeLib
         [return: MarshalAs(UnmanagedType.I1)]
         private static extern bool setupInternalFixation(InternalFixationParam param);
 
+
         // Public methods
         /////////////////////////////////////////////////////////////////////////////////////////////
         public static bool TurnOnInternalFixation(int row, int col)

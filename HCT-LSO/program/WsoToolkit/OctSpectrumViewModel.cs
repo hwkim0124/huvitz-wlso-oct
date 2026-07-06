@@ -53,7 +53,7 @@ namespace WsoToolkit
             _octInitParam.scanDirection = WsoOctDefs.OctScanDirection.X_TO_Y;
             _octInitParam.scanRangeX = 3.0f;
             _octInitParam.scanRangeY = 0.0f;
-            _octInitParam.scanSpeed = radioCameraSpeed1.IsChecked == true ? WsoOctDefs.OctScanSpeed.SLOWER : radioCameraSpeed2.IsChecked == true ? WsoOctDefs.OctScanSpeed.NORMAL : WsoOctDefs.OctScanSpeed.FASTER;
+            _octInitParam.scanSpeed = radioCameraSpeed1.IsChecked == true ? WsoOctDefs.OctScanSpeed.SLOW : radioCameraSpeed2.IsChecked == true ? WsoOctDefs.OctScanSpeed.NORMAL : WsoOctDefs.OctScanSpeed.FAST;
 
             OctScanning.ConnectSpectrumDataCaptured(_onSpectrumDataCaptured);
             OctScanning.ConnectResampleDataCaptured(_onResampleDataCaptured);

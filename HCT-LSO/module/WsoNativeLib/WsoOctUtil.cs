@@ -108,11 +108,11 @@ namespace WsoNativeLib
             */
             switch (speed)
             {
-                case OctScanSpeed.SLOWER:
+                case OctScanSpeed.SLOW:
                     return "Slower";
                 case OctScanSpeed.NORMAL:
                     return "Normal";
-                case OctScanSpeed.FASTER:
+                case OctScanSpeed.FAST:
                     return "Faster";
                 case OctScanSpeed.CUSTOM:
                     return "Custom";
