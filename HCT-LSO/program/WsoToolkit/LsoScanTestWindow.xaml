@@ -14,7 +14,7 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="342"/>
             <ColumnDefinition Width="8"/>
-            <ColumnDefinition Width="1540"/>
+            <ColumnDefinition Width="1530"/>
         </Grid.ColumnDefinitions>
         <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Vertical">
             <controls:CorneaCameraPreview x:Name="corneaPreview1" Width="334" Height="328"/>
@@ -35,13 +35,12 @@
                 <ColumnDefinition/>
                 <ColumnDefinition/>
                 <ColumnDefinition/>
-
+                <ColumnDefinition/>
             </Grid.ColumnDefinitions>
             <Grid Grid.Row="0" Grid.Column="0" Grid.RowSpan="4" Grid.ColumnSpan="4">
-                <controls:LsoScanImagePreview x:Name="myColorPreview" Width="980" Height="980" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <controls:LsoScanImagePreview x:Name="myColorPreview" Width="870" Height="980" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Grid>
-            <!--fixation Group-->
-            <Grid Grid.Row="1" Grid.Column="5" Margin="5">
+            <Grid Grid.Row="0" Grid.Column="4" Grid.RowSpan="4" Grid.ColumnSpan="3">
                 <Grid.RowDefinitions>
                     <RowDefinition/>
                     <RowDefinition/>
@@ -52,267 +51,280 @@
                     <ColumnDefinition/>
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
-                <Grid Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Grid.ColumnSpan="2" >
-                    <GroupBox Header="Setting">
+                <!--fixation Group-->
+                <Grid Grid.Row="1" Grid.Column="1" Margin="5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Grid Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Grid.ColumnSpan="2" >
+                        <GroupBox Header="Setting">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition/>
+                                    <ColumnDefinition/>
+                                </Grid.ColumnDefinitions>
+                                <Grid Grid.Row="0" Grid.Column="0">
+                                    <Button x:Name="myBtSettingColorCamera" Style="{StaticResource ButtonM1Style}" Content="Color Camera" HorizontalAlignment="Center" VerticalAlignment="Center" Click="myBtSettingColorCamera_Click"/>
+                                </Grid>
+                                <Grid Grid.Row="0" Grid.Column="1">
+                                    <Button x:Name="myBtSettingIRCameras" Content="IR Cameras" Style="{StaticResource ButtonM1Style}"/>
+                                </Grid>
+                                <Grid Grid.Row="1" Grid.Column="0">
+                                    <Button x:Name="myBtSettingLeds" Content="LED" Style="{StaticResource ButtonM1Style}" Click="myBtSettingLeds_Click"/>
+                                </Grid>
+                                <Grid Grid.Row="1" Grid.Column="1">
+                                    <Button x:Name="myBtSettingFixation" Content="Fixation" Style="{StaticResource ButtonM1Style}" Click="myBtSettingFixation_Click"/>
+                                </Grid>
+                            </Grid>
+                        </GroupBox>
+                    </Grid>
+                    <Grid Grid.Row="2" Grid.RowSpan="2" Grid.Column="0" Grid.ColumnSpan="2">
+                        <GroupBox Header="Internal Fixation">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition/>
+                                    <ColumnDefinition/>
+                                    <ColumnDefinition/>
+                                    <ColumnDefinition/>
+                                    <ColumnDefinition/>
+                                </Grid.ColumnDefinitions>
+                                <Label Grid.Row="0" Grid.Column="0" Content="Row :" Style="{StaticResource LabelStyle}"/>
+                                <Slider x:Name="mySliderFixationRow" Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" VerticalAlignment="Center" TickFrequency="1" LargeChange="1" SmallChange="1" IsSnapToTickEnabled="True" AutoToolTipPlacement="BottomRight" ValueChanged="mySliderFixationRow_ValueChanged"/>
+                                <TextBox x:Name="myTbFixationRow" Grid.Row="0" Grid.Column="4" Style="{StaticResource TextBoxS2Style}" HorizontalAlignment="Center" KeyDown="myTbFixationRow_KeyDown"/>
+                                <Label Grid.Row="1" Grid.Column="0" Content="Col :" Style="{StaticResource LabelStyle}"/>
+                                <Slider x:Name="mySliderFixationCol" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" VerticalAlignment="Center" TickFrequency="1" LargeChange="1" SmallChange="1" IsSnapToTickEnabled="True" AutoToolTipPlacement="BottomRight" ValueChanged="mySliderFixationCol_ValueChanged"/>
+                                <TextBox x:Name="myTbFixationCol" Grid.Row="1" Grid.Column="4" Style="{StaticResource TextBoxS2Style}" HorizontalAlignment="Center" KeyDown="myTbFixationCol_KeyDown"/>
+                                <RadioButton x:Name="myRbSideOD" Grid.Row="2" Grid.Column="0" GroupName="groupFixationEyeSide" Content="OD" Style="{StaticResource RadioButtonStyle}" IsChecked="True"/>
+                                <RadioButton x:Name="myRbSideOS" Grid.Row="2" Grid.Column="1" GroupName="groupFixationEyeSide" Content="OS" Style="{StaticResource RadioButtonStyle}"/>
+                                <Button x:Name="myBtFixationFundus" Grid.Row="2" Grid.Column="2" Content="Fundus" Style="{StaticResource ButtonS1Style}" Width="50" Click="myBtFixationFundus_Click"/>
+                                <Button x:Name="myBtFixationMarcular" Grid.Row="2" Grid.Column="3" Content="Macular" Style="{StaticResource ButtonS1Style}" Width="50" Click="myBtFixationMarcular_Click"/>
+                                <Button x:Name="myBtFixationDisc" Grid.Row="2" Grid.Column="4" Content="Disc" Style="{StaticResource ButtonS1Style}" Width="50" Click="myBtFixationDisc_Click"/>
+                            </Grid>
+                        </GroupBox>
+                    </Grid>
+                </Grid>
+                <!--StageMotor, Galvano Y Pos, LSO Focus Motor-->
+                <Grid Grid.Row="1" Grid.Column="0" Margin="5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <Grid Grid.Row="0">
+                        <Button x:Name="btnShowStageM" Content="StageM..." Style="{StaticResource ButtonM1Style}" HorizontalAlignment="Left" Click="BtnShowStageM_Click"/>
+                    </Grid>
+                    <Grid Grid.Row="1">
+                        <GroupBox Header="Galvano" VerticalAlignment="Top">
+                            <StackPanel Orientation="Horizontal">
+                                <Label Content="Galvano.Y Pos :" Style="{StaticResource LabelStyle}"/>
+                                <TextBox x:Name="myTbGalvanoYPos" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbGalvanoYPos_KeyDown"/>
+                                <Button x:Name="myBtGalvanoYPosMove" Content="Move" Style="{StaticResource ButtonS1Style}" Margin="8,0,0,0" Click="myBtGalvanoYPosMove_Click"/>
+                            </StackPanel>
+                        </GroupBox>
+                    </Grid>
+                    <Grid Grid.Row="2" Grid.RowSpan="2">
+                        <GroupBox Header="LSO Focus Motor">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition/>
+                                    <ColumnDefinition/>
+                                    <ColumnDefinition/>
+                                    <ColumnDefinition/>
+                                    <ColumnDefinition/>
+                                    <ColumnDefinition/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <Label x:Name="myLbLsoFocusMin" Grid.Row="0" Grid.Column="0" Content="" Style="{StaticResource LabelStyle}"/>
+                                <Slider x:Name="mySliderLsoFocus" Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" VerticalAlignment="Center" TickFrequency="1" LargeChange="3" SmallChange="3" IsSnapToTickEnabled="True" AutoToolTipPlacement="BottomRight" Thumb.DragStarted="mySliderLsoFocus_DragStarted" Thumb.DragCompleted="mySliderLsoFocus_DragCompleted" ValueChanged="mySliderLsoFocus_ValueChanged"/>
+                                <Label x:Name="myLbLsoFocusMax" Grid.Row="0" Grid.Column="3" Content="" Style="{StaticResource LabelStyle}"/>
+                                <TextBox x:Name="myTbLsoFocusPos" Grid.Row="0" Grid.Column="4" Style="{StaticResource TextBoxS1Style}" Width="45" ToolTip="Pos" KeyDown="myTbLsoFocusPos_KeyDown"/>
+                                <TextBox x:Name="myTbLsoFocusValue" Grid.Row="0" Grid.Column="5" Style="{StaticResource TextBoxS1Style}" Width="45" ToolTip="Diopter" KeyDown="myTbLsoFocusValue_KeyDown"/>
+                                <Button x:Name="myBtLsoFocusBwd" Grid.Row="1" Grid.Column="3" Content="-1D" Style="{StaticResource ButtonS1Style}" Width="45" Click="myBtLsoFocusBwd_Click"/>
+                                <Button x:Name="myBtLsoFocusFwd" Grid.Row="1" Grid.Column="4" Content="+1D" Style="{StaticResource ButtonS1Style}" Width="45" Click="myBtLsoFocusFwd_Click"/>
+                                <Button x:Name="myBtLsoFocusZero" Grid.Row="1" Grid.Column="5" Content="0D" Style="{StaticResource ButtonS1Style}" Width="45" Click="myBtLsoFocusZero_Click"/>
+                            </Grid>
+                        </GroupBox>
+                    </Grid>
+                </Grid>
+                <!--Scan Menu 1-->
+                <Grid Grid.Row="2" Grid.Column="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Grid Grid.Row="0">
+                        <Button x:Name="myBtStartScan" Style="{StaticResource ButtonM1Style}" Content="Start Scan" HorizontalAlignment="Center" VerticalAlignment="Center" Click="myBtStartScan_Click"/>
+                    </Grid>
+                    <Grid Grid.Row="0" Grid.Column="1">
+                        <Button x:Name="myBtCapture" Style="{StaticResource ButtonM1Style}" Content="Capture" HorizontalAlignment="Center" VerticalAlignment="Center" Click="myBtCapture_Click"/>
+                    </Grid>
+                    <Grid Grid.Row="1" Grid.Column="1">
+                        <Button x:Name="myBtCaptureHWTrig" Style="{StaticResource ButtonM1Style}" Content="Capture(HWTrig)" HorizontalAlignment="Center" VerticalAlignment="Center" Click="myBtCaptureHWTrig_Click"/>
+                    </Grid>
+                    <Grid Grid.Row="2" Grid.Column="0">
+                        <CheckBox x:Name="myCheckAlignGuide" Style="{StaticResource CheckBoxStyle}" Content="Align Guide" HorizontalAlignment="Center" VerticalAlignment="Center"  IsChecked="False" Checked="myCheckAlignGuide_CheckedNUnchecked" Unchecked="myCheckAlignGuide_CheckedNUnchecked"/>
+                    </Grid>
+                </Grid>
+                <!--Scan Menu 2-->
+                <Grid Grid.Row="2" Grid.Column="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Grid Grid.Row="0" Grid.Column="0">
+                        <Button x:Name="myBtCaptureSlide" Style="{StaticResource ButtonM1Style}" Content="Capture(Slide)" HorizontalAlignment="Center" VerticalAlignment="Center" Click="myBtCaptureSlide_Click"/>
+                    </Grid>
+                    <Grid Grid.Row="0" Grid.Column="3">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <Button x:Name="myBtCaptureROI" Content="Capture(ROI)" Style="{StaticResource ButtonM1Style}" Width="80" Margin="5,0,0,0" Click="myBtCaptureROI_Click"/>
+                            <Button x:Name="myBtCaptureROISetting" Content="Set" Style="{StaticResource ButtonM1Style}" Width="30" Margin="5,0,0,0" Click="myBtCaptureROISetting_Click"/>
+                        </StackPanel>
+                    </Grid>
+                    <Grid Grid.Row="1" Grid.Column="0">
+                        <Button x:Name="myBtCorneaStart" Content="Start Cornea" Style="{StaticResource ButtonM1Style}" Margin="8,0,0,0" Click="myBtCorneaStart_Click"/>
+                    </Grid>
+                    <Grid Grid.Row="1" Grid.Column="1">
+                        <Button x:Name="myBtStartColorCameraLive" Style="{StaticResource ButtonM1Style}" Content="Start Color Live" HorizontalAlignment="Center" VerticalAlignment="Center" Click="myBtStartColorCameraLive_Click"/>
+                    </Grid>
+                </Grid>
+                <!--Scanner Setting-->
+                <Grid Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2">
+                    <GroupBox Header="Scan Setting">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition/>
                                 <RowDefinition/>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                                <RowDefinition/>
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition/>
                                 <ColumnDefinition/>
                                 <ColumnDefinition/>
                             </Grid.ColumnDefinitions>
                             <Grid Grid.Row="0" Grid.Column="0">
-                                <Button x:Name="myBtSettingColorCamera" Style="{StaticResource ButtonM1Style}" Content="Color Camera" HorizontalAlignment="Center" VerticalAlignment="Center" Click="myBtSettingColorCamera_Click"/>
+                                <Label x:Name="myLbPatternID" Content="Pattern ID :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
                             </Grid>
                             <Grid Grid.Row="0" Grid.Column="1">
-                                <Button x:Name="myBtSettingIRCameras" Content="IR Cameras" Style="{StaticResource ButtonM1Style}"/>
+                                <ComboBox x:Name="myCbPatternID" Style="{StaticResource ComboBoxStyle}" HorizontalAlignment="Center" SelectionChanged="myCbPatternID_SelectionChanged"/>
                             </Grid>
                             <Grid Grid.Row="1" Grid.Column="0">
-                                <Button x:Name="myBtSettingLeds" Content="LED" Style="{StaticResource ButtonM1Style}" Click="myBtSettingLeds_Click"/>
+                                <Label x:Name="myLbTriggerSrc" Content="Trigger src :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
                             </Grid>
                             <Grid Grid.Row="1" Grid.Column="1">
-                                <Button x:Name="myBtSettingFixation" Content="Fixation" Style="{StaticResource ButtonM1Style}" Click="myBtSettingFixation_Click"/>
+                                <ComboBox x:Name="myCbTriggerSrc" Style="{StaticResource ComboBoxStyle}" HorizontalAlignment="Center" SelectionChanged="myCbTriggerSrc_SelectionChanged"/>
+                            </Grid>
+                            <Grid Grid.Row="0" Grid.Column="3">
+                                <CheckBox x:Name="myCheckBoxFixedFrame" Content="Fixed Frame" Style="{StaticResource CheckBoxStyle}" HorizontalAlignment="Center" Checked="myCheckBoxFixedFrame_CheckedNUnchecked" Unchecked="myCheckBoxFixedFrame_CheckedNUnchecked"/>
+                            </Grid>
+                            <Grid Grid.Row="1" Grid.Column="3">
+                                <CheckBox x:Name="myCheckBoxUseSyncExposureTime" Content="Sync Exposure" Style="{StaticResource CheckBoxStyle}" HorizontalAlignment="Center" IsChecked="True"/>
+                            </Grid>
+                            <Grid Grid.Row="2" Grid.Column="0">
+                                <Label x:Name="myLbCameraTimeStep" Content="Time Step(us):" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
+                            </Grid>
+                            <Grid Grid.Row="2" Grid.Column="1">
+                                <TextBox x:Name="myTbCameraTimeStep" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
+                            </Grid>
+                            <Grid Grid.Row="2" Grid.Column="2">
+                                <Label x:Name="myLbCameraExposureTime" Content="Exposure Time(us):" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
+                            </Grid>
+                            <Grid Grid.Row="2" Grid.Column="3">
+                                <TextBox x:Name="myTbCameraExposureTime" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
+                            </Grid>
+                            <Grid Grid.Row="3" Grid.Column="0">
+                                <Label x:Name="myLbAcqFrame" Content="Acq Frame :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
+                            </Grid>
+                            <Grid Grid.Row="3" Grid.Column="1">
+                                <TextBox x:Name="myTbAcqFrame" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
+                            </Grid>
+                            <Grid Grid.Row="3" Grid.Column="2">
+                                <Label x:Name="myLbSubFrame" Content="Sub Frame Count :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
+                            </Grid>
+                            <Grid Grid.Row="3" Grid.Column="3">
+                                <TextBox x:Name="myTbSubFrame" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
+                            </Grid>
+                            <Grid Grid.Row="4" Grid.Column="0">
+                                <Label x:Name="myLbGalvoPatternSize" Content="Galvo. Pattern Size :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
+                            </Grid>
+                            <Grid Grid.Row="4" Grid.Column="1">
+                                <TextBox x:Name="myTbGalvoPatternSize" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
+                            </Grid>
+                            <Grid Grid.Row="5" Grid.Column="0">
+                                <Label x:Name="myLbLightIndexOn" Content="Light Index On :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
+                            </Grid>
+                            <Grid Grid.Row="5" Grid.Column="1">
+                                <TextBox x:Name="myTbLightIndexOn" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
+                            </Grid>
+                            <Grid Grid.Row="5" Grid.Column="2">
+                                <Label x:Name="myLbLightIndexOff" Content="Light Index Off :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
+                            </Grid>
+                            <Grid Grid.Row="5" Grid.Column="3">
+                                <TextBox x:Name="myTbLightIndexOff" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
+                            </Grid>
+                            <Grid Grid.Row="6" Grid.Column="0">
+                                <Label x:Name="myLbGalvoStartPos" Content="Galvo. Start Pos :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
+                            </Grid>
+                            <Grid Grid.Row="6" Grid.Column="1">
+                                <TextBox x:Name="myTbGalvoStartPos" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
+                            </Grid>
+                            <Grid Grid.Row="6" Grid.Column="2">
+                                <Label x:Name="myLbGalvoEndPos" Content="Galvo. End Pos :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
+                            </Grid>
+                            <Grid Grid.Row="6" Grid.Column="3">
+                                <TextBox x:Name="myTbGalvoEndPos" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
+                            </Grid>
+                            <Grid Grid.Row="7" Grid.Column="0">
+                                <Label x:Name="myLbGalvoRewindOffset" Content="Galvo. Rewind Offset :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
+                            </Grid>
+                            <Grid Grid.Row="7" Grid.Column="1">
+                                <TextBox x:Name="myTbGalvoRewindOffset" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
+                            </Grid>
+                            <Grid Grid.Row="8" Grid.Column="3">
+                                <Button x:Name="myBtApply" Content="Apply" Style="{StaticResource ButtonM1Style}" Height="" Click="myBtApply_Click"/>
                             </Grid>
                         </Grid>
                     </GroupBox>
                 </Grid>
-                <Grid Grid.Row="2" Grid.RowSpan="2" Grid.Column="0" Grid.ColumnSpan="2">
-                    <GroupBox Header="Internal Fixation">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition/>
-                                <RowDefinition/>
-                                <RowDefinition/>
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition/>
-                                <ColumnDefinition/>
-                                <ColumnDefinition/>
-                                <ColumnDefinition/>
-                                <ColumnDefinition/>
-                            </Grid.ColumnDefinitions>
-                            <Label Grid.Row="0" Grid.Column="0" Content="Row :" Style="{StaticResource LabelStyle}"/>
-                            <Slider x:Name="mySliderFixationRow" Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" VerticalAlignment="Center" TickFrequency="1" LargeChange="1" SmallChange="1" IsSnapToTickEnabled="True" AutoToolTipPlacement="BottomRight" ValueChanged="mySliderFixationRow_ValueChanged"/>
-                            <TextBox x:Name="myTbFixationRow" Grid.Row="0" Grid.Column="4" Style="{StaticResource TextBoxS2Style}" HorizontalAlignment="Center" KeyDown="myTbFixationRow_KeyDown"/>
-                            <Label Grid.Row="1" Grid.Column="0" Content="Col :" Style="{StaticResource LabelStyle}"/>
-                            <Slider x:Name="mySliderFixationCol" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" VerticalAlignment="Center" TickFrequency="1" LargeChange="1" SmallChange="1" IsSnapToTickEnabled="True" AutoToolTipPlacement="BottomRight" ValueChanged="mySliderFixationCol_ValueChanged"/>
-                            <TextBox x:Name="myTbFixationCol" Grid.Row="1" Grid.Column="4" Style="{StaticResource TextBoxS2Style}" HorizontalAlignment="Center" KeyDown="myTbFixationCol_KeyDown"/>
-                            <RadioButton x:Name="myRbSideOD" Grid.Row="2" Grid.Column="0" GroupName="groupFixationEyeSide" Content="OD" Style="{StaticResource RadioButtonStyle}" IsChecked="True"/>
-                            <RadioButton x:Name="myRbSideOS" Grid.Row="2" Grid.Column="1" GroupName="groupFixationEyeSide" Content="OS" Style="{StaticResource RadioButtonStyle}"/>
-                            <Button x:Name="myBtFixationFundus" Grid.Row="2" Grid.Column="2" Content="Fundus" Style="{StaticResource ButtonS1Style}" Width="50" Click="myBtFixationFundus_Click"/>
-                            <Button x:Name="myBtFixationMarcular" Grid.Row="2" Grid.Column="3" Content="Macular" Style="{StaticResource ButtonS1Style}" Width="50" Click="myBtFixationMarcular_Click"/>
-                            <Button x:Name="myBtFixationDisc" Grid.Row="2" Grid.Column="4" Content="Disc" Style="{StaticResource ButtonS1Style}" Width="50" Click="myBtFixationDisc_Click"/>
-                        </Grid>
-                    </GroupBox>
-                </Grid>
-            </Grid>
-            <Grid Grid.Row="1" Grid.Column="4" Margin="5">
-                <Grid.RowDefinitions>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                </Grid.RowDefinitions>
-                <Grid Grid.Row="0">
-                    <Button x:Name="btnShowStageM" Content="StageM..." Style="{StaticResource ButtonM1Style}" HorizontalAlignment="Left" Click="BtnShowStageM_Click"/>
-                </Grid>
-                <Grid Grid.Row="1">
-                    <GroupBox Header="Galvano" VerticalAlignment="Top">
-                        <StackPanel Orientation="Horizontal">
-                            <Label Content="Galvano.Y Pos :" Style="{StaticResource LabelStyle}"/>
-                            <TextBox x:Name="myTbGalvanoYPos" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbGalvanoYPos_KeyDown"/>
-                            <Button x:Name="myBtGalvanoYPosMove" Content="Move" Style="{StaticResource ButtonS1Style}" Margin="8,0,0,0" Click="myBtGalvanoYPosMove_Click"/>
-                        </StackPanel>
-                    </GroupBox>
-                </Grid>
-                <Grid Grid.Row="2" Grid.RowSpan="2">
-                    <GroupBox Header="LSO Focus Motor">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition/>
-                                <ColumnDefinition/>
-                                <ColumnDefinition/>
-                                <ColumnDefinition/>
-                                <ColumnDefinition/>
-                                <ColumnDefinition/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition/>
-                                <RowDefinition/>
-                            </Grid.RowDefinitions>
-                            <Label x:Name="myLbLsoFocusMin" Grid.Row="0" Grid.Column="0" Content="" Style="{StaticResource LabelStyle}"/>
-                            <Slider x:Name="mySliderLsoFocus" Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" VerticalAlignment="Center" TickFrequency="1" LargeChange="3" SmallChange="3" IsSnapToTickEnabled="True" AutoToolTipPlacement="BottomRight" Thumb.DragStarted="mySliderLsoFocus_DragStarted" Thumb.DragCompleted="mySliderLsoFocus_DragCompleted" ValueChanged="mySliderLsoFocus_ValueChanged"/>
-                            <Label x:Name="myLbLsoFocusMax" Grid.Row="0" Grid.Column="3" Content="" Style="{StaticResource LabelStyle}"/>
-                            <TextBox x:Name="myTbLsoFocusPos" Grid.Row="0" Grid.Column="4" Style="{StaticResource TextBoxS1Style}" Width="45" ToolTip="Pos" KeyDown="myTbLsoFocusPos_KeyDown"/>
-                            <TextBox x:Name="myTbLsoFocusValue" Grid.Row="0" Grid.Column="5" Style="{StaticResource TextBoxS1Style}" Width="45" ToolTip="Diopter" KeyDown="myTbLsoFocusValue_KeyDown"/>
-                            <Button x:Name="myBtLsoFocusBwd" Grid.Row="1" Grid.Column="3" Content="-1D" Style="{StaticResource ButtonS1Style}" Width="45" Click="myBtLsoFocusBwd_Click"/>
-                            <Button x:Name="myBtLsoFocusFwd" Grid.Row="1" Grid.Column="4" Content="+1D" Style="{StaticResource ButtonS1Style}" Width="45" Click="myBtLsoFocusFwd_Click"/>
-                            <Button x:Name="myBtLsoFocusZero" Grid.Row="1" Grid.Column="5" Content="0D" Style="{StaticResource ButtonS1Style}" Width="45" Click="myBtLsoFocusZero_Click"/>
-                        </Grid>
-                    </GroupBox>
-                </Grid>
-            </Grid>
-            <Grid Grid.Row="2" Grid.Column="4">
-                <Grid.RowDefinitions>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                </Grid.ColumnDefinitions>
-                <Grid Grid.Row="0">
-                    <Button x:Name="myBtStartScan" Style="{StaticResource ButtonM1Style}" Content="Start Scan" HorizontalAlignment="Center" VerticalAlignment="Center" Click="myBtStartScan_Click"/>
-                </Grid>
-                <Grid Grid.Row="0" Grid.Column="1">
-                    <Button x:Name="myBtCapture" Style="{StaticResource ButtonM1Style}" Content="Capture" HorizontalAlignment="Center" VerticalAlignment="Center" Click="myBtCapture_Click"/>
-                </Grid>
-                <Grid Grid.Row="1" Grid.Column="1">
-                    <Button x:Name="myBtCaptureHWTrig" Style="{StaticResource ButtonM1Style}" Content="Capture(HWTrig)" HorizontalAlignment="Center" VerticalAlignment="Center" Click="myBtCaptureHWTrig_Click"/>
-                </Grid>
-                <Grid Grid.Row="2" Grid.Column="0">
-                    <CheckBox x:Name="myCheckAlignGuide" Style="{StaticResource CheckBoxStyle}" Content="Align Guide" HorizontalAlignment="Center" VerticalAlignment="Center"  IsChecked="False" Checked="myCheckAlignGuide_CheckedNUnchecked" Unchecked="myCheckAlignGuide_CheckedNUnchecked"/>
-                </Grid>
-            </Grid>
-            <Grid Grid.Row="2" Grid.Column="5">
-                <Grid.RowDefinitions>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                </Grid.ColumnDefinitions>
-                <Grid Grid.Row="0" Grid.Column="0">
-                    <Button x:Name="myBtCaptureSlide" Style="{StaticResource ButtonM1Style}" Content="Capture(Slide)" HorizontalAlignment="Center" VerticalAlignment="Center" Click="myBtCaptureSlide_Click"/>
-                </Grid>
-                <Grid Grid.Row="0" Grid.Column="3">
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                        <Button x:Name="myBtCaptureROI" Content="Capture(ROI)" Style="{StaticResource ButtonM1Style}" Width="80" Margin="5,0,0,0" Click="myBtCaptureROI_Click"/>
-                        <Button x:Name="myBtCaptureROISetting" Content="Set" Style="{StaticResource ButtonM1Style}" Width="30" Margin="5,0,0,0" Click="myBtCaptureROISetting_Click"/>
-                    </StackPanel>
-                </Grid>
-                <Grid Grid.Row="1" Grid.Column="0">
-                    <Button x:Name="myBtCorneaStart" Content="Start Cornea" Style="{StaticResource ButtonM1Style}" Margin="8,0,0,0" Click="myBtCorneaStart_Click"/>
-                </Grid>
-                <Grid Grid.Row="1" Grid.Column="1">
-                    <Button x:Name="myBtStartColorCameraLive" Style="{StaticResource ButtonM1Style}" Content="Start Color Live" HorizontalAlignment="Center" VerticalAlignment="Center" Click="myBtStartColorCameraLive_Click"/>
-                </Grid>
-            </Grid>
-            <Grid Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="2">
-                
-            </Grid>
-            <Grid Grid.Row="3" Grid.Column="4" Grid.ColumnSpan="2">
-                <GroupBox Header="Scan Setting">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition/>
-                            <RowDefinition/>
-                            <RowDefinition/>
-                            <RowDefinition/>
-                            <RowDefinition/>
-                            <RowDefinition/>
-                            <RowDefinition/>
-                            <RowDefinition/>
-                            <RowDefinition/>
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="130"/>
-                            <ColumnDefinition/>
-                            <ColumnDefinition/>
-                            <ColumnDefinition/>
-                        </Grid.ColumnDefinitions>
-                        <Grid Grid.Row="0" Grid.Column="0">
-                            <Label x:Name="myLbPatternID" Content="Pattern ID :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
-                        </Grid>
-                        <Grid Grid.Row="0" Grid.Column="1">
-                            <ComboBox x:Name="myCbPatternID" Style="{StaticResource ComboBoxStyle}" HorizontalAlignment="Center" SelectionChanged="myCbPatternID_SelectionChanged"/>
-                        </Grid>
-                        <Grid Grid.Row="1" Grid.Column="0">
-                            <Label x:Name="myLbTriggerSrc" Content="Trigger src :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
-                        </Grid>
-                        <Grid Grid.Row="1" Grid.Column="1">
-                            <ComboBox x:Name="myCbTriggerSrc" Style="{StaticResource ComboBoxStyle}" HorizontalAlignment="Center" SelectionChanged="myCbTriggerSrc_SelectionChanged"/>
-                        </Grid>
-                        <Grid Grid.Row="0" Grid.Column="3">
-                            <CheckBox x:Name="myCheckBoxFixedFrame" Content="Fixed Frame" Style="{StaticResource CheckBoxStyle}" HorizontalAlignment="Center" Checked="myCheckBoxFixedFrame_CheckedNUnchecked" Unchecked="myCheckBoxFixedFrame_CheckedNUnchecked"/>
-                        </Grid>
-                        <Grid Grid.Row="1" Grid.Column="3">
-                            <CheckBox x:Name="myCheckBoxUseSyncExposureTime" Content="Sync Exposure" Style="{StaticResource CheckBoxStyle}" HorizontalAlignment="Center" IsChecked="True"/>
-                        </Grid>
-                        <Grid Grid.Row="2" Grid.Column="0">
-                            <Label x:Name="myLbCameraTimeStep" Content="Time Step(us):" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
-                        </Grid>
-                        <Grid Grid.Row="2" Grid.Column="1">
-                            <TextBox x:Name="myTbCameraTimeStep" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
-                        </Grid>
-                        <Grid Grid.Row="2" Grid.Column="2">
-                            <Label x:Name="myLbCameraExposureTime" Content="Exposure Time(us):" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
-                        </Grid>
-                        <Grid Grid.Row="2" Grid.Column="3">
-                            <TextBox x:Name="myTbCameraExposureTime" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
-                        </Grid>
-                        <Grid Grid.Row="3" Grid.Column="0">
-                            <Label x:Name="myLbAcqFrame" Content="Acq Frame :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
-                        </Grid>
-                        <Grid Grid.Row="3" Grid.Column="1">
-                            <TextBox x:Name="myTbAcqFrame" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
-                        </Grid>
-                        <Grid Grid.Row="3" Grid.Column="2">
-                            <Label x:Name="myLbSubFrame" Content="Sub Frame Count :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
-                        </Grid>
-                        <Grid Grid.Row="3" Grid.Column="3">
-                            <TextBox x:Name="myTbSubFrame" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
-                        </Grid>
-                        <Grid Grid.Row="4" Grid.Column="0">
-                            <Label x:Name="myLbGalvoPatternSize" Content="Galvo. Pattern Size :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
-                        </Grid>
-                        <Grid Grid.Row="4" Grid.Column="1">
-                            <TextBox x:Name="myTbGalvoPatternSize" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
-                        </Grid>
-                        <Grid Grid.Row="5" Grid.Column="0">
-                            <Label x:Name="myLbLightIndexOn" Content="Light Index On :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
-                        </Grid>
-                        <Grid Grid.Row="5" Grid.Column="1">
-                            <TextBox x:Name="myTbLightIndexOn" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
-                        </Grid>
-                        <Grid Grid.Row="5" Grid.Column="2">
-                            <Label x:Name="myLbLightIndexOff" Content="Light Index Off :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
-                        </Grid>
-                        <Grid Grid.Row="5" Grid.Column="3">
-                            <TextBox x:Name="myTbLightIndexOff" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
-                        </Grid>
-                        <Grid Grid.Row="6" Grid.Column="0">
-                            <Label x:Name="myLbGalvoStartPos" Content="Galvo. Start Pos :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
-                        </Grid>
-                        <Grid Grid.Row="6" Grid.Column="1">
-                            <TextBox x:Name="myTbGalvoStartPos" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
-                        </Grid>
-                        <Grid Grid.Row="6" Grid.Column="2">
-                            <Label x:Name="myLbGalvoEndPos" Content="Galvo. End Pos :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
-                        </Grid>
-                        <Grid Grid.Row="6" Grid.Column="3">
-                            <TextBox x:Name="myTbGalvoEndPos" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
-                        </Grid>
-                        <Grid Grid.Row="7" Grid.Column="0">
-                            <Label x:Name="myLbGalvoRewindOffset" Content="Galvo. Rewind Offset :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
-                        </Grid>
-                        <Grid Grid.Row="7" Grid.Column="1">
-                            <TextBox x:Name="myTbGalvoRewindOffset" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
-                        </Grid>
-                        <Grid Grid.Row="8" Grid.Column="3">
-                            <Button x:Name="myBtApply" Content="Apply" Style="{StaticResource ButtonM1Style}" Click="myBtApply_Click"/>
-                        </Grid>
-                    </Grid>
-                </GroupBox>
             </Grid>
         </Grid>
-        <!--<Grid Grid.Row="0" Grid.Column="3" Background="#E0E0E0"/>-->
     </Grid>
 </Window>
