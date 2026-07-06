@@ -20,7 +20,7 @@
   </Target>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="call postbuild.bat $(OutputPath) $(SolutionDir)\deploy\$(Configuration)" />
+    <Exec Command="call postbuild.bat $(OutputPath) $(SolutionDir)\deploy\$(Configuration)&#xD;&#xA;" />
   </Target>
 
   <ItemGroup>
@@ -49,6 +49,9 @@
     <None Update="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <None Update="WsoDeviceCfg.ini">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 

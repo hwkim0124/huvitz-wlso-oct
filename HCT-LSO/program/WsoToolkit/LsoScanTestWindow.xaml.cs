@@ -27,9 +27,17 @@ namespace WsoToolkit
     {
         public LsoScanTestWindow()
         {
+            _onColorCaptureImageCaptured = new WsoCallback.ColorCameraImageCaptured(this.OnColorCameraCaptureFrameCaptured);
+            _onColorLiveFrameCaptured = new WsoCallback.ColorCameraFrameCaptured(this.OnColorCameraFrameCaptured);
+
+            _onCorneaLeftFrameCaptured = new WsoCallback.CorneaCameraFrameCaptured(this.OnCorneaCameraLeftFrameCaptured);
+            _onCorneaRightFrameCaptured = new WsoCallback.CorneaCameraFrameCaptured(this.OnCorneaCameraRightFrameCaptured);
+            _onCorneaLowerFrameCaptured = new WsoCallback.CorneaCameraFrameCaptured(this.OnCorneaCameraLowerFrameCaptured);
+
+            _onLsoFocusPositionChanged = new StepMotorPositionChanged(this.OnLsoFocusPositionChanged);
+
             InitializeComponent();
 
-            initCallbacks_();
             initSetting_();
             initLsoFocusMotor_();
             initFixation_();
@@ -126,6 +134,7 @@ namespace WsoToolkit
 
         #endregion Setting 
 
+        #region Stage Motor
         private void BtnShowStageM_Click(object sender, RoutedEventArgs e)
         {
             if (_stageMotorWindow == null || !_stageMotorWindow.IsLoaded)
@@ -138,6 +147,8 @@ namespace WsoToolkit
                 _stageMotorWindow?.Focus();
             }
         }
+
+        #endregion Stage Motor
 
         #region LSO Scanner Setting
 
@@ -224,51 +235,6 @@ namespace WsoToolkit
         #endregion Galvano Move
 
         #region LSO Focus Motor
-
-        private StepMotorStatus _lsoFocusMotorStatus = new();
-
-        private StepMotorPositionChanged _onLsoFocusPositionChanged;
-
-        // 콜백에서 슬라이더 값을 갱신할 때 발생하는 ValueChanged가 모터를 다시 이동시키는 것을 막는 플래그.
-        private bool _isLsoFocusSliderDragging;
-        private bool _isLsoFocusPositionChanged;
-
-        private void initLsoFocusMotor_()
-        {
-            DeviceMotors.FetchStepMotorStatus(MotorType.LsoFocus, out _lsoFocusMotorStatus);
-
-            mySliderLsoFocus.Minimum = _lsoFocusMotorStatus.rangeMin;
-            mySliderLsoFocus.Maximum = _lsoFocusMotorStatus.rangeMax;
-            mySliderLsoFocus.TickFrequency = 100;
-
-            myLbLsoFocusMin.Content = _lsoFocusMotorStatus.rangeMin.ToString();
-            myLbLsoFocusMax.Content = _lsoFocusMotorStatus.rangeMax.ToString();
-
-            _onLsoFocusPositionChanged = new StepMotorPositionChanged(this.OnLsoFocusPositionChanged);
-            DeviceMotors.ConnectStepMotorPositionChanged(MotorType.LsoFocus, _onLsoFocusPositionChanged);
-
-            DeviceMotors.MoveStepMotorPosition(MotorType.LsoFocus, _lsoFocusMotorStatus.currPos);
-        }
-
-        private void releaseLsoFocusMotor_()
-        {
-            DeviceMotors.ReleaseStepMotorPositionChanged(MotorType.LsoFocus);
-        }
-
-        private void OnLsoFocusPositionChanged(int pos, float value)
-        {
-            Dispatcher.BeginInvoke(() =>
-            {
-                myTbLsoFocusPos.Text = pos.ToString();
-                myTbLsoFocusValue.Text = value.ToString("N1");
-
-                if (pos != mySliderLsoFocus.Value)
-                {
-                    mySliderLsoFocus.Value = pos;
-                    _isLsoFocusPositionChanged = true;
-                }
-            }, DispatcherPriority.Normal);
-        }
 
         private void mySliderLsoFocus_DragStarted(object sender, System.Windows.Controls.Primitives.DragStartedEventArgs e)
         {

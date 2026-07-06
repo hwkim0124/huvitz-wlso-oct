@@ -319,7 +319,7 @@
                                 <TextBox x:Name="myTbGalvoRewindOffset" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
                             </Grid>
                             <Grid Grid.Row="8" Grid.Column="3">
-                                <Button x:Name="myBtApply" Content="Apply" Style="{StaticResource ButtonM1Style}" Height="" Click="myBtApply_Click"/>
+                                <Button x:Name="myBtApply" Content="Apply" Style="{StaticResource ButtonM1Style}" Height="24" Click="myBtApply_Click"/>
                             </Grid>
                         </Grid>
                     </GroupBox>

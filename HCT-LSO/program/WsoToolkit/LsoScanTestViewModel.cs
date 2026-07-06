@@ -384,6 +384,24 @@ namespace WsoToolkit
         StageMotorWindow? _stageMotorWindow = null;
         LightControlWindow? _lightControlWindow = null;
 
+        // LSO Focus Motor
+        private StepMotorStatus _lsoFocusMotorStatus = new();
+        private StepMotorPositionChanged _onLsoFocusPositionChanged;
+        private bool _isLsoFocusSliderDragging; // 콜백에서 슬라이더 값을 갱신할 때 발생하는 ValueChanged가 모터를 다시 이동시키는 것을 막는 플래그.
+        private bool _isLsoFocusPositionChanged;
+
+        private void initSetting_()
+        {
+            // Load INI
+            _scanTestModel.LoadConfigFromIniFile();
+
+            // Color Camera
+            var paramColorCamera = _scanTestModel.ColorCamera.ToSettingParam();
+            LsoCamera.SetCameraParameters(ref paramColorCamera);
+
+            // Scan Setting
+            initScannerControls_();
+        }
 
         #region Captrue - Review
         // Capture - Review
@@ -400,15 +418,6 @@ namespace WsoToolkit
                         myColorPreview.AcqFrameCount = 0;
                         myColorPreview.SubFrameCount = 0;
 
-                        //LsoConfig.ImageAdjustPreset param = new();
-                        //if (!Configuration.ObtainImageAdjustPreset(out param))
-                        //{
-                        //    MessageBox.Show("Image Adjust Preset을 가져오지 못함.", "오류", MessageBoxButton.OK, MessageBoxImage.Warning);
-                        //    return;
-                        //}
-
-                        //myColorPreview.ImageAdjustBrightness = param.Brightness;
-
                     }
                     break;
                 case PreviewDisplayMode.REVIEW_SLICE:
@@ -419,15 +428,6 @@ namespace WsoToolkit
                         myColorPreview.IsReviewROIMode = false;
                         myColorPreview.AcqFrameCount = ToInt(myTbAcqFrame.Text);
                         myColorPreview.SubFrameCount = ToInt(myTbSubFrame.Text);
-
-                        //LsoConfig.ImageAdjustPreset param = new();
-                        //if (!Configuration.ObtainImageAdjustPreset(out param))
-                        //{
-                        //    MessageBox.Show("Image Adjust Preset을 가져오지 못함.", "오류", MessageBoxButton.OK, MessageBoxImage.Warning);
-                        //    return;
-                        //}
-
-                        //myColorPreview.ImageAdjustBrightness = param.Brightness;
                     }
                     break;
                 case PreviewDisplayMode.REVIEW_ROI:
@@ -441,105 +441,8 @@ namespace WsoToolkit
                         myColorPreview.FrameROIs = _scanTestModel.ColorCamera.GetCaptureFrameRoisArray();
                     }
                     break;
-                    //case PreviewDisplayMode.LIVE_SEQ_ROI:
-                    //    {
-                    //        myColorPreview.ClearReviewImages();
-                    //        myColorPreview.IsReviewMode = false;
-                    //        myColorPreview.IsReviewSliceMode = false;
-                    //        myColorPreview.IsReviewROIMode = false;
-                    //        myColorPreview.IsLiveSeqROIMode = true;
 
-                    //        LsoConfig.CaptureFrameSeqROIPreset param = new LsoConfig.CaptureFrameSeqROIPreset();
-                    //        if (!Configuration.ObtainCaptureFrameSeqROIPreset(out param))
-                    //        {
-                    //            return;
-                    //        }
-
-                    //        CaptureFrameSeqROIPresetCS presetCS = StructCaptureFrameSeqROIConverter.ToManaged(in param);
-                    //        myColorPreview.FrameSeqROIs = presetCS.FrameSeqROIParamArray;
-                    //        myColorPreview.SeqTargetImageMaxWidth = (int)_colorCameraParam.roiMaxWidth;
-                    //        myColorPreview.SeqTargetImageMaxHeight = (int)_colorCameraParam.roiMaxHeight;
-                    //    }
-                    //    break;
-                    //case PreviewDisplayMode.REVIEW_OFFSET_ROI:
-                    //    {
-                    //        myColorPreview.ClearReviewImages();
-                    //        myColorPreview.IsReviewMode = false;
-                    //        myColorPreview.IsReviewSliceMode = false;
-                    //        myColorPreview.IsReviewROIMode = false;
-                    //        myColorPreview.IsLiveSeqROIMode = false;
-                    //        myColorPreview.IsLiveOffsetROIMode = true;
-
-                    //        LsoConfig.CaptureFrameOffsetROIPreset param = new LsoConfig.CaptureFrameOffsetROIPreset();
-                    //        if (!Configuration.ObtainCaptureFrameOffsetROIPreset(out param))
-                    //        {
-                    //            return;
-                    //        }
-
-                    //        CaptureFrameOffsetROIPresetCS presetCS = StructCaptureFrameOffsetROIConverter.ToManaged(in param);
-                    //        myColorPreview.FrameOffsetROIs = presetCS.FrameOffsetROIParamArray;
-                    //        myColorPreview.OffsetRoiImageWidth = presetCS.RoiWidth;
-                    //        myColorPreview.OffsetRoiImageHeight = presetCS.RoiHeight;
-                    //        myColorPreview.OffsetRoiTargetImageMaxWidth = (int)_colorCameraParam.roiMaxWidth;
-                    //        myColorPreview.OffsetRoiTargetImageMaxHeight = (int)_colorCameraParam.roiMaxHeight;
-                    //    }
-                    //    break;
-                    //case PreviewDisplayMode.REVIEW_ROLLING_SW_TRIGGER_OVERLAP:
-                    //    {
-                    //        myColorPreview.ClearReviewImages();
-                    //        myColorPreview.IsReviewMode = false;
-                    //        myColorPreview.IsReviewSliceMode = false;
-                    //        myColorPreview.IsReviewROIMode = false;
-                    //        myColorPreview.IsLiveSeqROIMode = false;
-                    //        myColorPreview.IsLiveOffsetROIMode = false;
-                    //        myColorPreview.IsReviewRollSWTrigOverlapMode = true;
-
-                    //        LsoConfig.CaptureFrameRollSWTrigOverlapPreset param = new LsoConfig.CaptureFrameRollSWTrigOverlapPreset();
-                    //        if (!Configuration.ObtainCaptureFrameRollSWTrigOverlapPreset(out param))
-                    //        {
-                    //            return;
-                    //        }
-
-                    //        myColorPreview.ReviewRollSWTrigOverlapBrightness = param.Brightness;
-                    //    }
-                    //    break;
-                    //case PreviewDisplayMode.REVIEW_ROLLING_SW_TRIGGER_MANUAL:
-                    //    {
-                    //        myColorPreview.ClearReviewImages();
-                    //        myColorPreview.IsReviewMode = true;
-                    //        myColorPreview.IsReviewSliceMode = false;
-                    //        myColorPreview.IsReviewROIMode = false;
-                    //        myColorPreview.AcqFrameCount = 0;
-                    //        myColorPreview.SubFrameCount = 0;
-
-                    //        LsoConfig.ImageAdjustPreset ImageParam = new();
-                    //        if (!Configuration.ObtainImageAdjustPreset(out ImageParam))
-                    //        {
-                    //            MessageBox.Show("Image Adjust Preset을 가져오지 못함.", "오류", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    //            return;
-                    //        }
-
-                    //        myColorPreview.ImageAdjustBrightness = ImageParam.Brightness;
-                    //    }
-                    //    break;
             }
-
-            //if (IsRetinaCameraPreviewing())
-            //{
-            //    //myBtStartScan.Content = "Start Scan";
-            //    myBtSWTriggerManualIrLive.Content = "IR Live";
-            //    myBtRollShutSWTriggerOverlabIrLive.Content = "IR Live";
-            //    myBtHWTriggerIrLive.Content = "IR Live";
-            //    CloseRetinaCameraPreview();
-            //}
-            //if (IsRetinaCameraPreviewing())
-            //{
-            //    //myBtStartScan.Content = "Start Scan";
-            //    myBtSWTriggerManualIrLive.Content = "IR Live";
-            //    myBtRollShutSWTriggerOverlabIrLive.Content = "IR Live";
-            //    myBtHWTriggerIrLive.Content = "IR Live";
-            //    CloseRetinaCameraPreview();
-            //}
         }
 
         public void StartColorCameraOriginal()
@@ -557,16 +460,6 @@ namespace WsoToolkit
         public void StopColorCameraHWTriggerLive()
         {
             LsoCamera.StopColorCameraHwTriggerLive();
-        }
-
-        private void initCallbacks_()
-        {
-            _onColorCaptureImageCaptured = new WsoCallback.ColorCameraImageCaptured(this.OnColorCameraCaptureFrameCaptured);
-            _onColorLiveFrameCaptured = new WsoCallback.ColorCameraFrameCaptured(this.OnColorCameraFrameCaptured);
-
-            _onCorneaLeftFrameCaptured = new WsoCallback.CorneaCameraFrameCaptured(this.OnCorneaCameraLeftFrameCaptured);
-            _onCorneaRightFrameCaptured = new WsoCallback.CorneaCameraFrameCaptured(this.OnCorneaCameraRightFrameCaptured);
-            _onCorneaLowerFrameCaptured = new WsoCallback.CorneaCameraFrameCaptured(this.OnCorneaCameraLowerFrameCaptured);
         }
 
         public void StartColorCameraLive()
@@ -594,18 +487,7 @@ namespace WsoToolkit
             return LsoCamera.IsLiveMode();
         }
 
-        private void initSetting_()
-        {
-            // Load INI
-            _scanTestModel.LoadConfigFromIniFile();
-
-            // Color Camera
-            var paramColorCamera = _scanTestModel.ColorCamera.ToSettingParam();
-            LsoCamera.SetCameraParameters(ref paramColorCamera);
-
-            // Scan Setting
-            initScannerControls_();
-        }
+        #endregion Captrue - Review
 
         #region Cornea Camera
 
@@ -632,8 +514,6 @@ namespace WsoToolkit
         }
 
         #endregion Cornea Camera 
-
-        #endregion Captrue - Review
 
         #region Scan Setting
 
@@ -839,6 +719,46 @@ namespace WsoToolkit
         }
 
         #endregion Internal Fixation
+
+        #region LSO Focus Motor
+
+        private void initLsoFocusMotor_()
+        {
+            DeviceMotors.FetchStepMotorStatus(MotorType.LsoFocus, out _lsoFocusMotorStatus);
+
+            mySliderLsoFocus.Minimum = _lsoFocusMotorStatus.rangeMin;
+            mySliderLsoFocus.Maximum = _lsoFocusMotorStatus.rangeMax;
+            mySliderLsoFocus.TickFrequency = 100;
+
+            myLbLsoFocusMin.Content = _lsoFocusMotorStatus.rangeMin.ToString();
+            myLbLsoFocusMax.Content = _lsoFocusMotorStatus.rangeMax.ToString();
+
+            DeviceMotors.ConnectStepMotorPositionChanged(MotorType.LsoFocus, _onLsoFocusPositionChanged);
+
+            DeviceMotors.MoveStepMotorPosition(MotorType.LsoFocus, _lsoFocusMotorStatus.currPos);
+        }
+
+        private void releaseLsoFocusMotor_()
+        {
+            DeviceMotors.ReleaseStepMotorPositionChanged(MotorType.LsoFocus);
+        }
+
+        private void OnLsoFocusPositionChanged(int pos, float value)
+        {
+            Dispatcher.BeginInvoke(() =>
+            {
+                myTbLsoFocusPos.Text = pos.ToString();
+                myTbLsoFocusValue.Text = value.ToString("N1");
+
+                if (pos != mySliderLsoFocus.Value)
+                {
+                    mySliderLsoFocus.Value = pos;
+                    _isLsoFocusPositionChanged = true;
+                }
+            }, DispatcherPriority.Normal);
+        }
+
+        #endregion LSO Focus Motor
 
         #region Callbacks
 
