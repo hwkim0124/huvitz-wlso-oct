@@ -179,7 +179,7 @@ bool sig_chain::ChainSetup::isScanAmplitudesStored(void)
 }
 
 
-
+/*
 bool sig_chain::ChainSetup::loadSignalSettings(wso_config::SignalSetting * sset)
 {
 	double coeffs[WAVELENGTH_FUNCTION_COEFFS_SIZE] = { 0.0 };
@@ -219,7 +219,7 @@ bool sig_chain::ChainSetup::saveSignalSettings(wso_config::SignalSetting * sset)
 	}
 	return true;
 }
-
+*/
 
 void sig_chain::ChainSetup::getSpectrometerParameters(double * params)
 {

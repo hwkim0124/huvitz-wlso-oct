@@ -33,12 +33,9 @@ namespace wso_config
 	constexpr const char* CAMERA_SETTING_GROUP = "CameraSetting";
 	constexpr const char* FIXATION_SETTING_GROUP = "FixationSetting";
 	constexpr const char* GALVANO_SETTING_GROUP = "GalvanoSetting";
-	constexpr const char* MEASURE_SETTING_GROUP = "MeasureSetting";
 	constexpr const char* LSO_CAPTURE_SETTING_GROUP = "LsoCaptureSetting";
 	constexpr const char* LSO_DISPLAY_SETTING_GROUP = "LsoDisplaySetting";
 
-	constexpr int WAVELENGTH_PARAMS_SIZE = 4;
-	constexpr int DISPERSION_PARAMS_SIZE = 3;
 
 
 	struct FixationPoint {

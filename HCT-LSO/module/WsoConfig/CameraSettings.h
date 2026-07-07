@@ -23,8 +23,8 @@ namespace wso_config
 		bool importFromBoardProfile(const HbsConfiguration* config);
 		bool exportToBoardProfile(HbsConfiguration* config) const;
 
-		CorneaCameraConfigParams* getCorneaCameraConfigParams(void) const;
-		void setCorneaCameraConfigParams(const CorneaCameraConfigParams& param);
+		CorneaCameraConfigParam* getCorneaCameraConfigParam(void) const;
+		void setCorneaCameraConfigParam(const CorneaCameraConfigParam& param);
 
 		float getCorneaAgain(CameraType type) const;
 		float getCorneaDgain(CameraType type) const;

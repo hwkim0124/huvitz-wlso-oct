@@ -76,7 +76,7 @@ bool wso_system::Fixation::getInternalPosition(EyeSide side, FixationTarget targ
 	std::pair<int, int> fixp;
 
 	if (auto* config = SystemConfig::getInstance(); config) {
-		if (auto* sett = config->getFixationSetting(); sett) {
+		if (auto* sett = config->getFixationSettings(); sett) {
 			switch (target) {
 				using enum FixationTarget;
 			case CENTER:

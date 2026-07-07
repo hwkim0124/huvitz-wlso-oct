@@ -205,15 +205,6 @@ bool wso_device::MainBoard::initializeMainBoard(int* warnings)
 void wso_device::MainBoard::releaseMainBoard(void)
 {
 	try {
-		/*
-
-		//save Led Setting
-		getLsoWhiteLed()->saveConfigToIniFile();
-		getRetinaIrLed()->saveConfigToIniFile();
-		getCorneaIrLeftLed()->saveConfigToIniFile();
-		getCorneaIrRightLed()->saveConfigToIniFile();
-		*/
-
 		getColorCamera()->uninitialize();
 
 		getUsbComm().releaseChannel();
@@ -329,9 +320,9 @@ bool wso_device::MainBoard::initiateBoardComponents(int* numWarns)
 		warns += 1;
 	}
 	
-	//if (!initiateCorneaCamera(CameraType::IR_CORNEA_LOWER)) {
-	//	warns += 1;
-	//}
+	if (!initiateCorneaCamera(CameraType::IR_CORNEA_LOWER)) {
+		warns += 1;
+	}
 
 	if (!initiateColorCamera()) {
 		warns += 1;
@@ -661,8 +652,7 @@ bool wso_device::MainBoard::loadHostBufferTable(void)
 	auto* hbsSub = getSubDataProfile();
 
 	hbsSub->setHbsDataComm(&impl().subComm);
-	/*
-	if (hbsSub->loadHbsTableHeader()) {
+	if (hbsSub->loadHbsTableHeader(true)) {
 		LogD() << "HBS table descriptor loaded from sub-board";
 	}
 	else {
@@ -670,14 +660,13 @@ bool wso_device::MainBoard::loadHostBufferTable(void)
 		return false;
 	}
 
-	if (hbsSub->loadHbsTableEntries()) {
+	if (hbsSub->loadHbsTableEntries(true)) {
 		LogD() << "HBS table entries loaded from sub-board";
 	}
 	else {
 		LogD() << "Failed to load HBS table entries from sub-board";
 		return false;
 	}
-	*/
 	return true;
 }
 

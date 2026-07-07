@@ -6,7 +6,7 @@ using namespace wso_config;
 
 struct CameraSettings::CameraSettingsImpl
 {
-	CorneaCameraConfigParams param;
+	CorneaCameraConfigParam param;
 
 	CameraSettingsImpl() {
 		initializeCameraSettingsImpl();
@@ -87,12 +87,12 @@ void wso_config::CameraSettings::resetToDefaultValues(void)
 	return;
 }
 
-CorneaCameraConfigParams* wso_config::CameraSettings::getCorneaCameraConfigParams(void) const
+CorneaCameraConfigParam* wso_config::CameraSettings::getCorneaCameraConfigParam(void) const
 {
 	return &impl().param;
 }
 
-void wso_config::CameraSettings::setCorneaCameraConfigParams(const CorneaCameraConfigParams& param)
+void wso_config::CameraSettings::setCorneaCameraConfigParam(const CorneaCameraConfigParam& param)
 {
 	impl().param = param;
 	return;

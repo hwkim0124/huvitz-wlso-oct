@@ -1,11 +1,10 @@
 #include "pch.h"
 #include "SysConfigFile.h"
-#include "SysConfiguration.h"
-#include "CameraSetting.h"
-#include "FixationSetting.h"
-#include "MeasureSetting.h"
-#include "LsoCaptureSetting.h"
-#include "LsoDisplaySetting.h"
+#include "SystemConfig.h"
+#include "CameraSettings.h"
+#include "FixationSettings.h"
+#include "LsoCaptureSettings.h"
+#include "LsoDisplaySettings.h"
 
 #include "tinyxml2.h"
 
@@ -51,36 +50,33 @@ SysConfigFile& wso_config::SysConfigFile::operator=(const SysConfigFile& rhs)
 }
 
 
-bool wso_config::SysConfigFile::loadSystemConfig(const char* filename, SysConfiguration* config)
+bool wso_config::SysConfigFile::loadSystemConfig(const char* filename, SystemConfig* config)
 {
-	tinyxml2::XMLDocument doc;
-	if (!checkXMLResult(doc.LoadFile(filename))) {
-		return false;
-	}
-
-	XMLNode* pRoot = doc.FirstChildElement(SYS_CONFIG_FILE_ROOT);
-	if (pRoot == nullptr) {
-		return false;
-	}
-
-	getImpl().pDoc = &doc;
-	getImpl().pRoot = pRoot;
-	getImpl().pNode = pRoot;
-
 	try {
-		if (!loadFixationSetting(config->getFixationSetting())) {
+		tinyxml2::XMLDocument doc;
+		if (!checkXMLResult(doc.LoadFile(filename))) {
 			return false;
 		}
-		if (!loadCameraSetting(config->getCameraSetting())) {
+
+		XMLNode* pRoot = doc.FirstChildElement(SYS_CONFIG_FILE_ROOT);
+		if (pRoot == nullptr) {
 			return false;
 		}
-		if (!loadMeasureSetting(config->getMeasureSetting())) {
+
+		getImpl().pDoc = &doc;
+		getImpl().pRoot = pRoot;
+		getImpl().pNode = pRoot;
+
+		if (!loadFixationSettings(config->getFixationSettings())) {
 			return false;
 		}
-		if (!loadLsoCaptureSetting(config->getLsoCaptureSetting())) {
+		if (!loadCameraSettings(config->getCameraSettings())) {
 			return false;
 		}
-		if (!loadLsoDisplaySetting(config->getLsoDisplaySetting())) {
+		if (!loadLsoCaptureSettings(config->getLsoCaptureSettings())) {
+			return false;
+		}
+		if (!loadLsoDisplaySettings(config->getLsoDisplaySettings())) {
 			return false;
 		}
 	}
@@ -91,33 +87,38 @@ bool wso_config::SysConfigFile::loadSystemConfig(const char* filename, SysConfig
 	return true;
 }
 
-bool wso_config::SysConfigFile::saveSystemConfig(const char* filename, SysConfiguration* config)
+bool wso_config::SysConfigFile::saveSystemConfig(const char* filename, SystemConfig* config)
 {
-	tinyxml2::XMLDocument doc;
+	try {
+		tinyxml2::XMLDocument doc;
 
-	XMLDeclaration* decl = doc.NewDeclaration();
-	doc.LinkEndChild(decl);
+		XMLDeclaration* decl = doc.NewDeclaration();
+		doc.LinkEndChild(decl);
 
-	XMLElement* root = doc.NewElement(SYS_CONFIG_FILE_ROOT);
-	doc.LinkEndChild(root);
+		XMLElement* root = doc.NewElement(SYS_CONFIG_FILE_ROOT);
+		doc.LinkEndChild(root);
 
-	XMLComment* comment = doc.NewComment(SYS_CONFIG_FILE_ROOT_COMMENT);
-	root->LinkEndChild(comment);
+		XMLComment* comment = doc.NewComment(SYS_CONFIG_FILE_ROOT_COMMENT);
+		root->LinkEndChild(comment);
 
-	getImpl().pDoc = &doc;
-	getImpl().pRoot = root;
-	getImpl().pNode = root;
+		getImpl().pDoc = &doc;
+		getImpl().pRoot = root;
+		getImpl().pNode = root;
 
-	saveFixationSetting(config->getFixationSetting());
-	saveCameraSetting(config->getCameraSetting());
-	saveMeasureSetting(config->getMeasureSetting());
-	saveLsoCaptureSetting(config->getLsoCaptureSetting());
-	saveLsoDisplaySetting(config->getLsoDisplaySetting());
+		saveFixationSettings(config->getFixationSettings());
+		saveCameraSettings(config->getCameraSettings());
+		saveLsoCaptureSettings(config->getLsoCaptureSettings());
+		saveLsoDisplaySettings(config->getLsoDisplaySettings());
 
-	return checkXMLResult(doc.SaveFile(filename));
+		bool result = checkXMLResult(doc.SaveFile(filename));
+		return result;
+	}
+	catch (...) {
+		return false;
+	}
 }
 
-bool wso_config::SysConfigFile::loadCameraSetting(CameraSetting* cset)
+bool wso_config::SysConfigFile::loadCameraSettings(CameraSettings* cset)
 {
 	tinyxml2::XMLNode* root = getImpl().pRoot;
 
@@ -130,7 +131,7 @@ bool wso_config::SysConfigFile::loadCameraSetting(CameraSetting* cset)
 	return true;
 }
 
-bool wso_config::SysConfigFile::loadFixationSetting(FixationSetting* pset)
+bool wso_config::SysConfigFile::loadFixationSettings(FixationSettings* pset)
 {
 	tinyxml2::XMLNode* root = getImpl().pRoot;
 
@@ -143,20 +144,7 @@ bool wso_config::SysConfigFile::loadFixationSetting(FixationSetting* pset)
 	return true;
 }
 
-bool wso_config::SysConfigFile::loadMeasureSetting(MeasureSetting* mset)
-{
-	tinyxml2::XMLNode* root = getImpl().pRoot;
-
-	XMLElement* group = root->FirstChildElement(MEASURE_SETTING_GROUP);
-	if (group == nullptr) return false;
-
-	if (!loadSectionOfMeasure(mset, group)) {
-		return false;
-	}
-	return true;
-}
-
-bool wso_config::SysConfigFile::loadLsoCaptureSetting(LsoCaptureSetting* lcset)
+bool wso_config::SysConfigFile::loadLsoCaptureSettings(LsoCaptureSettings* lcset)
 {
 	tinyxml2::XMLNode* root = getImpl().pRoot;
 
@@ -169,7 +157,7 @@ bool wso_config::SysConfigFile::loadLsoCaptureSetting(LsoCaptureSetting* lcset)
 	return true;
 }
 
-bool wso_config::SysConfigFile::loadLsoDisplaySetting(LsoDisplaySetting* ldset)
+bool wso_config::SysConfigFile::loadLsoDisplaySettings(LsoDisplaySettings* ldset)
 {
 	tinyxml2::XMLNode* root = getImpl().pRoot;
 
@@ -183,7 +171,7 @@ bool wso_config::SysConfigFile::loadLsoDisplaySetting(LsoDisplaySetting* ldset)
 }
 
 
-bool wso_config::SysConfigFile::saveCameraSetting(const CameraSetting* cset)
+bool wso_config::SysConfigFile::saveCameraSettings(const CameraSettings* cset)
 {
 	tinyxml2::XMLDocument* pdoc = getImpl().pDoc;
 	tinyxml2::XMLNode* root = getImpl().pRoot;
@@ -197,7 +185,7 @@ bool wso_config::SysConfigFile::saveCameraSetting(const CameraSetting* cset)
 	return true;
 }
 
-bool wso_config::SysConfigFile::saveFixationSetting(const FixationSetting* pset)
+bool wso_config::SysConfigFile::saveFixationSettings(const FixationSettings* pset)
 {
 	tinyxml2::XMLDocument* pdoc = getImpl().pDoc;
 	tinyxml2::XMLNode* root = getImpl().pRoot;
@@ -211,21 +199,7 @@ bool wso_config::SysConfigFile::saveFixationSetting(const FixationSetting* pset)
 	return true;
 }
 
-bool wso_config::SysConfigFile::saveMeasureSetting(const MeasureSetting* mset)
-{
-	tinyxml2::XMLDocument* pdoc = getImpl().pDoc;
-	tinyxml2::XMLNode* root = getImpl().pRoot;
-
-	XMLElement* group = pdoc->NewElement(MEASURE_SETTING_GROUP);
-	root->LinkEndChild(group);
-
-	if (!saveSectionOfMeasure(mset, group)) {
-		return false;
-	}
-	return true;
-}
-
-bool wso_config::SysConfigFile::saveLsoCaptureSetting(const LsoCaptureSetting* lcset)
+bool wso_config::SysConfigFile::saveLsoCaptureSettings(const LsoCaptureSettings* lcset)
 {
 	tinyxml2::XMLDocument* pdoc = getImpl().pDoc;
 	tinyxml2::XMLNode* root = getImpl().pRoot;
@@ -239,7 +213,7 @@ bool wso_config::SysConfigFile::saveLsoCaptureSetting(const LsoCaptureSetting* l
 	return true;
 }
 
-bool wso_config::SysConfigFile::saveLsoDisplaySetting(const LsoDisplaySetting* ldset)
+bool wso_config::SysConfigFile::saveLsoDisplaySettings(const LsoDisplaySettings* ldset)
 {
 	tinyxml2::XMLDocument* pdoc = getImpl().pDoc;
 	tinyxml2::XMLNode* root = getImpl().pRoot;
@@ -253,7 +227,7 @@ bool wso_config::SysConfigFile::saveLsoDisplaySetting(const LsoDisplaySetting* l
 	return true;
 }
 
-bool wso_config::SysConfigFile::loadSectionOfFixation(FixationSetting* pset, tinyxml2::XMLElement* group)
+bool wso_config::SysConfigFile::loadSectionOfFixation(FixationSettings* pset, tinyxml2::XMLElement* group)
 {
 	XMLNode* child;
 	XMLElement* elem;
@@ -364,25 +338,24 @@ bool wso_config::SysConfigFile::loadSectionOfFixation(FixationSetting* pset, tin
 	return true;
 }
 
-bool wso_config::SysConfigFile::loadSectionOfCamera(CameraSetting* cset, tinyxml2::XMLElement* group)
+bool wso_config::SysConfigFile::loadSectionOfCamera(CameraSettings* cset, tinyxml2::XMLElement* group)
 {
 	XMLNode* child;
 	XMLElement* elem;
 	XMLElement* items;
 	string name;
 	float fValue;
-	int nValue;
 
 	items = group->FirstChildElement("CorneaIr");
 	if (items != nullptr)
 	{
 		child = items->FirstChild();
 		if (child != nullptr && (elem = child->ToElement()) != nullptr) {
-			if (checkXMLResult(elem->QueryFloatAttribute("analogGain", &fValue))) {
-				cset->setCorneaAgain(fValue);
+			if (checkXMLResult(elem->QueryFloatAttribute("again", &fValue))) {
+				cset->setCorneaAgain(CameraType::IR_CORNEA_LEFT, fValue);
 			}
-			if (checkXMLResult(elem->QueryFloatAttribute("digitalGain", &fValue))) {
-				cset->setCorneaDgain(fValue);
+			if (checkXMLResult(elem->QueryFloatAttribute("dgain", &fValue))) {
+				cset->setCorneaDgain(CameraType::IR_CORNEA_LEFT, fValue);
 			}
 		}
 		else {
@@ -391,11 +364,24 @@ bool wso_config::SysConfigFile::loadSectionOfCamera(CameraSetting* cset, tinyxml
 
 		child = child->NextSibling();
 		if (child != nullptr && (elem = child->ToElement()) != nullptr) {
-			if (checkXMLResult(elem->QueryIntAttribute("value1", &nValue))) {
-				cset->setWdotIntensity(0, nValue);
+			if (checkXMLResult(elem->QueryFloatAttribute("again", &fValue))) {
+				cset->setCorneaAgain(CameraType::IR_CORNEA_RIGHT, fValue);
 			}
-			if (checkXMLResult(elem->QueryIntAttribute("value2", &nValue))) {
-				cset->setWdotIntensity(1, nValue);
+			if (checkXMLResult(elem->QueryFloatAttribute("dgain", &fValue))) {
+				cset->setCorneaDgain(CameraType::IR_CORNEA_RIGHT, fValue);
+			}
+		}
+		else {
+			return false;
+		}
+
+		child = child->NextSibling();
+		if (child != nullptr && (elem = child->ToElement()) != nullptr) {
+			if (checkXMLResult(elem->QueryFloatAttribute("again", &fValue))) {
+				cset->setCorneaAgain(CameraType::IR_CORNEA_LOWER, fValue);
+			}
+			if (checkXMLResult(elem->QueryFloatAttribute("dgain", &fValue))) {
+				cset->setCorneaDgain(CameraType::IR_CORNEA_LOWER, fValue);
 			}
 		}
 		else {
@@ -405,45 +391,8 @@ bool wso_config::SysConfigFile::loadSectionOfCamera(CameraSetting* cset, tinyxml
 	return true;
 }
 
-bool wso_config::SysConfigFile::loadSectionOfMeasure(MeasureSetting* mset, tinyxml2::XMLElement* group)
-{
-	XMLNode* child;
-	XMLElement* elem;
-	XMLElement* items;
-	string name;
 
-	int x, y, z;
-
-	items = group->FirstChildElement("StagePosition");
-	if (items != nullptr)
-	{
-		for (child = items->FirstChild(); child != nullptr; child = child->NextSibling()) {
-			if ((elem = child->ToElement()) != nullptr) {
-				if (checkXMLResult(elem->QueryIntAttribute("x", &x)) &&
-					checkXMLResult(elem->QueryIntAttribute("y", &y)) && 
-					checkXMLResult(elem->QueryIntAttribute("z", &z))) {
-					const char* name = elem->Attribute("name");
-					auto pos = std::tuple<int, int, int>(x, y, z);
-					if (!strcmp(name, "center")) {
-						mset->setCenterPos(pos);
-					}
-					else if (!strcmp(name, "readyOD")) {
-						mset->setReadyPosOD(pos);
-					}
-					else if (!strcmp(name, "readyOS")) {
-						mset->setReadyPosOS(pos);
-					}
-					else if (!strcmp(name, "readyME")) {
-						mset->setReadyPosME(pos);
-					}
-				}
-			}
-		}
-	}
-	return true;
-}
-
-bool wso_config::SysConfigFile::loadSectionOfLsoCapture(LsoCaptureSetting* lcset, tinyxml2::XMLElement* group)
+bool wso_config::SysConfigFile::loadSectionOfLsoCapture(LsoCaptureSettings* lcset, tinyxml2::XMLElement* group)
 {
 	XMLNode* child;
 	XMLElement* elem;
@@ -564,9 +513,9 @@ bool wso_config::SysConfigFile::loadSectionOfLsoCapture(LsoCaptureSetting* lcset
 	return true;
 }
 
-bool wso_config::SysConfigFile::loadSectionOfLsoDisplay(LsoDisplaySetting* ldset, tinyxml2::XMLElement* group)
+bool wso_config::SysConfigFile::loadSectionOfLsoDisplay(LsoDisplaySettings* ldset, tinyxml2::XMLElement* group)
 {
-	XMLNode* child;
+	// XMLNode* child;
 	XMLElement* elem;
 	XMLElement* items;
 	string name;
@@ -576,8 +525,8 @@ bool wso_config::SysConfigFile::loadSectionOfLsoDisplay(LsoDisplaySetting* ldset
 	items = group->FirstChildElement("ImageMask");
 	if (items != nullptr)
 	{
-		child = items->FirstChild();
-		if (child != nullptr && (elem = child->ToElement()) != nullptr) {
+		// child = items->FirstChild();
+		if (items != nullptr && (elem = items->ToElement()) != nullptr) {
 			if (checkXMLResult(elem->QueryIntAttribute("irRadius", &nValue))) {
 				ldset->setMaskIrRadius(nValue);
 			}
@@ -593,8 +542,8 @@ bool wso_config::SysConfigFile::loadSectionOfLsoDisplay(LsoDisplaySetting* ldset
 	items = group->FirstChildElement("ImageAdjust");
 	if (items != nullptr)
 	{
-		child = items->FirstChild();
-		if (child != nullptr && (elem = child->ToElement()) != nullptr) {
+		// child = items->FirstChild();
+		if (items != nullptr && (elem = items->ToElement()) != nullptr) {
 			if (checkXMLResult(elem->QueryIntAttribute("brightness", &nValue))) {
 				ldset->setAdjustBrightness(nValue);
 			}
@@ -606,7 +555,7 @@ bool wso_config::SysConfigFile::loadSectionOfLsoDisplay(LsoDisplaySetting* ldset
 	return true;
 }
 
-bool wso_config::SysConfigFile::saveSectionOfFixation(const FixationSetting* pset, tinyxml2::XMLElement* group)
+bool wso_config::SysConfigFile::saveSectionOfFixation(const FixationSettings* pset, tinyxml2::XMLElement* group)
 {
 	tinyxml2::XMLDocument* pdoc = getImpl().pDoc;
 	string name;
@@ -742,7 +691,7 @@ bool wso_config::SysConfigFile::saveSectionOfFixation(const FixationSetting* pse
 }
 
 
-bool wso_config::SysConfigFile::saveSectionOfCamera(const CameraSetting* cset, tinyxml2::XMLElement* group)
+bool wso_config::SysConfigFile::saveSectionOfCamera(const CameraSettings* cset, tinyxml2::XMLElement* group)
 {
 	tinyxml2::XMLDocument* pdoc = getImpl().pDoc;
 	string name;
@@ -750,57 +699,24 @@ bool wso_config::SysConfigFile::saveSectionOfCamera(const CameraSetting* cset, t
 	XMLElement* list = pdoc->NewElement("CorneaIr");
 	group->LinkEndChild(list);
 
-	XMLElement* item = pdoc->NewElement("Preset");
+	XMLElement* item = pdoc->NewElement("Left");
 	list->LinkEndChild(item);
-	item->SetAttribute("analogGain", cset->getCorneaAgain());
-	item->SetAttribute("digitalGain", cset->getCorneaDgain());
+	item->SetAttribute("again", cset->getCorneaAgain(CameraType::IR_CORNEA_LEFT));
+	item->SetAttribute("dgain", cset->getCorneaDgain(CameraType::IR_CORNEA_LEFT));
 
-	item = pdoc->NewElement("WorkingDots");
+	item = pdoc->NewElement("Right");
 	list->LinkEndChild(item);
-	item->SetAttribute("value1", cset->getWdotIntensity(0));
-	item->SetAttribute("value2", cset->getWdotIntensity(1));
+	item->SetAttribute("again", cset->getCorneaAgain(CameraType::IR_CORNEA_RIGHT));
+	item->SetAttribute("dgain", cset->getCorneaDgain(CameraType::IR_CORNEA_RIGHT));
+
+	item = pdoc->NewElement("Lower");
+	list->LinkEndChild(item);
+	item->SetAttribute("again", cset->getCorneaAgain(CameraType::IR_CORNEA_LOWER));
+	item->SetAttribute("dgain", cset->getCorneaDgain(CameraType::IR_CORNEA_LOWER));
 	return true;
 }
 
-bool wso_config::SysConfigFile::saveSectionOfMeasure(const MeasureSetting* mset, tinyxml2::XMLElement* group)
-{
-	tinyxml2::XMLDocument* pdoc = getImpl().pDoc;
-	string name;
-
-	XMLElement* list = pdoc->NewElement("StagePosition");
-	group->LinkEndChild(list);
-
-	XMLElement* item = pdoc->NewElement("attribute");
-	list->LinkEndChild(item);
-	item->SetAttribute("name", "center");
-	item->SetAttribute("x", std::get<0>(mset->getCenterPos()));
-	item->SetAttribute("y", std::get<1>(mset->getCenterPos()));
-	item->SetAttribute("z", std::get<2>(mset->getCenterPos()));
-
-	item = pdoc->NewElement("attribute");
-	list->LinkEndChild(item);
-	item->SetAttribute("name", "readyOD");
-	item->SetAttribute("x", std::get<0>(mset->getReadyPosOD()));
-	item->SetAttribute("y", std::get<1>(mset->getReadyPosOD()));
-	item->SetAttribute("z", std::get<2>(mset->getReadyPosOD()));
-
-	item = pdoc->NewElement("attribute");
-	list->LinkEndChild(item);
-	item->SetAttribute("name", "readyOS");
-	item->SetAttribute("x", std::get<0>(mset->getReadyPosOS()));
-	item->SetAttribute("y", std::get<1>(mset->getReadyPosOS()));
-	item->SetAttribute("z", std::get<2>(mset->getReadyPosOS()));
-
-	item = pdoc->NewElement("attribute");
-	list->LinkEndChild(item);
-	item->SetAttribute("name", "readyME");
-	item->SetAttribute("x", std::get<0>(mset->getReadyPosME()));
-	item->SetAttribute("y", std::get<1>(mset->getReadyPosME()));
-	item->SetAttribute("z", std::get<2>(mset->getReadyPosME()));
-	return true;
-}
-
-bool wso_config::SysConfigFile::saveSectionOfLsoCapture(const LsoCaptureSetting* lcset, tinyxml2::XMLElement* group)
+bool wso_config::SysConfigFile::saveSectionOfLsoCapture(const LsoCaptureSettings* lcset, tinyxml2::XMLElement* group)
 {
 	tinyxml2::XMLDocument* pdoc = getImpl().pDoc;
 	string name;
@@ -839,7 +755,7 @@ bool wso_config::SysConfigFile::saveSectionOfLsoCapture(const LsoCaptureSetting*
 	group->LinkEndChild(list);
 
 	XMLElement* item = pdoc->NewElement("attribute");
-	group->LinkEndChild(item);
+	list->LinkEndChild(item);
 	item->SetAttribute("roiWidth", lcset->getOffsetRoiWidth());
 	item->SetAttribute("roiHeight", lcset->getOffsetRoiHeight());
 
@@ -857,7 +773,7 @@ bool wso_config::SysConfigFile::saveSectionOfLsoCapture(const LsoCaptureSetting*
 	group->LinkEndChild(list);
 
 	item = pdoc->NewElement("attribute");
-	group->LinkEndChild(item);
+	list->LinkEndChild(item);
 	item->SetAttribute("overlapCount", lcset->getFrameRollSwTrigOverlapCount());
 	item->SetAttribute("roiWidth", lcset->getFrameRollSwTrigOverlapRoiWidth());
 	item->SetAttribute("roiHeight", lcset->getFrameRollSwTrigOverlapRoiHeight());
@@ -868,7 +784,7 @@ bool wso_config::SysConfigFile::saveSectionOfLsoCapture(const LsoCaptureSetting*
 	return true;
 }
 
-bool wso_config::SysConfigFile::saveSectionOfLsoDisplay(const LsoDisplaySetting* ldset, tinyxml2::XMLElement* group)
+bool wso_config::SysConfigFile::saveSectionOfLsoDisplay(const LsoDisplaySettings* ldset, tinyxml2::XMLElement* group)
 {
 	tinyxml2::XMLDocument* pdoc = getImpl().pDoc;
 	string name;

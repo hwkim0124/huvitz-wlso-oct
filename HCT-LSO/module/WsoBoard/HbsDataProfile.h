@@ -21,8 +21,8 @@ namespace wso_board
 	public:
 		void setHbsDataComm(HbsDataComm* comm);
 
-		bool loadHbsTableHeader(void);
-		bool loadHbsTableEntries(void);
+		bool loadHbsTableHeader(bool subBoard = false);
+		bool loadHbsTableEntries(bool subBoard = false);
 		bool loadBufferDescriptor(void);
 		bool loadCalibrationBlocks(bool fetch, int region = CALIB_ACTIVE_REGION);
 

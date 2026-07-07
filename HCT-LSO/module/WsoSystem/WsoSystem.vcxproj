@@ -169,7 +169,6 @@
     <ClInclude Include="exts_oct_calibration.h" />
     <ClInclude Include="exts_oct_scanner.h" />
     <ClInclude Include="exts_oct_scanning.h" />
-    <ClInclude Include="exts_sys_config.h" />
     <ClInclude Include="Fixation.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="Hardware.h" />
@@ -200,7 +199,6 @@
     <ClCompile Include="exts_oct_calibration.cpp" />
     <ClCompile Include="exts_oct_scanner.cpp" />
     <ClCompile Include="exts_oct_scanning.cpp" />
-    <ClCompile Include="exts_sys_config.cpp" />
     <ClCompile Include="Fixation.cpp" />
     <ClCompile Include="Hardware.cpp" />
     <ClCompile Include="exts_hardware.cpp" />

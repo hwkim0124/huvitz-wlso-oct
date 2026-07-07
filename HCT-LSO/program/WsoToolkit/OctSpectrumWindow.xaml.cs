@@ -24,7 +24,6 @@ namespace WsoToolkit
         LightControlWindow? _lightControlWindow = null;
         FocusMotorWindow? _focusMotorWindow = null;
         StageMotorWindow? _stageMotorWindow = null;
-        private bool _isWindowLoaded = false;
 
         public OctSpectrumWindow()
         {
@@ -52,7 +51,6 @@ namespace WsoToolkit
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             StartCorneaCameraPreview();
-            _isWindowLoaded = true;
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)

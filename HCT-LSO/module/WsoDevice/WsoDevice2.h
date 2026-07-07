@@ -216,7 +216,7 @@ namespace wso_device
 		CORNEA_LEFT = 0x00,
 		CORNEA_RIGHT = 0x01,
 		RETINA = 0x02,
-		CORNEA_LOWER = 0x03,
+		CORNEA_LOWER = 0x01, // 0x03,
 		UNKNOWN = 0x00
 	};
 

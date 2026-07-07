@@ -105,7 +105,7 @@ void wso_board::HbsDataProfile::setHbsDataComm(HbsDataComm* comm)
 	return;
 }
 
-bool wso_board::HbsDataProfile::loadHbsTableHeader(void)
+bool wso_board::HbsDataProfile::loadHbsTableHeader(bool subBoard)
 {
 	auto* channel = getDataChannel();
 	if (auto data = getHbsTableDescriptor(); channel) {
@@ -116,11 +116,16 @@ bool wso_board::HbsDataProfile::loadHbsTableHeader(void)
 	return false;
 }
 
-bool wso_board::HbsDataProfile::loadHbsTableEntries(void)
+bool wso_board::HbsDataProfile::loadHbsTableEntries(bool subBoard)
 {
 	if (!loadBufferDescriptor()) {
 		return false;
 	}
+
+	if (subBoard) {
+		return true;
+	}
+
 	if (!loadCalibrationBlocks(true)) {
 		return false;
 	}

@@ -11,12 +11,6 @@ namespace wso_domain
 	const float OCT_GALVANO_SCALE_MIN = 0.1f;
 
 	struct CorneaCameraConfigParam {
-		float again = 0.0f;
-		float dgain = 0.0f;
-		int wdots[2] = { 30, 30 };
-	};
-
-	struct CorneaCameraConfigParams {
 		float again_left = 0.0f;
 		float again_right = 0.0f;
 		float again_lower = 0.0f;
@@ -35,10 +29,4 @@ namespace wso_domain
 		int fixtype = 0;
 	};
 
-	struct OctGalvanoConfigParam {
-		float xoffset = 0.0f;
-		float yoffset = 0.0f;
-		float xscale[OCT_GALVANO_SCALE_NUM] = { 0.0f };
-		float yscale[OCT_GALVANO_SCALE_NUM] = { 0.0f };
-	};
 }

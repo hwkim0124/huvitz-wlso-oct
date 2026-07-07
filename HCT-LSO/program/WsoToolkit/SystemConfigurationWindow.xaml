@@ -1,0 +1,133 @@
+﻿<Window x:Class="WsoToolkit.SystemConfigurationWindow"
+        Style="{StaticResource WindowStyle}"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WsoToolkit"
+        mc:Ignorable="d"
+        Title="System Configuration" Height="Auto" Width="Auto" ResizeMode="NoResize" Loaded="Window_Loaded" Closing="Window_Closing" Closed="Window_Closed" SizeToContent="WidthAndHeight">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="64"/>
+        </Grid.RowDefinitions>
+        <Grid Margin="12,12,12,12" HorizontalAlignment="Left">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Margin="0,0,0,0" HorizontalAlignment="Left">
+                <Border BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" BorderThickness="1">
+                    <Grid HorizontalAlignment="Left">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="40"/>
+                            <ColumnDefinition Width="90"/>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="90"/>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="90"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="12"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="12"/>
+                        </Grid.RowDefinitions>
+                        <Label x:Name="label_Copy23" Content="Internal Fixation Points" Style="{StaticResource HeaderStyle}" Grid.Row="1" Grid.ColumnSpan="2"/>
+                        <Label x:Name="label_Copy24" Content="Fundus (OD)" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="1"/>
+                        <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="2">
+                            <TextBox x:Name="FundusOdXEdit" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                            <TextBox x:Name="FundusOdYEdit" Style="{StaticResource TextBoxStyle}" Margin="4,0,0,0" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                        </StackPanel>
+                        <Label x:Name="label_Copy25" Content="Fundus (OS)" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="4"/>
+                        <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="5" Grid.ColumnSpan="2">
+                            <TextBox x:Name="FundusOsXEdit" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                            <TextBox x:Name="FundusOsYEdit" Style="{StaticResource TextBoxStyle}" Margin="4,0,0,0" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                        </StackPanel>
+                        <Label x:Name="label_Copy26" Content="Center (OD)" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="1" />
+                        <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="2">
+                            <TextBox x:Name="FoveaOdXEdit" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                            <TextBox x:Name="FoveaOdYEdit" Style="{StaticResource TextBoxStyle}" Margin="4,0,0,0" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                        </StackPanel>
+                        <Label x:Name="label_Copy27" Content="Center (OS)" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="4"/>
+                        <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="5" Grid.ColumnSpan="2">
+                            <TextBox x:Name="FoveaOsXEdit" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                            <TextBox x:Name="FoveaOsYEdit" Style="{StaticResource TextBoxStyle}" Margin="4,0,0,0" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                        </StackPanel>
+                        <Label x:Name="label_Copy28" Content="Optic Disc (OD)" Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="1" />
+                        <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="2" Grid.ColumnSpan="2">
+                            <TextBox x:Name="DiscOdXEdit" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                            <TextBox x:Name="DiscOdYEdit" Style="{StaticResource TextBoxStyle}" Margin="4,0,0,0" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                        </StackPanel>
+                        <Label x:Name="label_Copy29" Content="Optic Disc (OS)" Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="4"/>
+                        <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="5" Grid.ColumnSpan="2">
+                            <TextBox x:Name="DiscOsXEdit" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                            <TextBox x:Name="DiscOsYEdit" Style="{StaticResource TextBoxStyle}" Margin="4,0,0,0" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                        </StackPanel>
+                        <Label x:Name="label_Copy30" Content="Internal Fixation LED" Style="{StaticResource HeaderStyle}" Grid.Row="5" Grid.ColumnSpan="2"/>
+                        <Label x:Name="label_Copy31" Content="Brightness" Style="{StaticResource LabelStyle}" Grid.Row="6" Grid.Column="1"/>
+                        <TextBox x:Name="FixBrightEdit" Style="{StaticResource TextBoxStyle}" Grid.Column="2" Grid.Row="6" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                        <Label x:Name="label_Copy32" Content="Period/OnTime" Style="{StaticResource LabelStyle}" Grid.Row="6" Grid.Column="4"/>
+                        <StackPanel Orientation="Horizontal" Grid.Row="6" Grid.Column="5" Grid.ColumnSpan="2">
+                            <TextBox x:Name="BlinkPeriodEdit" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                            <TextBox x:Name="BlinkOnTimeEdit" Style="{StaticResource TextBoxStyle}" Margin="4,0,0,0" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                        </StackPanel>
+                        <Label x:Name="label_Copy33" Content="Fixation Type" Style="{StaticResource LabelStyle}" Grid.Row="7" Grid.Column="4"/>
+                        <TextBox x:Name="FixationTypeEdit" Style="{StaticResource TextBoxStyle}" Grid.Column="5" Grid.Row="7" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                        <CheckBox x:Name="BlinkCheckBox" Style="{StaticResource CheckBoxStyle}"  Grid.Column="2" Content="Blink Mode" Grid.Row="7"/>
+                    </Grid>
+                </Border>
+                <Grid Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="40"/>
+                        <ColumnDefinition Width="90"/>
+                        <ColumnDefinition Width="80"/>
+                        <ColumnDefinition Width="90"/>
+                        <ColumnDefinition Width="80"/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="4"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="12"/>
+                    </Grid.RowDefinitions>
+                    <Label x:Name="label301" Content="Cornea Ir Camera" Style="{StaticResource HeaderStyle}" Grid.Row="1" Grid.ColumnSpan="2"/>
+                    <Label x:Name="label302" Content="A-Gain" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="1"/>
+                    <TextBox x:Name="editCorneaAgain1" Style="{StaticResource TextBoxStyle}" Grid.Column="2" Grid.Row="2" PreviewTextInput="FloatTextBox_PreviewTextInput"/>
+                    <Label x:Name="label303" Content="D-Gain" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="3"/>
+                    <TextBox x:Name="editCorneaDgain1" Style="{StaticResource TextBoxStyle}" Grid.Column="4" Grid.Row="2" PreviewTextInput="FloatTextBox_PreviewTextInput"/>
+                    <Label x:Name="label304" Content="A-Gain" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="1"/>
+                    <TextBox x:Name="editCorneaAgain2" Style="{StaticResource TextBoxStyle}" Grid.Column="2" Grid.Row="3" PreviewTextInput="FloatTextBox_PreviewTextInput"/>
+                    <Label x:Name="label305" Content="D-Gain" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="3"/>
+                    <TextBox x:Name="editCorneaDgain2" Style="{StaticResource TextBoxStyle}" Grid.Column="4" Grid.Row="3" PreviewTextInput="FloatTextBox_PreviewTextInput"/>
+                    <Label x:Name="label306" Content="A-Gain" Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="1"/>
+                    <TextBox x:Name="editCorneaAgain3" Style="{StaticResource TextBoxStyle}" Grid.Column="2" Grid.Row="4" PreviewTextInput="FloatTextBox_PreviewTextInput"/>
+                    <Label x:Name="label307" Content="D-Gain" Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="3"/>
+                    <TextBox x:Name="editCorneaDgain3" Style="{StaticResource TextBoxStyle}" Grid.Column="4" Grid.Row="4" PreviewTextInput="FloatTextBox_PreviewTextInput"/>
+                    <Label x:Name="label308" Content="(Left)" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="5" HorizontalAlignment="Left"/>
+                    <Label x:Name="label309" Content="(Right)" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="5" HorizontalAlignment="Left"/>
+                    <Label x:Name="label310" Content="(Lower)" Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="5" HorizontalAlignment="Left"/>
+                    <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="6" Grid.RowSpan="6"/>
+                </Grid>
+            </StackPanel>
+        </Grid>
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,32,12">
+            <Button x:Name="LoadButton" Content="Load" Style="{StaticResource ButtonStyle}" Margin="0,0,8,0" Click="LoadButton_Click"/>
+            <Button x:Name="SaveButton" Content="Save" Style="{StaticResource ButtonStyle}" Margin="0,0,8,0" Click="SaveButton_Click"/>
+            <Button x:Name="btnApply" Content="Apply" Style="{StaticResource ButtonStyle}"  Margin="0,0,8,0" Click="BtnApply_Click"/>
+            <Button x:Name="CloseButton" Content="Close" Style="{StaticResource ButtonStyle}" Click="CloseButton_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

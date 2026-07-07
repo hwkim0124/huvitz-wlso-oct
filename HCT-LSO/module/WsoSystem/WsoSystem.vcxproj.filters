@@ -48,16 +48,10 @@
     <ClInclude Include="OctScanning.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="exts_configuration.h">
-      <Filter>Header Files\externs</Filter>
-    </ClInclude>
     <ClInclude Include="exts_fixation.h">
       <Filter>Header Files\externs</Filter>
     </ClInclude>
     <ClInclude Include="exts_hardware.h">
-      <Filter>Header Files\externs</Filter>
-    </ClInclude>
-    <ClInclude Include="exts_sys_config.h">
       <Filter>Header Files\externs</Filter>
     </ClInclude>
     <ClInclude Include="exts_system.h">
@@ -105,6 +99,9 @@
     <ClInclude Include="exts_lso_camera.h">
       <Filter>Header Files\externs</Filter>
     </ClInclude>
+    <ClInclude Include="exts_configuration.h">
+      <Filter>Header Files\externs</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -128,16 +125,10 @@
     <ClCompile Include="OctScanning.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="exts_configuration.cpp">
-      <Filter>Source Files\externs</Filter>
-    </ClCompile>
     <ClCompile Include="exts_fixation.cpp">
       <Filter>Source Files\externs</Filter>
     </ClCompile>
     <ClCompile Include="exts_hardware.cpp">
-      <Filter>Source Files\externs</Filter>
-    </ClCompile>
-    <ClCompile Include="exts_sys_config.cpp">
       <Filter>Source Files\externs</Filter>
     </ClCompile>
     <ClCompile Include="exts_system.cpp">
@@ -180,6 +171,9 @@
       <Filter>Source Files\externs</Filter>
     </ClCompile>
     <ClCompile Include="exts_lso_camera.cpp">
+      <Filter>Source Files\externs</Filter>
+    </ClCompile>
+    <ClCompile Include="exts_configuration.cpp">
       <Filter>Source Files\externs</Filter>
     </ClCompile>
   </ItemGroup>

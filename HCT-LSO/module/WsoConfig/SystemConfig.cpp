@@ -1,11 +1,10 @@
 #include "pch.h"
 #include "SystemConfig.h"
-#include "CameraSetting.h"
-#include "FixationSetting.h"
-#include "GalvanoSetting.h"
-#include "MeasureSetting.h"
-#include "LsoCaptureSetting.h"
-#include "LsoDisplaySetting.h"
+#include "SysConfigFile.h"
+#include "CameraSettings.h"
+#include "FixationSettings.h"
+#include "LsoCaptureSettings.h"
+#include "LsoDisplaySettings.h"
 
 using namespace wso_config;
 using namespace std;
@@ -16,13 +15,12 @@ struct SystemConfig::SystemConfigImpl
 {
     optional<HbsDataProfile*> hbsProfile{ nullopt };
 
-    FixationSetting fixationSet;
-    CameraSetting cameraSet;
-	GalvanoSetting galvanoSet;
+    FixationSettings fixationSet;
+    CameraSettings cameraSet;
+	LsoCaptureSettings lsoCaptureSet;
+	LsoDisplaySettings lsoDisplaySet;
 
-	MeasureSetting measureSet;
-	LsoCaptureSetting lsoCaptureSet;
-	LsoDisplaySetting lsoDisplaySet;
+    SysConfigFile configFile;
 
     SystemConfigImpl()
     {
@@ -55,13 +53,10 @@ void wso_config::SystemConfig::setupBoardProfile(HbsDataProfile* profile)
     return;
 }
 
-void wso_config::SystemConfig::resetToDefaults(void)
+void wso_config::SystemConfig::resetToDefaultValues(void)
 {
 	impl().cameraSet.resetToDefaultValues();
 	impl().fixationSet.resetToDefaultValues();
-    impl().galvanoSet.resetToDefaultValues();
-
-	impl().measureSet.resetToDefaultValues();
 	impl().lsoCaptureSet.resetToDefaultValues();
 	impl().lsoDisplaySet.resetToDefaultValues();
     return;
@@ -74,9 +69,6 @@ bool wso_config::SystemConfig::updateFromBoardProfile(HbsDataProfile* profile)
         if (auto* config = profile->getHbsConfiguration(); config) {
             impl().fixationSet.importFromBoardProfile(config);
             impl().cameraSet.importFromBoardProfile(config);
-            impl().galvanoSet.importFromBoardProfile(config);
-
-			impl().measureSet.importFromBoardProfile(config);
 			impl().lsoCaptureSet.importFromBoardProfile(config);
             impl().lsoDisplaySet.importFromBoardProfile(config);
             return true;
@@ -93,9 +85,6 @@ bool wso_config::SystemConfig::uploadToBoardProfile(HbsDataProfile* profile)
             auto* p = const_cast<HbsConfiguration*>(config);
 			impl().fixationSet.exportToBoardProfile(p);
 			impl().cameraSet.exportToBoardProfile(p);
-			impl().galvanoSet.exportToBoardProfile(p);
-
-			impl().measureSet.exportToBoardProfile(p);
 			impl().lsoCaptureSet.exportToBoardProfile(p);
 			impl().lsoDisplaySet.exportToBoardProfile(p);
 			return true;
@@ -104,33 +93,65 @@ bool wso_config::SystemConfig::uploadToBoardProfile(HbsDataProfile* profile)
     return false;
 }
 
+bool wso_config::SystemConfig::loadSysConfigFile(const char* name)
+{
+    string path = (name == nullptr ? getDefaultSysConfigFilePath() : name);
+    if (!impl().configFile.loadSystemConfig(path.c_str(), this)) {
+        LogW() << "Failed to load system config file, path: " << path;
+        return false;
+    }
+    else {
+        LogI() << "System config file loaded, path: " << path;
+        return true;
+    }
+}
 
-CameraSetting* wso_config::SystemConfig::getCameraSetting(void) const
+bool wso_config::SystemConfig::saveSysConfigFile(const char* name)
+{
+    string path = (name == nullptr ? getDefaultSysConfigFilePath() : name);
+    if (!impl().configFile.saveSystemConfig(path.c_str(), this)) {
+        LogW() << "Failed to save system config file, path: " << path;
+        return false;
+    }
+    else {
+        LogI() << "System config file saved, path: " << path;
+        return true;
+    }
+}
+
+std::string wso_config::SystemConfig::getDefaultSysConfigFilePath(void)
+{
+    string cstr = getDefaultSysConfigDirPath();
+    cstr += "\\";
+    cstr += SYS_CONFIG_FILE_NAME;
+    return cstr;
+}
+
+std::string wso_config::SystemConfig::getDefaultSysConfigDirPath(void)
+{
+    wchar_t buffer[MAX_PATH];
+    GetCurrentDirectory(MAX_PATH, buffer);
+    std::string path = wtoa(buffer);
+    return path;
+}
+
+
+CameraSettings* wso_config::SystemConfig::getCameraSettings(void) const
 {
     return &impl().cameraSet;
 }
 
-FixationSetting* wso_config::SystemConfig::getFixationSetting(void) const
+FixationSettings* wso_config::SystemConfig::getFixationSettings(void) const
 {
     return &impl().fixationSet;
 }
 
-GalvanoSetting* wso_config::SystemConfig::getGalvanoSetting(void) const
-{
-    return &impl().galvanoSet;
-}
-
-MeasureSetting* wso_config::SystemConfig::getMeasureSetting(void) const
-{
-    return &impl().measureSet;
-}
-
-LsoCaptureSetting* wso_config::SystemConfig::getLsoCaptureSetting(void) const
+LsoCaptureSettings* wso_config::SystemConfig::getLsoCaptureSettings(void) const
 {
     return &impl().lsoCaptureSet;
 }
 
-LsoDisplaySetting* wso_config::SystemConfig::getLsoDisplaySetting(void) const
+LsoDisplaySettings* wso_config::SystemConfig::getLsoDisplaySettings(void) const
 {
     return &impl().lsoDisplaySet;
 }

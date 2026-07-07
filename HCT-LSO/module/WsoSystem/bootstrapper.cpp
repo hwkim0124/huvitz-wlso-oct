@@ -2,6 +2,7 @@
 #include "Bootstrapper.h"
 #include "Hardware.h"
 #include "OctScanning.h"
+#include "Calibration.h"
 #include "Configuration.h"
 
 #include <ostream>
@@ -98,12 +99,11 @@ bool wso_system::Bootstrapper::initializeWsoSystem(WsoLogMsgCallback clb, bool t
 	if (!initOctScanning()) {
 		// return false;
 	}
-	/*
+
 	if (!implementSystemConfiguration()) {
 		WsoLogError("System configuration not implemented.");
 		// return false;
 	}
-	*/
 	WsoLogInfo("Wso system initialized");
 	impl().isSystemInitialized = true;
 	return true;
@@ -277,12 +277,12 @@ void wso_system::Bootstrapper::parseCommandLineArguments(void)
 
 bool wso_system::Bootstrapper::implementSystemCalibration(void)
 {
-	if (auto* config = Configuration::getInstance(); config) {
-		if (!config->loadSystemCalibration(true)) {
+	if (auto* calib = Calibration::getInstance(); calib) {
+		if (!calib->loadSystemCalibration(true)) {
 			WsoLogError("Failed to load system calibration.");
 			return false;
 		}
-		if (!config->applySystemCalibration()) {
+		if (!calib->applySystemCalibration()) {
 			WsoLogError("Failed to apply system calibration.");
 			return false;
 		}
@@ -297,13 +297,10 @@ bool wso_system::Bootstrapper::implementSystemConfiguration(void)
 	if (auto* config = Configuration::getInstance(); config) {
 		if (!config->loadSystemConfiguration(true)) {
 			WsoLogWarn("Failed to load system configuration.");
-			/*
 			if (!config->saveSystemConfiguration(true)) {
 				WsoLogError("Failed to save system configuration.");
 				return false;
 			}
-			*/
-			return false;
 		}
 		if (!config->applySystemConfiguration()) {
 			WsoLogError("Failed to apply system configuration.");

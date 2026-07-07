@@ -71,15 +71,13 @@ namespace WsoToolkit
             */
         }
 
-        private void ConfigreButton_Click(object sender, RoutedEventArgs e)
+        private void ConfigButton_Click(object sender, RoutedEventArgs e)
         {
-            /*
-            var window = new SystemConfigWindow
+            var window = new SystemConfigurationWindow
             {
                 Owner = this
             };
             window.ShowDialog();
-            */
         }
 
         private void CalibrationButton_Click(object sender, RoutedEventArgs e)
@@ -91,7 +89,11 @@ namespace WsoToolkit
             window.ShowDialog();
         }
 
-        private void BtnSloScanTest_Click(object sender, RoutedEventArgs e)
+        private void BtnLsoScanMode_Click(object sender, RoutedEventArgs e)
+        {
+        }
+
+        private void BtnLsoScanTest_Click(object sender, RoutedEventArgs e)
         {
             var window = new LsoScanTestWindow
             {
@@ -100,10 +102,6 @@ namespace WsoToolkit
             window.ShowDialog();
         }
 
-        private void BtnSloScanMode_Click(object sender, RoutedEventArgs e)
-        {
-          
-        }
 
         private void btnOctScanMode_Click(object sender, RoutedEventArgs e)
         {
@@ -172,22 +170,11 @@ namespace WsoToolkit
 
         private void BtnOctSldControl_Click(object sender, RoutedEventArgs e)
         {
-            var window = new LightControlWindow
-            {
-                Owner = this
-            };
-            window.ShowDialog();
-        }
-
-        private void BtnSloQldControl_Click(object sender, RoutedEventArgs e)
-        {
-            /*
             var window = new LaserControlWindow
             {
                 Owner = this
             };
             window.ShowDialog();
-            */
         }
 
         private void BtnXadcMonitor_Click(object sender, RoutedEventArgs e)

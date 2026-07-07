@@ -5,12 +5,10 @@
 
 namespace wso_config
 {
-	class CameraSetting;
-	class FixationSetting;
-	class GalvanoSetting;
-	class MeasureSetting;
-	class LsoDisplaySetting;
-	class LsoCaptureSetting;
+	class CameraSettings;
+	class FixationSettings;
+	class LsoDisplaySettings;
+	class LsoCaptureSettings;
 
 	class WSOCONFIG_DLL_API SystemConfig
 	{
@@ -27,17 +25,19 @@ namespace wso_config
 	public:
 		void setupBoardProfile(HbsDataProfile* profile);
 
-		void resetToDefaults(void);
+		void resetToDefaultValues(void);
 		bool updateFromBoardProfile(HbsDataProfile* profile);
 		bool uploadToBoardProfile(HbsDataProfile* profile);
 
-		CameraSetting* getCameraSetting(void) const;
-		FixationSetting* getFixationSetting(void) const;
-		GalvanoSetting* getGalvanoSetting(void) const;	
+		bool loadSysConfigFile(const char* name = nullptr);
+		bool saveSysConfigFile(const char* name = nullptr);
+		std::string getDefaultSysConfigFilePath(void);
+		std::string getDefaultSysConfigDirPath(void);
 
-		MeasureSetting* getMeasureSetting(void) const;
-		LsoCaptureSetting* getLsoCaptureSetting(void) const;
-		LsoDisplaySetting* getLsoDisplaySetting(void) const;
+		CameraSettings* getCameraSettings(void) const;
+		FixationSettings* getFixationSettings(void) const;
+		LsoCaptureSettings* getLsoCaptureSettings(void) const;
+		LsoDisplaySettings* getLsoDisplaySettings(void) const;
 
 	protected:
 		HbsDataProfile* getBoardProfile(void) const;

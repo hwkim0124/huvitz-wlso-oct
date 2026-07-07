@@ -45,6 +45,10 @@ Configuration* wso_system::Configuration::getInstance(void)
 bool wso_system::Configuration::loadSystemConfiguration(bool fetch)
 {
 	if (auto* board = Hardware::getInstance()->getMainBoard(); board) {
+		if (auto* config = SystemConfig::getInstance(); config) {
+			return config->loadSysConfigFile();
+		}
+		/*
 		if (fetch) {
 			if (!board->pullSystemConfigFromMemory()) {
 				return false;
@@ -58,6 +62,7 @@ bool wso_system::Configuration::loadSystemConfiguration(bool fetch)
 				}
 			}
 		}
+		*/
 	}
 	return false;
 }
@@ -65,6 +70,10 @@ bool wso_system::Configuration::loadSystemConfiguration(bool fetch)
 bool wso_system::Configuration::saveSystemConfiguration(bool write)
 {
 	if (auto* board = Hardware::getInstance()->getMainBoard(); board) {
+		if (auto* config = SystemConfig::getInstance(); config) {
+			return config->saveSysConfigFile();
+		}
+		/*
 		if (auto* config = SystemConfig::getInstance(); config) {
 			auto* profile = board->getHbsDataProfile();
 			if (!config->uploadToBoardProfile(profile)) {
@@ -76,6 +85,7 @@ bool wso_system::Configuration::saveSystemConfiguration(bool write)
 				}
 			}
 		}
+		*/
 		return true;
 	}
 	return false;
@@ -84,7 +94,7 @@ bool wso_system::Configuration::saveSystemConfiguration(bool write)
 bool wso_system::Configuration::applySystemConfiguration(void)
 {
 	if (auto* config = SystemConfig::getInstance(); config) {
-		if (auto* fix = config->getFixationSetting(); fix) {
+		if (auto* fix = config->getFixationSettings(); fix) {
 			if (auto* board = Hardware::getInstance()->getMainBoard(); board) {
 				auto bright = fix->getBrightness();
 				auto ontime = fix->getBlinkOnTime();
@@ -116,8 +126,7 @@ bool wso_system::Configuration::applySystemConfiguration(void)
 				}
 			}
 		}
-		*/
-		auto* galset = config->getGalvanoSetting();
+		auto* galset = config->getGalvanoSettings();
 		if (auto* p = OctScanOptions::getInstance(); p) {
 			for (int i = 0; i < 3; i++) {
 				auto offsetX = galset->getOffsetX();
@@ -133,116 +142,9 @@ bool wso_system::Configuration::applySystemConfiguration(void)
 				}
 			}
 		}
-	}
-	return true;
-}
-
-bool wso_system::Configuration::isSystemConfigurationValid(void) const
-{
-	if (auto* board = Hardware::getInstance()->getMainBoard(); board) {
-		if (auto* profile = board->getHbsDataProfile(); profile) {
-			if (auto* config = profile->getHbsConfiguration(); config) {
-				if (config->chksum == sizeof(HbsConfiguration)) {
-					return true;
-				}
-			}
-		}
-	}
-	return false;
-}
-
-bool wso_system::Configuration::loadSystemCalibration(bool fetch)
-{
-	if (auto* board = Hardware::getInstance()->getMainBoard(); board) {
-		/*
-		if (fetch) {
-			if (!board->pullSystemCalibFromMemory()) {
-				return false;
-			}
-		}
 		*/
-		if (auto* calib = SystemCaliber::getInstance(); calib) {
-			auto* profile = board->getHbsDataProfile();
-			calib->setupBoardProfile(profile);
-		}
-		return true;
-	}
-	return false;
-}
-
-bool wso_system::Configuration::saveSystemCalibration(bool write)
-{
-	if (write) {
-		if (auto* board = Hardware::getInstance()->getMainBoard(); board) {
-			if (!board->pushSystemCalibToMemory()) {
-				return false;
-			}
-		}
 	}
 	return true;
-}
-
-bool wso_system::Configuration::applySystemCalibration(void)
-{
-	if (auto* board = Hardware::getInstance()->getMainBoard(); board) {
-		if (auto* calib = SystemCaliber::getInstance(); calib) {
-			ChainSetup::updateSpectrometerParameters();
-			ChainSetup::updateDispersionParameters();
-			ChainSetup::updateScanAxialResolutions();
-
-			/*
-			auto offsetX = calib->galvanometerOffsetX();
-			auto offsetY = calib->galvanometerOffsetY();
-			auto scaleX = calib->galvanometerScaleX();
-			auto scaleY = calib->galvanometerScaleY();
-			if (auto* p = OctScanOptions::getInstance(); p) {
-				for (int i = 0; i < 3; i++) {
-					p->setCorneaPatternRangeOffset(i, offsetX, offsetY);
-					p->setCorneaPatternRangeScale(i, scaleX, scaleY);
-					p->setRetinaPatternRangeOffset(i, offsetX, offsetY);
-					p->setRetinaPatternRangeScale(i, scaleX, scaleY);
-				}
-			}
-			*/
-		}
-		return true;
-	}
-	return false;
-}
-
-
-bool wso_system::Configuration::obtainSystemCalibration(wso_board::HbsCalibration* sys_calib, bool fetch)
-{
-	if (auto* board = Hardware::getInstance()->getMainBoard(); board) {
-		if (fetch) {
-			if (!board->pullSystemCalibFromMemory()) {
-				return false;
-			}
-		}
-		if (auto* profile = board->getHbsDataProfile(); profile) {
-			memcpy(sys_calib, profile->getHbsCalibration(), sizeof(wso_board::HbsCalibration));
-		}
-		return true;
-	}
-	return false;
-}
-
-
-bool wso_system::Configuration::submitSystemCalibration(const wso_board::HbsCalibration* sys_calib, bool write)
-{
-	if (auto* board = Hardware::getInstance()->getMainBoard(); board) {
-		if (auto* profile = board->getHbsDataProfile(); profile) {
-			auto* calib = const_cast<HbsCalibration*>(profile->getHbsCalibration());
-			memcpy(calib, sys_calib, sizeof(wso_board::HbsCalibration));
-			if (write) {
-				if (!board->pushSystemCalibToMemory()) {
-					return false;
-				}
-			}
-			return true;
-		}
-	}
-	return false;
 }
 
 

@@ -32,12 +32,12 @@
                 <Button x:Name="ReleaseButton" Content="Release WSO System" Style="{StaticResource ButtonStyle}" Width="200" Margin="0,12,0,0" Click="ReleaseButton_Click" IsEnabled="False"/>
             </StackPanel>
             <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="2">
-                <Button x:Name="btnLsoScanMode" Content="LSO Scan Mode" Width="200" Margin="0,0,0,0" Style="{StaticResource ButtonStyle}" Click="BtnSloScanMode_Click"/>
+                <Button x:Name="btnLsoScanMode" Content="LSO Scan Mode" Width="200" Margin="0,0,0,0" Style="{StaticResource ButtonStyle}" Click="BtnLsoScanMode_Click"/>
                 <Button x:Name="btnOctScanMode" Content="OCT Scan Mode" Width="200" Margin="0,12,0,0" Style="{StaticResource ButtonStyle}" Click="btnOctScanMode_Click"/>
                 <Button x:Name="btnOctAngioMode" Content="OCT Angio Mode" Width="200" Margin="0,12,0,0" Style="{StaticResource ButtonStyle}" Click="btnOctAngioMode_Click"/>
             </StackPanel>
             <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="3">
-                <Button x:Name="btnLsoScanTest" Content="LSO Scanner Test" Width="200" Style="{StaticResource ButtonStyle}" Click="BtnSloScanTest_Click"/>
+                <Button x:Name="btnLsoScanTest" Content="LSO Scanner Test" Width="200" Style="{StaticResource ButtonStyle}" Click="BtnLsoScanTest_Click"/>
                 <Button x:Name="btnOctSignalTest" Content="OCT Signal Test" Width="200" Margin="0,12,0,0" Style="{StaticResource ButtonStyle}" Click="btnOctSignalTest_Click"/>
                 <Button x:Name="btnOctSpectroCalib" Content="OCT Spectrometer Calib." Width="200" Margin="0,12,0,0" Style="{StaticResource ButtonStyle}" Click="BtnOctSpectroCalib_Click"/>
                 <Button x:Name="btnDeviceMotorTest" Content="Device Motor Test" Width="200" Margin="0,12,0,0" Style="{StaticResource ButtonStyle}" Click="BtnDeviceMotorTest_Click"/>
@@ -47,7 +47,7 @@
             <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="4">
                 <Button x:Name="btnOctSldControl" Content="OCT SLD Control" Width="200" Margin="0,0,0,0" Style="{StaticResource ButtonStyle}" Click="BtnOctSldControl_Click"/>
                 <Button x:Name="btnXadcMonitor" Content="xADC Monitor" Width="200" Margin="0,12,0,0" Style="{StaticResource ButtonStyle}" Click="BtnXadcMonitor_Click"/>
-                <Button x:Name="ConfigreButton" Content="System Configuration" Width="200" Margin="0,12,0,0" Style="{StaticResource ButtonStyle}" Click="ConfigreButton_Click" />
+                <Button x:Name="ConfigreButton" Content="System Configuration" Width="200" Margin="0,12,0,0" Style="{StaticResource ButtonStyle}" Click="ConfigButton_Click" />
                 <Button x:Name="CalibrationButton" Content="System Calibration" Width="200" Margin="0,12,0,0" Style="{StaticResource ButtonStyle}" Click="CalibrationButton_Click" />
 
             </StackPanel>

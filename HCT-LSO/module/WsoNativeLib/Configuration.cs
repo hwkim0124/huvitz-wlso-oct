@@ -26,25 +26,18 @@ namespace WsoNativeLib
         private static extern bool obtainCorneaCameraConfigParam(ref CorneaCameraConfigParam param);
 
         [DllImport(LibraryName)]
-        [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool obtainOctGalvanoConfigParam(ref OctGalvanoConfigParam param);
-
-        [DllImport(LibraryName)]
         private static extern void submitInternalFixationPreset(InternalFixationPreset param);
 
         [DllImport(LibraryName)]
         private static extern void submitCorneaCameraConfigParam(CorneaCameraConfigParam param);
 
         [DllImport(LibraryName)]
-        private static extern void submitOctGalvanoConfigParam(OctGalvanoConfigParam param);
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool importSystemConfigFile();
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool loadSystemConfigFile();
-
-        [DllImport(LibraryName)]
-        [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool saveSystemConfigFile();
+        private static extern bool exportSystemConfigFile();
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
@@ -57,10 +50,6 @@ namespace WsoNativeLib
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
         private static extern bool applySystemConfiguration();
-
-        [DllImport(LibraryName)]
-        [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool applySystemCalibration();
 
 
         // Public methods
@@ -77,12 +66,6 @@ namespace WsoNativeLib
             return obtainCorneaCameraConfigParam(ref param);
         }
 
-        public static bool ObtainOctGalvanoConfig(out OctGalvanoConfigParam param)
-        {
-            param = new OctGalvanoConfigParam();
-            return obtainOctGalvanoConfigParam(ref param);
-        }
-
         public static void SubmitInternalFixationPreset(InternalFixationPreset param)
         {
             submitInternalFixationPreset(param);
@@ -92,19 +75,14 @@ namespace WsoNativeLib
             submitCorneaCameraConfigParam(param);
         }
         
-        public static void SubmitOctGalvanoConfig(OctGalvanoConfigParam param)
+        public static bool ImportSystemConfigFile()
         {
-            submitOctGalvanoConfigParam(param);
+            return importSystemConfigFile();
         }
 
-        public static bool LoadSystemConfigFile()
+        public static bool ExportSystemConfigFile()
         {
-            return loadSystemConfigFile();
-        }
-
-        public static bool SaveSystemConfigFile()
-        {
-            return saveSystemConfigFile();
+            return exportSystemConfigFile();
         }
 
         public static bool LoadSystemConfiguration()
@@ -122,9 +100,5 @@ namespace WsoNativeLib
             return applySystemConfiguration();
         }
 
-        public static bool ApplySystemCalibration()
-        {
-            return applySystemCalibration();
-        }
     }
 }

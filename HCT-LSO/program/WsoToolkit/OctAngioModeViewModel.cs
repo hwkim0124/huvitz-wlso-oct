@@ -134,14 +134,14 @@ namespace WsoToolkit
         {
             CorneaCamera.StartPreview(CameraType.IrCorneaLeft, _onCorneaLeftFrameCaptured);
             CorneaCamera.StartPreview(CameraType.IrCorneaRight, _onCorneaRightFrameCaptured);
-            // CorneaCamera.StartPreview(CameraType.IrCorneaLower, _onCorneaLowerFrameCaptured);
+            CorneaCamera.StartPreview(CameraType.IrCorneaLower, _onCorneaLowerFrameCaptured);
         }
 
         public void CloseCorneaCameraPreview()
         {
             CorneaCamera.ClosePreview(CameraType.IrCorneaLeft);
             CorneaCamera.ClosePreview(CameraType.IrCorneaRight);
-            // CorneaCamera.ClosePreview(CameraType.IrCorneaLower);
+            CorneaCamera.ClosePreview(CameraType.IrCorneaLower);
         }
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////

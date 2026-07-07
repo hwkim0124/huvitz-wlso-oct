@@ -24,19 +24,7 @@
     <ClInclude Include="WsoConfig2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FixationSetting.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="SysConfigFile.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SysConfiguration.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SignalSetting.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CameraSetting.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SystemConfig.h">
@@ -45,25 +33,10 @@
     <ClInclude Include="SystemCaliber.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GalvanoSetting.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LsoCaptureSetting.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MeasureSetting.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LsoDisplaySetting.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="CameraSettings.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="FixationSettings.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GalvanoSettings.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="LsoCaptureSettings.h">
@@ -72,27 +45,12 @@
     <ClInclude Include="LsoDisplaySettings.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="OctScanSettings.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FixationSetting.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="SysConfigFile.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SysConfiguration.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SignalSetting.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CameraSetting.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SystemConfig.cpp">
@@ -101,34 +59,16 @@
     <ClCompile Include="SystemCaliber.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GalvanoSetting.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="LsoCaptureSetting.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MeasureSetting.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="LsoDisplaySetting.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="CameraSettings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="FixationSettings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GalvanoSettings.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="LsoCaptureSettings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="LsoDisplaySettings.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="OctScanSettings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

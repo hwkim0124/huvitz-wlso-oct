@@ -380,7 +380,7 @@ bool wso_device::UsbComm::readTableDescriptor(const HbsTableDescriptor* data)
 	}
 	if (data->header.count != HBS_TBL_ITEM_NUM) {
 		LogD() << "HBS table items count invalid, count: " << data->header.count << ", expected: " << HBS_TBL_ITEM_NUM;
-		return false;
+		// return false;
 	}
 
 	auto addrData = HBS_TBL_DESCRIPTOR_ADDR + sizeof(hbs_table_header_st);

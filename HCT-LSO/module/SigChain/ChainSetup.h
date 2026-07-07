@@ -13,12 +13,12 @@ namespace sig_proc
 	class Background;
 }
 
-
+/*
 namespace wso_config 
 {
 	class SignalSetting;
 }
-
+*/
 
 namespace sig_chain
 {
@@ -45,8 +45,10 @@ namespace sig_chain
 		static void setScanAmplitudesStored(bool flag);
 		static bool isScanAmplitudesStored(void) ;
 
+		/*
 		static bool loadSignalSettings(wso_config::SignalSetting* sset);
 		static bool saveSignalSettings(wso_config::SignalSetting* sset);
+		*/
 
 		static void getSpectrometerParameters(double* params);
 		static void setSpectrometerParameters(double* params);
