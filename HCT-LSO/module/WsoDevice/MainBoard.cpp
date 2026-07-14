@@ -29,6 +29,8 @@
 #include "ColorCamera.h"
 
 #include "LsoWhiteLed.h"
+#include "LsoBlueLed.h"
+#include "LsoGreenLed.h"
 #include "RetinaIrLed.h"
 #include "CorneaIrLed.h"
 
@@ -117,6 +119,8 @@ MainBoard::MainBoard() :
 	impl().colorCamera = make_unique<ColorCamera>(this);
 
 	impl().lightLeds.emplace(LightType::LSO_WHITE_LED, make_unique<LsoWhiteLed>(this));
+	impl().lightLeds.emplace(LightType::LSO_BLUE_LED, make_unique<LsoBlueLed>(this));
+	impl().lightLeds.emplace(LightType::LSO_GREEN_LED, make_unique<LsoGreenLed>(this));
 	impl().lightLeds.emplace(LightType::RETINA_IR_LED, make_unique<RetinaIrLed>(this));
 	impl().lightLeds.emplace(LightType::CORNEA_IR_LEFT_LED, make_unique<CorneaIrLed>(this, LightType::CORNEA_IR_LEFT_LED));
 	impl().lightLeds.emplace(LightType::CORNEA_IR_RIGHT_LED, make_unique<CorneaIrLed>(this, LightType::CORNEA_IR_RIGHT_LED));
@@ -225,6 +229,18 @@ bool wso_device::MainBoard::initiateBoardComponents(int* numWarns)
 	int warns = 0;
 	*numWarns = warns;
 
+	if (!getLsoWhiteLed()->initializeLsoWhiteLed()) {
+		WsoLogWarn("Failed to initialize LSO white led");
+		warns += 1;
+	}
+	if (!getLsoBlueLed()->initializeLsoBlueLed()) {
+		WsoLogWarn("Failed to initialize LSO blue led");
+		warns += 1;
+	}
+	if (!getLsoGreenLed()->initializeLsoGreenLed()) {
+		WsoLogWarn("Failed to initialize LSO green led");
+		warns += 1;
+	}
 	if (!getLsoWhiteLed()->initializeLsoWhiteLed()) {
 		WsoLogWarn("Failed to initialize LSO white led");
 		warns += 1;
@@ -1044,6 +1060,16 @@ ZynqXadcDriver* wso_device::MainBoard::getZyncXadcDriver(void) const
 LsoWhiteLed* wso_device::MainBoard::getLsoWhiteLed(void) const
 {
 	return (LsoWhiteLed*)getLightLed(LightType::LSO_WHITE_LED);
+}
+
+LsoBlueLed* wso_device::MainBoard::getLsoBlueLed(void) const
+{
+	return (LsoBlueLed*)getLightLed(LightType::LSO_BLUE_LED);
+}
+
+LsoGreenLed* wso_device::MainBoard::getLsoGreenLed(void) const
+{
+	return (LsoGreenLed*)getLightLed(LightType::LSO_GREEN_LED);
 }
 
 RetinaIrLed* wso_device::MainBoard::getRetinaIrLed(void) const

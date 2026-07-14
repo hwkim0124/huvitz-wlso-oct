@@ -11,7 +11,10 @@ using namespace std;
 
 struct LsoFilterMotor::LsoFilterMotorImpl
 {
-	LsoFilterMotorImpl()
+	int32_t posMirrorIn;
+	int32_t posMirrorOut;
+
+	LsoFilterMotorImpl() : posMirrorIn(0), posMirrorOut(0)
 	{}
 };
 
@@ -51,7 +54,114 @@ LsoFilterMotor& wso_device::LsoFilterMotor::operator=(const LsoFilterMotor& rhs)
 
 bool wso_device::LsoFilterMotor::initializeLsoFilterMotor(void)
 {
-	return StepMotor::initializeStepMotor();
+	if (StepMotor::initializeStepMotor()) {
+		loadCalibParamFromProfile();
+		updatePositionToMirrorOut();
+		return true;
+	}
+	return false;
+}
+
+
+bool wso_device::LsoFilterMotor::updatePositionToOrigin(int mode)
+{
+	if (mode == 0) {
+		return updatePositionToMirrorIn();
+	}
+	else {
+		return updatePositionToMirrorOut();
+	}
+}
+
+bool wso_device::LsoFilterMotor::setCurrentPositionAsOrigin(int mode)
+{
+	if (mode == 0) {
+		setCurrentPositionAsMirrorIn();
+	}
+	else {
+		setCurrentPositionAsMirrorOut();
+	}
+	return true;
+}
+
+bool wso_device::LsoFilterMotor::updatePositionToMirrorIn(void)
+{
+	int pos = getPositionOfMirrorIn();
+	return StepMotor::updatePosition(pos);
+}
+
+bool wso_device::LsoFilterMotor::updatePositionToMirrorOut(void)
+{
+	int pos = getPositionOfMirrorOut();
+	return StepMotor::updatePosition(pos);
+}
+
+void wso_device::LsoFilterMotor::setCurrentPositionAsMirrorIn(void)
+{
+	int pos = getPosition();
+	setPositionOfMirrorIn(pos);
+	return;
+}
+
+void wso_device::LsoFilterMotor::setCurrentPositionAsMirrorOut(void)
+{
+	int pos = getPosition();
+	setPositionOfMirrorOut(pos);
+	return;
+}
+
+int wso_device::LsoFilterMotor::getPositionOfMirrorIn(void) const
+{
+	return impl().posMirrorIn;
+}
+
+int wso_device::LsoFilterMotor::getPositionOfMirrorOut(void) const
+{
+	return impl().posMirrorOut;
+}
+
+void wso_device::LsoFilterMotor::setPositionOfMirrorIn(int pos)
+{
+	pos = (pos > getRangeMax() ? getRangeMax() : pos);
+	pos = (pos < getRangeMin() ? getRangeMin() : pos);
+	impl().posMirrorIn = pos;
+	return;
+}
+
+void wso_device::LsoFilterMotor::setPositionOfMirrorOut(int pos)
+{
+	pos = (pos > getRangeMax() ? getRangeMax() : pos);
+	pos = (pos < getRangeMin() ? getRangeMin() : pos);
+	impl().posMirrorOut = pos;
+	return;
+}
+
+bool wso_device::LsoFilterMotor::loadCalibParamFromProfile(void)
+{
+	if (auto p = getMainBoard()->getHbsDataProfile()->getHbsCalibMotorSets(); p) {
+		/*
+		auto value1 = p->MotorCalPos.ReturnMirrorPos.InPos;
+		auto value2 = p->MotorCalPos.ReturnMirrorPos.OutPos;
+		setPositionOfMirrorIn(value1);
+		setPositionOfMirrorOut(value2);
+		*/
+		return true;
+	}
+	return false;
+}
+
+bool wso_device::LsoFilterMotor::saveCalibParamToProfile(void)
+{
+	if (auto p = const_cast<HbsCalibMotorSets*>(getMainBoard()->getHbsDataProfile()->getHbsCalibMotorSets()); p) {
+		/*
+		auto value1 = getPositionOfMirrorIn();
+		auto value2 = getPositionOfMirrorOut();
+		p->MotorCalPos.ReturnMirrorPos.InPos = value1;
+		p->MotorCalPos.ReturnMirrorPos.OutPos = value2;
+		*/
+		return true;
+	}
+	return false;
 }
 
 

@@ -33,6 +33,11 @@ namespace WsoToolkit
             PreviewFloatInput(sender, e);
         }
 
+        private void DoubleTextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            PreviewDoubleInput(sender, e);
+        }
+
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             UpdateSystemCalibration();
@@ -103,5 +108,7 @@ namespace WsoToolkit
         {
             Close();
         }
+
+
     }
 }

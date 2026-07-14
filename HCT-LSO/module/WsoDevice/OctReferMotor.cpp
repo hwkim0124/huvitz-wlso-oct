@@ -254,6 +254,7 @@ bool wso_device::OctReferMotor::loadCalibParamFromProfile(void)
 		auto value2 = p->MotorCalPos.REF_CorneaPos;
 		setPositionOfRetinaOrigin(value1);
 		setPositionOfCorneaOrigin(value2);
+		LogD() << "OctReferMotor origin positions loaded from profile, retina: " << value1 << ", cornea: " << value2;
 		return true;
 	}
 	return false;

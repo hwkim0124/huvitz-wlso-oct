@@ -32,16 +32,24 @@ namespace WsoToolkit
         /// 
         public void StartCorneaCameraPreview()
         {
-            CorneaCamera.StartPreview(CameraType.IrCorneaLeft, _onCorneaLeftFrameCaptured);
-            CorneaCamera.StartPreview(CameraType.IrCorneaRight, _onCorneaRightFrameCaptured);
-            CorneaCamera.StartPreview(CameraType.IrCorneaLower, _onCorneaLowerFrameCaptured);
+            corneaPreview1.CameraType = CameraType.IrCorneaLeft;
+            corneaPreview2.CameraType = CameraType.IrCorneaRight;
+            corneaPreview3.CameraType = CameraType.IrCorneaLower;
+
+            corneaPreview1.Callback = _onCorneaLeftFrameCaptured;
+            corneaPreview2.Callback = _onCorneaRightFrameCaptured;
+            corneaPreview3.Callback = _onCorneaLowerFrameCaptured;
+
+            corneaPreview1.Play();
+            corneaPreview2.Play();
+            corneaPreview3.Play();
         }
 
         public void CloseCorneaCameraPreview()
         {
-            CorneaCamera.ClosePreview(CameraType.IrCorneaLeft);
-            CorneaCamera.ClosePreview(CameraType.IrCorneaRight);
-            CorneaCamera.ClosePreview(CameraType.IrCorneaLower);
+            corneaPreview1.Stop();
+            corneaPreview2.Stop();
+            corneaPreview3.Stop();
         }
 
         public bool IsCorneaCameraLeftPreviewing()
@@ -99,13 +107,6 @@ namespace WsoToolkit
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// Callbacks
         /// 
-        private void OnOctScanProtocolCompleted(bool result)
-        {
-            Dispatcher.BeginInvoke(() =>
-            {
-            }, DispatcherPriority.Normal);
-        }
-
         private void OnCorneaCameraLeftFrameCaptured(nint data, int width, int height)
         {
             if (data == 0) return;

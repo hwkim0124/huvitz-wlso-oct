@@ -22,6 +22,7 @@ namespace WsoToolkit
     public partial class OctSpectrumWindow : Window
     {
         LightControlWindow? _lightControlWindow = null;
+        LaserControlWindow? _laserControlWindow = null;
         FocusMotorWindow? _focusMotorWindow = null;
         StageMotorWindow? _stageMotorWindow = null;
 
@@ -156,6 +157,19 @@ namespace WsoToolkit
             else
             {
                 _lightControlWindow.Focus();
+            }
+        }
+
+        private void BtnShowLasers_Click(object sender, RoutedEventArgs e)
+        {
+            if (_laserControlWindow == null || !_laserControlWindow.IsLoaded)
+            {
+                _laserControlWindow = new();
+                _laserControlWindow.Show();
+            }
+            else
+            {
+                _laserControlWindow?.Focus();
             }
         }
 
@@ -465,8 +479,8 @@ namespace WsoToolkit
             editRangeXmax.Text = "2048";
             editRangeYmin.Text = "0";
             editRangeYmax.Text = "4096";
-            editKernelSize.Text = "5";
-            editAverageSize.Text = "5";
+            editKernelSize.Text = "1"; // "5";
+            editAverageSize.Text = "1"; // "5";
         }
 
         private void BtnResetRange_Click(object sender, RoutedEventArgs e)

@@ -126,7 +126,7 @@ bool wso_board::HbsDataProfile::loadHbsTableEntries(bool subBoard)
 		return true;
 	}
 
-	if (!loadCalibrationBlocks(true)) {
+	if (!loadCalibrationBlocks(false)) {
 		return false;
 	}
 	/*

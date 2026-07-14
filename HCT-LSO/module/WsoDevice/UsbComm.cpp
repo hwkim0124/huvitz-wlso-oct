@@ -407,10 +407,11 @@ bool wso_device::UsbComm::readBufferDescriptor(const HbsBufferDescriptor* data, 
 	lock_guard<mutex> lock(impl().mutexControl);
 	const auto addr = desc->entries[TBL_BLKBUF_ID].buf_addr;
 	const auto size = desc->entries[TBL_BLKBUF_ID].buf_size;
+	const auto size2 = sizeof(HbsBufferDescriptor);
 
-	LogD() << "HBS bulk buffer descriptor read, addr: " << addr << ", size: " << size;
-	if (!readAddress(addr, (unsigned char*)data, size)) {
-		LogD() << "Failed to read HBS bulk buffer descriptor, addr: " << addr << ", size: " << size;
+	LogD() << "HBS bulk buffer descriptor read, addr: " << addr << ", size: " << size << ", size2: " << size2;
+	if (size <= 0 || addr <= 0 || !readAddress(addr, (unsigned char*)data, size2)) {
+		LogD() << "Failed to read HBS bulk buffer descriptor, addr: " << addr << ", size: " << size2;
 		return false;
 	}
 	return true;
@@ -423,10 +424,11 @@ bool wso_device::UsbComm::readCalibsDescriptor(const HbsCalibsDescriptor* data, 
 	lock_guard<mutex> lock(impl().mutexControl);
 	const auto addr = desc->entries[TBL_CALBLKBUF_ID].buf_addr;
 	const auto size = desc->entries[TBL_CALBLKBUF_ID].buf_size;
+	const auto size2 = sizeof(HbsCalibsDescriptor);
 
-	LogD() << "HBS calibration descriptor read, addr: " << addr << ", size: " << size;
-	if (size <= 0 || addr <= 0 || !readAddress(addr, (unsigned char*)data, size)) {
-		LogD() << "Failed to read HBS calibration block descriptor, addr: " << addr << ", size: " << size;
+	LogD() << "HBS calibration descriptor read, addr: " << addr << ", size: " << size << ", size2: " << size2;
+	if (size <= 0 || addr <= 0 || !readAddress(addr, (unsigned char*)data, size2)) {
+		LogD() << "Failed to read HBS calibration block descriptor, addr: " << addr << ", size: " << size2;
 		return false;
 	}
 	return true;
@@ -442,8 +444,8 @@ bool wso_device::UsbComm::readCalibMotorSets(const HbsCalibMotorSets* data, cons
 	const auto size2 = sizeof(HbsCalibMotorSets);
 
 	LogD() << "HBS motor sets calibration block read, addr: " << addr << ", size: " << size << ", size2: " << size2;
-	if (size <= 0 || addr <= 0 || !readAddress(addr, (unsigned char*)data, size)) {
-		LogD() << "Failed to read HBS motor sets calibration block, addr: " << addr << ", size: " << size;
+	if (size <= 0 || addr <= 0 || !readAddress(addr, (unsigned char*)data, size2)) {
+		LogD() << "Failed to read HBS motor sets calibration block, addr: " << addr << ", size: " << size2;
 		return false;
 	}
 	return true;
@@ -459,8 +461,8 @@ bool wso_device::UsbComm::readCalibOctParams(const HbsCalibOctParams* data, cons
 	const auto size2 = sizeof(HbsCalibOctParams);
 
 	LogD() << "HBS oct params calibration block read, addr: " << addr << ", size: " << size << ", size2: " << size2;
-	if (size <= 0 || addr <= 0 || !readAddress(addr, (unsigned char*)data, size)) {
-		LogD() << "Failed to read HBS oct params calibration block, addr: " << addr << ", size: " << size;
+	if (size <= 0 || addr <= 0 || !readAddress(addr, (unsigned char*)data, size2)) {
+		LogD() << "Failed to read HBS oct params calibration block, addr: " << addr << ", size: " << size2;
 		return false;
 	}
 	return true;
@@ -476,8 +478,8 @@ bool wso_device::UsbComm::readCalibLedSource(const HbsCalibLedSource* data, cons
 	const auto size2 = sizeof(HbsCalibLedSource);
 
 	LogD() << "HBS led source calibration block read, addr: " << addr << ", size: " << size << ", size2: " << size2;
-	if (size <= 0 || addr <= 0 || !readAddress(addr, (unsigned char*)data, size)) {
-		LogD() << "Failed to read HBS led source calibration block, addr: " << addr << ", size: " << size;
+	if (size <= 0 || addr <= 0 || !readAddress(addr, (unsigned char*)data, size2)) {
+		LogD() << "Failed to read HBS led source calibration block, addr: " << addr << ", size: " << size2;
 		return false;
 	}
 	return true;
@@ -493,8 +495,8 @@ bool wso_device::UsbComm::readCalibOctGalvano(const HbsCalibOctGalvano* data, co
 	const auto size2 = sizeof(HbsCalibOctGalvano);
 
 	LogD() << "HBS oct galvano calibration block read, addr: " << addr << ", size: " << size << ", size2: " << size2;
-	if (size <= 0 || addr <= 0 || !readAddress(addr, (unsigned char*)data, size)) {
-		LogD() << "Failed to read HBS oct galvano calibration block, addr: " << addr << ", size: " << size;
+	if (size <= 0 || addr <= 0 || !readAddress(addr, (unsigned char*)data, size2)) {
+		LogD() << "Failed to read HBS oct galvano calibration block, addr: " << addr << ", size: " << size2;
 		return false;
 	}
 	return true;
@@ -510,8 +512,8 @@ bool wso_device::UsbComm::readCalibDeviceCfg(const HbsCalibDeviceCfg* data, cons
 	const auto size2 = sizeof(HbsCalibDeviceCfg);
 
 	LogD() << "HBS device cfg calibration block read, addr: " << addr << ", size: " << size << ", size2: " << size2;
-	if (size <= 0 || addr <= 0 || !readAddress(addr, (unsigned char*)data, size)) {
-		LogD() << "Failed to read HBS device cfg calibration block, addr: " << addr << ", size: " << size;
+	if (size <= 0 || addr <= 0 || !readAddress(addr, (unsigned char*)data, size2)) {
+		LogD() << "Failed to read HBS device cfg calibration block, addr: " << addr << ", size: " << size2;
 		return false;
 	}
 	return true;
@@ -527,8 +529,8 @@ bool wso_device::UsbComm::readCalibStepMotors(const HbsCalibStepMotors* data, co
 	const auto size2 = sizeof(HbsCalibStepMotors);
 
 	LogD() << "HBS step motors calibration block read, addr: " << addr << ", size: " << size << ", size2: " << size2;
-	if (size <= 0 || addr <= 0 || !readAddress(addr, (unsigned char*)data, size)) {
-		LogD() << "Failed to read HBS step motors calibration block, addr: " << addr << ", size: " << size;
+	if (size <= 0 || addr <= 0 || !readAddress(addr, (unsigned char*)data, size2)) {
+		LogD() << "Failed to read HBS step motors calibration block, addr: " << addr << ", size: " << size2;
 		return false;
 	}
 	return true;
@@ -544,8 +546,8 @@ bool wso_device::UsbComm::readCalibFactorySet1(const HbsCalibFactorySet1* data, 
 	const auto size2 = sizeof(HbsCalibFactorySet1);
 
 	LogD() << "HBS factory set1 calibration block read, addr: " << addr << ", size: " << size << ", size2: " << size2;
-	if (size <= 0 || addr <= 0 || !readAddress(addr, (unsigned char*)data, size)) {
-		LogD() << "Failed to read HBS factory set1 calibration block, addr: " << addr << ", size: " << size;
+	if (size <= 0 || addr <= 0 || !readAddress(addr, (unsigned char*)data, size2)) {
+		LogD() << "Failed to read HBS factory set1 calibration block, addr: " << addr << ", size: " << size2;
 		return false;
 	}
 	return true;
@@ -561,8 +563,8 @@ bool wso_device::UsbComm::readCalibFactorySet2(const HbsCalibFactorySet2* data, 
 	const auto size2 = sizeof(HbsCalibFactorySet2);
 
 	LogD() << "HBS factory set2 calibration block read, addr: " << addr << ", size: " << size << ", size2: " << size2;
-	if (size <= 0 || addr <= 0 || !readAddress(addr, (unsigned char*)data, size)) {
-		LogD() << "Failed to read HBS factory set2 calibration block, addr: " << addr << ", size: " << size;
+	if (size <= 0 || addr <= 0 || !readAddress(addr, (unsigned char*)data, size2)) {
+		LogD() << "Failed to read HBS factory set2 calibration block, addr: " << addr << ", size: " << size2;
 		return false;
 	}
 	return true;
@@ -571,6 +573,7 @@ bool wso_device::UsbComm::readCalibFactorySet2(const HbsCalibFactorySet2* data, 
 bool wso_device::UsbComm::pullCalibBlockFromMemory(int region, int blockIdx)
 {
 	auto dsize = HbsDataUtil::getCalibBlockDataSize(blockIdx);
+
 	if (dsize <= 0 || !FlashCalibBlockLoad(region, blockIdx, dsize)) {
 		LogD() << "Failed to pull calibration block from memory, region: " << region << ", block: " << blockIdx << ", size: " << dsize;
 		return false;
@@ -581,6 +584,11 @@ bool wso_device::UsbComm::pullCalibBlockFromMemory(int region, int blockIdx)
 bool wso_device::UsbComm::pushCalibBlockToMemory(int region, int blockIdx)
 {
 	auto dsize = HbsDataUtil::getCalibBlockDataSize(blockIdx);
+	if (!FlashCalibBlockErase(region, blockIdx)) {
+		LogD() << "Failed to erase calibraiton block, region: " << region << ", block: " << blockIdx;
+		return false;
+	}
+
 	if (dsize <= 0 || !FlashCalibBlockProgram(region, blockIdx, dsize)) {
 		LogD() << "Failed to push calibration block from memory, region: " << region << ", block: " << blockIdx << ", size: " << dsize;
 		return false;
@@ -622,14 +630,14 @@ bool wso_device::UsbComm::readMainBoardVersion(const HbsMainBoardVersion* data, 
 	const auto addr = desc->entries[TBL_MB_VER_INFO_ID].buf_addr;
 	const auto size = desc->entries[TBL_MB_VER_INFO_ID].buf_size;
 
-	const auto data_size = sizeof(HbsMainBoardVersion);
-	if (data_size != size) {
-		LogD() << "Mainboard version data size not matched, " << data_size << ", read_size: " << size;
-		return false;
+	const auto size2 = sizeof(HbsMainBoardVersion);
+	if (size2 != size) {
+		LogD() << "Mainboard version data size not matched, data_size: " << size2 << ", buff_size: " << size;
+		// return false;
 	}
 
-	if (!readAddress(addr, (unsigned char*)data, size)) {
-		LogDebug() << "Mainboard version data failed to read!";
+	if (size <= 0 || addr <= 0 || !readAddress(addr, (unsigned char*)data, size)) {
+		LogDebug() << "Mainboard version data failed to read, addr: " << addr << ", size: " << size2;
 		return false;
 	}
 	return true;
@@ -643,14 +651,14 @@ bool wso_device::UsbComm::readSystemInitStatus(const HbsSystemInitStatus* data, 
 	const auto addr = desc->entries[TBL_SYS_INIT_STATUS_ID].buf_addr;
 	const auto size = desc->entries[TBL_SYS_INIT_STATUS_ID].buf_size;
 
-	const auto data_size = sizeof(HbsSystemInitStatus);
-	if (data_size != size) {
-		LogD() << "System init status data size not matched, " << data_size << ", read_size: " << size;
-		return false;
+	const auto size2 = sizeof(HbsSystemInitStatus);
+	if (size2 != size) {
+		LogD() << "System init status data size not matched, data_size: " << size2 << ", buff_size: " << size;
+		// return false;
 	}
 
-	if (!readAddress(addr, (unsigned char*)data, size)) {
-		LogDebug() << "System init status data failed to read!";
+	if (size <= 0 || addr <= 0 || !readAddress(addr, (unsigned char*)data, size2)) {
+		LogDebug() << "System init status data failed to read, addr: " << addr << ", size: " << size2;
 		return false;
 	}
 	return true;
@@ -664,14 +672,14 @@ bool wso_device::UsbComm::readCalibration(const HbsCalibration* data, const HbsT
 	const auto addr = desc->entries[TBL_SYSCAL_ID].buf_addr;
 	const auto size = desc->entries[TBL_SYSCAL_ID].buf_size;
 
-	const auto data_size = sizeof(HbsCalibration);
-	if (data_size != size) {
-		LogD() << "System calibration data size not matched, " << data_size << ", read_size: " << size;
-		return false;
+	const auto size2 = sizeof(HbsCalibration);
+	if (size2 != size) {
+		LogD() << "System calibration data size not matched, data_size: " << size2 << ", buff_size: " << size;
+		// return false;
 	}
 
-	if (!readAddress(addr, (unsigned char*)data, size)) {
-		LogD() << "System calibration data failed to read!";
+	if (size <= 0 || addr <= 0 || !readAddress(addr, (unsigned char*)data, size2)) {
+		LogD() << "System calibration data failed to read, addr: " << addr << ", size: " << size2;
 		return false;
 	}
 	return true;
@@ -685,14 +693,14 @@ bool wso_device::UsbComm::readSystemConfigure(const HbsSystemConfig* data, const
 	const auto addr = desc->entries[TBL_SYS_CFG_ID].buf_addr;
 	const auto size = desc->entries[TBL_SYS_CFG_ID].buf_size;
 
-	const auto data_size = sizeof(HbsSystemConfig);
-	if (data_size != size) {
-		LogD() << "System configure data size not matched, " << data_size << ", read_size: " << size;
-		return false;
+	const auto size2 = sizeof(HbsSystemConfig);
+	if (size2 != size) {
+		LogD() << "System configure data size not matched, data_size: " << size2 << ", buff_size: " << size;
+		// return false;
 	}
 
-	if (!readAddress(addr, (unsigned char*)data, size)) {
-		LogDebug() << "System configure data failed to read!";
+	if (size <= 0 || addr <= 0 || !readAddress(addr, (unsigned char*)data, size2)) {
+		LogDebug() << "System configure data failed to read, addr: " << addr << ", size: " << size2;
 		return false;
 	}
 	return true;
@@ -706,14 +714,14 @@ bool wso_device::UsbComm::readGpioStatus(const HbsGpioStatus* data, const HbsTab
 	const auto addr = desc->entries[TBL_GP_STATUS_ID].buf_addr;
 	const auto size = desc->entries[TBL_GP_STATUS_ID].buf_size;
 
-	const auto data_size = sizeof(HbsGpioStatus);
-	if (data_size != size) {
-		LogD() << "Gpio status data size not matched, " << data_size << ", read_size: " << size;
+	const auto size2 = sizeof(HbsGpioStatus);
+	if (size2 != size) {
+		LogD() << "Gpio status data size not matched, data_size: " << size2 << ", buff_size: " << size;
 		// return false;
 	}
 
-	if (!readAddress(addr, (unsigned char*)data, size)) {
-		LogDebug() << "Gpio status data failed to read!";
+	if (size <= 0 || addr <= 0 || !readAddress(addr, (unsigned char*)data, size)) {
+		LogDebug() << "Gpio status data failed to read, addr: " << addr << ", size: " << size2;
 		return false;
 	}
 	return true;
@@ -727,14 +735,14 @@ bool wso_device::UsbComm::readLsoScannerParam(const HbsLsoScanner* data, const H
 	const auto addr = desc->entries[TBL_LSO_SCANNER_ID].buf_addr;
 	const auto size = desc->entries[TBL_LSO_SCANNER_ID].buf_size;
 
-	const auto data_size = sizeof(HbsLsoScanner);
-	if (data_size != size) {
-		LogD() << "LSO scanner param data size not matched, " << data_size << ", read_size: " << size;
-		return false;
+	const auto size2 = sizeof(HbsLsoScanner);
+	if (size2 != size) {
+		LogD() << "LSO scanner param data size not matched, data_size: " << size2 << ", buff_size: " << size;
+		// return false;
 	}
 
-	if (!readAddress(addr, (unsigned char*)data, size)) {
-		LogDebug() << "LSO scanner param data failed to read!";
+	if (size <= 0 || addr <= 0 || !readAddress(addr, (unsigned char*)data, size2)) {
+		LogDebug() << "LSO scanner param data failed to read, addr: " << addr << ", size: " << size2;
 		return false;
 	}
 	return true;
@@ -748,14 +756,14 @@ bool wso_device::UsbComm::readSldStatus(const HbsSldStatus* data, const HbsTable
 	const auto addr = desc->entries[TBL_SLD_STATUS_ID].buf_addr;
 	const auto size = desc->entries[TBL_SLD_STATUS_ID].buf_size;
 
-	const auto data_size = sizeof(HbsSldStatus);
-	if (data_size != size) {
-		LogD() << "Sld status data size not matched, " << data_size << ", read_size: " << size;
-		return false;
+	const auto size2 = sizeof(HbsSldStatus);
+	if (size2 != size) {
+		LogD() << "Sld status data size not matched, data_size: " << size2 << ", buff_size: " << size;
+		// return false;
 	}
 
-	if (!readAddress(addr, (unsigned char*)data, size)) {
-		LogDebug() << "Sld status data failed to read!";
+	if (size <= 0 || addr <= 0 || !readAddress(addr, (unsigned char*)data, size2)) {
+		LogDebug() << "Sld status data failed to read, addr: " << addr << ", size: " << size2;
 		return false;
 	}
 	return true;
@@ -769,14 +777,14 @@ bool wso_device::UsbComm::readZynqXADC(const HbsZyncXADC* data, const HbsTableDe
 	const auto addr = desc->entries[TBL_ZYNQ_XADC_ID].buf_addr;
 	const auto size = desc->entries[TBL_ZYNQ_XADC_ID].buf_size;
 
-	const auto data_size = sizeof(HbsZyncXADC);
-	if (data_size != size) {
-		LogD() << "Zync XADC data size not matched, " << data_size << ", read_size: " << size;
-		return false;
+	const auto size2 = sizeof(HbsZyncXADC);
+	if (size2 != size) {
+		LogD() << "Zync XADC data size not matched, data_size: " << size2 << ", buff_size: " << size;
+		// return false;
 	}
 
-	if (!readAddress(addr, (unsigned char*)data, size)) {
-		LogDebug() << "Zync XADC data failed to read!";
+	if (size <= 0 || addr <= 0 || !readAddress(addr, (unsigned char*)data, size2)) {
+		LogDebug() << "Zync XADC data failed to read, addr: " << addr << ", size: " << size2;
 		return false;
 	}
 	return true;
@@ -790,15 +798,15 @@ bool wso_device::UsbComm::readGalvanoDynamicParam(const HbsGalvanoDynamicParam* 
 	const auto addr = desc->entries[TBL_OCT_GAVANO_ID].buf_addr;
 	const auto size = desc->entries[TBL_OCT_GAVANO_ID].buf_size;
 
-	const auto data_size = sizeof(HbsGalvanoDynamicParam);
-	if (data_size != size) {
-		LogD() << "Galvano dynamic param data size not matched, " << data_size << ", read_size: " << size;
-		return false;
+	const auto size2 = sizeof(HbsGalvanoDynamicParam);
+	if (size2 != size) {
+		LogD() << "Galvano dynamic param data size not matched, data_size: " << size2 << ", buff_size: " << size;
+		// return false;
 	}
 
 	auto addr2 = static_cast<uint32_t>(addr + sizeof(HbsOctGalvano::traj_profile1));
-	if (!readAddress(addr2, (unsigned char*)data, data_size)) {
-		LogDebug() << "Galvano dynamic param data failed to read!";
+	if (size <= 0 || addr <= 0 || !readAddress(addr2, (unsigned char*)data, size2)) {
+		LogDebug() << "Galvano dynamic param data failed to read, addr: " << addr << ", size: " << size2;
 		return false;
 	}
 	return true;
@@ -812,14 +820,14 @@ bool wso_device::UsbComm::readInfraredCameraStatus(const HbsInfraredCameraStatus
 	const auto addr = desc->entries[TBL_RET_IR_CAM_STATUS_ID].buf_addr;
 	const auto size = desc->entries[TBL_RET_IR_CAM_STATUS_ID].buf_size;
 
-	const auto data_size = sizeof(HbsInfraredCameraStatus);
-	if (data_size != size) {
-		LogD() << "IR camera status data size not matched, " << data_size << ", read_size: " << size;
-		return false;
+	const auto size2 = sizeof(HbsInfraredCameraStatus);
+	if (size2 != size) {
+		LogD() << "IR camera status data size not matched, data_size: " << size2 << ", buff_size: " << size;
+		// return false;
 	}
 
-	if (!readAddress(addr, (unsigned char*)data, size)) {
-		LogDebug() << "IR camera status data failed to read!";
+	if (size <= 0 || addr <= 0 || !readAddress(addr, (unsigned char*)data, size2)) {
+		LogDebug() << "IR camera status data failed to read, addr: " << addr << ", size: " << size2;
 		return false;
 	}
 	return true;
@@ -836,14 +844,14 @@ bool wso_device::UsbComm::readStepMotorStatus(const HbsStepMotorStatus* data, St
 	const auto addr = desc->entries[index].buf_addr;
 	const auto size = desc->entries[index].buf_size;
 
-	const auto data_size = sizeof(HbsStepMotorStatus);
-	if (data_size != size) {
-		LogD() << "Step motor status data size not matched, " << data_size << ", read_size: " << size;
-		return false;
+	const auto size2 = sizeof(HbsStepMotorStatus);
+	if (size2 != size) {
+		LogD() << "Step motor status data size not matched, data_size: " << size2 << ", buff_size: " << size;
+		// return false;
 	}
 
-	if (!readAddress(addr, (unsigned char*)data, size)) {
-		LogDebug() << "Step motor status data failed to read!";
+	if (size <= 0 || addr <= 0 || !readAddress(addr, (unsigned char*)data, size2)) {
+		LogDebug() << "Step motor status data failed to read, addr: " << addr << ", size: " << size2;
 		return false;
 	}
 	return true;
@@ -860,14 +868,14 @@ bool wso_device::UsbComm::readStageMotorStatus(const HbsStageMotorStatus* data, 
 	const auto addr = desc->entries[index].buf_addr;
 	const auto size = desc->entries[index].buf_size;
 
-	const auto data_size = sizeof(HbsStageMotorStatus);
-	if (data_size != size) {
-		LogD() << "Stage motor status data size not matched, " << data_size << ", read_size: " << size;
-		return false;
+	const auto size2 = sizeof(HbsStageMotorStatus);
+	if (size2 != size) {
+		LogD() << "Stage motor status data size not matched, data_size: " << size2 << ", buff_size: " << size;
+		// return false;
 	}
 
-	if (!writeAddress(addr, (unsigned char*)data, size)) {
-		LogDebug() << "Stage motor status data failed to read!";
+	if (size <= 0 || addr <= 0 || !writeAddress(addr, (unsigned char*)data, size2)) {
+		LogDebug() << "Stage motor status data failed to read, addr: " << addr << ", size: " << size2;
 		return false;
 	}
 	return true;
@@ -881,8 +889,16 @@ bool wso_device::UsbComm::writeCalibMotorSets(const HbsCalibMotorSets* data, con
 	const auto addr = desc->blocks[CALIB_IDX_MOTOR_SETS].HBS_BlkBaseAddr;
 	const auto size = desc->blocks[CALIB_IDX_MOTOR_SETS].RomBlkSize;
 
-	if (!writeAddress(addr, (unsigned char*)data, size)) {
-		LogD() << "Failed to write calibration block of motor sets, addr: " << addr << ", size: " << size;
+	const auto size2 = sizeof(HbsCalibMotorSets);
+	if (size2 != size) {
+		LogD() << "Motor sets calibration block data size not matched, data_size: " << size2 << ", buff_size: " << size;
+	}
+	
+	const auto* dmsg = reinterpret_cast<const unsigned char*>(data) + sizeof(data->crc);
+	const_cast<HbsCalibMotorSets*>(data)->crc = crcFast(dmsg, (int)(size2 - sizeof(data->crc)));
+
+	if (size <= 0 || addr <= 0 || !writeAddress(addr, (unsigned char*)data, size2)) {
+		LogD() << "Failed to write calibration block of motor sets, addr: " << addr << ", size: " << size2 << ", crc: " << data->crc; 
 		return false;
 	}
 	return true;
@@ -896,8 +912,16 @@ bool wso_device::UsbComm::writeCalibOctParams(const HbsCalibOctParams* data, con
 	const auto addr = desc->blocks[CALIB_IDX_OCT_PARAMS].HBS_BlkBaseAddr;
 	const auto size = desc->blocks[CALIB_IDX_OCT_PARAMS].RomBlkSize;
 
-	if (!writeAddress(addr, (unsigned char*)data, size)) {
-		LogD() << "Failed to write calibration block of oct params, addr: " << addr << ", size: " << size;
+	const auto size2 = sizeof(HbsCalibOctParams);
+	if (size2 != size) {
+		LogD() << "Oct params calibration block data size not matched, data_size: " << size2 << ", buff_size: " << size;
+	}
+
+	const auto* dmsg = reinterpret_cast<const unsigned char*>(data) + sizeof(data->crc);
+	const_cast<HbsCalibOctParams*>(data)->crc = crcFast(dmsg, (int)(size2 - sizeof(data->crc)));
+
+	if (size <= 0 || addr <= 0 || !writeAddress(addr, (unsigned char*)data, size2)) {
+		LogD() << "Failed to write calibration block of oct params, addr: " << addr << ", size: " << size2 << ", crc: " << data->crc;
 		return false;
 	}
 	return true;
@@ -911,8 +935,16 @@ bool wso_device::UsbComm::writeCalibLedSource(const HbsCalibLedSource* data, con
 	const auto addr = desc->blocks[CALIB_IDX_LED_SOURCE].HBS_BlkBaseAddr;
 	const auto size = desc->blocks[CALIB_IDX_LED_SOURCE].RomBlkSize;
 
-	if (!writeAddress(addr, (unsigned char*)data, size)) {
-		LogD() << "Failed to write calibration block of led source, addr: " << addr << ", size: " << size;
+	const auto size2 = sizeof(HbsCalibLedSource);
+	if (size2 != size) {
+		LogD() << "Led source calibration block data size not matched, data_size: " << size2 << ", buff_size: " << size;
+	}
+
+	const auto* dmsg = reinterpret_cast<const unsigned char*>(data) + sizeof(data->crc);
+	const_cast<HbsCalibLedSource*>(data)->crc = crcFast(dmsg, (int)(size2 - sizeof(data->crc)));
+
+	if (size <= 0 || addr <= 0 || !writeAddress(addr, (unsigned char*)data, size2)) {
+		LogD() << "Failed to write calibration block of led source, addr: " << addr << ", size: " << size2 << ", crc: " << data->crc;
 		return false;
 	}
 	return true;
@@ -926,8 +958,16 @@ bool wso_device::UsbComm::writeCalibOctGalvano(const HbsCalibOctGalvano* data, c
 	const auto addr = desc->blocks[CALIB_IDX_OCT_GALVANO].HBS_BlkBaseAddr;
 	const auto size = desc->blocks[CALIB_IDX_OCT_GALVANO].RomBlkSize;
 
-	if (!writeAddress(addr, (unsigned char*)data, size)) {
-		LogD() << "Failed to write calibration block of oct galvano, addr: " << addr << ", size: " << size;
+	const auto size2 = sizeof(HbsCalibOctGalvano);
+	if (size2 != size) {
+		LogD() << "Oct galvano calibration block data size not matched, data_size: " << size2 << ", buff_size: " << size;
+	}
+
+	const auto* dmsg = reinterpret_cast<const unsigned char*>(data) + sizeof(data->crc);
+	const_cast<HbsCalibOctGalvano*>(data)->crc = crcFast(dmsg, (int)(size2 - sizeof(data->crc)));
+
+	if (size <= 0 || addr <= 0 || !writeAddress(addr, (unsigned char*)data, size2)) {
+		LogD() << "Failed to write calibration block of oct galvano, addr: " << addr << ", size: " << size2 << ", crc: " << data->crc;
 		return false;
 	}
 	return true;
@@ -941,8 +981,16 @@ bool wso_device::UsbComm::writeCalibDeviceCfg(const HbsCalibDeviceCfg* data, con
 	const auto addr = desc->blocks[CALIB_IDX_DEVICE_CFG].HBS_BlkBaseAddr;
 	const auto size = desc->blocks[CALIB_IDX_DEVICE_CFG].RomBlkSize;
 
-	if (!writeAddress(addr, (unsigned char*)data, size)) {
-		LogD() << "Failed to write calibration block of device config, addr: " << addr << ", size: " << size;
+	const auto size2 = sizeof(HbsCalibDeviceCfg);
+	if (size2 != size) {
+		LogD() << "Device config calibration block data size not matched, data_size: " << size2 << ", buff_size: " << size;
+	}
+
+	const auto* dmsg = reinterpret_cast<const unsigned char*>(data) + sizeof(data->crc);
+	const_cast<HbsCalibDeviceCfg*>(data)->crc = crcFast(dmsg, (int)(size2 - sizeof(data->crc)));
+
+	if (size <= 0 || addr <= 0 || !writeAddress(addr, (unsigned char*)data, size2)) {
+		LogD() << "Failed to write calibration block of device config, addr: " << addr << ", size: " << size2 << ", crc: " << data->crc;
 		return false;
 	}
 	return true;
@@ -956,8 +1004,16 @@ bool wso_device::UsbComm::writeCalibStepMotors(const HbsCalibStepMotors* data, c
 	const auto addr = desc->blocks[CALIB_IDX_STEP_MOTORS].HBS_BlkBaseAddr;
 	const auto size = desc->blocks[CALIB_IDX_STEP_MOTORS].RomBlkSize;
 
-	if (!writeAddress(addr, (unsigned char*)data, size)) {
-		LogD() << "Failed to write calibration block of step motors, addr: " << addr << ", size: " << size;
+	const auto size2 = sizeof(HbsCalibStepMotors);
+	if (size2 != size) {
+		LogD() << "Step motors calibration block data size not matched, data_size: " << size2 << ", buff_size: " << size;
+	}
+
+	const auto* dmsg = reinterpret_cast<const unsigned char*>(data) + sizeof(data->crc);
+	const_cast<HbsCalibStepMotors*>(data)->crc = crcFast(dmsg, (int)(size2 - sizeof(data->crc)));
+
+	if (size <= 0 || addr <= 0 || !writeAddress(addr, (unsigned char*)data, size2)) {
+		LogD() << "Failed to write calibration block of step motors, addr: " << addr << ", size: " << size2 << ", crc: " << data->crc;
 		return false;
 	}
 	return true;
@@ -971,8 +1027,16 @@ bool wso_device::UsbComm::writeCalibFactorySet1(const HbsCalibFactorySet1* data,
 	const auto addr = desc->blocks[CALIB_IDX_FACTORY_SET1].HBS_BlkBaseAddr;
 	const auto size = desc->blocks[CALIB_IDX_FACTORY_SET1].RomBlkSize;
 
-	if (!writeAddress(addr, (unsigned char*)data, size)) {
-		LogD() << "Failed to write calibration block of factory set1, addr: " << addr << ", size: " << size;
+	const auto size2 = sizeof(HbsCalibFactorySet1);
+	if (size2 != size) {
+		LogD() << "Factory set1 calibration block data size not matched, data_size: " << size2 << ", buff_size: " << size;
+	}
+
+	const auto* dmsg = reinterpret_cast<const unsigned char*>(data) + sizeof(data->crc);
+	const_cast<HbsCalibFactorySet1*>(data)->crc = crcFast(dmsg, (int)(size2 - sizeof(data->crc)));
+
+	if (size <= 0 || addr <= 0 || !writeAddress(addr, (unsigned char*)data, size2)) {
+		LogD() << "Failed to write calibration block of factory set1, addr: " << addr << ", size: " << size2 << ", crc: " << data->crc;
 		return false;
 	}
 	return true;
@@ -986,8 +1050,16 @@ bool wso_device::UsbComm::writeCalibFactorySet2(const HbsCalibFactorySet2* data,
 	const auto addr = desc->blocks[CALIB_IDX_FACTORY_SET2].HBS_BlkBaseAddr;
 	const auto size = desc->blocks[CALIB_IDX_FACTORY_SET2].RomBlkSize;
 
-	if (!writeAddress(addr, (unsigned char*)data, size)) {
-		LogD() << "Failed to write calibration block of factory set2, addr: " << addr << ", size: " << size;
+	const auto size2 = sizeof(HbsCalibFactorySet2);
+	if (size2 != size) {
+		LogD() << "Factory set2 calibration block data size not matched, data_size: " << size2 << ", buff_size: " << size;
+	}
+
+	const auto* dmsg = reinterpret_cast<const unsigned char*>(data) + sizeof(data->crc);
+	const_cast<HbsCalibFactorySet2*>(data)->crc = crcFast(dmsg, (int)(size2 - sizeof(data->crc)));
+
+	if (size <= 0 || addr <= 0 || !writeAddress(addr, (unsigned char*)data, size2)) {
+		LogD() << "Failed to write calibration block of factory set2, addr: " << addr << ", size: " << size2 << ", crc: " << data->crc;
 		return false;
 	}
 	return true;
@@ -1001,8 +1073,13 @@ bool wso_device::UsbComm::writeCalibration(const HbsCalibration* data, const Hbs
 	const auto addr = desc->entries[TBL_SYSCAL_ID].buf_addr;
 	const auto size = desc->entries[TBL_SYSCAL_ID].buf_size;
 
-	if (!writeAddress(addr, (unsigned char*)data, size)) {
-		LogD() << "System calibration data write failed!";
+	const auto size2 = sizeof(HbsCalibration);
+	if (size2 != size) {
+		LogD() << "System calibration data size not matched, data_size: " << size2 << ", buff_size: " << size;
+	}
+
+	if (size <= 0 || addr <= 0 || !writeAddress(addr, (unsigned char*)data, size2)) {
+		LogD() << "System calibration data write failed!, addr: " << addr << ", size: " << size2;
 		return false;
 	}
 	return true;
@@ -1033,8 +1110,13 @@ bool wso_device::UsbComm::writeSystemConfigure(const HbsSystemConfig* data, cons
 	const auto addr = desc->entries[TBL_SYS_CFG_ID].buf_addr;
 	const auto size = desc->entries[TBL_SYS_CFG_ID].buf_size;
 
-	if (!writeAddress(addr, (unsigned char*)data, size)) {
-		LogDebug() << "System configure data write failed!";
+	const auto size2 = sizeof(HbsSystemConfig);
+	if (size2 != size) {
+		LogD() << "System configure data size not matched, data_size: " << size2 << ", buff_size: " << size;
+	}
+
+	if (size <= 0 || addr <= 0 || !writeAddress(addr, (unsigned char*)data, size2)) {
+		LogDebug() << "System configure data write failed!, addr: " << addr << ", size: " << size2;
 		return false;
 	}
 	return true;
@@ -1048,11 +1130,14 @@ bool wso_device::UsbComm::writeGalvanoDynamicParam(const HbsGalvanoDynamicParam*
 	const auto addr = desc->entries[TBL_OCT_GAVANO_ID].buf_addr;
 	const auto size = desc->entries[TBL_OCT_GAVANO_ID].buf_size;
 
-	const auto data_size = sizeof(HbsGalvanoDynamicParam);
+	const auto size2 = sizeof(HbsGalvanoDynamicParam);
+	if (size2 != size) {
+		LogD() << "Galvano dynamic param data size not matched, data_size: " << size2 << ", buff_size: " << size;
+	}
 
 	auto addr2 = static_cast<uint32_t>(addr + sizeof(HbsOctGalvano::traj_profile1));
-	if (!writeAddress(addr2, (unsigned char*)data, data_size)) {
-		LogDebug() << "Galvano dynamic param data write failed!";
+	if (size <= 0 || addr <= 0 || !writeAddress(addr2, (unsigned char*)data, size2)) {
+		LogDebug() << "Galvano dynamic param data write failed!, addr: " << addr2 << ", size: " << size2;
 		return false;
 	}
 	return true;
@@ -1066,8 +1151,13 @@ bool wso_device::UsbComm::writeLsoScannerParam(const HbsLsoScanner* data, const 
 	const auto addr = desc->entries[TBL_LSO_SCANNER_ID].buf_addr;
 	const auto size = desc->entries[TBL_LSO_SCANNER_ID].buf_size;
 
-	if (!writeAddress(addr, (unsigned char*)data, size)) {
-		LogDebug() << "LSO scanner param data write failed!";
+	const auto size2 = sizeof(HbsLsoScanner);
+	if (size2 != size) {
+		LogD() << "LSO scanner param data size not matched, data_size: " << size2 << ", buff_size: " << size;
+	}
+
+	if (size <= 0 || addr <= 0 || !writeAddress(addr, (unsigned char*)data, size2)) {
+		LogDebug() << "LSO scanner param data write failed!, addr: " << addr << ", size: " << size2;
 		return false;
 	}
 	return true;
@@ -1081,9 +1171,14 @@ bool wso_device::UsbComm::writeTrajectoryParam(std::uint8_t tid, const Trajector
 	const auto addr = desc->entries[TBL_OCT_GAVANO_ID].buf_addr;
 	const auto size = desc->entries[TBL_OCT_GAVANO_ID].buf_size;
 
+	const auto size2 = sizeof(TrajectoryProfileParam);
+	if (size2 != size) {
+		LogD() << "Galvano trajectory param data size not matched, data_size: " << size2 << ", buff_size: " << size;
+	}
+
 	uint32_t addr2 = addr + tid * sizeof(TrajectoryProfile);
-	if (!writeAddress(addr2, (uint8_t*)param, sizeof(TrajectoryProfileParam))) {
-		LogDebug() << "Galvano trajectory param write failed!";
+	if (!writeAddress(addr2, (uint8_t*)param, size2)) {
+		LogDebug() << "Galvano trajectory param write failed!, addr: " << addr2 << ", size: " << size2;
 		return false;
 	}
 	return true;
@@ -1449,7 +1544,7 @@ bool wso_device::UsbComm::FlashCalibBlockProgram(std::uint16_t region, std::uint
 	msg->packet.ctrl13.s1 = region;
 	msg->packet.ctrl13.s2 = blockNum;
 	msg->packet.ctrl13.n1 = size;
-	attachCRC(msg->packet.ctrl3.crc);
+	attachCRC(msg->packet.ctrl13.crc);
 	return sendMsgCmd(msg);
 }
 
@@ -1460,7 +1555,7 @@ bool wso_device::UsbComm::FlashCalibBlockLoad(std::uint16_t region, std::uint16_
 	msg->packet.ctrl13.s1 = region;
 	msg->packet.ctrl13.s2 = blockNum;
 	msg->packet.ctrl13.n1 = size;
-	attachCRC(msg->packet.ctrl3.crc);
+	attachCRC(msg->packet.ctrl13.crc);
 	return sendMsgCmd(msg);
 }
 

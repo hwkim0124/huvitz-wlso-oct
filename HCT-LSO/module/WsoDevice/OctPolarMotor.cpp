@@ -205,6 +205,7 @@ bool wso_device::OctPolarMotor::loadCalibParamFromProfile(void)
 	if (auto p = getMainBoard()->getHbsDataProfile()->getHbsCalibMotorSets(); p) {
 		auto value = p->MotorCalPos.PolarizationPos;
 		setPositionOfZeroDegree(value);
+		LogD() << "OctPolarMotor loaded from profile, zero-degree pos: " << value;
 		return true;
 	}
 	return false;

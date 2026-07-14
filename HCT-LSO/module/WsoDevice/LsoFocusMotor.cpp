@@ -126,6 +126,7 @@ bool wso_device::LsoFocusMotor::loadCalibParamFromProfile(void)
 	if (auto p = getMainBoard()->getHbsDataProfile()->getHbsCalibMotorSets(); p) {
 		auto value = p->MotorCalPos.lso_focus_motor_0D_pos;
 		setZeroDiopterPosition(value);
+		LogD() << "LsoFocusMotor loaded from profile, zero-diopt pos: " << value;
 		return true;
 	}
 	return false;

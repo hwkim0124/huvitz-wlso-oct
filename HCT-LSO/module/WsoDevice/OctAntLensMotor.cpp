@@ -11,7 +11,10 @@ using namespace std;
 
 struct OctAntLensMotor::OctAntLensMotorImpl
 {
-	OctAntLensMotorImpl()
+	int32_t posMirrorIn;
+	int32_t posMirrorOut;
+
+	OctAntLensMotorImpl() : posMirrorIn(0), posMirrorOut(0)
 	{}
 };
 
@@ -51,7 +54,111 @@ OctAntLensMotor& wso_device::OctAntLensMotor::operator=(const OctAntLensMotor& r
 
 bool wso_device::OctAntLensMotor::initializeOctAntLensMotor(void)
 {
-	return StepMotor::initializeStepMotor();
+	if (StepMotor::initializeStepMotor()) {
+		loadCalibParamFromProfile();
+		updatePositionToMirrorOut();
+		return true;
+	}
+	return false;
+}
+
+
+bool wso_device::OctAntLensMotor::updatePositionToOrigin(int mode)
+{
+	if (mode == 0) {
+		return updatePositionToMirrorIn();
+	}
+	else {
+		return updatePositionToMirrorOut();
+	}
+}
+
+bool wso_device::OctAntLensMotor::setCurrentPositionAsOrigin(int mode)
+{
+	if (mode == 0) {
+		setCurrentPositionAsMirrorIn();
+	}
+	else {
+		setCurrentPositionAsMirrorOut();
+	}
+	return true;
+}
+
+bool wso_device::OctAntLensMotor::updatePositionToMirrorIn(void)
+{
+	int pos = getPositionOfMirrorIn();
+	return StepMotor::updatePosition(pos);
+}
+
+bool wso_device::OctAntLensMotor::updatePositionToMirrorOut(void)
+{
+	int pos = getPositionOfMirrorOut();
+	return StepMotor::updatePosition(pos);
+}
+
+void wso_device::OctAntLensMotor::setCurrentPositionAsMirrorIn(void)
+{
+	int pos = getPosition();
+	setPositionOfMirrorIn(pos);
+	return;
+}
+
+void wso_device::OctAntLensMotor::setCurrentPositionAsMirrorOut(void)
+{
+	int pos = getPosition();
+	setPositionOfMirrorOut(pos);
+	return;
+}
+
+int wso_device::OctAntLensMotor::getPositionOfMirrorIn(void) const
+{
+	return impl().posMirrorIn;
+}
+
+int wso_device::OctAntLensMotor::getPositionOfMirrorOut(void) const
+{
+	return impl().posMirrorOut;
+}
+
+void wso_device::OctAntLensMotor::setPositionOfMirrorIn(int pos)
+{
+	pos = (pos > getRangeMax() ? getRangeMax() : pos);
+	pos = (pos < getRangeMin() ? getRangeMin() : pos);
+	impl().posMirrorIn = pos;
+	return;
+}
+
+void wso_device::OctAntLensMotor::setPositionOfMirrorOut(int pos)
+{
+	pos = (pos > getRangeMax() ? getRangeMax() : pos);
+	pos = (pos < getRangeMin() ? getRangeMin() : pos);
+	impl().posMirrorOut = pos;
+	return;
+}
+
+bool wso_device::OctAntLensMotor::loadCalibParamFromProfile(void)
+{
+	if (auto p = getMainBoard()->getHbsDataProfile()->getHbsCalibMotorSets(); p) {
+		auto value1 = p->MotorCalPos.OCT_AntLensPos.InPos;
+		auto value2 = p->MotorCalPos.OCT_AntLensPos.OutPos;
+		setPositionOfMirrorIn(value1);
+		setPositionOfMirrorOut(value2);
+		LogD() << "OCT anterior lens motor loaded from profile, in_pos: " << value1 << ", out_pos: " << value2; 
+		return true;
+	}
+	return false;
+}
+
+bool wso_device::OctAntLensMotor::saveCalibParamToProfile(void)
+{
+	if (auto p = const_cast<HbsCalibMotorSets*>(getMainBoard()->getHbsDataProfile()->getHbsCalibMotorSets()); p) {
+		auto value1 = getPositionOfMirrorIn();
+		auto value2 = getPositionOfMirrorOut();
+		p->MotorCalPos.OCT_AntLensPos.InPos = value1;
+		p->MotorCalPos.OCT_AntLensPos.OutPos = value2;
+		return true;
+	}
+	return false;
 }
 
 

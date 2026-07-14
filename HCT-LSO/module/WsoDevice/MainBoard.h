@@ -22,6 +22,8 @@ namespace wso_device
 	class OctSldLed;
 	class LightLed;
 	class LsoWhiteLed;
+	class LsoBlueLed;
+	class LsoGreenLed;
 	class RetinaIrLed;
 	class CorneaIrLed;
 
@@ -185,6 +187,8 @@ namespace wso_device
 		ColorCamera* getColorCamera(void);
 
 		LsoWhiteLed* getLsoWhiteLed(void) const;
+		LsoBlueLed* getLsoBlueLed(void) const;
+		LsoGreenLed* getLsoGreenLed(void) const;
 		RetinaIrLed* getRetinaIrLed(void) const;
 		CorneaIrLed* getCorneaIrLeftLed(void) const;
 		CorneaIrLed* getCorneaIrRightLed(void) const;

@@ -23,6 +23,7 @@ namespace WsoToolkit
     public partial class OctSignalTestWindow : Window
     {
         LightControlWindow? _lightControlWindow = null;
+        LaserControlWindow? _laserControlWindow = null;
         FocusMotorWindow? _focusMotorWindow = null;
         StageMotorWindow? _stageMotorWindow = null;
         private bool _isWindowLoaded = false;
@@ -194,6 +195,19 @@ namespace WsoToolkit
             else
             {
                 _lightControlWindow?.Focus();
+            }
+        }
+
+        private void BtnShowLasers_Click(object sender, RoutedEventArgs e)
+        {
+            if (_laserControlWindow == null || !_laserControlWindow.IsLoaded)
+            {
+                _laserControlWindow = new();
+                _laserControlWindow.Show();
+            }
+            else
+            {
+                _laserControlWindow?.Focus();
             }
         }
 

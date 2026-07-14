@@ -26,6 +26,22 @@ namespace wso_device
 	public:
 		bool initializeRetMirrorMotor(void);
 
+		virtual bool updatePositionToOrigin(int mode) override;
+		virtual bool setCurrentPositionAsOrigin(int mode) override;
+
+		bool updatePositionToMirrorIn(void);
+		bool updatePositionToMirrorOut(void);
+		void setCurrentPositionAsMirrorIn(void);
+		void setCurrentPositionAsMirrorOut(void);
+
+		virtual int getPositionOfMirrorIn(void) const;
+		virtual int getPositionOfMirrorOut(void) const;
+		virtual void setPositionOfMirrorIn(int pos);
+		virtual void setPositionOfMirrorOut(int pos);
+
+		virtual bool loadCalibParamFromProfile(void) override;
+		virtual bool saveCalibParamToProfile(void) override;
+
 	private:
 		struct RetMirrorMotorImpl;
 		std::unique_ptr<RetMirrorMotorImpl> d_ptr;

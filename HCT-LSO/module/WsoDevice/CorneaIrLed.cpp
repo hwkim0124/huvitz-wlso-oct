@@ -67,9 +67,11 @@ bool wso_device::CorneaIrLed::loadCalibParamFromProfile(void)
 		unsigned short value = 0;
 		if (getType() == LightType::CORNEA_IR_LEFT_LED) {
 			value = p->LED_Info.AntIR1_intensity;
+			LogD() << "CorneaIrLed Left intensity loaded from profile: " << value;
 		}
 		else if (getType() == LightType::CORNEA_IR_RIGHT_LED) {
 			value = p->LED_Info.AntIR2_intensity;
+			LogD() << "CorneaIrLed Right intensity loaded from profile: " << value;
 		}
 		setIntensity(value);
 		return true;

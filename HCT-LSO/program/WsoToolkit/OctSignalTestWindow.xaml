@@ -17,8 +17,8 @@
             <ColumnDefinition Width="8"/>
             <ColumnDefinition Width="1028"/>
             <ColumnDefinition Width="8"/>
-            <ColumnDefinition Width="600"/>
-            <ColumnDefinition Width="164"/>
+            <ColumnDefinition Width="640"/>
+            <ColumnDefinition Width="144"/>
         </Grid.ColumnDefinitions>
         <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Vertical">
             <controls:CorneaCameraPreview x:Name="corneaPreview1" Width="384" Height="328"/>
@@ -59,6 +59,7 @@
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="16,4,0,4">
                 <Button x:Name="btnStartScan" Content="Start Scan" Style="{StaticResource ButtonM1Style}" Margin="0" Click="BtnStartScan_Click"/>
                 <Button x:Name="btnShowLights" Content="Lights..." Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0" Click="BtnShowLights_Click"/>
+                <Button x:Name="btnShowLasers" Content="Lasers..." Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0" Click="BtnShowLasers_Click"/>
                 <Button x:Name="btnShowFocusM" Content="FocusM..." Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0" Click="BtnShowFocusM_Click"/>
                 <Button x:Name="btnShowStageM" Content="StageM..." Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0" Click="BtnShowStageM_Click"/>
                 <Button x:Name="btnClose" Content="Close" Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0" Click="BtnClose_Click"/>

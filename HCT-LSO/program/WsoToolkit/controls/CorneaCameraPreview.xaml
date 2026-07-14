@@ -18,10 +18,10 @@
             <Grid Grid.Row="0" Grid.Column="0" Background="LightGray">
                 <Image x:Name="imageViewport" Style="{StaticResource ImageStyle}" Stretch="Uniform"/>
             </Grid>
-            <StackPanel Grid.Row="1" Orientation="Vertical" Margin="8, 4, 8, 4">
+            <Grid Grid.Row="1" Grid.Column="0" Margin="8, 4, 8, 4">
                 <Label x:Name="lblStatus" Content="Cornea Camera" Style="{StaticResource LabelStyle}"/>
-            </StackPanel>
+                <CheckBox x:Name="checkSwitch" Content="ON" Style="{StaticResource CheckBoxStyle}" Click="CheckSwitch_Click" HorizontalAlignment="Right" Margin="0,0,12,0"/>
+            </Grid>
         </Grid>
-            
     </Grid>
 </UserControl>

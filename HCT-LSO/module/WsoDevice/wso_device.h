@@ -21,6 +21,8 @@
 #include "ChinRestMotor.h"
 
 #include "LsoWhiteLed.h"
+#include "LsoBlueLed.h"
+#include "LsoGreenLed.h"
 #include "CorneaIrLed.h"
 #include "RetinaIrLed.h"
 

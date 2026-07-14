@@ -83,13 +83,14 @@
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="16,4,0,4">
                     <Button x:Name="btnStartScan" Content="Start Scan" Style="{StaticResource ButtonM1Style}" Margin="0" Click="BtnStartScan_Click"/>
                     <Button x:Name="btnShowLights" Content="Lights..." Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0" Click="BtnShowLights_Click"/>
+                    <Button x:Name="btnShowLasers" Content="Lasers..." Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0" Click="BtnShowLasers_Click"/>
                     <Button x:Name="btnShowFocusM" Content="FocusM..." Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0" Click="BtnShowFocusM_Click"/>
                     <Button x:Name="btnShowStageM" Content="StageM..." Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0" Click="BtnShowStageM_Click"/>
-                    <Button x:Name="btnClose" Content="Close" Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0" Click="BtnClose_Click"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="16,0,0,4">
                     <Button x:Name="btnReferLoop" Content="Refer. Loop" Style="{StaticResource ButtonM1Style}" Margin="0" Click="BtnReferLoop_Click"/>
                     <Button x:Name="btnPolarLoop" Content="Polar. Loop" Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0" Click="BtnPolarLoop_Click"/>
+                    <Button x:Name="btnClose" Content="Close" Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0" Click="BtnClose_Click"/>
                 </StackPanel>
 
                 <Grid Margin="0,8,0,0">

@@ -56,7 +56,7 @@ namespace wso_board
 #define MAX_OCT_DAC_SAMPLE_SIZE 16384
 #define MAX_TRAJ_NUM 32
 #define MAX_LSO_TRAJ_NUM 8
-#define MAX_STEP_MOTOR_NUM 16
+#define MAX_STEP_MOTOR_NUM 13 // 16
 
 #define CALIB_IDX_MOTOR_SETS            0
 #define CALIB_IDX_OCT_PARAMS            1
@@ -80,7 +80,7 @@ namespace wso_board
 #define CALIB_ACTIVE_REGION             0 
 #define CALIB_BACKUP_REGION             1
 
-#pragma pack(push, 4)
+#pragma pack(push, 8)
 
     /////////////////////////////////////////////////////////////////////////////////////////////
     typedef struct {

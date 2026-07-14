@@ -65,6 +65,7 @@ bool wso_device::RetinaIrLed::loadCalibParamFromProfile(void)
 	if (auto p = getMainBoard()->getHbsDataProfile()->getHbsCalibLedSource(); p) {
 		auto value = p->LED_Info.RetIR_intensity;
 		setIntensity(value);
+		LogD() << "RetinaIrLed intensity loaded from profile: " << value;
 		return true;
 	}
 	return false;

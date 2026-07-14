@@ -68,10 +68,10 @@
                     </Grid.RowDefinitions>
                     <Label x:Name="label3" Content="Spectrometer Calibration" Style="{StaticResource HeaderStyle}" Grid.Row="1" Grid.ColumnSpan="3" Margin="16,0,0,0" HorizontalAlignment="Left"/>
                     <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="5">
-                        <TextBox x:Name="editSpectroCalib1" Style="{StaticResource TextBoxStyle}" PreviewTextInput="FloatTextBox_PreviewTextInput" Margin="12,0,0,0" Width="100"/>
-                        <TextBox x:Name="editSpectroCalib2" Style="{StaticResource TextBoxStyle}" PreviewTextInput="FloatTextBox_PreviewTextInput" Margin="4,0,0,0" Width="100"/>
-                        <TextBox x:Name="editSpectroCalib3" Style="{StaticResource TextBoxStyle}" PreviewTextInput="FloatTextBox_PreviewTextInput" Margin="4,0,0,0" Width="100"/>
-                        <TextBox x:Name="editSpectroCalib4" Style="{StaticResource TextBoxStyle}" PreviewTextInput="FloatTextBox_PreviewTextInput" Margin="4,0,0,0" Width="100"/>
+                        <TextBox x:Name="editSpectroCalib1" Style="{StaticResource TextBoxStyle}" PreviewTextInput="DoubleTextBox_PreviewTextInput" Margin="12,0,0,0" Width="100"/>
+                        <TextBox x:Name="editSpectroCalib2" Style="{StaticResource TextBoxStyle}" PreviewTextInput="DoubleTextBox_PreviewTextInput" Margin="4,0,0,0" Width="100"/>
+                        <TextBox x:Name="editSpectroCalib3" Style="{StaticResource TextBoxStyle}" PreviewTextInput="DoubleTextBox_PreviewTextInput" Margin="4,0,0,0" Width="100"/>
+                        <TextBox x:Name="editSpectroCalib4" Style="{StaticResource TextBoxStyle}" PreviewTextInput="DoubleTextBox_PreviewTextInput" Margin="4,0,0,0" Width="100"/>
                     </StackPanel>
                     <Border Style="{StaticResource BorderStyle}" BorderThickness="1" Grid.ColumnSpan="6" Grid.RowSpan="4"/>
                 </Grid>
@@ -260,8 +260,8 @@
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,64,0">
             <Button x:Name="btnFetch" Content="Fetch EEPROM" Style="{StaticResource ButtonStyle}" Margin="0,0,12,0" Click="BtnFetch_Click" />
             <Button x:Name="btnWrite" Content="Write EEPROM" Style="{StaticResource ButtonStyle}" Margin="0,0,12,0" Click="BtnWrite_Click" />
-            <Button x:Name="btnUpdate" Content="Update" Style="{StaticResource ButtonStyle}" Margin="0,0,12,0" Click="BtnUpdate_Click" />
-            <Button x:Name="btnApply" Content="Apply" Style="{StaticResource ButtonStyle}" Margin="0,0,12,0" Click="BtnApply_Click" />
+            <Button x:Name="btnUpdate" Content="Obtain" Style="{StaticResource ButtonStyle}" Margin="0,0,12,0" Click="BtnUpdate_Click" />
+            <Button x:Name="btnApply" Content="Submit" Style="{StaticResource ButtonStyle}" Margin="0,0,12,0" Click="BtnApply_Click" />
             <Button x:Name="btnClose" Content="Close" Style="{StaticResource ButtonStyle}" Click="BtnClose_Click" />
         </StackPanel>
     </Grid>

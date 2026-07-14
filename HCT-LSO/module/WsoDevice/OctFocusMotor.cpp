@@ -234,6 +234,7 @@ bool wso_device::OctFocusMotor::loadCalibParamFromProfile(void)
 	if (auto p = getMainBoard()->getHbsDataProfile()->getHbsCalibMotorSets(); p) {
 		auto value = p->MotorCalPos.oct_focus_motor_0D_pos;
 		setZeroDiopterPosition(value);
+		LogD() << "OctFocusMotor loaded from profile, zero-diopt pos: " << value; 
 		return true;
 	}
 	return false;

@@ -135,6 +135,12 @@
     <ClInclude Include="LsoFilterMotor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="LsoBlueLed.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LsoGreenLed.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -243,6 +249,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="LsoFilterMotor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LsoBlueLed.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LsoGreenLed.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

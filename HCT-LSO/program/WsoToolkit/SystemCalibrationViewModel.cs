@@ -70,7 +70,7 @@ namespace WsoToolkit
             _sysCalib.motorParam.returnMirror.inPos = ToShort(editRetMirrorInPos.Text);
             _sysCalib.motorParam.returnMirror.outPos = ToShort(editRetMirrorOutPos.Text);
             _sysCalib.motorParam.octAnteriorLens.inPos = ToShort(editAntLensInPos.Text);
-            _sysCalib.motorParam.octAnteriorLens.outPos = ToShort(editAntLensInPos.Text);
+            _sysCalib.motorParam.octAnteriorLens.outPos = ToShort(editAntLensOutPos.Text);
 
             _sysCalib.ledParam.anteriorIrIntensity1 = ToUshort(editLedAntIr1.Text);
             _sysCalib.ledParam.anteriorIrIntensity2 = ToUshort(editLedAntIr2.Text);

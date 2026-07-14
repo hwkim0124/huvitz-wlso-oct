@@ -14,6 +14,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using WsoNativeLib;
+using WsoToolkit.entity;
 using WsoToolkit.utils;
 
 namespace WsoToolkit
@@ -25,7 +26,7 @@ namespace WsoToolkit
         public MainWindow()
         {
             InitializeComponent();
-            this.Title = "Huvitz Wide LSO-OCT Toolkit (ver 0.01.0 - 2026/06/17)";
+            this.Title = "Huvitz Wide LSO-OCT Toolkit (ver 0.01.0 - 2026/07/14)";
 
             _logMsgCallback = new WsoLogMsgCallback(this.CallbackWsoLogMessage);
             _logMsgItems = new ObservableCollection<LogMsgItem>();
@@ -36,6 +37,8 @@ namespace WsoToolkit
             // Data binding for log message list box. 
             LogMsgListBox.ItemsSource = _logMsgItems;
             StartInitialTimer();
+
+            DatabaseRepository.CreateResultDirectory();
         }
 
         private void StartupButton_Click(object sender, RoutedEventArgs e)

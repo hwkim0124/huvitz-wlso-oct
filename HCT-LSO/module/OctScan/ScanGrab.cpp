@@ -730,7 +730,9 @@ bool oct_scan::ScanGrab::processGrabMeasure(void)
 	std::int16_t offsetX, offsetY;
 	std::int16_t startX, startY;
 	if (!getMainboard()->getGalvanoDynamicOffset(offsetX, offsetY)) {
-		return false;
+		// return false;
+		offsetX = 0;
+		offsetY = 0;
 	}
 
 	StopWatch::start();

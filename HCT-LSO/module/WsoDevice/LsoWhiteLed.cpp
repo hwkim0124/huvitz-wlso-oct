@@ -65,6 +65,7 @@ bool wso_device::LsoWhiteLed::loadCalibParamFromProfile(void)
 	if (auto p = getMainBoard()->getHbsDataProfile()->getHbsCalibLedSource(); p) {
 		auto value = p->LED_Info.WLED_intensity;
 		setIntensity(value);
+		LogD() << "LsoWhiteLed intensity loaded from profile: " << value;
 		return true;
 	}
 	return false;

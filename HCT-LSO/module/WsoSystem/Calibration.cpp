@@ -90,12 +90,14 @@ bool wso_system::Calibration::saveSystemCalibration(bool write, int region)
 	if (!saveStepMotorsCalibration(write, region)) {
 		return false;
 	}
+	/*
 	if (!saveFactorySetup1Calibration(write, region)) {
 		return false;
 	}
 	if (!saveFactorySetup2Calibration(write, region)) {
 		return false;
 	}
+	*/
 	return true;
 }
 
@@ -126,6 +128,17 @@ bool wso_system::Calibration::applySystemCalibration(void)
 				}
 			}
 			*/
+			board->getLsoFocusMotor()->loadCalibParamFromProfile();
+			board->getOctFocusMotor()->loadCalibParamFromProfile();
+			board->getOctReferMotor()->loadCalibParamFromProfile();
+			board->getOctPolarMotor()->loadCalibParamFromProfile();
+			board->getRetMirrorMotor()->loadCalibParamFromProfile();
+			board->getOctAntLensMotor()->loadCalibParamFromProfile();
+
+			board->getCorneaIrLeftLed()->loadCalibParamFromProfile();
+			board->getCorneaIrRightLed()->loadCalibParamFromProfile();
+			board->getRetinaIrLed()->loadCalibParamFromProfile();
+			board->getLsoWhiteLed()->loadCalibParamFromProfile();
 		}
 		return true;
 	}
@@ -400,9 +413,10 @@ bool wso_system::Calibration::obtainSystemCalibration(SystemCalibration* sys_cal
 				sys_calib->ledParam.anteriorIrIntensity2 = param->LED_Info.AntIR2_intensity;
 				sys_calib->ledParam.retinaIrIntensity = param->LED_Info.RetIR_intensity;
 				sys_calib->ledParam.whiteIntensity = param->LED_Info.WLED_intensity;
-				sys_calib->ledParam.blueIntensity = param->LED_Info.Bled_intensity;
-				sys_calib->ledParam.greenIntensity = param->LED_Info.Gled_inentity;
+				sys_calib->ledParam.blueIntensity = 0; // param->LED_Info.Bled_intensity;
+				sys_calib->ledParam.greenIntensity = 0; // param->LED_Info.Gled_inentity;
 			}
+			return true;
 		}
 	}
 	return false;
@@ -464,8 +478,8 @@ bool wso_system::Calibration::submitSystemCalibration(const SystemCalibration* s
 				param->LED_Info.AntIR2_intensity = sys_calib->ledParam.anteriorIrIntensity2;
 				param->LED_Info.RetIR_intensity = sys_calib->ledParam.retinaIrIntensity;
 				param->LED_Info.WLED_intensity = sys_calib->ledParam.whiteIntensity;
-				param->LED_Info.Bled_intensity = sys_calib->ledParam.blueIntensity;
-				param->LED_Info.Gled_inentity = sys_calib->ledParam.greenIntensity;
+				param->LED_Info.Bled_intensity = 0; // sys_calib->ledParam.blueIntensity;
+				param->LED_Info.Gled_inentity = 0; // sys_calib->ledParam.greenIntensity;
 			}
 		}
 	}
@@ -473,6 +487,7 @@ bool wso_system::Calibration::submitSystemCalibration(const SystemCalibration* s
 	if (!saveSystemCalibration(write)) {
 		return false;
 	}
+
 	applySystemCalibration();
 	return true;
 }

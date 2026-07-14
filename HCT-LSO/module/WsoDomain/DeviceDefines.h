@@ -54,11 +54,11 @@ namespace wso_domain
 		CORNEA_IR_LEFT_LED = 0x02,
 		CORNEA_IR_RIGHT_LED = 0x03,
 		EXT_FIXATION_LED = 0x04, 
-		BLUE_LED = 0x05, // FA/Blue FAF mode
-		GREEN_LED = 0x06, // Green FAF 
+		LSO_BLUE_LED = 0x05, // FA/Blue FAF mode
+		LSO_GREEN_LED = 0x06, // Green FAF 
 		// OCT_SLD = 0x04,
 		UNKNOWN = 0xFF,
-		NUM_LIGHT_LEDS = (GREEN_LED + 1)
+		NUM_LIGHT_LEDS = (LSO_GREEN_LED + 1)
 	};
 
 	enum class LaserType : unsigned char

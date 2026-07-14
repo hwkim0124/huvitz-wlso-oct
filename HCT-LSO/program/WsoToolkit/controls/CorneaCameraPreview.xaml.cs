@@ -36,7 +36,8 @@ namespace WsoToolkit.controls
 
         public bool IsStretchToFit { get; set; } = true;
         public bool IsOverlayAlignGuide { get; set; } = false;
-        public WsoDevice.CameraType CameraType { get; set; } = WsoDevice.CameraType.IrCorneaLeft; 
+        public WsoDevice.CameraType CameraType { get; set; } = WsoDevice.CameraType.IrCorneaLeft;
+        public WsoCallback.CorneaCameraFrameCaptured? Callback { get; set; } = null;
 
         public CorneaCameraPreview()
         {
@@ -68,18 +69,30 @@ namespace WsoToolkit.controls
         {
             if (data == 0) return;
 
+            if (checkSwitch.IsChecked == false)
+            {
+                return;
+            }
+
             // Stride for 8-bit grayscale. 
             nint step = width * 1;
 
-            // Passing a nint to Mat.FromPixelData explicitly invokes the zero-copy mapping overload, 
-            // creating a lightweight header over your camera buffer.
-            using (Mat rawFrame = Mat.FromPixelData(height, width, MatType.CV_8UC1, data, step))
+            try
             {
-                _imageWidth = width;
-                _imageHeight = height;
-                _imageMat = rawFrame.Clone();
-                UpdateCameraStatusItems();
-                UpdateCameraFrameImage();
+                // Passing a nint to Mat.FromPixelData explicitly invokes the zero-copy mapping overload, 
+                // creating a lightweight header over your camera buffer.
+                using (Mat rawFrame = Mat.FromPixelData(height, width, MatType.CV_8UC1, data, step))
+                {
+                    _imageWidth = width;
+                    _imageHeight = height;
+                    rawFrame.CopyTo(_imageMat);
+                    UpdateCameraStatusItems();
+                    UpdateCameraFrameImage();
+                }
+            }
+            catch (Exception e)
+            {
+                e.ToString();
             }
         }
 
@@ -177,6 +190,36 @@ namespace WsoToolkit.controls
         private void UserControl_Unloaded(object sender, RoutedEventArgs e)
         {
             _stopwatch.Stop();
+        }
+
+        public void Play()
+        {
+            if (!CorneaCamera.IsPreviewing(CameraType))
+            {
+                if (Callback != null)
+                {
+                    CorneaCamera.StartPreview(CameraType, Callback);
+                }
+            }
+            checkSwitch.IsChecked = true;
+        }
+
+        public void Stop()
+        {
+            CorneaCamera.ClosePreview(CameraType);
+            checkSwitch.IsChecked = false;
+        }
+
+        private void CheckSwitch_Click(object sender, RoutedEventArgs e)
+        {
+            if (checkSwitch.IsChecked == true)
+            {
+                Play(); 
+            }
+            else
+            {
+                Stop();
+            }
         }
     }
 }
