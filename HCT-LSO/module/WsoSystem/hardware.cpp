@@ -134,6 +134,9 @@ void wso_system::Hardware::connectCorneaCameraImageCaptured(CameraType type, Cor
 		else if (type == CameraType::IR_CORNEA_LOWER) {
 			inst->setCorneaLowerCameraFrameCaptured(clb);
 		}
+		else if (type == CameraType::IR_RETINA) {
+			inst->setRetinaCameraFrameCaptured(clb);
+		}
 	}
 }
 
@@ -219,6 +222,9 @@ void wso_system::Hardware::disconnectCorneaCameraImageCaptured(CameraType type)
 		}
 		else if (type == CameraType::IR_CORNEA_LOWER) {
 			inst->setCorneaLowerCameraFrameCaptured(nullptr);
+		}
+		else if (type == CameraType::IR_RETINA) {
+			inst->setRetinaCameraFrameCaptured(nullptr);
 		}
 	}
 }

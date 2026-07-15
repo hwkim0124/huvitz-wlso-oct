@@ -38,6 +38,17 @@ namespace WsoToolkit
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             InitializeWindowControls();
+
+            btnStartCamera.Content = "Stop Camera";
+            StartCorneaCameraPreview();
+
+            corneaPreview1.IsOverlayAlignGuide = true;
+            corneaPreview2.IsOverlayAlignGuide = true;
+            corneaPreview3.IsOverlayAlignGuide = true;
+
+            checkAlignGuide1.IsChecked = true;
+            checkAlignGuide2.IsChecked = true;
+            checkAlignGuide3.IsChecked = true;
         }
 
         private void Window_Closed(object sender, EventArgs e)

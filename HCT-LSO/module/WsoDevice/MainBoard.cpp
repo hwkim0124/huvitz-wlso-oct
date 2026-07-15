@@ -323,11 +323,10 @@ bool wso_device::MainBoard::initiateBoardComponents(int* numWarns)
 	}
 
 	// return true;
-	/*
 	if (!initiateRetinaCamera()) {
 		warns += 1;
 	}
-	*/
+
 	if (!initiateCorneaCamera(CameraType::IR_CORNEA_LEFT)) {
 		warns += 1;
 	}
@@ -1186,6 +1185,9 @@ CorneaCamera* wso_device::MainBoard::getCorneaCamera(CameraType type) const
 		break;
 	case CameraType::IR_CORNEA_LOWER:
 		pCamera = (CorneaCamera*)getInfraredCamera(CameraType::IR_CORNEA_LOWER);
+		break;
+	case CameraType::IR_RETINA:
+		pCamera = (CorneaCamera*)getInfraredCamera(CameraType::IR_RETINA);
 		break;
 	}
 	return pCamera;

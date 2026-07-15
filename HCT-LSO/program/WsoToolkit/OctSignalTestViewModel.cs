@@ -19,6 +19,7 @@ namespace WsoToolkit
         WsoCallback.CorneaCameraFrameCaptured _onCorneaLeftFrameCaptured;
         WsoCallback.CorneaCameraFrameCaptured _onCorneaRightFrameCaptured;
         WsoCallback.CorneaCameraFrameCaptured _onCorneaLowerFrameCaptured;
+        WsoCallback.CorneaCameraFrameCaptured _onCorneaRetinaFrameCaptured;
         WsoCallback.JoystickButtonPressed _onJoystickButtonPressed;
         WsoCallback.OptimizeButtonPressed _onOptimizeButtonPressed;
 
@@ -221,14 +222,17 @@ namespace WsoToolkit
             corneaPreview1.CameraType = CameraType.IrCorneaLeft;
             corneaPreview2.CameraType = CameraType.IrCorneaRight;
             corneaPreview3.CameraType = CameraType.IrCorneaLower;
+            retinaPreview.CameraType = CameraType.IrRetina;
 
             corneaPreview1.Callback = _onCorneaLeftFrameCaptured;
             corneaPreview2.Callback = _onCorneaRightFrameCaptured;
             corneaPreview3.Callback = _onCorneaLowerFrameCaptured;
+            retinaPreview.Callback = _onCorneaRetinaFrameCaptured;
 
             corneaPreview1.Play();
             corneaPreview2.Play();
             corneaPreview3.Play();
+            retinaPreview.Play();
         }
 
         public void CloseCorneaCameraPreview()
@@ -236,6 +240,7 @@ namespace WsoToolkit
             corneaPreview1.Stop();
             corneaPreview2.Stop();
             corneaPreview3.Stop();
+            retinaPreview.Stop();
         }
 
 
@@ -571,6 +576,16 @@ namespace WsoToolkit
             // Update GUI preview control asynchronously.
             Dispatcher.BeginInvoke(() => {
                 corneaPreview3.CallbackCorneaCameraFrame(data, width, height);
+            }, DispatcherPriority.Background);
+        }
+
+        private void OnCorneaRetinaFrameCaptured(IntPtr data, int width, int height)
+        {
+            if (data == 0) return;
+
+            // Update GUI preview control asynchronously.
+            Dispatcher.BeginInvoke(() => {
+                retinaPreview.CallbackCorneaCameraFrame(data, width, height);
             }, DispatcherPriority.Background);
         }
 

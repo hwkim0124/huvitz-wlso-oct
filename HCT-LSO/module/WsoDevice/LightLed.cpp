@@ -23,7 +23,7 @@ struct LightLed::LightLedImpl
 	unsigned short lightMode;
 
 	LightLedImpl() : 
-		lightMode(1), // 0: Strobe mode (pulse by LSO scan param), 1 : Continuous mode 
+		lightMode(0), // 0: Strobe mode (pulse by LSO scan param), 1 : Continuous mode 
 		value(0), valueSet1(0), valueSet2(0), valueMem(0), valueMin(0), valueMax(100), valueStep(5)
 	{
 		type = LightType::UNKNOWN;
@@ -47,7 +47,7 @@ wso_device::LightLed::LightLed(MainBoard* board, LightType type) :
 	impl().valueMax = LED_INTENSITY_MAX;
 	impl().value = LED_INTENSITY_INIT;
 	impl().valueStep = LED_INTENSITY_STEP;
-	impl().lightMode = 1;
+	impl().lightMode = 0;
 	return;
 }
 
@@ -95,12 +95,10 @@ bool wso_device::LightLed::initializeLightLed(void)
 		}
 	}
 
-	if (loadConfigFromIniFile()) {
-		auto mode = getLightMode();
-		if (mode > 0) {
-			if (!setLightMode(mode)) {
-				LogError() << "Light LED init mode failed!, name: " << getName();
-			}
+	unsigned short mode = getInitialMode();
+	if (mode >= 0) {
+		if (!setLightMode(mode)) {
+			LogError() << "Light LED init mode failed!, name: " << getName();
 		}
 	}
 	return true;
@@ -156,7 +154,7 @@ bool wso_device::LightLed::setLightMode(unsigned short value, bool setBoard)
 	UsbComm& usbComm = getMainBoard()->getUsbComm();
 	if (usbComm.LedSetMode(impl().type, (uint8_t)value)) {
 		impl().lightMode = value;
-		saveConfigToIniFile();
+		// saveConfigToIniFile();
 		return true;
 	}
 	LogDebug() << "LightLed::setMode() failed!, name=" << getName() << ", value=" << value;
@@ -286,6 +284,11 @@ std::uint16_t wso_device::LightLed::getInitialValue(void) const
 	case CORNEA_IR_RIGHT_LED:
 		return LED_CORNEA_RIGHT_IR_INIT_VALUE;
 	}
+	return 0;
+}
+
+std::uint16_t wso_device::LightLed::getInitialMode(void) const
+{
 	return 0;
 }
 

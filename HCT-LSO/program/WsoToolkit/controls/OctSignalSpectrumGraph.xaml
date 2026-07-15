@@ -6,18 +6,18 @@
              xmlns:local="clr-namespace:WsoToolkit.controls"
              xmlns:oxy="http://oxyplot.org/wpf"
              mc:Ignorable="d" 
-             Width="512" Height="360">
+             d:DesignWidth="512" d:DesignHeight="360">
     <Grid Background="White">
         <Grid Margin="4">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
-                <RowDefinition Height="320"/>
-                <RowDefinition Height="32"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="28"/>
             </Grid.RowDefinitions>
             <oxy:PlotView x:Name="plotView"/>
-            <StackPanel Grid.Row="1" Orientation="Vertical" Margin="8, 4, 8, 4">
+            <StackPanel Grid.Row="1" Orientation="Vertical" Margin="0, 0, 0, 0">
                 <Label x:Name="lblStatus" Content="OCT Signal Spectrum" Style="{StaticResource LabelStyle}" Height="Auto"/>
             </StackPanel>
         </Grid>

@@ -58,16 +58,17 @@ bool wso_device::SldLaserDriver::isInitialized(void)
 bool wso_device::SldLaserDriver::getOctSldStatusParam(OctSldStatusParam* status)
 {
 	if (status) {
-		auto sld = getMainBoard()->getOctSldLed();
-		status->calibParam.highCode = sld->getHighCode();
-		status->calibParam.lowCode1 = sld->getLowCode1();
-		status->calibParam.lowCode2 = sld->getLowCode2();
-		status->calibParam.rsiCode = sld->getRsiCode();
+		if (auto sld = getMainBoard()->getOctSldLed(); sld) {
+			status->calibParam.highCode = sld->getHighCode();
+			status->calibParam.lowCode1 = sld->getLowCode1();
+			status->calibParam.lowCode2 = sld->getLowCode2();
+			status->calibParam.rsiCode = sld->getRsiCode();
 
-		status->sldCurrent = getSldCurrent();
-		status->ipdCurrent = getIpdCurrent();
-		status->externalPd = getExternalPd();
-		status->temperature = getTemperature();
+			status->sldCurrent = getSldCurrent();
+			status->ipdCurrent = getIpdCurrent();
+			status->externalPd = getExternalPd();
+			status->temperature = getTemperature();
+		}
 		return true;
 	}
 	return false;
@@ -76,12 +77,14 @@ bool wso_device::SldLaserDriver::getOctSldStatusParam(OctSldStatusParam* status)
 bool wso_device::SldLaserDriver::getOctSldCalibParam(OctSldCalibParam* calib)
 {
 	if (calib) {
-		if (auto* sld = getMainBoard()->getOctSldLed(); sld->loadCalibParamFromProfile()) {
-			calib->highCode = sld->getHighCode();
-			calib->lowCode1 = sld->getLowCode1();
-			calib->lowCode2 = sld->getLowCode2();
-			calib->rsiCode = sld->getRsiCode();
-			return true;
+		if (auto* sld = getMainBoard()->getOctSldLed(); sld) {
+			if (sld->loadCalibParamFromProfile()) {
+				calib->highCode = sld->getHighCode();
+				calib->lowCode1 = sld->getLowCode1();
+				calib->lowCode2 = sld->getLowCode2();
+				calib->rsiCode = sld->getRsiCode();
+				return true;
+			}
 		}
 	}
 	return false;
@@ -150,7 +153,7 @@ bool wso_device::SldLaserDriver::reloadOctSldStatus(void)
 bool wso_device::SldLaserDriver::reloadSystemProfile(void)
 {
 	if (isInitialized()) {
-		if (auto* hbs = impl().mainboard->getHbsDataProfile(); hbs->loadCalibBlockLedSource(false)) {
+		if (auto* hbs = impl().mainboard->getHbsDataProfile(); hbs->loadCalibBlockLedSource(true)) {
 			auto sld = getMainBoard()->getOctSldLed();
 			return sld->loadCalibParamFromProfile();
 		}
@@ -160,20 +163,30 @@ bool wso_device::SldLaserDriver::reloadSystemProfile(void)
 
 bool wso_device::SldLaserDriver::saveSldCalibration(void)
 {
+	/*
 	if (isInitialized()) {
 		if (auto sld = getMainBoard()->getOctSldLed(); sld) {
 			return sld->writeCalibParam_BoardToMemory();
 		}
+	}
+	*/
+	if (updateSystemProfile()) {
+		return true;
 	}
 	return false;
 }
 
 bool wso_device::SldLaserDriver::loadSldCalibration(void)
 {
+	/*
 	if (isInitialized()) {
 		if (auto sld = getMainBoard()->getOctSldLed(); sld) {
 			return sld->fetchCalibParam_MemoryToBoard();
 		}
+	}
+	*/
+	if (reloadSystemProfile()) {
+		return true;
 	}
 	return false;
 }
@@ -183,7 +196,7 @@ bool wso_device::SldLaserDriver::updateSystemProfile(void)
 	if (isInitialized()) {
 		auto sld = getMainBoard()->getOctSldLed();
 		sld->saveCalibParamToProfile();
-		if (auto* hbs = impl().mainboard->getHbsDataProfile(); hbs->saveCalibration()) {
+		if (auto* hbs = impl().mainboard->getHbsDataProfile(); hbs->saveCalibBlockLedSource(true)) {
 			return true;
 		}
 	}

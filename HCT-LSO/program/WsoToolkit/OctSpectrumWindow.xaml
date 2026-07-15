@@ -7,27 +7,28 @@
         xmlns:local="clr-namespace:WsoToolkit"
         xmlns:controls="clr-namespace:WsoToolkit.controls"
         mc:Ignorable="d"
-        Title="OCT Spectrometer Calibration" Height="1080" Width="2096" ResizeMode="NoResize" Loaded="Window_Loaded" Initialized="Window_Initialized" Closing="Window_Closing" Closed="Window_Closed" ShowInTaskbar="False" SizeToContent="WidthAndHeight">
+        SizeToContent="WidthAndHeight"
+        Title="OCT Spectrometer Calibration" Height="Auto" Width="Auto" ResizeMode="NoResize" Loaded="Window_Loaded" Initialized="Window_Initialized" Closing="Window_Closing" Closed="Window_Closed" ShowInTaskbar="False">
     <ScrollViewer HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible">
-        <Grid Margin="12,12,12,12">
+        <Grid Margin="4,4,4,4">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="392"/>
-                <ColumnDefinition Width="8"/>
-                <ColumnDefinition Width="1028"/>
-                <ColumnDefinition Width="8"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="4"/>
+                <ColumnDefinition Width="940"/>
+                <ColumnDefinition Width="4"/>
                 <ColumnDefinition Width="540"/>
-                <ColumnDefinition Width="28"/>
+                <ColumnDefinition Width="4"/>
             </Grid.ColumnDefinitions>
             <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Vertical">
-                <controls:CorneaCameraPreview x:Name="corneaPreview1" Width="384" Height="328"/>
-                <controls:CorneaCameraPreview x:Name="corneaPreview2" Width="384" Height="328"/>
-                <controls:CorneaCameraPreview x:Name="corneaPreview3" Width="384" Height="328"/>
+                <controls:CorneaCameraPreview x:Name="corneaPreview1" Width="384" Height="312"/>
+                <controls:CorneaCameraPreview x:Name="corneaPreview2" Width="384" Height="312"/>
+                <controls:CorneaCameraPreview x:Name="corneaPreview3" Width="384" Height="312"/>
             </StackPanel>
             <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Vertical">
-                <controls:OctSignalResampleGraph x:Name="octResampleGraph"/>
+                <controls:OctSignalResampleGraph x:Name="octResampleGraph" Width="928" Height="586"/>
                 <Grid Margin="0,8,0,0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -36,12 +37,12 @@
                         <RowDefinition Height="12"/>
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="20"/>
+                        <ColumnDefinition Width="4"/>
                         <ColumnDefinition Width="230"/>
                         <ColumnDefinition Width="230"/>
                         <ColumnDefinition Width="230"/>
                         <ColumnDefinition Width="230"/>
-                        <ColumnDefinition Width="20"/>
+                        <ColumnDefinition Width="4"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <Label x:Name="label101" Content="FBG Class" Style="{StaticResource HeaderStyle}" Grid.Column="1"/>

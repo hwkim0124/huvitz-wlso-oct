@@ -53,6 +53,7 @@ namespace wso_device
 	protected:
 		std::uint8_t getLightLedId(void) const;
 		std::uint16_t getInitialValue(void) const;
+		std::uint16_t getInitialMode(void) const;
 
 	private:
 		struct LightLedImpl;

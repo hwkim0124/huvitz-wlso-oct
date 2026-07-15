@@ -35,10 +35,11 @@ namespace WsoToolkit
 
         private void Window_Initialized(object sender, EventArgs e)
         {
-            FetchAllMotorStatus();
         }
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            FetchAllMotorStatus();
+
             sliderSwing.Minimum = _msSwing.rangeMin;
             sliderSwing.Maximum = _msSwing.rangeMax;
             sliderSwing.TickFrequency = 10;

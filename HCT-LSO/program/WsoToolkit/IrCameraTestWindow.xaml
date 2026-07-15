@@ -7,24 +7,25 @@
         xmlns:local="clr-namespace:WsoToolkit"
         xmlns:controls="clr-namespace:WsoToolkit.controls"
         mc:Ignorable="d"
+        SizeToContent="WidthAndHeight"
        Title="Ir Camera Test" Height="Auto" Width="Auto" ResizeMode="NoResize" Initialized="Window_Initialized" Loaded="Window_Loaded" Closed="Window_Closed" Closing="Window_Closing">
-    <Grid Margin="12,12,12,12">
+    <Grid Margin="4,4,4,4">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="8"/>
+            <ColumnDefinition Width="4"/>
             <ColumnDefinition Width="Auto"/>
         </Grid.ColumnDefinitions>
 
         <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Vertical">
-            <controls:CorneaCameraPreview x:Name="corneaPreview1" Width="640" Height="480"/>
-            <controls:CorneaCameraPreview x:Name="corneaPreview2" Width="640" Height="480"/>
+            <controls:CorneaCameraPreview x:Name="corneaPreview1" Width="640" Height="512"/>
+            <controls:CorneaCameraPreview x:Name="corneaPreview2" Width="640" Height="512"/>
         </StackPanel>
 
         <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Vertical">
-            <controls:CorneaCameraPreview x:Name="corneaPreview3" Width="640" Height="480"/>
+            <controls:CorneaCameraPreview x:Name="corneaPreview3" Width="640" Height="512"/>
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="24,16,0,4">
                 <Button x:Name="btnStartCamera" Content="Start Camera" Style="{StaticResource ButtonStyle}" Margin="0" Click="BtnStartCamera_Click"/>
@@ -38,7 +39,7 @@
                 <Button x:Name="btnShowConfig" Content="Config..." Style="{StaticResource ButtonStyle}" Margin="8,0,0,0" Click="BtnShowConfig_Click"/>
             </StackPanel>
 
-            <Grid Margin="0,16,0,0">
+            <Grid Margin="0,16,8,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="60"/>
                     <ColumnDefinition Width="90"/>

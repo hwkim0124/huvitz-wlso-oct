@@ -58,8 +58,8 @@ namespace WsoNativeLib
         {
             IrCorneaLeft = 0x00,
             IrCorneaRight = 0x01,
-            IrRetina = 0x02, 
-            IrCorneaLower = 0x03, 
+            IrCorneaLower = 0x02,
+            IrRetina = 0x03, 
             ColorFundus = 0x04 
         }
 

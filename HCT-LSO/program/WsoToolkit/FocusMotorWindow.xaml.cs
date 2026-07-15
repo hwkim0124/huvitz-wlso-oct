@@ -41,11 +41,12 @@ namespace WsoToolkit
 
         private void Window_Initialized(object sender, EventArgs e)
         {
-            FetchAllMotorStatus();
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            FetchAllMotorStatus();
+
             sliderOctFocus.Minimum = _msOctFocus.rangeMin;
             sliderOctFocus.Maximum = _msOctFocus.rangeMax;
             sliderOctFocus.TickFrequency = 100;

@@ -1,5 +1,4 @@
 ﻿using OpenCvSharp;
-using OpenCvSharp.WpfExtensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -18,8 +17,7 @@ using WsoNativeLib;
 namespace WsoToolkit.controls
 {
     using static WsoNativeLib.CorneaCamera;
-
-    public partial class CorneaCameraPreview : UserControl
+    public partial class RetinaCameraPreview : UserControl
     {
         Mat _imageMat = new();
         Mat _frameMat = new();
@@ -37,10 +35,10 @@ namespace WsoToolkit.controls
         public bool IsStretchToFit { get; set; } = true;
         public bool IsOverlayAlignGuide { get; set; } = false;
         public bool IsOverlayFocusGuide { get; set; } = false;
-        public WsoDevice.CameraType CameraType { get; set; } = WsoDevice.CameraType.IrCorneaLeft;
+        public WsoDevice.CameraType CameraType { get; set; } = WsoDevice.CameraType.IrRetina;
         public WsoCallback.CorneaCameraFrameCaptured? Callback { get; set; } = null;
 
-        public CorneaCameraPreview()
+        public RetinaCameraPreview()
         {
             InitializeComponent();
         }
@@ -179,7 +177,7 @@ namespace WsoToolkit.controls
             }
             else if (CameraType == WsoDevice.CameraType.IrCorneaLower)
             {
-                Cv2.Line(image, img_cx, 0, img_cx, img_h-1, color, 1, LineTypes.AntiAlias);
+                Cv2.Line(image, img_cx, 0, img_cx, img_h - 1, color, 1, LineTypes.AntiAlias);
             }
             return;
         }
@@ -254,7 +252,7 @@ namespace WsoToolkit.controls
         {
             if (checkSwitch.IsChecked == true)
             {
-                Play(); 
+                Play();
             }
             else
             {

@@ -23,12 +23,13 @@ namespace WsoToolkit
 
         private void Window_Initialized(object sender, EventArgs e)
         {
-            DeviceLights.ObtainOctSldStatusParam(ref _sldStatus, true);
-            DeviceLights.ObtainOctSldCalibParam(ref _sldStatus.calibParam, true);
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            DeviceLights.ObtainOctSldStatusParam(ref _sldStatus, true);
+            DeviceLights.ObtainOctSldCalibParam(ref _sldStatus.calibParam, true);
+
             InitializeControls();
             StartRefreshTimer();
         }
@@ -60,7 +61,7 @@ namespace WsoToolkit
         {
             Mouse.OverrideCursor = Cursors.Wait;
             SubmitCalibrationParams();
-            MsgBoxUtil.ShowInfo("Oct SLD calibration applied!");
+            MsgBoxUtil.ShowInfo("SLD calibration parameters applied!");
             Mouse.OverrideCursor = null;
         }
 
@@ -70,11 +71,11 @@ namespace WsoToolkit
             SubmitCalibrationParams();
             if (!DeviceLights.SaveOctSldCalibration())
             {
-                MsgBoxUtil.ShowWarning("Oct SLD calibration not saved in system!");
+                MsgBoxUtil.ShowWarning("Failed to save SLD calibration parameters!");
             }
             else
             {
-                MsgBoxUtil.ShowInfo("Oct SLD calibration saved in system!");
+                MsgBoxUtil.ShowInfo("SLD calibration parameters saved!");
             }
             Mouse.OverrideCursor = null;
         }
@@ -86,11 +87,11 @@ namespace WsoToolkit
             {
                 DeviceLights.ObtainOctSldCalibParam(ref _sldStatus.calibParam, true);
                 PopulateCalibParamControls();
-                MsgBoxUtil.ShowInfo("Oct SLD calibration loaded!");
+                MsgBoxUtil.ShowInfo("SLD calibration parameters loaded!");
             }
             else
             {
-                MsgBoxUtil.ShowWarning("Oct SLD calibration not loaded!");
+                MsgBoxUtil.ShowWarning("Failed to load SLD calibration parameters!");
             }
             Mouse.OverrideCursor = null;
         }

@@ -7,23 +7,24 @@
         xmlns:local="clr-namespace:WsoToolkit"
         xmlns:controls="clr-namespace:WsoToolkit.controls"
         mc:Ignorable="d"
-        Title="OCT Signal Test" Height="1200" Width="2200" ResizeMode="NoResize" Loaded="Window_Loaded" Initialized="Window_Initialized" Closing="Window_Closing" Closed="Window_Closed">
-    <Grid Margin="12,12,12,12">
+        SizeToContent="WidthAndHeight"
+        Title="OCT Signal Test" Height="Auto" Width="Auto" ResizeMode="NoResize" Loaded="Window_Loaded" Initialized="Window_Initialized" Closing="Window_Closing" Closed="Window_Closed">
+    <Grid Margin="4,4,4,4">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="392"/>
-            <ColumnDefinition Width="8"/>
-            <ColumnDefinition Width="1028"/>
-            <ColumnDefinition Width="8"/>
-            <ColumnDefinition Width="640"/>
-            <ColumnDefinition Width="144"/>
+            <ColumnDefinition Width="4"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="4"/>
+            <ColumnDefinition Width="540"/>
+            <ColumnDefinition Width="4"/>
         </Grid.ColumnDefinitions>
         <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Vertical">
-            <controls:CorneaCameraPreview x:Name="corneaPreview1" Width="384" Height="328"/>
-            <controls:CorneaCameraPreview x:Name="corneaPreview2" Width="384" Height="328"/>
-            <controls:CorneaCameraPreview x:Name="corneaPreview3" Width="384" Height="328"/>
+            <controls:CorneaCameraPreview x:Name="corneaPreview1" Width="384" Height="312"/>
+            <controls:CorneaCameraPreview x:Name="corneaPreview2" Width="384" Height="312"/>
+            <controls:CorneaCameraPreview x:Name="corneaPreview3" Width="384" Height="312"/>
             
             <Grid Margin="0,8,0,0">
                 <Grid.RowDefinitions>
@@ -50,27 +51,27 @@
             </Grid>
         </StackPanel>
         <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Vertical">
-            <controls:OctSignalIntensityGraph x:Name="octIntensityGraph"/>
-            <controls:OctScanImagePreview x:Name="octScanImagePreview"/>
+            <controls:OctSignalIntensityGraph x:Name="octIntensityGraph" Width="1024" Height="512"/>
+            <controls:OctScanImagePreview x:Name="octScanImagePreview" Width="1024" Height="512"/>
         </StackPanel>
-        <StackPanel Grid.Row="0" Grid.Column="4" Orientation="Vertical">
+        <StackPanel Grid.Row="0" Grid.Column="4" Orientation="Vertical" Margin="0,0,0,0">
             <controls:OctSignalSpectrumGraph x:Name="octSpectrumGraph"/>
 
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="16,4,0,4">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="4,4,0,4">
                 <Button x:Name="btnStartScan" Content="Start Scan" Style="{StaticResource ButtonM1Style}" Margin="0" Click="BtnStartScan_Click"/>
                 <Button x:Name="btnShowLights" Content="Lights..." Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0" Click="BtnShowLights_Click"/>
                 <Button x:Name="btnShowLasers" Content="Lasers..." Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0" Click="BtnShowLasers_Click"/>
                 <Button x:Name="btnShowFocusM" Content="FocusM..." Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0" Click="BtnShowFocusM_Click"/>
                 <Button x:Name="btnShowStageM" Content="StageM..." Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0" Click="BtnShowStageM_Click"/>
-                <Button x:Name="btnClose" Content="Close" Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0" Click="BtnClose_Click"/>
             </StackPanel>
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="16,0,0,4">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="4,0,0,4">
                 <Button x:Name="btnAutoRefer" Content="Auto Refer" Style="{StaticResource ButtonM1Style}" Margin="0" Click="BtnAutoRefer_Click"/>
                 <Button x:Name="btnAutoFocus" Content="Auto Focus" Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0" Click="BtnAutoFocus_Click"/>
                 <Button x:Name="btnAutoPolar" Content="Auto Polar" Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0" Click="BtnAutoPolar_Click"/>
                 <Button x:Name="btnOptimize" Content="Optimize" Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0" Click="BtnOptimize_Click"/>
+                <Button x:Name="btnClose" Content="Close" Style="{StaticResource ButtonM1Style}" Margin="4,0,8,0" Click="BtnClose_Click"/>
             </StackPanel>
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="16,0,0,4">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="4,0,0,4">
                 <Button x:Name="btnMakeBackground" Content="Background" Style="{StaticResource ButtonM1Style}" Margin="0" Click="BtnMakeBackground_Click"/>
                 <Button x:Name="btnAutoTest" Content="Auto Testing" Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0" Click="BtnAutoTest_Click"/>
                 <Button x:Name="btnReferLoop" Content="Refer. Loop" Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0" Click="BtnReferLoop_Click"/>
@@ -78,7 +79,7 @@
                 <Button x:Name="btnFindPeak" Content="Find Peak" Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0" Click="BtnFindPeak_Click"/>
             </StackPanel>
 
-            <Grid Margin="0,8,0,0">
+            <Grid Margin="0,4,0,0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -98,7 +99,7 @@
                     <ColumnDefinition Width="70"/>
                     <ColumnDefinition Width="90"/>
                     <ColumnDefinition Width="90"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="10"/>
                 </Grid.ColumnDefinitions>
                 <Label x:Name="label501" Content="Intensity Graph Display" Style="{StaticResource HeaderStyle}" Grid.ColumnSpan="3" Margin="16,0,0,0" HorizontalAlignment="Left"/>
                 <Label x:Name="label502" Content="Peak Range" Style="{StaticResource LabelStyle}" Grid.Row="1" Grid.Column="1"/>
@@ -149,7 +150,7 @@
                 <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="8" Grid.RowSpan="9"/>
             </Grid>
 
-            <Grid Margin="0,8,0,0">
+            <Grid Margin="0,4,0,0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -167,7 +168,7 @@
                     <ColumnDefinition Width="80"/>
                     <ColumnDefinition Width="70"/>
                     <ColumnDefinition Width="90"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="40"/>
                 </Grid.ColumnDefinitions>
                 <Label x:Name="label12" Content="Scan Pattern Control" Style="{StaticResource HeaderStyle}" Grid.ColumnSpan="3" Margin="16,0,0,0" HorizontalAlignment="Left"/>
                 <Label x:Name="label13" Content="Pattern" Style="{StaticResource LabelStyle}" Grid.Row="1" Grid.Column="1"/>
@@ -198,8 +199,7 @@
                 </StackPanel>
                 <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="8" Grid.RowSpan="7"/>
             </Grid>
-
-            <Grid Margin="0,8,0,0">
+            <Grid Margin="0,4,0,0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -215,7 +215,7 @@
                     <ColumnDefinition Width="100"/>
                     <ColumnDefinition Width="100"/>
                     <ColumnDefinition Width="100"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="10"/>
                 </Grid.ColumnDefinitions>
                 <Label x:Name="label1" Content="Dispersion Parameters" Style="{StaticResource HeaderStyle}" Grid.ColumnSpan="3" Margin="16,0,0,0" HorizontalAlignment="Left"/>
                 <StackPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="5" Orientation="Horizontal">
@@ -240,6 +240,7 @@
                 </StackPanel>
                 <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="7" Grid.RowSpan="6"/>
             </Grid>
+            <controls:RetinaCameraPreview x:Name="retinaPreview" Width="384" Height="312"/>
         </StackPanel>
     </Grid>
 </Window>
