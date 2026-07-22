@@ -29,25 +29,28 @@
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="24,16,0,4">
                 <Button x:Name="btnStartCamera" Content="Start Camera" Style="{StaticResource ButtonStyle}" Margin="0" Click="BtnStartCamera_Click"/>
-                <Button x:Name="btnClose" Content="Close" Style="{StaticResource ButtonStyle}" Margin="8,0,0,0" Click="BtnClose_Click"/>
+                <Button x:Name="btnSaveFrame" Content="Save Frame" Style="{StaticResource ButtonStyle}" Margin="4,0,0,0" Click="BtnSaveFrame_Click"/>
+                <Button x:Name="btnClose" Content="Close" Style="{StaticResource ButtonStyle}" Margin="4,0,0,0" Click="BtnClose_Click"/>
             </StackPanel>
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="24,0,0,4">
                 <Button x:Name="btnShowFocusM" Content="FocusM..." Style="{StaticResource ButtonStyle}" Margin="0" Click="BtnShowFocusM_Click"/>
-                <Button x:Name="btnShowStageM" Content="StageM..." Style="{StaticResource ButtonStyle}" Margin="8,0,0,0" Click="BtnShowStageM_Click"/>
-                <Button x:Name="btnShowLights" Content="Lights..." Style="{StaticResource ButtonStyle}" Margin="8,0,0,0" Click="BtnShowLights_Click"/>
-                <Button x:Name="btnShowConfig" Content="Config..." Style="{StaticResource ButtonStyle}" Margin="8,0,0,0" Click="BtnShowConfig_Click"/>
+                <Button x:Name="btnShowStageM" Content="StageM..." Style="{StaticResource ButtonStyle}" Margin="4,0,0,0" Click="BtnShowStageM_Click"/>
+                <Button x:Name="btnShowLights" Content="Lights..." Style="{StaticResource ButtonStyle}" Margin="4,0,0,0" Click="BtnShowLights_Click"/>
+                <Button x:Name="btnShowConfig" Content="Config..." Style="{StaticResource ButtonStyle}" Margin="4,0,0,0" Click="BtnShowConfig_Click"/>
             </StackPanel>
 
             <Grid Margin="0,16,8,0">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="60"/>
-                    <ColumnDefinition Width="90"/>
+                    <ColumnDefinition Width="30"/>
                     <ColumnDefinition Width="80"/>
-                    <ColumnDefinition Width="90"/>
                     <ColumnDefinition Width="80"/>
-                    <ColumnDefinition Width="40"/>
-                    <ColumnDefinition Width="120"/>
+                    <ColumnDefinition Width="80"/>
+                    <ColumnDefinition Width="80"/>
+                    <ColumnDefinition Width="20"/>
+                    <ColumnDefinition Width="70"/>
+                    <ColumnDefinition Width="70"/>
+                    <ColumnDefinition Width="*"/>
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
@@ -60,28 +63,31 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="24"/>
                 </Grid.RowDefinitions>
-                <Label x:Name="label301" Content="Cornea Ir Camera (Left)" Style="{StaticResource HeaderStyle}" Grid.Row="1" Grid.ColumnSpan="3"/>
+                <Label x:Name="label301" Content="Cornea Ir - Left" Style="{StaticResource HeaderStyle}" Grid.Row="1" Grid.ColumnSpan="2"/>
                 <Label x:Name="label302" Content="Analog Gain" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="1"/>
                 <TextBox x:Name="editCorneaAgain1" Style="{StaticResource TextBoxStyle}" Grid.Column="2" Grid.Row="2" KeyDown="EditCorneaAgain1_KeyDown"/>
                 <Label x:Name="label303" Content="Digital Gain" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="3"/>
                 <TextBox x:Name="editCorneaDgain1" Style="{StaticResource TextBoxStyle}" Grid.Column="4" Grid.Row="2" KeyDown="EditCorneaDgain1_KeyDown"/>
-                <CheckBox x:Name="checkAlignGuide1" Content="Align Guide" Style="{StaticResource CheckBoxStyle}" Grid.Row="2" Grid.Column="6" Click="checkAlignGuide1_Click"/>
+                <CheckBox x:Name="checkAlignGuide1" Content="Align" Style="{StaticResource CheckBoxStyle}" Grid.Row="2" Grid.Column="6" Click="checkAlignGuide1_Click"/>
+                <CheckBox x:Name="checkFocusGuide1" Content="Focus" Style="{StaticResource CheckBoxStyle}" Grid.Row="2" Grid.Column="7" Click="checkFocusGuide1_Click"/>
 
-                <Label x:Name="label401" Content="Cornea Ir Camera (Right)" Style="{StaticResource HeaderStyle}" Grid.Row="3" Grid.ColumnSpan="3"/>
+                <Label x:Name="label401" Content="Cornea Ir - Right" Style="{StaticResource HeaderStyle}" Grid.Row="3" Grid.ColumnSpan="2"/>
                 <Label x:Name="label402" Content="Analog Gain" Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="1"/>
                 <TextBox x:Name="editCorneaAgain2" Style="{StaticResource TextBoxStyle}" Grid.Column="2" Grid.Row="4" KeyDown="EditCorneaAgain2_KeyDown"/>
                 <Label x:Name="label403" Content="Digital Gain" Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="3"/>
                 <TextBox x:Name="editCorneaDgain2" Style="{StaticResource TextBoxStyle}" Grid.Column="4" Grid.Row="4" KeyDown="EditCorneaDgain2_KeyDown"/>
-                <CheckBox x:Name="checkAlignGuide2" Content="Align Guide" Style="{StaticResource CheckBoxStyle}" Grid.Row="4" Grid.Column="6" Click="checkAlignGuide2_Click"/>
+                <CheckBox x:Name="checkAlignGuide2" Content="Align" Style="{StaticResource CheckBoxStyle}" Grid.Row="4" Grid.Column="6" Click="checkAlignGuide2_Click"/>
+                <CheckBox x:Name="checkFocusGuide2" Content="Focus" Style="{StaticResource CheckBoxStyle}" Grid.Row="4" Grid.Column="7" Click="checkFocusGuide2_Click"/>
 
-                <Label x:Name="label501" Content="Cornea Ir Camera (Lower)" Style="{StaticResource HeaderStyle}" Grid.Row="5" Grid.ColumnSpan="3"/>
+                <Label x:Name="label501" Content="Cornea Ir - Lower" Style="{StaticResource HeaderStyle}" Grid.Row="5" Grid.ColumnSpan="2"/>
                 <Label x:Name="label502" Content="Analog Gain" Style="{StaticResource LabelStyle}" Grid.Row="6" Grid.Column="1"/>
                 <TextBox x:Name="editCorneaAgain3" Style="{StaticResource TextBoxStyle}" Grid.Column="2" Grid.Row="6" KeyDown="EditCorneaAgain3_KeyDown"/>
                 <Label x:Name="label503" Content="Digital Gain" Style="{StaticResource LabelStyle}" Grid.Row="6" Grid.Column="3"/>
                 <TextBox x:Name="editCorneaDgain3" Style="{StaticResource TextBoxStyle}" Grid.Column="4" Grid.Row="6" KeyDown="EditCorneaDgain3_KeyDown"/>
-                <CheckBox x:Name="checkAlignGuide3" Content="Align Guide" Style="{StaticResource CheckBoxStyle}" Grid.Row="6" Grid.Column="6" Click="checkAlignGuide3_Click"/>
+                <CheckBox x:Name="checkAlignGuide3" Content="Align" Style="{StaticResource CheckBoxStyle}" Grid.Row="6" Grid.Column="6" Click="checkAlignGuide3_Click"/>
+                <CheckBox x:Name="checkFocusGuide3" Content="Focus" Style="{StaticResource CheckBoxStyle}" Grid.Row="6" Grid.Column="7" Click="checkFocusGuide3_Click"/>
 
-                <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="7" Grid.RowSpan="8"/>
+                <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="9" Grid.RowSpan="8"/>
             </Grid>
         </StackPanel>
     </Grid>

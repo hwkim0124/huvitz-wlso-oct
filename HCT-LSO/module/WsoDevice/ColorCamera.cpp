@@ -122,7 +122,7 @@ bool wso_device::ColorCamera::initialize(void)
 	impl().pCam = impl().camList.GetByIndex(0);
 	impl().pCam->Init();
 
-	//setInitParameters();
+	setDefaultParameters(true);
 
 	impl().initiated = true;
 	return true;

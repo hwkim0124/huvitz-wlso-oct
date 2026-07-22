@@ -140,6 +140,14 @@ namespace WsoToolkit
             corneaPreview2.Callback = _onCorneaRightFrameCaptured;
             corneaPreview3.Callback = _onCorneaLowerFrameCaptured;
 
+            corneaPreview1.IsStageControlEnabled = true;
+            corneaPreview2.IsStageControlEnabled = true;
+            corneaPreview3.IsStageControlEnabled = true;
+
+            corneaPreview1.IsOverlayFocusGuide = true;
+            corneaPreview2.IsOverlayFocusGuide = true;
+            corneaPreview3.IsOverlayFocusGuide = true;
+
             corneaPreview1.Play();
             corneaPreview2.Play();
             corneaPreview3.Play();

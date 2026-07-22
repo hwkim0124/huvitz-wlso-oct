@@ -327,6 +327,73 @@ bool wso_device::StepMotor::controlJogg(int delta)
 	return false;
 }
 
+bool wso_device::StepMotor::moveVelocity(int direction)
+{
+	if (!isInitiated()) {
+		return false;
+	}
+
+	UsbComm& usbComm = getMainBoard()->getUsbComm();
+	if (usbComm.MotorMoveVelocity(getMotorId(), (uint8_t)direction)) {
+		return true;
+	}
+	LogD() << "StepMotor::moveVelocity() failed, name: " << getName();
+	return false;
+}
+
+bool wso_device::StepMotor::stopVelocity(void)
+{
+	if (!isInitiated()) {
+		return false;
+	}
+
+	UsbComm& usbComm = getMainBoard()->getUsbComm();
+	if (usbComm.MotorStopVelocity(getMotorId())) {
+		if (!updateStatus()) {
+			return false;
+		}
+		int pos = getPosition();
+		float value = getCurrentValueByPosition();
+		CallbackRegistry::getInstance()->runStepMotorPositionChanged(getMotorType(), pos, value);
+		return true;
+	}
+	LogD() << "StepMotor::controlStopVelocity() failed, name: " << getName();
+	return false;
+}
+
+bool wso_device::StepMotor::setVelocityProfile(int nAccelStop, int nMinSpeed, int nMaxSpeed)
+{
+	if (!isInitiated()) {
+		return false;
+	}
+
+	UsbComm& usbComm = getMainBoard()->getUsbComm();
+	if (usbComm.WriteMotorSpeedVelocity(getMotorId(), (uint32_t)nAccelStop, (uint32_t)nMinSpeed, (uint32_t)nMaxSpeed)) {
+		if (!updateStatus()) {
+			return false;
+		}
+		return true;
+	}
+	LogD() << "StepMotor::setVelocityProfile() failed, name: " << getName() << ", acc_stop: " << nAccelStop << ", min_speed: " << nMinSpeed << ", max_speed: " << nMaxSpeed;
+	return false;
+}
+
+bool wso_device::StepMotor::setDefaultVelocity(void)
+{
+	if (!isInitiated()) {
+		return false;
+	}
+
+	UsbComm& usbComm = getMainBoard()->getUsbComm();
+	if (usbComm.MotorSpeedDefaultVelocity(getMotorId())) {
+		if (!updateStatus()) {
+			return false;
+		}
+		return true;
+	}
+	LogD() << "StepMotor::setDefaultVelocity() failed, name: " << getName();
+	return false;
+}
 
 bool wso_device::StepMotor::updateStopVelocity()
 {

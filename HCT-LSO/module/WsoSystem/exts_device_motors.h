@@ -36,6 +36,16 @@ namespace wso_system
 		float WSOSYSTEM_DLL_API __stdcall getStepMotorValue(MotorType type);
 		float WSOSYSTEM_DLL_API __stdcall getStepMotorValueAtPosition(MotorType type, int pos);
 
+		bool WSOSYSTEM_DLL_API __stdcall moveStageLeft(void);
+		bool WSOSYSTEM_DLL_API __stdcall moveStageRight(void);
+		bool WSOSYSTEM_DLL_API __stdcall moveStageUp(void);
+		bool WSOSYSTEM_DLL_API __stdcall moveStageDown(void);
+		bool WSOSYSTEM_DLL_API __stdcall moveStageForward(void);
+		bool WSOSYSTEM_DLL_API __stdcall moveStageBackward(void);
+		bool WSOSYSTEM_DLL_API __stdcall stopStageX(void);
+		bool WSOSYSTEM_DLL_API __stdcall stopStageY(void);
+		bool WSOSYSTEM_DLL_API __stdcall stopStageZ(void);
+		bool WSOSYSTEM_DLL_API __stdcall stopStageAll(void);
 
 		// PI Sensor Vaule
 		///////////////////////////////////////////////////////////////////////////////////////////

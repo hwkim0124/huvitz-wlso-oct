@@ -46,9 +46,21 @@ namespace WsoToolkit
             corneaPreview2.IsOverlayAlignGuide = true;
             corneaPreview3.IsOverlayAlignGuide = true;
 
+            corneaPreview1.IsOverlayFocusGuide = false;
+            corneaPreview2.IsOverlayFocusGuide= false;
+            corneaPreview3.IsOverlayFocusGuide = false;
+
+            corneaPreview1.IsStageControlEnabled = true;
+            corneaPreview2.IsStageControlEnabled = true;
+            corneaPreview3.IsStageControlEnabled = true;
+
             checkAlignGuide1.IsChecked = true;
             checkAlignGuide2.IsChecked = true;
             checkAlignGuide3.IsChecked = true;
+
+            checkFocusGuide1.IsChecked = false;
+            checkFocusGuide2.IsChecked = false;
+            checkFocusGuide3.IsChecked = false;
         }
 
         private void Window_Closed(object sender, EventArgs e)
@@ -181,6 +193,29 @@ namespace WsoToolkit
         private void checkAlignGuide3_Click(object sender, RoutedEventArgs e)
         {
             corneaPreview3.IsOverlayAlignGuide = checkAlignGuide3.IsChecked == true;
+        }
+
+        private void checkFocusGuide1_Click(object sender, RoutedEventArgs e)
+        {
+            corneaPreview1.IsOverlayFocusGuide = checkFocusGuide1.IsChecked == true;
+        }
+
+        private void checkFocusGuide2_Click(object sender, RoutedEventArgs e)
+        {
+            corneaPreview2.IsOverlayFocusGuide = checkFocusGuide2.IsChecked == true;
+        }
+
+        private void checkFocusGuide3_Click(object sender, RoutedEventArgs e)
+        {
+            corneaPreview3.IsOverlayFocusGuide= checkFocusGuide3.IsChecked == true;
+        }
+
+        private void BtnSaveFrame_Click(object sender, RoutedEventArgs e)
+        {
+            corneaPreview1.SaveFrameImage();
+            corneaPreview2.SaveFrameImage();
+            corneaPreview3.SaveFrameImage();
+            MsgBoxUtil.ShowInfo("Cornea frame images saved in cornea folder.");
         }
     }
 }

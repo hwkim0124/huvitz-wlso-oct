@@ -44,6 +44,11 @@ namespace wso_device
 		bool controlStop(void);
 		bool controlJogg(int delta);
 
+		bool moveVelocity(int direction);
+		bool stopVelocity(void);
+		bool setVelocityProfile(int nAccelStop, int nMinSpeed, int nMaxSpeed);
+		bool setDefaultVelocity(void);
+
 		bool updateStopVelocity();
 		bool controlMoveVelocity(int direction);
 		bool controlStopVelocity();

@@ -13,7 +13,9 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.IO;
 using WsoNativeLib;
+using WsoToolkit.utils;
 
 namespace WsoToolkit.controls
 {
@@ -33,16 +35,20 @@ namespace WsoToolkit.controls
         const int AVERAGE_SIZE = 90;
 
         Stopwatch _stopwatch = new();
+        private readonly object _syncLock = new object();
 
         public bool IsStretchToFit { get; set; } = true;
         public bool IsOverlayAlignGuide { get; set; } = false;
         public bool IsOverlayFocusGuide { get; set; } = false;
+        public bool IsStageControlEnabled { get; set; } = false;
+
         public WsoDevice.CameraType CameraType { get; set; } = WsoDevice.CameraType.IrCorneaLeft;
         public WsoCallback.CorneaCameraFrameCaptured? Callback { get; set; } = null;
 
         public CorneaCameraPreview()
         {
             InitializeComponent();
+            RegisterMouseEventHandlers();
         }
 
         private void UpdateCameraStatusItems()
@@ -64,6 +70,26 @@ namespace WsoToolkit.controls
             string s = string.Format("{0}, {1}x{2}, {3:F0}fps", GetCameraTypeName(type), _imageWidth, _imageHeight, frate);
             s += string.Format(" - a/dgain: {0:F2}, {1:F2}", again, dgain);
             lblStatus.Content = s;
+        }
+
+        public string GetCameraName()
+        {
+            return GetCameraTypeName(CameraType);
+        }
+
+        public bool IsCorneaLeftPreview()
+        {
+            return CameraType == WsoDevice.CameraType.IrCorneaLeft;
+        }
+
+        public bool IsCorneaRightPreview()
+        {
+            return CameraType == WsoDevice.CameraType.IrCorneaRight;
+        }
+
+        public bool IsCorneaLowerPreview()
+        {
+            return CameraType == WsoDevice.CameraType.IrCorneaLower;
         }
 
         private string GetCameraTypeName(WsoDevice.CameraType type)
@@ -96,9 +122,12 @@ namespace WsoToolkit.controls
                 // creating a lightweight header over your camera buffer.
                 using (Mat rawFrame = Mat.FromPixelData(height, width, MatType.CV_8UC1, data, step))
                 {
-                    _imageWidth = width;
-                    _imageHeight = height;
-                    rawFrame.CopyTo(_imageMat);
+                    lock (_syncLock)
+                    {
+                        _imageWidth = width;
+                        _imageHeight = height;
+                        rawFrame.CopyTo(_imageMat);
+                    }
                     UpdateCameraStatusItems();
                     UpdateCameraFrameImage();
                 }
@@ -160,7 +189,7 @@ namespace WsoToolkit.controls
 
         private void DrawOverlayFocusGuide(ref Mat image)
         {
-            if (IsOverlayFocusGuide != true || IsOverlayAlignGuide == true)
+            if (IsOverlayFocusGuide != true)
             {
                 return;
             }
@@ -171,14 +200,17 @@ namespace WsoToolkit.controls
             var img_cy = img_h / 2;
             var color = new Scalar(255, 255, 0);
 
-            if (CameraType != WsoDevice.CameraType.IrCorneaLeft && CameraType != WsoDevice.CameraType.IrCorneaRight)
+            if (CameraType == WsoDevice.CameraType.IrCorneaLeft || CameraType == WsoDevice.CameraType.IrCorneaRight)
             {
-                var unit_h = img_h / 24;
+                var unit_h = img_h / 12;
                 Cv2.Line(image, 0, img_cy - unit_h * 1, img_w - 1, img_cy - unit_h * 1, color, 1, LineTypes.AntiAlias);
                 Cv2.Line(image, 0, img_cy + unit_h * 1, img_w - 1, img_cy + unit_h * 1, color, 1, LineTypes.AntiAlias);
+
+                Cv2.Line(image, img_cx, 0, img_cx, img_h - 1, color, 1, LineTypes.AntiAlias);
             }
             else if (CameraType == WsoDevice.CameraType.IrCorneaLower)
             {
+                Cv2.Line(image, 0, img_cy, img_w-1, img_cy, color, 1, LineTypes.AntiAlias);
                 Cv2.Line(image, img_cx, 0, img_cx, img_h-1, color, 1, LineTypes.AntiAlias);
             }
             return;
@@ -186,7 +218,7 @@ namespace WsoToolkit.controls
 
         private void DrawOverlayAlignGuide(ref Mat image)
         {
-            if (IsOverlayAlignGuide != true || IsOverlayFocusGuide == true)
+            if (IsOverlayAlignGuide != true)
             {
                 return;
             }
@@ -260,6 +292,117 @@ namespace WsoToolkit.controls
             {
                 Stop();
             }
+        }
+
+        public void SaveFrameImage(string filename = "")
+        {
+            if (_imageMat.Empty())
+            {
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(filename))
+            {
+                string timestamp = DateTime.Now.ToString("yyMMdd_HHmmss");
+                filename = $"{GetCameraName()}_{timestamp}.png";
+            }
+
+            string dirname = ".\\cornea";
+            if (!Directory.Exists(dirname))
+            {
+                Directory.CreateDirectory(dirname);
+            }
+            string path = dirname + "\\" + filename;
+
+            lock (_syncLock)
+            {
+                Cv2.ImWrite(path, _imageMat);
+            }
+            return;
+        }
+
+        private void RegisterMouseEventHandlers()
+        {
+            imageViewport.MouseDown += (sender, e) =>
+            {
+                if (IsStageControlEnabled && e.LeftButton == MouseButtonState.Pressed)
+                {
+                    var position = e.GetPosition(imageViewport);
+                    double normalizedX = position.X / imageViewport.ActualWidth;
+                    double normalizedY = position.Y / imageViewport.ActualHeight;
+                    double targetX1 = 0.5 - 0.08;
+                    double targetX2 = 0.5 + 0.08;
+                    double targetY1 = 0.5 - 0.08;
+                    double targetY2 = 0.5 + 0.08;
+                    double centerX = 0.5;
+                    double centerY = 0.5;
+
+                    if (IsCorneaLeftPreview() || IsCorneaRightPreview())
+                    {
+                        if (normalizedX < targetX1 || normalizedX > targetX2)
+                        {
+                            if (normalizedX < centerX)
+                            {
+                                StageMotors.MoveLeft();
+                            }
+                            else
+                            {
+                                StageMotors.MoveRight();
+                            }
+
+                            if (normalizedY < targetY1)
+                            {
+                                StageMotors.MoveUp();
+                            }
+                            else if (normalizedY > targetY2)
+                            {
+                                StageMotors.MoveDown();
+                            }
+                        }
+                        else
+                        {
+                            if (normalizedY < centerY)
+                            {
+                                StageMotors.MoveUp();
+                            }
+                            else
+                            {
+                                StageMotors.MoveDown();
+                            }
+                            if (normalizedY >= targetY1 && normalizedY <= targetY2)
+                            {
+                                if (normalizedX < centerX)
+                                {
+                                    StageMotors.MoveLeft();
+                                }
+                                else
+                                {
+                                    StageMotors.MoveRight();
+                                }
+                            }
+                        }
+                    }
+                    else if (IsCorneaLowerPreview())
+                    {
+                        if (normalizedY < targetY1)
+                        {
+                            StageMotors.MoveForward();
+                        }
+                        else if (normalizedY > targetY2)
+                        {
+                            StageMotors.MoveBackward();
+                        }
+                    }
+                }
+            };
+
+            imageViewport.MouseUp += (sender, e) =>
+            {
+                if (IsStageControlEnabled && e.LeftButton == MouseButtonState.Released)
+                {
+                    StageMotors.StopAll();
+                }
+            };
         }
     }
 }
