@@ -37,6 +37,15 @@ namespace WsoToolkit.controls
         Stopwatch _stopwatch = new();
         private readonly object _syncLock = new object();
 
+        // Frame rate measured from the actual capture-callback rate (see MarkFrameCaptured),
+        // ticked before the UI-side frame coalescing so it reflects the true camera rate
+        // rather than the throttled preview-update rate. Guarded because MarkFrameCaptured
+        // runs on the native callback thread while the status label is read on the UI thread.
+        private readonly Stopwatch _captureStopwatch = new();
+        private readonly object _fpsLock = new object();
+        private double _captureFrameRate = 0.0;
+        private bool _hasCaptureFrameRate = false;
+
         public bool IsStretchToFit { get; set; } = true;
         public bool IsOverlayAlignGuide { get; set; } = false;
         public bool IsOverlayFocusGuide { get; set; } = false;
@@ -51,12 +60,49 @@ namespace WsoToolkit.controls
             RegisterMouseEventHandlers();
         }
 
+        /// <summary>
+        /// Tick once per actual captured frame, before any pending/coalescing gate, so the
+        /// reported FPS reflects the true capture rate instead of the throttled update rate.
+        /// Thread-safe; may be called from the native callback thread.
+        /// </summary>
+        public void MarkFrameCaptured()
+        {
+            lock (_fpsLock)
+            {
+                if (!_captureStopwatch.IsRunning)
+                {
+                    _captureStopwatch.Restart();
+                    return;
+                }
+
+                double ms = _captureStopwatch.Elapsed.TotalMilliseconds;
+                _captureStopwatch.Restart();
+                if (ms > 0.0)
+                {
+                    double inst = 1000.0 / ms;
+                    // Exponential moving average to smooth the reading.
+                    _captureFrameRate = _hasCaptureFrameRate ? (_captureFrameRate * 0.9 + inst * 0.1) : inst;
+                    _hasCaptureFrameRate = true;
+                }
+            }
+        }
+
         private void UpdateCameraStatusItems()
         {
             _stopwatch.Stop();
             int frate = (int)(1000.0f / _stopwatch.ElapsedMilliseconds);
             frate = _frameCount == 1 ? 0 : frate;
             _stopwatch.Restart();
+
+            // Prefer the true capture rate (ticked before UI-side coalescing) when available;
+            // otherwise fall back to the preview-update interval measured above.
+            lock (_fpsLock)
+            {
+                if (_hasCaptureFrameRate)
+                {
+                    frate = (int)Math.Round(_captureFrameRate);
+                }
+            }
 
             if (_frameCount > 1 && _frameCount % AVERAGE_SIZE != 0)
             {

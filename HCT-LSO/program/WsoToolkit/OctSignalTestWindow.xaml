@@ -14,7 +14,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="392"/>
+            <ColumnDefinition Width="350"/>
             <ColumnDefinition Width="4"/>
             <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="4"/>
@@ -22,22 +22,22 @@
             <ColumnDefinition Width="4"/>
         </Grid.ColumnDefinitions>
         <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Vertical">
-            <controls:CorneaCameraPreview x:Name="corneaPreview1" Width="384" Height="312"/>
-            <controls:CorneaCameraPreview x:Name="corneaPreview2" Width="384" Height="312"/>
-            <controls:CorneaCameraPreview x:Name="corneaPreview3" Width="384" Height="312"/>
-            
-            <Grid Margin="0,8,0,0">
+            <controls:CorneaCameraPreview x:Name="corneaPreview1" Width="340" Height="280"/>
+            <controls:CorneaCameraPreview x:Name="corneaPreview2" Width="340" Height="280"/>
+            <controls:RetinaCameraPreview x:Name="retinaPreview" Width="344" Height="280"/>
+
+            <Grid Margin="4,0,4,0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="12"/>
+                    <RowDefinition Height="8"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="20"/>
+                    <ColumnDefinition Width="10"/>
                     <ColumnDefinition Width="4"/>
-                    <ColumnDefinition Width="180"/>
+                    <ColumnDefinition Width="160"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <Label x:Name="label201" Content="Signal Processing Options" Style="{StaticResource HeaderStyle}" Grid.ColumnSpan="3" Margin="16,0,0,0" HorizontalAlignment="Left"/>
@@ -51,11 +51,11 @@
             </Grid>
         </StackPanel>
         <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Vertical">
-            <controls:OctSignalIntensityGraph x:Name="octIntensityGraph" Width="1024" Height="512"/>
-            <controls:OctScanImagePreview x:Name="octScanImagePreview" Width="1024" Height="512"/>
+            <controls:OctSignalIntensityGraph x:Name="octIntensityGraph" Width="960" Height="480"/>
+            <controls:OctScanImagePreview x:Name="octScanImagePreview" Width="960" Height="480"/>
         </StackPanel>
         <StackPanel Grid.Row="0" Grid.Column="4" Orientation="Vertical" Margin="0,0,0,0">
-            <controls:OctSignalSpectrumGraph x:Name="octSpectrumGraph"/>
+            <controls:OctSignalSpectrumGraph x:Name="octSpectrumGraph" Width="512" Height="320"/>
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="4,4,0,4">
                 <Button x:Name="btnStartScan" Content="Start Scan" Style="{StaticResource ButtonM1Style}" Margin="0" Click="BtnStartScan_Click"/>
@@ -240,7 +240,6 @@
                 </StackPanel>
                 <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="7" Grid.RowSpan="6"/>
             </Grid>
-            <controls:RetinaCameraPreview x:Name="retinaPreview" Width="384" Height="312"/>
         </StackPanel>
     </Grid>
 </Window>

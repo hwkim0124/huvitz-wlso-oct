@@ -14,6 +14,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace WsoToolkit.controls
 {
@@ -56,6 +57,11 @@ namespace WsoToolkit.controls
         private float _resampleMaxValue = 0.0f;
         private float _resampleMinValue = 0.0f;
 
+        // The graph repaints on a fixed cadence, decoupled from the frame/averaging
+        // rate, and only when new data has arrived.
+        private readonly DispatcherTimer _redrawTimer;
+        private bool _dirty = false;
+
         public OctSignalSpectrumGraph()
         {
             InitializeComponent();
@@ -65,6 +71,23 @@ namespace WsoToolkit.controls
 
             SetAveragingSize(10);
             UpdatePlotAxisRange();
+
+            _redrawTimer = new DispatcherTimer(DispatcherPriority.Background)
+            {
+                Interval = TimeSpan.FromMilliseconds(50)   // ~20 Hz, independent of averaging size
+            };
+            _redrawTimer.Tick += OnRedrawTick;
+            _redrawTimer.Start();
+        }
+
+        private void OnRedrawTick(object? sender, EventArgs e)
+        {
+            if (!_dirty)
+            {
+                return;
+            }
+            _dirty = false;
+            RedrawGraph();
         }
 
         public void CallbackOctSpectrumDataCaptured(ushort[] data, int width, int height)
@@ -83,9 +106,9 @@ namespace WsoToolkit.controls
 
             UpdateSpectrumLine();
 
-            if (_spectrumCount >= _averagingSize && _spectrumCount % Math.Max(_averagingSize, 1) == 0)
+            if (_spectrumCount >= _averagingSize)
             {
-                RedrawGraph();
+                _dirty = true;   // actual repaint happens on the redraw timer
             }
         }
 
@@ -254,10 +277,8 @@ namespace WsoToolkit.controls
             string s = String.Format("Spectrum: {0} ~ {1}, Fwhm: {2:F2} ({3},{4}), Resample: {5:F2} ~ {6:F2}",
                 _fullMinValue, _fullMaxValue, _halfMaxWlenDist, _halfMaxIndex1, _halfMaxIndex2, _resampleMinValue, _resampleMaxValue);
 
-            Dispatcher.Invoke(delegate
-            {
-                lblStatus.Content = s;
-            });
+            // Called from the redraw timer, which already runs on the UI thread.
+            lblStatus.Content = s;
         }
 
         private void UpdatePlotAxisRange()
@@ -299,6 +320,7 @@ namespace WsoToolkit.controls
             }
             _spectrumIndex = 0;
             _resampleIndex = 0;
+            _dirty = false;
         }
 
         public void SetDetectorWavelengths(double[] wlen)

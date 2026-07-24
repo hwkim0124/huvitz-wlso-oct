@@ -607,12 +607,6 @@ bool oct_scan::ScanGrab::processGrabPreviewHD(void)
 	StopWatch::start();
 	impl().tickMsrAcqStart = GetTickCount64();
 
-	/*
-	if (impl().scanDesc->getPattern().isAngioScan()) {
-		return true;
-	}
-	*/
-
 	PreviewScan& preview = getPattern()->getPreviewScan();
 	int numFrames = preview.getNumberOfPatternFrames();
 	int buffStart = 0;

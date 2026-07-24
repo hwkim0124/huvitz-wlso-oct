@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -36,6 +37,15 @@ namespace WsoToolkit.controls
         List<OpenCvSharp.Point> _drawPoints = new();
 
         Stopwatch _stopwatch = new();
+
+        // Frame rate measured from the actual capture-callback rate (see MarkFrameCaptured),
+        // ticked before the UI-side frame coalescing so it reflects the true capture rate
+        // rather than the throttled preview-update rate. Guarded because MarkFrameCaptured
+        // runs on the native callback thread while the status label is read on the UI thread.
+        private readonly Stopwatch _captureStopwatch = new();
+        private readonly object _fpsLock = new object();
+        private double _captureFrameRate = 0.0;
+        private bool _hasCaptureFrameRate = false;
 
         public bool IsStretchToHeight { get; set; } = true;
         public bool IsPreviewMode { get; set; } = true;
@@ -102,6 +112,33 @@ namespace WsoToolkit.controls
             _chartCenterLateralPos = lateralPos;
         }
 
+        /// <summary>
+        /// Tick once per actual captured frame, before any pending/coalescing gate, so the
+        /// reported frame rate reflects the true capture rate instead of the throttled
+        /// update rate. Thread-safe; may be called from the native callback thread.
+        /// </summary>
+        public void MarkFrameCaptured()
+        {
+            lock (_fpsLock)
+            {
+                if (!_captureStopwatch.IsRunning)
+                {
+                    _captureStopwatch.Restart();
+                    return;
+                }
+
+                double ms = _captureStopwatch.Elapsed.TotalMilliseconds;
+                _captureStopwatch.Restart();
+                if (ms > 0.0)
+                {
+                    double inst = 1000.0 / ms;
+                    // Exponential moving average to smooth the reading.
+                    _captureFrameRate = _hasCaptureFrameRate ? (_captureFrameRate * 0.9 + inst * 0.1) : inst;
+                    _hasCaptureFrameRate = true;
+                }
+            }
+        }
+
         private void UpdatePreviewStatus()
         {
             _stopwatch.Stop();
@@ -109,6 +146,16 @@ namespace WsoToolkit.controls
             _frameCount++;
             frate = _frameCount == 1 ? 0 : frate;
             _stopwatch.Restart();
+
+            // Prefer the true capture rate (ticked before UI-side coalescing) when available;
+            // otherwise fall back to the preview-update interval measured above.
+            lock (_fpsLock)
+            {
+                if (_hasCaptureFrameRate)
+                {
+                    frate = (float)_captureFrameRate;
+                }
+            }
 
             if (_frameCount > 1 && _frameCount % AVERAGE_SIZE != 0)
             {
@@ -132,7 +179,7 @@ namespace WsoToolkit.controls
             lblStatus.Content = s1 + s2 + s3;
         }
 
-        public void CallbackOctScanPreviewImageCaptured(nint data, int width, int height, float quality, float snr_ratio, int ref_point, int image_index)
+        public void CallbackOctScanPreviewImageCaptured(byte[] data, int width, int height, float quality, float snr_ratio, int ref_point, int image_index)
         {
             ScanLineIndex = image_index;
             _imageWidth = width;
@@ -150,12 +197,16 @@ namespace WsoToolkit.controls
                 UpdatePatternStatus();
             }
 
-            if (data == 0) return;
+            // 8-bit grayscale preview (CV_8UC1), so 1 byte/pixel.
+            if (data == null || data.Length < width * height) return;
             nint step = width * sizeof(byte);
 
+            // Pin the managed buffer so OpenCV can wrap it without copying; the pin lasts
+            // only for the CopyTo, which snapshots the pixels into _imageMat.
+            GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
             try
             {
-                using (Mat rawFrame = Mat.FromPixelData(height, width, MatType.CV_8UC1, data, step))
+                using (Mat rawFrame = Mat.FromPixelData(height, width, MatType.CV_8UC1, handle.AddrOfPinnedObject(), step))
                 {
                     rawFrame.CopyTo(_imageMat);
                     _drawPoints.Clear();
@@ -164,6 +215,10 @@ namespace WsoToolkit.controls
             } catch (Exception e)
             {
                 e.ToString();
+            }
+            finally
+            {
+                handle.Free();
             }
             return;
         }

@@ -14,6 +14,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 using WsoNativeLib;
 
 namespace WsoToolkit.controls
@@ -27,7 +28,8 @@ namespace WsoToolkit.controls
         public int AxisX_Min { get; set; } = 0;
 
 
-        private const int DATA_WIDTH = 4096;
+        // Sized for the worst case (zero-padding x4 => height ~= 1 + 2048*4/2 = 4097).
+        private const int DATA_WIDTH = 4160;
         private const int PEAK_AVERAGE_SIZE = 10;
         private const int SNR_AVERAGE_SIZE = 100;
         private const double AXIAL_REF_INDEX = 1.36;
@@ -36,7 +38,6 @@ namespace WsoToolkit.controls
         private int _intensityCount = 0;
         private int _averagingSize = 1;
         private int _dataBuffIndex = 0;
-        private int _dataWidth = 0;
         private int _dataHeight = 0;
 
         private int _peakTopIndex = 0;
@@ -71,6 +72,15 @@ namespace WsoToolkit.controls
         private List<float[]> _listDataBuffer = new();
         private float[] _intensityLine = new float[DATA_WIDTH];
 
+        // Running (sliding-window) sum of the ring buffer, kept in double to avoid
+        // float drift over long runs. Averaging is then O(height) per frame.
+        private readonly double[] _runningSum = new double[DATA_WIDTH];
+
+        // The graph repaints on a fixed cadence, decoupled from the frame/averaging
+        // rate, and only when new data has arrived.
+        private readonly DispatcherTimer _redrawTimer;
+        private bool _dirty = false;
+
         public OctSignalIntensityGraph()
         {
             InitializeComponent();
@@ -80,29 +90,50 @@ namespace WsoToolkit.controls
 
             SetAveragingSize(10);
             UpdatePlotAxisRange();
+
+            _redrawTimer = new DispatcherTimer(DispatcherPriority.Background)
+            {
+                Interval = TimeSpan.FromMilliseconds(50)   // ~20 Hz, independent of averaging size
+            };
+            _redrawTimer.Tick += OnRedrawTick;
+            _redrawTimer.Start();
         }
 
-        public void CallbackOctIntensityDataCaptured(float[] data, int width, int height)
+        private void OnRedrawTick(object? sender, EventArgs e)
         {
-            if (data == null || data.Length == 0)
+            if (!_dirty)
             {
                 return;
             }
-            _dataWidth = width;
-            _dataHeight = height;
+            _dirty = false;
+            RedrawGraph();
+        }
+
+        public void CallbackOctIntensityDataCaptured(float[] column, int height)
+        {
+            if (column == null || column.Length == 0)
+            {
+                return;
+            }
+            _dataHeight = (height <= DATA_WIDTH ? height : DATA_WIDTH);
             _callbackCount += 1;
 
+            // Sliding-window running sum: subtract the value this ring slot held and
+            // add the incoming one, so re-averaging costs O(height), not O(size*height).
+            float[] slot = _listDataBuffer[_dataBuffIndex];
             for (int i = 0; i < _dataHeight; i++)
             {
-                _listDataBuffer[_dataBuffIndex][i] = data[i * _dataWidth + CurrentLinePosition];
+                float v = column[i];
+                _runningSum[i] += v - slot[i];
+                slot[i] = v;
             }
             _dataBuffIndex = (_averagingSize <= 1 ? 0 : (_dataBuffIndex + 1) % _averagingSize);
 
             UpdateIntensityLine();
 
-            if (_callbackCount >= _averagingSize && _callbackCount % _averagingSize == 0)
+            if (_callbackCount >= _averagingSize)
             {
-                RedrawGraph();
+                _dirty = true;   // actual repaint happens on the redraw timer
             }
         }
 
@@ -120,15 +151,15 @@ namespace WsoToolkit.controls
                 }
                 else
                 {
-                    Array.Clear(_intensityLine, 0, _intensityLine.Length);
-                    int size = _listDataBuffer.Count;
+                    double inv = 1.0 / _averagingSize;   // == _listDataBuffer.Count
                     for (int i = 0; i < _dataHeight; i++)
                     {
-                        for (int j = 0; j < size; j++)
-                        {
-                            _intensityLine[i] += _listDataBuffer[j][i];
-                        }
-                        _intensityLine[i] /= size;
+                        _intensityLine[i] = (float)(_runningSum[i] * inv);
+                    }
+                    // Keep the unused tail zeroed so RedrawGraph doesn't plot stale values.
+                    if (_dataHeight < _intensityLine.Length)
+                    {
+                        Array.Clear(_intensityLine, _dataHeight, _intensityLine.Length - _dataHeight);
                     }
                 }
                 _intensityCount += 1;
@@ -314,13 +345,11 @@ namespace WsoToolkit.controls
             string s3 = String.Format("SNR ratio: {0:F2} db, max: {1:F2} db, avg: {2:F2} db", _peakSnrRatio, _maxPeakSnrRatio, _avgPeakSnrRatio);
             string s4 = String.Format("FWHM avg.: {0:F2}, resol {1:F4}", _avgPeakFwhmDist, resol2);
 
-            Dispatcher.Invoke(delegate
-            {
-                lblStatus1.Content = s1;
-                lblStatus2.Content = s2;
-                lblStatus3.Content = s3;
-                lblStatus4.Content = s4;
-            });
+            // Called from the redraw timer, which already runs on the UI thread.
+            lblStatus1.Content = s1;
+            lblStatus2.Content = s2;
+            lblStatus3.Content = s3;
+            lblStatus4.Content = s4;
         }
 
         public void UpdatePlotAxisRange()
@@ -358,7 +387,10 @@ namespace WsoToolkit.controls
             {
                 _listDataBuffer.Add(new float[DATA_WIDTH]);
             }
+            Array.Clear(_runningSum, 0, _runningSum.Length);
             _callbackCount = 0;
+            _dataBuffIndex = 0;
+            _dirty = false;
         }
 
         public int GetPeakTopIndex()

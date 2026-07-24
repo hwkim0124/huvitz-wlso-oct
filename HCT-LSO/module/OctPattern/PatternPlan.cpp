@@ -213,7 +213,16 @@ bool oct_pattern::PatternPlan::buildPreviewPattern(OctScanProtocol& protocol)
 	if (!usePattern) {
 		if (type != OctPatternType::POINT) {
 			type = pattern.previewType;
-			numLines = (type == OctPatternType::CROSS ? 2 : 1);
+			if (type == OctPatternType::MULTI_LINE || type == OctPatternType::VERT_MULTI_LINE) {
+				numLines = 4;
+				numPoints = PATTERN_PREVIEW_MULTI_NUM_POINTS;
+			}
+			else if (type == OctPatternType::CROSS) {
+				numLines = 2;
+			}
+			else {
+				numLines = 1;
+			}
 		}
 		if (pattern.isAngioPattern()) {
 			numPoints = pattern.numAscan;

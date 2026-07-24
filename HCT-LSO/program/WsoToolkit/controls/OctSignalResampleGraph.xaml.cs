@@ -15,6 +15,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 using WsoNativeLib;
 
 namespace WsoToolkit.controls
@@ -76,6 +77,11 @@ namespace WsoToolkit.controls
         private double _maxFwhmWlenDist = 0.0;
         private double _maxFwhmIndexDist = 0.0;
 
+        // The graph repaints on a fixed cadence, decoupled from the frame/averaging
+        // rate, and only when new data has arrived.
+        private readonly DispatcherTimer _redrawTimer;
+        private bool _dirty = false;
+
         public OctSignalResampleGraph()
         {
             InitializeComponent();
@@ -84,6 +90,23 @@ namespace WsoToolkit.controls
             plotView.Model = Model;
 
             UpdatePlotAxisRange();
+
+            _redrawTimer = new DispatcherTimer(DispatcherPriority.Background)
+            {
+                Interval = TimeSpan.FromMilliseconds(50)   // ~20 Hz, independent of averaging size
+            };
+            _redrawTimer.Tick += OnRedrawTick;
+            _redrawTimer.Start();
+        }
+
+        private void OnRedrawTick(object? sender, EventArgs e)
+        {
+            if (!_dirty)
+            {
+                return;
+            }
+            _dirty = false;
+            RedrawGraph();
         }
 
         public void CallbackOctResampleDataCatpured(float[] data, int width, int height)
@@ -153,7 +176,7 @@ namespace WsoToolkit.controls
                     _listSpectrumBuff[i] = new ushort[DATA_WIDTH];
                 }
                 UpdateSpectrumProfile();
-                RedrawGraph();
+                _dirty = true;   // actual repaint happens on the redraw timer
             }
         }
 
@@ -385,13 +408,11 @@ namespace WsoToolkit.controls
             string s3 = String.Format("Total spectrum: {0:F0}, max: {1:F0}", _totalSpectrum, _maxTotalSpectrum);
             string s4 = String.Format("FWHM range: {0:F2} ~ {1:F2}", _halfMaxIndex1, _halfMaxIndex2);
 
-            Dispatcher.Invoke(delegate
-            {
-                lblStatus1.Content = s1;
-                lblStatus2.Content = s2;
-                lblStatus3.Content = s3;
-                lblStatus4.Content = s4;
-            });
+            // Called on the UI thread (redraw timer, or user-driven Set*/Clear* calls).
+            lblStatus1.Content = s1;
+            lblStatus2.Content = s2;
+            lblStatus3.Content = s3;
+            lblStatus4.Content = s4;
         }
 
 
@@ -411,6 +432,7 @@ namespace WsoToolkit.controls
                 _listSpectrumBuff.Add(new ushort[DATA_WIDTH]);
                 _listResampleBuff.Add(new float[DATA_WIDTH]);
             }
+            _dirty = false;
         }
 
         public void SetPeakThresholds(int peak, int subs)

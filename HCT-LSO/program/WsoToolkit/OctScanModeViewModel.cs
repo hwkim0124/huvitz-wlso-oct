@@ -32,6 +32,12 @@ namespace WsoToolkit
         WsoCallback.OctAutoPolarOptimized _onAutoPolarOptimized;
         WsoCallback.OctAutoReferOptimized _onAutoReferOptimized;
 
+        // Frame coalescing: keep at most one frame in flight so the dispatcher queue
+        // cannot back up under a fast frame stream.
+        private volatile bool _corneaLeftPending = false;
+        private volatile bool _corneaRightPending = false;
+        private volatile bool _corneaLowerPending = false;
+
 
         LightControlWindow? _lightControlWindow = null;
         FocusMotorWindow? _focusMotorWindow = null;
@@ -387,7 +393,7 @@ namespace WsoToolkit
             var name = cmbScanPattern.SelectedItem.ToString();
             var code = Array.Find(_scanPatterns, item => item.patternName == name).patternCode;
             _octInitParam.patternCode = code;
-            _octInitParam.previewType = WsoOctDefs.OctPatternType.LINE;
+            _octInitParam.previewType = WsoOctDefs.OctPatternType.MULTI_LINE;
 
             _octInitParam.scanPoints = ToInt(cmbScanPoints.SelectedItem.ToString());
             _octInitParam.scanLines = ToInt(cmbScanLines.SelectedItem.ToString());
@@ -866,10 +872,36 @@ namespace WsoToolkit
         {
             if (data == 0) return;
 
+            if (IsOctScanPreviewing())
+            {
+                if (index_image != 1)
+                {
+                    return;
+                }
+            }
+
+            // Count the true capture rate for the frames that actually update the preview,
+            // so the reported frame rate reflects the capture rate rather than any throttling.
+            octScanImagePreview.MarkFrameCaptured();
+
+            // Copy the native preview image here, while the source pointer is valid. Native
+            // hands out a pointer into a ring of reused buffers; deferring the read into the
+            // dispatcher lambda would let the ring wrap and overwrite it. 8-bit grayscale
+            // preview (CV_8UC1), so 1 byte/pixel.
+            int length = width * height;
+            byte[] buff = new byte[length];
+
+            unsafe
+            {
+                byte* pRawData = (byte*)data.ToPointer();
+                ReadOnlySpan<byte> nativeSpan = new ReadOnlySpan<byte>(pRawData, length);
+                nativeSpan.CopyTo(buff);
+            }
+
             // Update GUI preview control asynchronously.
             Dispatcher.BeginInvoke(() =>
             {
-                octScanImagePreview.CallbackOctScanPreviewImageCaptured(data, width, height, quality, snr_ratio, ref_point, index_image);
+                octScanImagePreview.CallbackOctScanPreviewImageCaptured(buff, width, height, quality, snr_ratio, ref_point, index_image);
             }, DispatcherPriority.Background);
         }
 
@@ -940,9 +972,16 @@ namespace WsoToolkit
         {
             if (data == 0) return;
 
+            // Count the true capture rate before the coalescing gate, so the preview's
+            // FPS reflects the camera rate rather than the throttled update rate.
+            corneaPreview1.MarkFrameCaptured();
+            if (_corneaLeftPending) return;
+
+            _corneaLeftPending = true;
             // Update GUI preview control asynchronously.
             Dispatcher.BeginInvoke(() => {
                 corneaPreview1.CallbackCorneaCameraFrame(data, width, height);
+                _corneaLeftPending = false;
             }, DispatcherPriority.Background);
         }
 
@@ -950,9 +989,14 @@ namespace WsoToolkit
         {
             if (data == 0) return;
 
+            corneaPreview2.MarkFrameCaptured();
+            if (_corneaRightPending) return;
+
+            _corneaRightPending = true;
             // Update GUI preview control asynchronously.
             Dispatcher.BeginInvoke(() => {
                 corneaPreview2.CallbackCorneaCameraFrame(data, width, height);
+                _corneaRightPending = false;
             }, DispatcherPriority.Background);
         }
 
@@ -960,9 +1004,14 @@ namespace WsoToolkit
         {
             if (data == 0) return;
 
+            corneaPreview3.MarkFrameCaptured();
+            if (_corneaLowerPending) return;
+
+            _corneaLowerPending = true;
             // Update GUI preview control asynchronously.
             Dispatcher.BeginInvoke(() => {
                 corneaPreview3.CallbackCorneaCameraFrame(data, width, height);
+                _corneaLowerPending = false;
             }, DispatcherPriority.Background);
         }
 

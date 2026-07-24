@@ -39,6 +39,7 @@ namespace oct_pattern
 		void buildPreviewRadial(void);
 		void buildPreviewRaster(bool isVert);
 		void buildPreviewCube(bool isVert);
+		void buildPreviewMultiLine(bool isVert);
 
 	private:
 		struct PreviewScanImpl;

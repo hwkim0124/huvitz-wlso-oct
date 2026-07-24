@@ -32,7 +32,7 @@
         </Style>
         <Style x:Key="HeaderStyle" TargetType="{x:Type Label}" BasedOn="{StaticResource LabelStyle}">
             <Setter Property="FontWeight" Value="Medium"/>
-            <Setter Property="Height" Value="30"/>
+            <Setter Property="Height" Value="28"/>
         </Style>
         <Style x:Key="TextBoxStyle" TargetType="{x:Type TextBox}">
             <Setter Property="VerticalAlignment" Value="Center"/>

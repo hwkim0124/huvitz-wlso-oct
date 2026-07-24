@@ -164,10 +164,12 @@ namespace wso_domain
 		CIRCLE = 6,
 		CUBE = 7,
 		ANGIO = 8,
+		MULTI_LINE = 9,
 		VERT_LINE = 12, 
 		VERT_RASTER = 14,
 		VERT_CUBE = 17,
-		VERT_ANGIO = 18
+		VERT_ANGIO = 18, 
+		VERT_MULTI_LINE = 19,
 	};
 
 	enum class OctScanDirection : int {

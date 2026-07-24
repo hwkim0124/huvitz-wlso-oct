@@ -7,24 +7,24 @@
         xmlns:local="clr-namespace:WsoToolkit"
         xmlns:controls="clr-namespace:WsoToolkit.controls"
         mc:Ignorable="d"
-        Title="Oct Scan Mode" Height="1060" Width="2180" ResizeMode="NoResize" Loaded="Window_Loaded" Initialized="Window_Initialized" Closed="Window_Closed" Closing="Window_Closing" MouseWheel="Window_MouseWheel" SizeToContent="WidthAndHeight">
+        Title="Oct Scan Mode" Height="Auto" Width="Auto" ResizeMode="NoResize" Loaded="Window_Loaded" Initialized="Window_Initialized" Closed="Window_Closed" Closing="Window_Closing" MouseWheel="Window_MouseWheel" SizeToContent="WidthAndHeight">
     <ScrollViewer HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible">
-        <Grid Margin="12,12,12,12">
+        <Grid Margin="4,4,4,4">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="392"/>
-                <ColumnDefinition Width="8"/>
-                <ColumnDefinition Width="1028"/>
-                <ColumnDefinition Width="8"/>
-                <ColumnDefinition Width="680"/>
-                <ColumnDefinition Width="24"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="4"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="4"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="4"/>
             </Grid.ColumnDefinitions>
             <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Vertical">
-                <controls:CorneaCameraPreview x:Name="corneaPreview1" Width="384" Height="328"/>
-                <controls:CorneaCameraPreview x:Name="corneaPreview2" Width="384" Height="328"/>
-                <controls:CorneaCameraPreview x:Name="corneaPreview3" Width="384" Height="328"/>
+                <controls:CorneaCameraPreview x:Name="corneaPreview1" Width="340" Height="280"/>
+                <controls:CorneaCameraPreview x:Name="corneaPreview2" Width="340" Height="280"/>
+                <controls:CorneaCameraPreview x:Name="corneaPreview3" Width="340" Height="280"/>
             </StackPanel>
             <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Vertical">
                 <controls:OctScanImagePreview x:Name="octScanImagePreview"/>
@@ -211,7 +211,7 @@
                     <controls:OctScanEnfacePreview x:Name="octScanEnfacePreivew"/>
                     <controls:OctReportThicknessMap x:Name="reportThicknessMap" Margin="8,0,0,0"/>
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
                     <controls:OctReportSectionChart x:Name="reportSectionChart"/>
                     <StackPanel Orientation="Vertical" Margin="8,0,0,0">
                         <TextBox x:Name="textProtocolSummary" Width="288" Height="120" FontSize="14" Padding="4" Text="Scan Protocol &#x09; &#10;" Style="{StaticResource TextBoxStyle}" IsReadOnly="True" AcceptsTab="True" VerticalContentAlignment="Top" HorizontalContentAlignment="Left" TextWrapping="Wrap" />

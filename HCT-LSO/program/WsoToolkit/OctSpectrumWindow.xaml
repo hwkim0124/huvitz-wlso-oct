@@ -23,9 +23,9 @@
                 <ColumnDefinition Width="4"/>
             </Grid.ColumnDefinitions>
             <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Vertical">
-                <controls:CorneaCameraPreview x:Name="corneaPreview1" Width="384" Height="312"/>
-                <controls:CorneaCameraPreview x:Name="corneaPreview2" Width="384" Height="312"/>
-                <controls:CorneaCameraPreview x:Name="corneaPreview3" Width="384" Height="312"/>
+                <controls:CorneaCameraPreview x:Name="corneaPreview1" Width="340" Height="280"/>
+                <controls:CorneaCameraPreview x:Name="corneaPreview2" Width="340" Height="280"/>
+                <controls:RetinaCameraPreview x:Name="retinaPreview" Width="344" Height="280"/>
             </StackPanel>
             <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Vertical">
                 <controls:OctSignalResampleGraph x:Name="octResampleGraph" Width="928" Height="586"/>

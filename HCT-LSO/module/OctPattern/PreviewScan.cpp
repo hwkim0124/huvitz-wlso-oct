@@ -107,6 +107,12 @@ bool oct_pattern::PreviewScan::buildPattern(bool hidden)
 		case CROSS:
 			buildPreviewCross();
 			break;
+		case MULTI_LINE:
+			buildPreviewMultiLine(false);
+			break;
+		case VERT_MULTI_LINE:
+			buildPreviewMultiLine(true);
+			break;
 		default:
 			buildPreviewLine(false);
 			break;
@@ -604,6 +610,123 @@ void oct_pattern::PreviewScan::buildPreviewCube(bool isVert)
 	return;
 }
 
+void oct_pattern::PreviewScan::buildPreviewMultiLine(bool isVert)
+{
+	float radiusX, radiusY;
+
+	radiusX = (getScanRangeX() / 2.0f) * getScanScaleX();
+	radiusY = (getScanRangeY() / 2.0f) * getScanScaleY();
+
+	float xStart = PATTERN_SCAN_CENTER_X - radiusX;
+	float xClose = PATTERN_SCAN_CENTER_X + radiusX;
+	float yStart = PATTERN_SCAN_CENTER_Y - radiusY;
+	float yClose = PATTERN_SCAN_CENTER_Y + radiusY;
+
+	double angle = getScanAngle();
+	if (angle > 0.0) {
+		double radian = degreeToRadian(angle);
+		double radius = (isVert ? radiusY : radiusX);
+		xStart = (float)(radius * cos(radian) * -1.0);
+		yStart = (float)(radius * sin(radian) * -1.0);
+		xClose = (float)(radius * cos(radian) * +1.0);
+		yClose = (float)(radius * sin(radian) * +1.0);
+	}
+
+	xStart += getScanRangeOffsetX(true);
+	xClose += getScanRangeOffsetX(true);
+	yStart += getScanRangeOffsetY(true);
+	yClose += getScanRangeOffsetY(true);
+
+	float xCenter = (xStart + xClose) / 2.0f;
+	float yCenter = (yStart + yClose) / 2.0f;
+
+	int numPoints = getNumberOfScanPoints(); 
+	setNumberOfScanPoints(numPoints);
+
+	// Scan speed for preview is fixed as the fastest. 
+	const int NUM_REPEATS_HD = 5;
+	const int NUM_LINES_MULTI = 4;
+
+	float x1, x2, y1, y2;
+	for (int lidx = 0; lidx < NUM_LINES_MULTI; lidx++)
+	{
+		if (lidx == 0) {
+			x1 = (isVert ? xStart : xStart);
+			x2 = (isVert ? xStart : xClose);
+			y1 = (isVert ? yStart : yStart);
+			y2 = (isVert ? yClose : yStart);
+		}
+		else if (lidx == 1) {
+			x1 = (isVert ? xCenter : xStart);
+			x2 = (isVert ? xCenter : xClose);
+			y1 = (isVert ? yStart : yCenter);
+			y2 = (isVert ? yClose : yCenter);
+		}
+		else if (lidx == 2) {
+			x1 = (isVert ? xClose : xStart);
+			x2 = (isVert ? xClose : xClose);
+			y1 = (isVert ? yStart : yClose);
+			y2 = (isVert ? yClose : yClose);
+		}
+		else {
+			x1 = (isVert ? xStart : xCenter);
+			x2 = (isVert ? xClose : xCenter);
+			y1 = (isVert ? yCenter : yStart);
+			y2 = (isVert ? yCenter : yClose);
+		}
+
+		LineTrace line;
+		line.initLine(TRACE_ID_PREVIEW_MULTI + lidx,
+			OctPoint(x1, y1),
+			OctPoint(x2, y2),
+			numPoints);
+
+		PatternFrame frame;
+		frame.addLineTrace(line);
+		addPatternFrame(frame);
+	}
+
+	for (int lidx = 0; lidx < NUM_LINES_MULTI; lidx++)
+	{
+		if (lidx == 0) {
+			x1 = (isVert ? xStart : xStart);
+			x2 = (isVert ? xStart : xClose);
+			y1 = (isVert ? yStart : yStart);
+			y2 = (isVert ? yClose : yStart);
+		}
+		else if (lidx == 1) {
+			x1 = (isVert ? xCenter : xStart);
+			x2 = (isVert ? xCenter : xClose);
+			y1 = (isVert ? yStart : yCenter);
+			y2 = (isVert ? yClose : yCenter);
+		}
+		else if (lidx == 2) {
+			x1 = (isVert ? xClose : xStart);
+			x2 = (isVert ? xClose : xClose);
+			y1 = (isVert ? yStart : yClose);
+			y2 = (isVert ? yClose : yClose);
+		}
+		else {
+			x1 = (isVert ? xStart : xCenter);
+			x2 = (isVert ? xClose : xCenter);
+			y1 = (isVert ? yCenter : yStart);
+			y2 = (isVert ? yCenter : yClose);
+		}
+
+		LineTrace line;
+		line.initLine(TRACE_ID_PREVIEW_MULTI_HD + lidx,
+			OctPoint(x1, y1),
+			OctPoint(x2, y2),
+			numPoints, 
+			NUM_REPEATS_HD);
+		line.setLineHD(true);
+
+		PatternFrame frame;
+		frame.addLineTrace(line);
+		addPatternFrame(frame);
+	}
+	return;
+}
 
 PreviewScan::PreviewScanImpl & oct_pattern::PreviewScan::getImpl(void) const
 {

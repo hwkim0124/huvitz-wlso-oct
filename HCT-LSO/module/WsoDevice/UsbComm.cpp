@@ -1192,7 +1192,7 @@ bool wso_device::UsbComm::writeTrajectoryPositionsX(std::uint8_t tid, const std:
 	const auto addr = desc->entries[TBL_OCT_GAVANO_ID].buf_addr;
 	const auto size = desc->entries[TBL_OCT_GAVANO_ID].buf_size;
 
-	uint32_t addr2 = addr + tid * sizeof(TrajectoryProfile) + sizeof(TrajectoryProfileParam) + sizeof(int16_t) * TRAJECT_SAMPLE_SIZE_MAX;
+	uint32_t addr2 = addr + tid * sizeof(TrajectoryProfile) + sizeof(TrajectoryProfileParam);
 	if (!writeAddress(addr2, (uint8_t*)positions, count * sizeof(int16_t))) {
 		LogDebug() << "Galvano trajectory x positions write failed!";
 		return false;
@@ -1208,7 +1208,7 @@ bool wso_device::UsbComm::writeTrajectoryPositionsY(std::uint8_t tid, const std:
 	const auto addr = desc->entries[TBL_OCT_GAVANO_ID].buf_addr;
 	const auto size = desc->entries[TBL_OCT_GAVANO_ID].buf_size;
 
-	uint32_t addr2 = addr + tid * sizeof(TrajectoryProfile) + sizeof(TrajectoryProfileParam);
+	uint32_t addr2 = addr + tid * sizeof(TrajectoryProfile) + sizeof(TrajectoryProfileParam) + sizeof(int16_t) * TRAJECT_SAMPLE_SIZE_MAX;
 	if (!writeAddress(addr2, (uint8_t*)positions, count * sizeof(int16_t))) {
 		LogDebug() << "Galvano trajectory y positions write failed!";
 		return false;
@@ -1564,8 +1564,8 @@ bool wso_device::UsbComm::GalvanoMoveX(short x)
 	lock_guard<mutex> lock(impl().mutexControl);
 
 	// X, Y motor switched. 
-	// MsgCommand* msg = getMsgCommand(CommandType::GALVO_MOVEX, 2);
-	MsgCommand* msg = getMsgCommand(CommandType::GALVO_MOVEY, 2);
+	MsgCommand* msg = getMsgCommand(CommandType::GALVO_MOVEX, 2);
+	// MsgCommand* msg = getMsgCommand(CommandType::GALVO_MOVEY, 2);
 	msg->packet.galv1.s1 = x;
 	attachCRC(msg->packet.galv1.crc);
 	return sendMsgCmd(msg);
@@ -1619,7 +1619,8 @@ bool wso_device::UsbComm::GalvanoRasterX(std::uint16_t tid, std::uint16_t lines,
 	msg->packet.scan2.s1 = tid;
 	msg->packet.scan2.s2 = lines;
 
-	msg->packet.scan2.s3 = static_cast<uint16_t>(ScanModeType::SCAN_MODE_Y);
+	msg->packet.scan2.s3 = static_cast<uint16_t>(ScanModeType::SCAN_MODE_X);
+	// msg->packet.scan2.s3 = static_cast<uint16_t>(ScanModeType::SCAN_MODE_Y);
 	msg->packet.scan2.s4 = xoffs;
 	msg->packet.scan2.s5 = yoffs;
 	
@@ -1637,7 +1638,8 @@ bool wso_device::UsbComm::GalvanoRasterY(std::uint16_t tid, std::uint16_t lines,
 	msg->packet.scan2.s1 = tid;
 	msg->packet.scan2.s2 = lines;
 
-	msg->packet.scan2.s3 = static_cast<uint16_t>(ScanModeType::SCAN_MODE_X);
+	// msg->packet.scan2.s3 = static_cast<uint16_t>(ScanModeType::SCAN_MODE_X); 
+	msg->packet.scan2.s3 = static_cast<uint16_t>(ScanModeType::SCAN_MODE_Y);
 	msg->packet.scan2.s4 = xoffs;
 	msg->packet.scan2.s5 = yoffs;
 	
@@ -1673,7 +1675,8 @@ bool wso_device::UsbComm::GalvanoRasterFastX(std::uint16_t tid, std::uint16_t li
 	msg->packet.scan2.s1 = tid;
 	msg->packet.scan2.s2 = lines;
 
-	msg->packet.scan2.s3 = static_cast<uint16_t>(ScanModeType::SCAN_MODE_Y);
+	msg->packet.scan2.s3 = static_cast<uint16_t>(ScanModeType::SCAN_MODE_X);
+	// msg->packet.scan2.s3 = static_cast<uint16_t>(ScanModeType::SCAN_MODE_Y);
 	msg->packet.scan2.s4 = xoffs;
 	msg->packet.scan2.s5 = yoffs;
 	
@@ -1691,7 +1694,8 @@ bool wso_device::UsbComm::GalvanoRasterFastY(std::uint16_t tid, std::uint16_t li
 	msg->packet.scan2.s1 = tid;
 	msg->packet.scan2.s2 = lines;
 
-	msg->packet.scan2.s3 = static_cast<uint16_t>(ScanModeType::SCAN_MODE_X);
+	// msg->packet.scan2.s3 = static_cast<uint16_t>(ScanModeType::SCAN_MODE_X);
+	msg->packet.scan2.s3 = static_cast<uint16_t>(ScanModeType::SCAN_MODE_Y);
 	msg->packet.scan2.s4 = xoffs;
 	msg->packet.scan2.s5 = yoffs;
 	
@@ -1700,8 +1704,6 @@ bool wso_device::UsbComm::GalvanoRasterFastY(std::uint16_t tid, std::uint16_t li
 	bool reply = (isCommandAsyncMode() ? false : true);
 	return sendMsgCmd(msg, reply);
 }
-
-
 
 bool wso_device::UsbComm::LcdFixationControl(std::uint8_t row, std::uint8_t col)
 {

@@ -37,7 +37,6 @@ namespace WsoToolkit
 
             _onCorneaLeftFrameCaptured = new WsoCallback.CorneaCameraFrameCaptured(this.OnCorneaLeftFrameCaptured);
             _onCorneaRightFrameCaptured = new WsoCallback.CorneaCameraFrameCaptured(this.OnCorneaRightFrameCaptured);
-            _onCorneaLowerFrameCaptured = new WsoCallback.CorneaCameraFrameCaptured(this.OnCorneaLowerFrameCaptured);
             _onCorneaRetinaFrameCaptured = new WsoCallback.CorneaCameraFrameCaptured(this.OnCorneaRetinaFrameCaptured);
 
             _onJoystickButtonPressed = new WsoCallback.JoystickButtonPressed(this.OnJoystickButtonPressed);
@@ -174,7 +173,7 @@ namespace WsoToolkit
 
             corneaPreview1.CameraType = WsoDevice.CameraType.IrCorneaLeft;
             corneaPreview2.CameraType = WsoDevice.CameraType.IrCorneaRight;
-            corneaPreview3.CameraType = WsoDevice.CameraType.IrCorneaLower;
+            retinaPreview.CameraType = WsoDevice.CameraType.IrRetina;
         }
 
 

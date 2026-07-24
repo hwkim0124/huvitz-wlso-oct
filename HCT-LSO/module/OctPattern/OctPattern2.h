@@ -54,6 +54,7 @@ namespace oct_pattern
 
 
 	constexpr int PATTERN_PREVIEW_LINE_NUM_POINTS = 1024; // 512;
+	constexpr int PATTERN_PREVIEW_MULTI_NUM_POINTS = 512;
 
 
 	// Line Trace id (Index of Trajectory)
@@ -63,15 +64,17 @@ namespace oct_pattern
 	constexpr int TRACE_ID_MAX_LINES = (TRACE_ID_CLOSE + 1);
 	constexpr int TRACE_ID_MAX_REPEATS = (TRACE_ID_MAX_LINES / 2);
 
-	constexpr int TRACE_ID_PREVIEW_START = 0;
-	constexpr int TRACE_ID_PREVIEW_POINT = 0;
-	constexpr int TRACE_ID_PREVIEW_LINE = 0;
-	constexpr int TRACE_ID_PREVIEW_CUBE = 0;
-	constexpr int TRACE_ID_PREVIEW_HIDDEN = 2;
-	constexpr int TRACE_ID_PREVIEW_LINE_HD = 4;
+	constexpr int TRACE_ID_PREVIEW_HIDDEN = 0;
+	constexpr int TRACE_ID_PREVIEW_START = 2;
+	constexpr int TRACE_ID_PREVIEW_POINT = 2;
+	constexpr int TRACE_ID_PREVIEW_LINE = 2;
+	constexpr int TRACE_ID_PREVIEW_CUBE = 2;
+	constexpr int TRACE_ID_PREVIEW_MULTI = 2;
+	constexpr int TRACE_ID_PREVIEW_LINE_HD = 7;
+	constexpr int TRACE_ID_PREVIEW_MULTI_HD = 7;
 
-	constexpr int TRACE_ID_ENFACE_START = 6; // 4;
-	constexpr int TRACE_ID_ENFACE_CUBE = 6; // 4;
+	constexpr int TRACE_ID_ENFACE_START = 13;
+	constexpr int TRACE_ID_ENFACE_CUBE = 13; 
 
 	constexpr int TRACE_ID_MEASURE_START = 0;
 	constexpr int TRACE_ID_MEASURE_LINE = 0;

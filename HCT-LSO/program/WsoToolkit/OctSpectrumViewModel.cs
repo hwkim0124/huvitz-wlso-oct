@@ -19,7 +19,7 @@ namespace WsoToolkit
     {
         WsoCallback.CorneaCameraFrameCaptured _onCorneaLeftFrameCaptured;
         WsoCallback.CorneaCameraFrameCaptured _onCorneaRightFrameCaptured;
-        WsoCallback.CorneaCameraFrameCaptured _onCorneaLowerFrameCaptured;
+        WsoCallback.CorneaCameraFrameCaptured _onCorneaRetinaFrameCaptured;
 
         WsoCallback.JoystickButtonPressed _onJoystickButtonPressed;
 
@@ -34,6 +34,13 @@ namespace WsoToolkit
         const int PEAK_THRESHOLD_MAX = 4096;
         const int PEAK_THRESHOLD_MIN = 0;
         const int PEAK_THRESHOLD_INIT = 3685;
+
+        // Frame coalescing: keep at most one frame in flight so the dispatcher queue
+        // cannot back up under a fast frame stream.
+        private volatile bool _octSpectrumPending = false;
+        private volatile bool _corneaLeftPending = false;
+        private volatile bool _corneaRightPending = false;
+        private volatile bool _retinaPending = false;
 
         private void InitializeViewModel()
         {
@@ -109,22 +116,22 @@ namespace WsoToolkit
         {
             corneaPreview1.CameraType = CameraType.IrCorneaLeft;
             corneaPreview2.CameraType = CameraType.IrCorneaRight;
-            corneaPreview3.CameraType = CameraType.IrCorneaLower;
+            retinaPreview.CameraType = CameraType.IrRetina;
 
             corneaPreview1.Callback = _onCorneaLeftFrameCaptured;
             corneaPreview2.Callback = _onCorneaRightFrameCaptured;
-            corneaPreview3.Callback = _onCorneaLowerFrameCaptured;
+            retinaPreview.Callback = _onCorneaRetinaFrameCaptured;
 
             corneaPreview1.Play();
             corneaPreview2.Play();
-            corneaPreview3.Play();
+            retinaPreview.Play();
         }
 
         public void CloseCorneaCameraPreview()
         {
             corneaPreview1.Stop();
             corneaPreview2.Stop();
-            corneaPreview3.Stop();
+            retinaPreview.Stop();
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -301,15 +308,36 @@ namespace WsoToolkit
         {
             if (data == 0) return;
 
+            // Count the true capture rate before posting, so the preview's frame rate
+            // reflects the capture rate rather than the throttled update rate.
+            octScanImagePreview.MarkFrameCaptured();
+
+            // Copy the native preview image here, while the source pointer is valid. Native
+            // hands out a pointer into a ring of reused buffers; deferring the read into the
+            // dispatcher lambda would let the ring wrap and overwrite it. 8-bit grayscale
+            // preview (CV_8UC1), so 1 byte/pixel.
+            int length = width * height;
+            byte[] buff = new byte[length];
+
+            unsafe
+            {
+                byte* pRawData = (byte*)data.ToPointer();
+                ReadOnlySpan<byte> nativeSpan = new ReadOnlySpan<byte>(pRawData, length);
+                nativeSpan.CopyTo(buff);
+            }
+
             // Update GUI preview control asynchronously.
             Dispatcher.BeginInvoke(() =>
             {
-                octScanImagePreview.CallbackOctScanPreviewImageCaptured(data, width, height, quality, snr_ratio, ref_point, index_image);
+                octScanImagePreview.CallbackOctScanPreviewImageCaptured(buff, width, height, quality, snr_ratio, ref_point, index_image);
             }, DispatcherPriority.Background);
         }
         private void OnOctSpectrumDataCaptured(IntPtr data, int width, int height)
         {
             if (data == 0) return;
+            if (_octSpectrumPending) return;
+
+            _octSpectrumPending = true;
             int length = width * height;
             ushort[] buff = new ushort[length];
 
@@ -324,6 +352,7 @@ namespace WsoToolkit
             Dispatcher.BeginInvoke(() =>
             {
                 octResampleGraph.CallbackOctSpectrumDataCaptured(buff, width, height);
+                _octSpectrumPending = false;
             }, DispatcherPriority.Background);
         }
 
@@ -332,6 +361,13 @@ namespace WsoToolkit
             if (data == 0) return;
             int length = width * height;
             float[] buff = new float[length];
+
+            unsafe
+            {
+                float* pRawData = (float*)data.ToPointer();
+                ReadOnlySpan<float> nativeSpan = new ReadOnlySpan<float>(pRawData, length);
+                nativeSpan.CopyTo(buff);
+            }
 
             Dispatcher.BeginInvoke(() =>
             {
@@ -343,8 +379,15 @@ namespace WsoToolkit
         {
             if (data == 0) return;
 
+            // Count the true capture rate before the coalescing gate, so the preview's
+            // FPS reflects the camera rate rather than the throttled update rate.
+            corneaPreview1.MarkFrameCaptured();
+            if (_corneaLeftPending) return;
+
+            _corneaLeftPending = true;
             Dispatcher.BeginInvoke(() => {
                 corneaPreview1.CallbackCorneaCameraFrame(data, width, height);
+                _corneaLeftPending = false;
             }, DispatcherPriority.Background);
         }
 
@@ -352,17 +395,27 @@ namespace WsoToolkit
         {
             if (data == 0) return;
 
+            corneaPreview2.MarkFrameCaptured();
+            if (_corneaRightPending) return;
+
+            _corneaRightPending = true;
             Dispatcher.BeginInvoke(() => {
                 corneaPreview2.CallbackCorneaCameraFrame(data, width, height);
+                _corneaRightPending = false;
             }, DispatcherPriority.Background);
         }
 
-        private void OnCorneaLowerFrameCaptured(IntPtr data, int width, int height)
+        private void OnCorneaRetinaFrameCaptured(IntPtr data, int width, int height)
         {
             if (data == 0) return;
 
+            retinaPreview.MarkFrameCaptured();
+            if (_retinaPending) return;
+
+            _retinaPending = true;
             Dispatcher.BeginInvoke(() => {
-                corneaPreview3.CallbackCorneaCameraFrame(data, width, height);
+                retinaPreview.CallbackCorneaCameraFrame(data, width, height);
+                _retinaPending = false;
             }, DispatcherPriority.Background);
         }
 

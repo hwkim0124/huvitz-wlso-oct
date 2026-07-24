@@ -18,7 +18,6 @@ namespace WsoToolkit
     {
         WsoCallback.CorneaCameraFrameCaptured _onCorneaLeftFrameCaptured;
         WsoCallback.CorneaCameraFrameCaptured _onCorneaRightFrameCaptured;
-        WsoCallback.CorneaCameraFrameCaptured _onCorneaLowerFrameCaptured;
         WsoCallback.CorneaCameraFrameCaptured _onCorneaRetinaFrameCaptured;
         WsoCallback.JoystickButtonPressed _onJoystickButtonPressed;
         WsoCallback.OptimizeButtonPressed _onOptimizeButtonPressed;
@@ -42,6 +41,17 @@ namespace WsoToolkit
         private bool _isDisposePeakByRefer = false;
         private int _disposePeakDiffStep = 0;
         private int _disposePeakCount = 0;
+
+        // Intensity-graph frame coalescing: keep at most one frame in flight so the
+        // dispatcher queue cannot back up. Reused across frames (only one in flight).
+        private volatile bool _intensityPending = false;
+        private volatile bool _octPreviewPending = false;
+        private volatile bool _octSpectrumPending = false;
+        private volatile bool _corenaLeftPending = false;
+        private volatile bool _corneaRightPending = false;
+        private volatile bool _retinaPending = false;
+        private float[] _intensityColumn = Array.Empty<float>();
+        private byte[] _octPreviewBuffer = Array.Empty<byte>();
 
         private void InitializeViewModel()
         {
@@ -221,17 +231,14 @@ namespace WsoToolkit
         {
             corneaPreview1.CameraType = CameraType.IrCorneaLeft;
             corneaPreview2.CameraType = CameraType.IrCorneaRight;
-            corneaPreview3.CameraType = CameraType.IrCorneaLower;
             retinaPreview.CameraType = CameraType.IrRetina;
 
             corneaPreview1.Callback = _onCorneaLeftFrameCaptured;
             corneaPreview2.Callback = _onCorneaRightFrameCaptured;
-            corneaPreview3.Callback = _onCorneaLowerFrameCaptured;
             retinaPreview.Callback = _onCorneaRetinaFrameCaptured;
 
             corneaPreview1.Play();
             corneaPreview2.Play();
-            corneaPreview3.Play();
             retinaPreview.Play();
         }
 
@@ -239,7 +246,6 @@ namespace WsoToolkit
         {
             corneaPreview1.Stop();
             corneaPreview2.Stop();
-            corneaPreview3.Stop();
             retinaPreview.Stop();
         }
 
@@ -448,16 +454,48 @@ namespace WsoToolkit
         {
             if (data == 0) return;
 
+            // Count the true capture rate before the coalescing gate, so the preview's
+            // frame rate reflects the capture rate rather than the throttled update rate.
+            octScanImagePreview.MarkFrameCaptured();
+
+            // Coalesce: keep at most one frame in flight so the dispatcher queue cannot back up.
+            if (_octPreviewPending) return;
+
+            // Copy the native preview image here, on the callback thread, while the source
+            // pointer is still valid. Native hands out a pointer into a 10-deep ring of
+            // reused image buffers; if we deferred the read into the dispatcher lambda and
+            // the UI thread fell >=10 frames behind, the ring would wrap and overwrite the
+            // slot, tearing the displayed frame. Copying up front lets the UI touch only
+            // managed memory. The preview is 8-bit grayscale (CV_8UC1), so 1 byte/pixel.
+            int length = width * height;
+            if (_octPreviewBuffer.Length != length)
+            {
+                _octPreviewBuffer = new byte[length];
+            }
+            byte[] buffer = _octPreviewBuffer;
+
+            unsafe
+            {
+                byte* pRawData = (byte*)data.ToPointer();
+                ReadOnlySpan<byte> nativeSpan = new ReadOnlySpan<byte>(pRawData, length);
+                nativeSpan.CopyTo(buffer);
+            }
+
             // Update GUI preview control asynchronously.
+            _octPreviewPending = true;
             Dispatcher.BeginInvoke(() =>
             {
-                octScanImagePreview.CallbackOctScanPreviewImageCaptured(data, width, height, quality, snr_ratio, ref_point, index_image);
+                octScanImagePreview.CallbackOctScanPreviewImageCaptured(buffer, width, height, quality, snr_ratio, ref_point, index_image);
+                _octPreviewPending = false;
             }, DispatcherPriority.Background);
         }
 
         private void OnOctSpectrumDataCaptured(nint data, int width, int height)
         {
             if (data == 0) return;
+            if (_octSpectrumPending) return;
+
+            _octSpectrumPending = true;
             int length = width * height;
             ushort[] buff = new ushort[length];
 
@@ -472,12 +510,16 @@ namespace WsoToolkit
             Dispatcher.BeginInvoke(() =>
             {
                 octSpectrumGraph.CallbackOctSpectrumDataCaptured(buff, width, height);
+                _octSpectrumPending = false;
             }, DispatcherPriority.Background);
         }
 
         private void OnOctResampleDataCaptured(nint data, int width, int height)
         {
             if (data == 0) return;
+            if (_octSpectrumPending) return;
+
+            _octSpectrumPending = true;
             int length = width * height;
             float[] buff = new float[length];
 
@@ -491,25 +533,47 @@ namespace WsoToolkit
             Dispatcher.BeginInvoke(() =>
             {
                 octSpectrumGraph.CallbackOctResampleDataCatpured(buff, width, height);
+                _octSpectrumPending = false;
             }, DispatcherPriority.Background);
         }
 
         private void OnOctIntensityDataCaptured(nint data, int width, int height)
         {
             if (data == 0) return;
-            int length = width * height;
-            float[] buff = new float[length];
+
+            // Coalesce: if the UI thread hasn't consumed the previous frame yet, drop
+            // this one. The graph only ever needs the newest frame, and this keeps the
+            // dispatcher queue from growing without bound under a fast frame stream.
+            if (_intensityPending) return;
+
+            // The graph reads only a single transverse column, so extract just that
+            // column (~height floats) instead of copying the whole ~4 MB B-scan.
+            if (_intensityColumn.Length != height)
+            {
+                _intensityColumn = new float[height];
+            }
+            float[] column = _intensityColumn;
+
+            int col = octIntensityGraph.CurrentLinePosition;
+            if (col < 0 || col >= width)
+            {
+                col = width / 2;
+            }
 
             unsafe
             {
                 float* pRawData = (float*)data.ToPointer();
-                ReadOnlySpan<float> nativeSpan = new ReadOnlySpan<float>(pRawData, length);
-                nativeSpan.CopyTo(buff);
+                for (int i = 0; i < height; i++)
+                {
+                    column[i] = pRawData[i * width + col];
+                }
             }
 
+            _intensityPending = true;
             Dispatcher.BeginInvoke(() =>
             {
-                octIntensityGraph.CallbackOctIntensityDataCaptured(buff, width, height);
+                octIntensityGraph.CallbackOctIntensityDataCaptured(column, height);
+                _intensityPending = false;
             }, DispatcherPriority.Background);
         }
 
@@ -553,9 +617,16 @@ namespace WsoToolkit
         {
             if (data == 0) return;
 
+            // Count the true capture rate before the coalescing gate, so the preview's
+            // FPS reflects the camera rate rather than the throttled update rate.
+            corneaPreview1.MarkFrameCaptured();
+            if (_corenaLeftPending) return;
+
+            _corenaLeftPending = true;
             Dispatcher.BeginInvoke(() =>
             {
                 corneaPreview1.CallbackCorneaCameraFrame(data, width, height);
+                _corenaLeftPending = false;
             }, DispatcherPriority.Background);
         }
 
@@ -563,19 +634,14 @@ namespace WsoToolkit
         {
             if (data == 0) return;
 
+            corneaPreview2.MarkFrameCaptured();
+            if (_corneaRightPending) return;
+
+            _corneaRightPending = true;
             // Update GUI preview control asynchronously.
             Dispatcher.BeginInvoke(() => {
                 corneaPreview2.CallbackCorneaCameraFrame(data, width, height);
-            }, DispatcherPriority.Background);
-        }
-
-        private void OnCorneaLowerFrameCaptured(IntPtr data, int width, int height)
-        {
-            if (data == 0) return;
-
-            // Update GUI preview control asynchronously.
-            Dispatcher.BeginInvoke(() => {
-                corneaPreview3.CallbackCorneaCameraFrame(data, width, height);
+                _corneaRightPending = false;
             }, DispatcherPriority.Background);
         }
 
@@ -583,9 +649,14 @@ namespace WsoToolkit
         {
             if (data == 0) return;
 
+            retinaPreview.MarkFrameCaptured();
+            if (_retinaPending) return;
+
+            _retinaPending = true;
             // Update GUI preview control asynchronously.
             Dispatcher.BeginInvoke(() => {
                 retinaPreview.CallbackCorneaCameraFrame(data, width, height);
+                _retinaPending = false;
             }, DispatcherPriority.Background);
         }
 
