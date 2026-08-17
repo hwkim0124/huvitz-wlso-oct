@@ -20,14 +20,18 @@ namespace WsoNativeLib
         /////////////////////////////////////////////////////////////////////////////////////////////
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool startCorneaCameraPreview(int type, CorneaCameraFrameCaptured clb);
-
-        [DllImport(LibraryName)]
-        private static extern void closeCorneaCameraPreview(int type);
+        private static extern bool setCorneaCameraViewPreset(int preset);
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool isCorneaCameraPreviewing(int type);
+        private static extern bool startCorneaCameraPreview(CorneaCameraFrameCaptured? clbLeft, CorneaCameraFrameCaptured? clbRight, CorneaCameraFrameCaptured? clbLower);
+
+        [DllImport(LibraryName)]
+        private static extern void closeCorneaCameraPreview();
+
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool isCorneaCameraPreviewing();
 
         [DllImport(LibraryName)]
         private static extern float getCorneaCameraAgain(int type);
@@ -44,21 +48,28 @@ namespace WsoNativeLib
         private static extern bool setCorneaCameraDgain(int type, float value);
 
 
+
+
         // Public methods
         /////////////////////////////////////////////////////////////////////////////////////////////
-        public static bool StartPreview(CameraType type, CorneaCameraFrameCaptured clb)
+        public static bool SetCameraViewPreset(IrCameraViewPreset preset)
         {
-            return startCorneaCameraPreview((int)type, clb);
+            return setCorneaCameraViewPreset((int)preset);
         }
 
-        public static void ClosePreview(CameraType type)
+        public static bool StartPreview(CorneaCameraFrameCaptured? clbLeft, CorneaCameraFrameCaptured? clbRight, CorneaCameraFrameCaptured? clbLower)
         {
-            closeCorneaCameraPreview((int)type);
+            return startCorneaCameraPreview(clbLeft, clbRight, clbLower);
         }
 
-        public static bool IsPreviewing(CameraType type)
+        public static void ClosePreview()
         {
-            return isCorneaCameraPreviewing((int)type);
+            closeCorneaCameraPreview();
+        }
+
+        public static bool IsPreviewing()
+        {
+            return isCorneaCameraPreviewing();
         }
 
         public static float GetAnalogGain(CameraType type)

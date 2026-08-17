@@ -9,10 +9,17 @@ using namespace wso_system;
 
 bool WSOSYSTEM_DLL_API __stdcall wso_system::initializeWsoSystem(wso_domain::WsoLogMsgCallback clb, bool trace_mode)
 {
-	if (auto* bsp = Bootstrapper::getInstance(); bsp) {
-		bsp->initializeWsoSystem(clb, trace_mode);
+	// Catch-all guard: no native exception may cross the C ABI boundary (see
+	// docs/claude/architecture.md). Device init can throw deep in vendor SDKs.
+	try {
+		if (auto* bsp = Bootstrapper::getInstance(); bsp) {
+			bsp->initializeWsoSystem(clb, trace_mode);
+		}
+		return true;
 	}
-	return true;
+	catch (...) {
+		return false;
+	}
 }
 
 void WSOSYSTEM_DLL_API __stdcall wso_system::releaseWsoSystem(void)

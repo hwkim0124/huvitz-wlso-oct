@@ -75,7 +75,7 @@ namespace wso_device
 
 		bool initiateBoardComponents(int* numWarns);
 		bool initiateRetinaCamera(void);
-		bool initiateCorneaCamera(CameraType type);
+		bool initiateCorneaCamera(void);
 		bool initiateColorCamera();
 
 		void setDeviceInitFlags(unsigned int flags);
@@ -86,6 +86,7 @@ namespace wso_device
 		bool isSourceLedsNotInUse(void) const;
 		bool isMotorsNotInUse(void) const;
 		bool isOctGrabberNotInUse(void) const;
+		bool isLsoScannerNotInUse(void) const;
 		bool isOpenClNotInUse(void) const;
 
 		bool openFTDIdevices(void);
@@ -156,9 +157,7 @@ namespace wso_device
 		bool updateLcdParameters(std::uint8_t bright, std::uint8_t blink, std::uint16_t period, std::uint16_t ontime, std::uint8_t type = 0x00);
 
 		wso_board::HbsDataProfile* getHbsDataProfile(void) const;
-		wso_board::HbsDataProfile* getSubDataProfile(void) const;
 		UsbComm& getUsbComm(void) const;
-		UsbComm& getSubComm(void) const;
 			
 		OctSldLed* getOctSldLed(void) const;
 		SldLaserDriver* getSldLaserDriver(void) const;
@@ -180,10 +179,7 @@ namespace wso_device
 		ChinRestMotor* getChinRestMotor(void) const;
 
 		RetinaCamera* getRetinaCamera(void) const;
-		CorneaCamera* getCorneaLeftCamera(void) const;
-		CorneaCamera* getCorneaRightCamera(void) const;
-		CorneaCamera* getCorneaLowerCamera(void) const;
-		CorneaCamera* getCorneaCamera(CameraType type) const;
+		CorneaCamera* getCorneaCamera(void) const;
 		ColorCamera* getColorCamera(void);
 
 		LsoWhiteLed* getLsoWhiteLed(void) const;
@@ -199,7 +195,7 @@ namespace wso_device
 		LightLed* getLightLed(LightType type) const;
 		StepMotor* getStepMotor(StepMotorType type) const;
 		StageMotor* getStageMotor(StageMotorType type) const;
-		InfraredCamera* getInfraredCamera(CameraType type) const;
+		InfraredCamera* getInfraredCamera(IrCameraType type) const;
 		FirmwareControl* getFirmwareControl(void) const;
 
 	private:

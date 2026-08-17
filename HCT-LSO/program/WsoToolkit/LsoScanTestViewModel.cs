@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using System.Globalization;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -6,6 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
+using System.IO;
 using WsoNativeLib;
 using WsoToolkit.utils;
 using static WsoNativeLib.LsoCamera;
@@ -13,6 +16,7 @@ using static WsoNativeLib.WsoDevice;
 using static WsoNativeLib.WsoDomain;
 using static WsoNativeLib.WsoLsoDefs;
 using static WsoNativeLib.WsoLsoScan;
+using WsoToolkit.controls;
 using static WsoToolkit.controls.LsoScanImagePreview;
 using static WsoToolkit.utils.NumberUtil;
 
@@ -27,18 +31,32 @@ namespace WsoToolkit
 
     public sealed class LsoScanTestModel
     {
-        public const string DefaultConfigIniPath = ".//WsoDeviceCfg.ini";
-        public LsoScanProfileModel ScanProfile0 { get; } = new LsoScanProfileModel();
-        public LsoScanProfileModel ScanProfile1 { get; } = new LsoScanProfileModel();
+        public const string DefaultConfigIniFileName = "WsoDeviceCfg.ini";
+        public static string DefaultConfigIniPath =>
+            Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, DefaultConfigIniFileName));
+
+        // One profile per native scanner slot (LSO_SCANNER_PATTERN_NUM_MAX), not just
+        // COLOR/IR. Slots without an INI section load as zeros until they are read back
+        // from the board or filled in.
+        private readonly LsoScanProfileModel[] _scanProfiles =
+            Enumerable.Range(0, LSO_SCANNER_PATTERN_NUM_MAX)
+                      .Select(_ => new LsoScanProfileModel())
+                      .ToArray();
+
         public LsoColorCameraModel ColorCamera { get; } = new LsoColorCameraModel();
+        public LsoImageAdjustModel ImageAdjust { get; } = new LsoImageAdjustModel();
+
+        public int ScanProfileCount => _scanProfiles.Length;
+
         public LsoScanProfileModel GetScanProfile(int patternId)
         {
-            return patternId switch
+            if (patternId < 0 || patternId >= _scanProfiles.Length)
             {
-                0 => ScanProfile0,
-                1 => ScanProfile1,
-                _ => throw new ArgumentOutOfRangeException(nameof(patternId), patternId, "LSO scanner pattern id must be 0 or 1."),
-            };
+                throw new ArgumentOutOfRangeException(nameof(patternId), patternId,
+                    $"LSO scanner pattern id must be 0..{_scanProfiles.Length - 1}.");
+            }
+
+            return _scanProfiles[patternId];
         }
 
         public bool LoadConfigFromIniFile(string? configIniPath = null)
@@ -46,9 +64,12 @@ namespace WsoToolkit
             try
             {
                 var ini = new IniFileUtil(configIniPath ?? DefaultConfigIniPath);
-                ScanProfile0.LoadFromIni(ini, 0);
-                ScanProfile1.LoadFromIni(ini, 1);
+                for (int i = 0; i < _scanProfiles.Length; i++)
+                {
+                    _scanProfiles[i].LoadFromIni(ini, i);
+                }
                 ColorCamera.LoadFromIni(ini);
+                ImageAdjust.LoadFromIni(ini);
                 return true;
             }
             catch (Exception)
@@ -62,9 +83,12 @@ namespace WsoToolkit
             try
             {
                 var ini = new IniFileUtil(configIniPath ?? DefaultConfigIniPath);
-                ScanProfile0.SaveToIni(ini, 0);
-                ScanProfile1.SaveToIni(ini, 1);
+                for (int i = 0; i < _scanProfiles.Length; i++)
+                {
+                    _scanProfiles[i].SaveToIni(ini, i);
+                }
                 ColorCamera.SaveToIni(ini);
+                ImageAdjust.SaveToIni(ini);
                 return true;
             }
             catch (Exception)
@@ -74,9 +98,108 @@ namespace WsoToolkit
         }
     }
 
+
+    public sealed class LsoImageAdjustModel
+    {
+        public const string IniSectionName = "ImageAdjust";
+
+        public int Brightness { get; set; }
+        public bool IsRadialCorrection { get; set; }
+        public float RadialCorIntensity { get; set; } = 1.0f;
+        public bool IsRemoveReflectedLight { get; set; }
+        public double[]? RadialCorrectionCurve { get; set; }
+
+        internal void LoadFromIni(IniFileUtil ini)
+        {
+            Brightness = ini.ReadInt(IniSectionName, "Brightness", 0);
+            IsRadialCorrection = ini.ReadInt(IniSectionName, "IsRadialCorrection", 0) != 0;
+            RadialCorIntensity = ini.ReadFloat(IniSectionName, "RadialCorIntensity", 1.0f);
+            IsRemoveReflectedLight = ini.ReadInt(IniSectionName, "IsRemoveReflectedLight", 0) != 0;
+
+            string curveText = ini.ReadString(IniSectionName, "RadialCorrectionCurve", string.Empty);
+            RadialCorrectionCurve = ParseCurve(curveText);
+        }
+
+        internal void SaveToIni(IniFileUtil ini)
+        {
+            ini.WriteInt(IniSectionName, "Brightness", Brightness);
+            ini.WriteInt(IniSectionName, "IsRadialCorrection", IsRadialCorrection ? 1 : 0);
+            ini.WriteFloat(IniSectionName, "RadialCorIntensity", RadialCorIntensity);
+            ini.WriteInt(IniSectionName, "IsRemoveReflectedLight", IsRemoveReflectedLight ? 1 : 0);
+            ini.WriteString(IniSectionName, "RadialCorrectionCurve", FormatCurve(RadialCorrectionCurve));
+        }
+
+        public void ApplyFrom(ImageAdjustParam param)
+        {
+            Brightness = param.Brightness;
+            IsRadialCorrection = param.IsRadialCorrection;
+            RadialCorIntensity = param.RadialCorIntensity;
+            IsRemoveReflectedLight = param.IsRemoveReflectedLight;
+            RadialCorrectionCurve = param.RadialCorrectionCurve?.ToArray();
+        }
+
+        public ImageAdjustParam ToParam(int nPixelDepth = 0)
+        {
+            var param = new ImageAdjustParam(Brightness, nPixelDepth)
+            {
+                IsRadialCorrection = IsRadialCorrection,
+                RadialCorIntensity = RadialCorIntensity,
+                IsRemoveReflectedLight = IsRemoveReflectedLight,
+                RadialCorrectionCurve = RadialCorrectionCurve?.ToArray(),
+            };
+            return param;
+        }
+
+        public bool SavePresetToIniFile(string? configIniPath = null)
+        {
+            try
+            {
+                var ini = new IniFileUtil(configIniPath ?? LsoScanTestModel.DefaultConfigIniPath);
+                SaveToIni(ini);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        private static double[]? ParseCurve(string curveText)
+        {
+            if (string.IsNullOrWhiteSpace(curveText))
+            {
+                return null;
+            }
+
+            string[] parts = curveText.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            var values = new List<double>(parts.Length);
+            foreach (string part in parts)
+            {
+                if (double.TryParse(part.Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out double value))
+                {
+                    values.Add(value);
+                }
+            }
+
+            return values.Count > 0 ? values.ToArray() : null;
+        }
+
+        private static string FormatCurve(double[]? curve)
+        {
+            if (curve == null || curve.Length == 0)
+            {
+                return string.Empty;
+            }
+
+            return string.Join(",", curve.Select(v => v.ToString("G17", CultureInfo.InvariantCulture)));
+        }
+    }
     public sealed class LsoScanProfileModel
     {
-        public float ExposureTimeUs { get; set; }
+        // The native struct carries these as float, but the board and the INI both work in
+        // whole microseconds - keeping them int stops a fractional value from surviving in
+        // memory only to be truncated on the next INI round-trip.
+        public int ExposureTimeUs { get; set; }
 
         public ushort TriggerSource { get; set; }
 
@@ -94,13 +217,11 @@ namespace WsoToolkit
 
         public ushort GalvoPatternSize { get; set; }
 
-        public float TimeStepUs { get; set; }
+        public int TimeStepUs { get; set; }
 
         public short GalvoStartPos { get; set; }
 
         public short GalvoEndPos { get; set; }
-
-        public short[] GalvanoPositions { get; private set; } = new short[LSO_SCANNER_SAMPLE_SIZE_MAX];
 
         public static string GetIniSectionName(int patternId)
         {
@@ -123,15 +244,13 @@ namespace WsoToolkit
             TimeStepUs = ini.ReadInt(section, "TimeStep");
             GalvoStartPos = (short)ini.ReadInt(section, "GalvoStartPos");
             GalvoEndPos = (short)ini.ReadInt(section, "GalvoEndPos");
-
-            CalcGalvanoPositions();
         }
 
         internal void SaveToIni(IniFileUtil ini, int patternId)
         {
             string section = GetIniSectionName(patternId);
 
-            ini.WriteInt(section, "ExposureTime", (int)ExposureTimeUs);
+            ini.WriteInt(section, "ExposureTime", ExposureTimeUs);
             ini.WriteInt(section, "TrgSrc", TriggerSource);
             ini.WriteInt(section, "AcqMode", AcquisitionMode);
             ini.WriteInt(section, "AcqFrameSize", (int)AcqFrameSize);
@@ -140,38 +259,14 @@ namespace WsoToolkit
             ini.WriteInt(section, "LedOffPosIndex", LedOffPosIndex);
             ini.WriteInt(section, "GalvanoRewindOffset", GalvanoRewindOffset);
             ini.WriteInt(section, "GalvoPatternSize", GalvoPatternSize);
-            ini.WriteInt(section, "TimeStep", (int)TimeStepUs);
+            ini.WriteInt(section, "TimeStep", TimeStepUs);
             ini.WriteInt(section, "GalvoStartPos", GalvoStartPos);
             ini.WriteInt(section, "GalvoEndPos", GalvoEndPos);
         }
 
-        public void CalcGalvanoPositions()
-        {
-            if (GalvanoPositions.Length != LSO_SCANNER_SAMPLE_SIZE_MAX)
-            {
-                GalvanoPositions = new short[LSO_SCANNER_SAMPLE_SIZE_MAX];
-            }
-            else
-            {
-                Array.Clear(GalvanoPositions, 0, GalvanoPositions.Length);
-            }
-
-            int sampleSize = GalvoPatternSize;
-            if (sampleSize <= 0 || sampleSize >= LSO_SCANNER_SAMPLE_SIZE_MAX)
-            {
-                return;
-            }
-
-            double delta = GalvoEndPos - GalvoStartPos;
-            double step = sampleSize > 1 ? delta / (sampleSize - 1) : 0.0;
-
-            for (int i = 0; i < sampleSize; i++)
-            {
-                double value = GalvoStartPos + step * i;
-                GalvanoPositions[i] = (short)Math.Round(value);
-            }
-        }
-
+        // Note: the galvano position table is not built here. Only start/end/sampleSize
+        // cross the ABI; the native LsoScanner::generateGalvanoPositions() interpolates the
+        // actual pos[] before it is written to the board.
         public LsoScannerControlParam ToControlParam()
         {
             return new LsoScannerControlParam
@@ -193,8 +288,8 @@ namespace WsoToolkit
 
         public void ApplyControlParam(LsoScannerControlParam param)
         {
-            TimeStepUs = param.timeStepUs;
-            ExposureTimeUs = param.exposureTimeUs;
+            TimeStepUs = (int)Math.Round(param.timeStepUs);
+            ExposureTimeUs = (int)Math.Round(param.exposureTimeUs);
             TriggerSource = param.triggerSource;
             AcquisitionMode = param.acquisitionMode;
             AcqFrameSize = (uint)param.acqFrameSize;
@@ -205,8 +300,6 @@ namespace WsoToolkit
             LedOffPosIndex = param.ledOffPosIndex;
             GalvoStartPos = param.yGalvoStartPos;
             GalvoEndPos = param.yGalvoEndPos;
-
-            CalcGalvanoPositions();
         }
     }
 
@@ -240,6 +333,10 @@ namespace WsoToolkit
 
         public int CaptureFrameRoiCount { get; set; }
 
+        // Mono aiming-preview drive mode. (int)ColorPreviewMonoMode - 0=SensorMono8, 1=BayerSwGray.
+        // Not a camera HW parameter, so excluded from ToSettingParam/ApplySettingParam.
+        public int PreviewMonoMode { get; set; }
+
         public List<FrameRoiPosition> CaptureFrameRois { get; } = new List<FrameRoiPosition>();
 
         internal void LoadFromIni(IniFileUtil ini)
@@ -256,6 +353,7 @@ namespace WsoToolkit
             BinningVertical = ini.ReadUInt(IniSectionName, "BinningVertical", 1);
             Gain = ini.ReadFloat(IniSectionName, "Gain");
             AdcDepthIndex = ini.ReadUInt(IniSectionName, "AdcDepth");
+            PreviewMonoMode = ini.ReadInt(IniSectionName, "PreviewMonoMode", (int)ColorPreviewMonoMode.SensorMono8);
 
             CaptureFrameRoiCount = ini.ReadInt(IniSectionName, "CaptureFrameRoiCount");
             CaptureFrameRois.Clear();
@@ -283,6 +381,7 @@ namespace WsoToolkit
             ini.WriteInt(IniSectionName, "BinningVertical", (int)BinningVertical);
             ini.WriteFloat(IniSectionName, "Gain", Gain);
             ini.WriteInt(IniSectionName, "AdcDepth", (int)AdcDepthIndex);
+            ini.WriteInt(IniSectionName, "PreviewMonoMode", PreviewMonoMode);
 
             CaptureFrameRoiCount = CaptureFrameRois.Count;
             ini.WriteInt(IniSectionName, "CaptureFrameRoiCount", CaptureFrameRoiCount);
@@ -372,6 +471,7 @@ namespace WsoToolkit
         private readonly LsoScanTestModel _scanTestModel = new LsoScanTestModel();
 
         WsoCallback.ColorCameraImageCaptured _onColorCaptureImageCaptured;
+        WsoCallback.ColorCaptureCompleted _onColorCaptureCompleted;
         WsoCallback.ColorCameraFrameCaptured _onColorLiveFrameCaptured;
 
         WsoCallback.CorneaCameraFrameCaptured _onCorneaLeftFrameCaptured;
@@ -399,8 +499,21 @@ namespace WsoToolkit
             var paramColorCamera = _scanTestModel.ColorCamera.ToSettingParam();
             LsoCamera.SetCameraParameters(ref paramColorCamera);
 
+            // Image Adjust preset (delegated to the inner LsoScanImagePreview)
+            myColorPreview.Image.SetDefaultAdjustPreset(_scanTestModel.ImageAdjust.ToParam());
+            myColorPreview.Image.AdjustPresetChanged = OnImageAdjustPresetChanged_;
+
             // Scan Setting
             initScannerControls_();
+
+            // Preview Mono Mode
+            initPreviewMonoModeControls_();
+        }
+
+        private void OnImageAdjustPresetChanged_(ImageAdjustParam param)
+        {
+            _scanTestModel.ImageAdjust.ApplyFrom(param);
+            _scanTestModel.ImageAdjust.SavePresetToIniFile();
         }
 
         #region Captrue - Review
@@ -438,7 +551,7 @@ namespace WsoToolkit
                         myColorPreview.IsReviewROIMode = true;
                         myColorPreview.AcqFrameCount = ToInt(myTbAcqFrame.Text);
                         myColorPreview.SubFrameCount = ToInt(myTbSubFrame.Text);
-                        myColorPreview.FrameROIs = _scanTestModel.ColorCamera.GetCaptureFrameRoisArray();
+                        myColorPreview.Image.FrameROIs = _scanTestModel.ColorCamera.GetCaptureFrameRoisArray();
                     }
                     break;
 
@@ -447,12 +560,28 @@ namespace WsoToolkit
 
         public void StartColorCameraOriginal()
         {
-            LsoScanner.StartLsoScannerGrabbing((int)LsoScannerPatternId.COLOR);
-            LsoCamera.StartOriginalMode(_onColorCaptureImageCaptured);
+            // The capture one-call owns the device sequence (IR off -> checked preset apply
+            // -> scanner COLOR grab -> worker acquisition -> scanner pause -> completion).
+            // The preset is the knob/INI model value, same source as before.
+            var captureParam = _scanTestModel.ColorCamera.ToSettingParam();
+            var stage = LsoCamera.StartColorCapture(ref captureParam, _onColorCaptureImageCaptured, _onColorCaptureCompleted);
+            if (stage != ColorCaptureStage.Ok)
+            {
+                MessageBox.Show($"Capture start failed: {stage} - {LsoCamera.GetLastCaptureError()}");
+            }
         }
 
         public void StartColorCameraHWTriggerLive()
         {
+            // Ensure the IR aiming light is off during capture. (White LED is scan-gated / manual.)
+            DeviceLights.TurnOffLight(LightType.RetinaIr);
+
+            // Apply known-good color(Bayer) settings explicitly, same as the Original path.
+            // StopPreview's restore can fail silently inside native's single try/catch (void ABI),
+            // so relying on it could leave a Mono8/half-FOV state at capture.
+            var captureParam = _scanTestModel.ColorCamera.ToSettingParam();
+            LsoCamera.SetCameraParameters(ref captureParam);
+
             //myColorPreview.SetLiveMode();
             LsoCamera.StartColorCameraHwTriggerLive(_onColorCaptureImageCaptured);
         }
@@ -465,6 +594,9 @@ namespace WsoToolkit
         public void StartColorCameraLive()
         {
             _isColorLiveFramePending = false;
+
+            // Normal color live always renders in color (clear any leftover aiming gray flag).
+            myColorPreview.IsForceGrayLiveDisplay = false;
 
             myColorPreview.SetLiveMode();
 
@@ -493,7 +625,7 @@ namespace WsoToolkit
 
         private bool isCorneaCameraPreviewing_()
         {
-            if (CorneaCamera.IsPreviewing(CameraType.IrCorneaLeft) || CorneaCamera.IsPreviewing(CameraType.IrCorneaRight))
+            if (CorneaCamera.IsPreviewing())
                 return true;
 
             return false;
@@ -509,19 +641,96 @@ namespace WsoToolkit
             corneaPreview2.Callback = _onCorneaRightFrameCaptured;
             corneaPreview3.Callback = _onCorneaLowerFrameCaptured;
 
-            corneaPreview1.Play();
-            corneaPreview2.Play();
-            corneaPreview3.Play();
+            CorneaCamera.StartPreview(_onCorneaLeftFrameCaptured, _onCorneaRightFrameCaptured, _onCorneaLowerFrameCaptured);
         }
 
         public void CloseCorneaCameraPreview()
         {
-            corneaPreview1.Stop();
-            corneaPreview2.Stop();
-            corneaPreview3.Stop();
+            CorneaCamera.ClosePreview();
         }
 
         #endregion Cornea Camera 
+
+        #region Retina Camera
+
+        // Whether the color-camera mono aiming live is active.
+        private bool IsRetinaPreviewing_()
+        {
+            return myColorPreview.IsPreviewing();
+        }
+
+        // Start the mono aiming live. The native one-call (via ColorCameraPreview.PlayPreview)
+        // owns the IR LED + IR scan pattern + camera setup; mode follows the UI option.
+        private void StartRetinaPreview_()
+        {
+            myColorPreview.LiveCallback = _onColorLiveFrameCaptured;
+            myColorPreview.PlayPreview(previewMonoMode_());
+        }
+
+        // Stop the aiming live. The native one-call (via StopPreview) pauses the IR scan pattern,
+        // turns off the IR LED, and restores camera params.
+        private void StopRetinaPreview_()
+        {
+            myColorPreview.StopPreview();
+        }
+
+        // Start Scan: show the color-camera aiming preview.
+        private void ShowRetinaPreview_()
+        {
+            myColorPreview.Visibility = Visibility.Visible;
+        }
+
+        // Capture: show the acquired LSO color image.
+        private void ShowColorPreview_()
+        {
+            myColorPreview.Visibility = Visibility.Visible;
+        }
+
+        #endregion Retina Camera
+
+        #region Preview Mono Mode
+
+        private bool _isUpdatingPreviewMonoMode;
+
+        private void initPreviewMonoModeControls_()
+        {
+            _isUpdatingPreviewMonoMode = true;
+
+            myCbPreviewMonoMode.Items.Clear();
+            myCbPreviewMonoMode.Items.Add("Sensor Mono8");    // index 0 = SensorMono8
+            myCbPreviewMonoMode.Items.Add("Bayer + SW Gray"); // index 1 = BayerSwGray
+            myCbPreviewMonoMode.SelectedIndex =
+                _scanTestModel.ColorCamera.PreviewMonoMode == (int)ColorPreviewMonoMode.BayerSwGray ? 1 : 0;
+
+            _isUpdatingPreviewMonoMode = false;
+        }
+
+        private ColorPreviewMonoMode previewMonoMode_()
+        {
+            return myCbPreviewMonoMode.SelectedIndex == 1
+                ? ColorPreviewMonoMode.BayerSwGray
+                : ColorPreviewMonoMode.SensorMono8;
+        }
+
+        private void commitPreviewMonoMode_()
+        {
+            if (_isUpdatingPreviewMonoMode)
+            {
+                return;
+            }
+
+            _scanTestModel.ColorCamera.PreviewMonoMode = (int)previewMonoMode_();
+            _scanTestModel.SaveConfigToIniFile();
+
+            // If the aiming preview is running, restart it in the new mode (else apply on next start).
+            if (IsRetinaPreviewing_())
+            {
+                StopRetinaPreview_();
+                StartRetinaPreview_();
+            }
+        }
+
+        #endregion Preview Mono Mode
 
         #region Scan Setting
 
@@ -531,9 +740,14 @@ namespace WsoToolkit
         {
             _isUpdatingScannerControls = true;
 
+            // All native scanner slots are selectable, not just COLOR/IR. Ids covered by
+            // LsoScannerPatternId show their enum name; the remaining slots are marked
+            // reserved so it is clear they carry no agreed meaning yet.
             myCbPatternID.Items.Clear();
-            myCbPatternID.Items.Add("Color");
-            myCbPatternID.Items.Add("IR");
+            for (int i = 0; i < _scanTestModel.ScanProfileCount; i++)
+            {
+                myCbPatternID.Items.Add(scannerPatternName_(i));
+            }
 
             myCbTriggerSrc.Items.Clear();
             myCbTriggerSrc.Items.Add("Color Camera");
@@ -544,6 +758,13 @@ namespace WsoToolkit
             _isUpdatingScannerControls = false;
 
             updateScannerControls_();
+        }
+
+        private static string scannerPatternName_(int patternId)
+        {
+            return Enum.IsDefined((LsoScannerPatternId)patternId)
+                ? $"{patternId}: {(LsoScannerPatternId)patternId}"
+                : $"{patternId}: (reserved)";
         }
 
         private void updateScannerControls_()
@@ -574,10 +795,33 @@ namespace WsoToolkit
             _isUpdatingScannerControls = false;
         }
 
+        // Reads back what the board is actually holding for this pattern and shows it.
+        // Model/UI only - press Apply afterwards to also persist it to the INI.
+        private bool loadScannerControlParam_(int nPatternId)
+        {
+            LsoScannerControlParam param = default;
+            if (!LsoScanner.ObtainLsoScannerControlParam(nPatternId, ref param))
+            {
+                MessageBox.Show($"Load scanner parameters from board failed! (patternId={nPatternId})");
+                return false;
+            }
+
+            _scanTestModel.GetScanProfile(nPatternId).ApplyControlParam(param);
+            updateScannerControls_();
+            return true;
+        }
+
         private bool applyScannerControlParam_(int nPatternId)
         {
             LsoScanProfileModel profile = _scanTestModel.GetScanProfile(nPatternId);
-            profile.CalcGalvanoPositions();
+
+            // A zero pattern size is not a scan - the native side rejects it in
+            // generateGalvanoPositions() but still stores the (zeroed) trajectory. Refuse
+            // here instead, so selecting an empty reserved slot cannot wipe it on the board.
+            if (profile.GalvoPatternSize == 0)
+            {
+                return false;
+            }
 
             // Color 패턴이라면 Color Camera에도 Exposure time을 동기화해야 한다.
             if (nPatternId == (int)LsoScannerPatternId.COLOR && myCheckBoxUseSyncExposureTime.IsChecked == true)
@@ -631,10 +875,10 @@ namespace WsoToolkit
             switch (textbox.Name)
             {
                 case "myTbCameraTimeStep":
-                    profile.TimeStepUs = ToFloat(textbox.Text);
+                    profile.TimeStepUs = ToInt(textbox.Text);
                     break;
                 case "myTbCameraExposureTime":
-                    profile.ExposureTimeUs = ToFloat(textbox.Text);
+                    profile.ExposureTimeUs = ToInt(textbox.Text);
                     break;
                 case "myTbAcqFrame":
                     profile.AcqFrameSize = (uint)ToInt(textbox.Text);
@@ -821,11 +1065,27 @@ namespace WsoToolkit
                 myColorPreview.CallbackLsoScanCaptureFrameImage(frameData, width, height, frameCount, totalFrameCount, channel, nFlipMode, nPixelFormat, nBytesPerPixel);
             }, DispatcherPriority.Background);
 
-            if (frameCount == totalFrameCount - 1)
+            // HWTrig 경로 전용 잔존: 원콜 캡처는 native 워커가 스캐너 정지와 완료 통지를
+            // 소유하므로 제외한다. HWTrig 원콜 전환 시 이 블록은 삭제된다.
+            if (frameCount == totalFrameCount - 1 && !LsoCamera.IsCapturing())
             {
                 LsoScanner.PauseLsoScannerGrabbing((int)LsoScannerPatternId.COLOR);
             }
             return;
+        }
+
+        // Capture one-call completion notice (native worker thread) - marshal before UI state.
+        private void OnColorCaptureCompleted(int result, int framesAcquired)
+        {
+            Dispatcher.BeginInvoke(() =>
+            {
+                var stage = (ColorCaptureStage)result;
+                System.Console.WriteLine($"Color capture completed: {stage}, frames={framesAcquired}");
+                if (stage != ColorCaptureStage.Ok && stage != ColorCaptureStage.Cancelled)
+                {
+                    MessageBox.Show($"Capture failed: {stage} ({framesAcquired} frames) - {LsoCamera.GetLastCaptureError()}");
+                }
+            }, DispatcherPriority.Background);
         }
 
         // Cornea Cameras
@@ -859,6 +1119,7 @@ namespace WsoToolkit
                 corneaPreview3.CallbackCorneaCameraFrame(data, width, height);
             }, DispatcherPriority.Background);
         }
+
         #endregion Callbacks
     }
 }

@@ -49,7 +49,7 @@ namespace wso_device
 		bool readAddress(std::uint32_t addr, std::uint8_t* buff, std::uint32_t size);
 		bool writeAddress(std::uint32_t addr, std::uint8_t* buff, std::uint32_t size, bool reply = true);
 
-		bool readIrCameraFrame(CameraType type, std::uint8_t* buff, std::uint32_t size);
+		bool readIrCameraFrame(IrCameraType type, std::uint8_t* buff, std::uint32_t size);
 		bool readSloScanFrame(std::uint8_t* buff, std::uint32_t size);
 		bool checkSystemReadyGPIO(void);
 		bool checkEyeSideGPIO(EyeSide& side);
@@ -130,6 +130,9 @@ namespace wso_device
 		bool IrCameraDigitalGain(std::uint8_t cid, std::uint8_t gain);
 		bool IrCameraAnalogGain(std::uint8_t cid, std::uint8_t gain);
 		bool IrCameraExposureTime(std::uint8_t cid, std::uint16_t ints);
+		bool IrCameraStreamFormat(std::uint8_t format);
+		bool IrCameraMirrorMode(std::uint8_t cid, std::uint8_t hflip, std::uint8_t vflip);
+		bool IrCameraOutputMode(std::uint8_t cid, std::uint8_t mode, std::uint8_t type);
 
 		bool TestCommand(std::uint8_t cmd);
 

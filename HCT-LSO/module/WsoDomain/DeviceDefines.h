@@ -95,16 +95,6 @@ namespace wso_domain
 		NUMBER_OF_ITEMS = 4
 	};
 
-
-	enum class CorneaCameraType : unsigned char
-	{
-		LEFT = 0x00,
-		RIGHT = 0x01,
-		LOWER = 0x03,
-		UNKNOWN = 0x99,
-		NUMBER_OF_ITEMS = 3
-	};
-
 	enum class CameraType : unsigned char
 	{
 		IR_CORNEA_LEFT = 0x00,
@@ -117,10 +107,65 @@ namespace wso_domain
 
 	enum class IrCameraType : unsigned short
 	{
-		CORNEA_LEFT = 0x00,
-		CORNEA_RIGHT = 0x01,
-		RETINA = 0x02,
-		CORNEA_LOWER = 0x03,
+		RETINA = 0x00,
+		ANTERIOR = 0x01,
+		NUMBER_OF_ITEMS = (ANTERIOR + 1)
+	};
+
+	enum class IrCameraId : unsigned char
+	{
+		RETINA = 0x00,
+		CORNEA_LOWER = 0x01,
+		CORNEA_LEFT = 0x02,
+		CORNEA_RIGHT = 0x03,
+		NUMBER_OF_ITEMS = (CORNEA_RIGHT + 1)
+	};
+
+	enum class IrCameraViewPreset : unsigned char
+	{
+		DEFAULT = 0x00,
+		LOWER_ONLY = 0x01,
+		LEFT_ONLY = 0x02,
+		LOWER_LEFT = 0x03,
+		RIGHT_ONLY = 0x04,
+		LOWER_RIGHT = 0x05,
+		LEFT_RIGHT = 0x06,
+		LOWER_LEFT_RIGHT = 0x07,
+		NUMBER_OF_ITEMS = (LOWER_LEFT_RIGHT + 1)
+	};
+
+	enum class IrCameraMirrorMode : unsigned char
+	{
+		MIRROR_OFF = 0x00,
+		MIRROR_ON = 0x01,
+		NUMBER_OF_ITEMS = (MIRROR_ON + 1)
+	};
+
+	enum class IrCameraOutputMode : unsigned char
+	{
+		NORMAL = 0x00,
+		TEST = 0x01,
+		NUMBER_OF_ITEMS = (TEST + 1)
+	};
+
+	enum class IrCameraTestPattern : unsigned char
+	{
+		TYPE1 = 0x00,
+		TYPE2 = 0x01,
+		TYPE3 = 0x02,
+		TYPE4 = 0x03,
+		NUMBER_OF_ITEMS = (TYPE4 + 1)
+	};
+
+	enum class IrAnteriorViewWidth : unsigned int
+	{
+		LOWER_ONLY = 644,
+		LEFT_ONLY = 644,
+		RIGHT_ONLY = 644,
+		LOWER_LEFT = 1288,
+		LEFT_RIGHT = 1288,
+		LOWER_RIGHT = 1288,
+		LOWER_LEFT_RIGHT = 1932,
 	};
 
 

@@ -45,7 +45,7 @@ namespace WsoToolkit.controls
         public bool IsOverlayAlignGuide { get; set; } = false;
         public bool IsOverlayFocusGuide { get; set; } = false;
         public WsoDevice.CameraType CameraType { get; set; } = WsoDevice.CameraType.IrRetina;
-        public WsoCallback.CorneaCameraFrameCaptured? Callback { get; set; } = null;
+        public WsoCallback.RetinaCameraFrameCaptured? Callback { get; set; } = null;
 
         public RetinaCameraPreview()
         {
@@ -122,14 +122,9 @@ namespace WsoToolkit.controls
             };
         }
 
-        public void CallbackCorneaCameraFrame(nint data, int width, int height)
+        public void CallbackRetinaCameraFrame(nint data, int width, int height)
         {
             if (data == 0) return;
-
-            if (checkSwitch.IsChecked == false)
-            {
-                return;
-            }
 
             // Stride for 8-bit grayscale. 
             nint step = width * 1;
@@ -274,36 +269,6 @@ namespace WsoToolkit.controls
         private void UserControl_Unloaded(object sender, RoutedEventArgs e)
         {
             _stopwatch.Stop();
-        }
-
-        public void Play()
-        {
-            if (!CorneaCamera.IsPreviewing(CameraType))
-            {
-                if (Callback != null)
-                {
-                    CorneaCamera.StartPreview(CameraType, Callback);
-                }
-            }
-            checkSwitch.IsChecked = true;
-        }
-
-        public void Stop()
-        {
-            CorneaCamera.ClosePreview(CameraType);
-            checkSwitch.IsChecked = false;
-        }
-
-        private void CheckSwitch_Click(object sender, RoutedEventArgs e)
-        {
-            if (checkSwitch.IsChecked == true)
-            {
-                Play();
-            }
-            else
-            {
-                Stop();
-            }
         }
     }
 }

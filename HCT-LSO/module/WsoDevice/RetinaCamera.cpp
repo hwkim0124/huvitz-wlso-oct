@@ -10,6 +10,9 @@ using namespace std;
 
 struct RetinaCamera::RetinaCameraImpl
 {
+	float again;
+	float dgain;
+
 	RetinaCameraImpl()
 	{
 		initializeRetinaCameraImpl();
@@ -17,6 +20,8 @@ struct RetinaCamera::RetinaCameraImpl
 
 	void initializeRetinaCameraImpl(void)
 	{
+		again = IR_CAMERA_AGAIN_INIT;
+		dgain = IR_CAMERA_DGAIN_INIT;
 	}
 };
 
@@ -27,11 +32,11 @@ RetinaCamera::RetinaCamera() :
 }
 
 
-RetinaCamera::RetinaCamera(MainBoard* board, CameraType type, std::uint8_t epid) :
-	d_ptr(make_unique<RetinaCameraImpl>()), InfraredCamera(board, type, epid)
+RetinaCamera::RetinaCamera(MainBoard* board, IrCameraType type) :
+	d_ptr(make_unique<RetinaCameraImpl>()), InfraredCamera(board, type)
 {
 }
-
+ 
 
 RetinaCamera::~RetinaCamera()
 {
@@ -43,31 +48,45 @@ bool wso_device::RetinaCamera::initializeRetinaCamera(void)
 	if (!InfraredCamera::initializeInfraredCamera()) {
 		return false;
 	}
+	setActiveViewPreset(IrCameraViewPreset::DEFAULT);
 	// loadParamsFromProfile();
-
-	loadConfigFromIniFile();
 	return true;
 }
 
 bool wso_device::RetinaCamera::setAnalogGain(float gain, bool control)
 {
-	if (!InfraredCamera::setAnalogGain(gain, control))
-	{
-		return false;
-	}
-
-	saveConfigToIniFile();
-	return true;
+	return InfraredCamera::setAnalogGain(IrCameraId::RETINA, gain, control);
 }
 
 bool wso_device::RetinaCamera::setDigitalGain(float gain, bool control)
 {
-	if (!InfraredCamera::setDigitalGain(gain, control))
-	{
-		return false;
+	return InfraredCamera::setDigitalGain(IrCameraId::RETINA, gain, control);
+}
+
+float wso_device::RetinaCamera::getAnalogGain(void) const
+{
+	return InfraredCamera::getAnalogGain(IrCameraId::RETINA);
+}
+
+float wso_device::RetinaCamera::getDigitalGain(void) const
+{
+	return InfraredCamera::getDigitalGain(IrCameraId::RETINA);
+}
+
+bool wso_device::RetinaCamera::handleFrameData(int index, unsigned char* frameData)
+{
+	static auto image = vector<uint8_t>(IR_CAMERA_IMAGE_WIDTH * IR_CAMERA_IMAGE_HEIGHT);
+	auto frame_h = getFrameHeight();
+
+	if (!InfraredCamera::handleFrameData(index, frameData)) {
+		LogD() << "Ir retina camera, handle frame data invalid!";
 	}
 
-	saveConfigToIniFile();
+	for (uint32_t i = 0; i < frame_h; i++) {
+		copy(frameData + i * IR_CAMERA_FRAME_WIDTH + IR_CAMERA_FRAME_PADD_SIZE, frameData + (i + 1) * IR_CAMERA_FRAME_WIDTH, image.begin() + i * IR_CAMERA_IMAGE_WIDTH);
+	}
+
+	CallbackRegistry::getInstance()->runRetinaCameraFrameCaptured(image.data(), IR_CAMERA_IMAGE_WIDTH, IR_CAMERA_IMAGE_HEIGHT);
 	return true;
 }
 
@@ -133,59 +152,6 @@ bool wso_device::RetinaCamera::saveCalibParamToProfile(void)
 	BoardConfig::setModified(true);
 	*/
 	return true;
-}
-
-bool wso_device::RetinaCamera::loadConfigFromIniFile()
-{
-	bool bRet = false;
-
-	try
-	{
-		IniFile* ini = getConfigIniFile();
-		if (!ini) {
-			return false;
-		}
-
-		float fAgain = (float)ini->ReadInt(L"RetinaCamera", L"Again");
-		float fDgain = (float)ini->ReadInt(L"RetinaCamera", L"Dgain");
-		
-		setAnalogGain(fAgain, true);
-		setDigitalGain(fDgain, true);
-
-		bRet = true;
-	}
-	catch (exception ex)
-	{
-		bRet = false;
-	}
-	return bRet;
-}
-
-bool wso_device::RetinaCamera::saveConfigToIniFile()
-{
-	bool bRet = false;
-
-	try
-	{
-		IniFile* ini = getConfigIniFile();
-		if (!ini) {
-			return false;
-		}
-
-		float fAgain = getAnalogGain();
-		float fDgain = getDigitalGain();
-
-		ini->WriteInt(L"RetinaCamera", L"Again", (int)fAgain);
-		ini->WriteInt(L"RetinaCamera", L"Dgain", (int)fDgain);
-
-		bRet = true;
-	}
-	catch (exception ex)
-	{
-		bRet = false;
-	}
-
-	return bRet;
 }
 
 RetinaCamera::RetinaCameraImpl& wso_device::RetinaCamera::impl(void) const

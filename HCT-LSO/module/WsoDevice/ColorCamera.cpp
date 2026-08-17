@@ -19,7 +19,7 @@ public:
 	ColorCameraDeviceEventHandler(ColorCamera* camera) : m_camera(camera) {}
 	virtual ~ColorCameraDeviceEventHandler() {}
 
-	// DeviceEventHandler의 순수 가상 함수 구현
+	// DeviceEventHandler?? ???? ???? ??? ????
 	virtual void OnDeviceEvent(Spinnaker::GenICam::gcstring eventName) override {
 		if (m_camera) {
 			m_camera->OnSpinnakerCameraEvent(eventName.c_str());
@@ -58,6 +58,8 @@ struct ColorCamera::ColorCameraImpl
 
 	atomic<bool> liveMode;
 	atomic<bool> originalMode;
+	atomic<bool> captureMode{ false };
+	atomic<bool> captureCancel{ false };
 	thread worker;
 
 	int nOffsetFrameCount = 0;
@@ -108,24 +110,49 @@ ColorCamera::~ColorCamera()
 
 bool wso_device::ColorCamera::initialize(void)
 {
-	impl().systemPtr = System::GetInstance();
-	impl().camList = impl().systemPtr->GetCameras();
-	unsigned int numCameras = impl().camList.GetSize();
+	// Defensive: a prior aborted attempt (or a start without a matching release)
+	// in this process may have left a camera/system handle around. Tear it down
+	// so re-initialization always starts from a clean state.
+	if (impl().pCam || impl().systemPtr) {
+		uninitialize();
+	}
 
-	if (numCameras == 0)
-	{
-		impl().camList.Clear();
-		impl().systemPtr->ReleaseInstance();
-		LogE() << "Color camera init failed! ";
+	try {
+		impl().systemPtr = System::GetInstance();
+		impl().camList = impl().systemPtr->GetCameras();
+		unsigned int numCameras = impl().camList.GetSize();
+
+		if (numCameras == 0)
+		{
+			impl().camList.Clear();
+			impl().systemPtr->ReleaseInstance();
+			impl().systemPtr = nullptr;
+			LogE() << "Color camera init failed! ";
+			return false;
+		}
+		impl().pCam = impl().camList.GetByIndex(0);
+		impl().pCam->Init();
+
+		if (!setDefaultParameters(true)) {
+			WsoLogError("Color camera initialize failed after retries");
+			return false;
+		}
+
+		impl().initiated = true;
+		return true;
+	}
+	// Architecture rule: never let a Spinnaker/GenICam exception cross the C ABI
+	// boundary. On failure return false so callers can retry or report cleanly.
+	catch (const std::exception& e) {
+		WsoLogError("Exception occurred during ColorCamera initialize! " + std::string(e.what()));
+		impl().initiated = false;
 		return false;
 	}
-	impl().pCam = impl().camList.GetByIndex(0);
-	impl().pCam->Init();
-
-	setDefaultParameters(true);
-
-	impl().initiated = true;
-	return true;
+	catch (...) {
+		WsoLogError("Unknown exception occurred during ColorCamera initialize!");
+		impl().initiated = false;
+		return false;
+	}
 }
 
 bool wso_device::ColorCamera::isInitiated(void) const
@@ -135,7 +162,7 @@ bool wso_device::ColorCamera::isInitiated(void) const
 
 void wso_device::ColorCamera::uninitialize(void)
 {
-	// 1. worker 스레드 먼저 종료
+	// 1. worker ?????? ???? ????
 	if (impl().liveMode) {
 		impl().liveMode = false;
 		if (impl().worker.joinable()) {
@@ -143,29 +170,29 @@ void wso_device::ColorCamera::uninitialize(void)
 		}
 	}
 
-	// rawImage grab 해제
+	// rawImage grab ????
 	impl().rawImage = nullptr;
 
-	// 2. 카메라가 아직 스트리밍 중이면 중지
+	// 2. ???? ???? ??????? ????? ????
 	if (impl().pCam && impl().pCam->IsStreaming()) {
 		try { impl().pCam->EndAcquisition(); }
 		catch (...) {}
 	}
-	// 3. 이벤트 핸들러 해제
+	// 3. ???? ??? ????
 	if (impl().m_deviceEventHandler && impl().pCam && impl().pCam->IsValid()) {
 		try { impl().pCam->UnregisterEventHandler(*(impl().m_deviceEventHandler)); }
 		catch (...) {}
 		impl().m_deviceEventHandler.reset();
 	}
-	// 4. DeInit 호출 (← 현재 완전 누락)
+	// 4. DeInit ??? (?? ???? ???? ????)
 	if (impl().pCam && impl().pCam->IsValid()) {
 		try { impl().pCam->DeInit(); }
 		catch (...) {}
 	}
-	// 5. 리소스 해제
+	// 5. ????? ????
 	impl().pCam = nullptr;
 	impl().camList.Clear();
-	// 6. systemPtr null 체크 후 ReleaseInstance
+	// 6. systemPtr null u? ?? ReleaseInstance
 	if (impl().systemPtr) {
 		impl().systemPtr->ReleaseInstance();
 		impl().systemPtr = nullptr;
@@ -195,7 +222,7 @@ void wso_device::ColorCamera::setInitParameters()
 				? strModelName
 				: strModelName.substr(strModelName.size() - 6);
 
-			// Trigger Mode 비활성화
+			// Trigger Mode ??????
 			int nTriggerMode = impl().getCamera()->TriggerMode.GetValue();
 			if (nTriggerMode == TriggerMode_On)
 				impl().getCamera()->TriggerMode.SetValue(TriggerMode_Off);
@@ -241,7 +268,7 @@ void wso_device::ColorCamera::setInitParameters()
 			impl().getCamera()->PixelFormat.SetValue(PixelFormat_BayerRG8);
 
 			// Set AcquisitionMode to Multiframe as Temporarily
-			impl().getCamera()->AcquisitionMode.SetValue(AcquisitionMode_MultiFrame); // Exposure Auto, Gain Auto, BalanceWhite Auto Off 설정을 위해 임시로 
+			impl().getCamera()->AcquisitionMode.SetValue(AcquisitionMode_MultiFrame); // Exposure Auto, Gain Auto, BalanceWhite Auto Off ?????? ???? ??÷? 
 
 			// Set Exposure time
 			impl().getCamera()->ExposureAuto.SetValue(ExposureAuto_Off);
@@ -317,25 +344,17 @@ void wso_device::ColorCamera::setInitParameters()
 		}
 		catch (const std::exception& e)
 		{
-			auto elog = e.what();
 			WsoLogError("Exception occurred during ColorCamera init! " + std::string(e.what()));
 
-			unsigned int numCameras = 0;
-			impl().getCamera()->DeviceReset.Execute();
-
-			do {
-				impl().systemPtr = System::GetInstance();
-				impl().camList = impl().systemPtr->GetCameras();
-				numCameras = impl().camList.GetSize();
-			} while (numCameras == 0);
-
-			impl().pCam = impl().camList.GetByIndex(0);
-			impl().pCam->Init();
+			// Recovery must not throw across the C ABI. If it fails, stop retrying.
+			if (!recoverCameraAfterFault()) {
+				break;
+			}
 		}
 	}
 }
 
-void wso_device::ColorCamera::setDefaultParameters(bool update)
+bool wso_device::ColorCamera::setDefaultParameters(bool update)
 {
 	for (int i = 0; i < 3; i++)
 	{
@@ -407,25 +426,21 @@ void wso_device::ColorCamera::setDefaultParameters(bool update)
 			WsoLogDebug("Color Camera Grab Test...ok!");
 
 			WsoLogInfo("Color Camera initialize...ok!");
-			break;
+			return true;
 		}
 		catch (const std::exception& e)
 		{
 			WsoLogError("Exception occurred during ColorCamera init!" + std::string(e.what()));
 
-			unsigned int numCameras = 0;
-			impl().getCamera()->DeviceReset.Execute();
-
-			do {
-				impl().systemPtr = System::GetInstance();
-				impl().camList = impl().systemPtr->GetCameras();
-				numCameras = impl().camList.GetSize();
-			} while (numCameras == 0);
-
-			impl().pCam = impl().camList.GetByIndex(0);
-			impl().pCam->Init();
+			// Recovery must not throw across the C ABI. If it fails, stop retrying.
+			if (!recoverCameraAfterFault()) {
+				return false;
+			}
 		}
 	}
+
+	// All attempts exhausted without a successful configuration + grab test.
+	return false;
 }
 
 void wso_device::ColorCamera::startLiveMode(void)
@@ -590,10 +605,10 @@ void wso_device::ColorCamera::startSwTriggerLiveMode(void)
 	if (impl().getCamera()->IsStreaming())
 		impl().getCamera()->EndAcquisition();
 
-	// Software Trigger 설정
+	// Software Trigger ????
 	setupSoftwareTrigger(1); // Single Frame
 
-	// Acquisition 시작
+	// Acquisition ????
 	impl().getCamera()->BeginAcquisition();
 	return;
 }
@@ -607,7 +622,7 @@ void wso_device::ColorCamera::stopSwTriggerLiveMode(void)
 		impl().getCamera()->EndAcquisition();
 	}
 
-	// Trigger Mode 비활성화
+	// Trigger Mode ??????
 	int nTriggerMode = impl().getCamera()->TriggerMode.GetValue();
 	if (nTriggerMode == TriggerMode_On)
 		impl().getCamera()->TriggerMode.SetValue(TriggerMode_Off);
@@ -619,21 +634,21 @@ void wso_device::ColorCamera::stopSwTriggerLiveMode(void)
 void wso_device::ColorCamera::setupSoftwareTrigger(int nMode)
 {
 	try {
-		// 1. Acquisition 중단
+		// 1. Acquisition ???
 		if (impl().getCamera()->IsStreaming()) {
 			impl().getCamera()->EndAcquisition();
 		}
 
-		// 2. Trigger Mode 활성화
+		// 2. Trigger Mode ????
 		impl().getCamera()->TriggerMode.SetValue(TriggerMode_On);
 
-		// 3. Trigger Source를 Software로 설정
+		// 3. Trigger Source?? Software?? ????
 		impl().getCamera()->TriggerSource.SetValue(TriggerSource_Software);
 
-		// 4. Trigger Activation 설정 (Rising Edge)
+		// 4. Trigger Activation ???? (Rising Edge)
 		//impl().getCamera()->TriggerActivation.SetValue(TriggerActivation_RisingEdge);
 
-		// 5. Acquisition Mode 설정 (SingleFrame 또는 MultiFrame)
+		// 5. Acquisition Mode ???? (SingleFrame ??? MultiFrame)
 		switch (nMode)
 		{
 			case 0 : // Continuous
@@ -653,7 +668,7 @@ void wso_device::ColorCamera::setupSoftwareTrigger(int nMode)
 			break;
 		}
 
-		// 6. Trigger Selector 설정 (Frame Start)
+		// 6. Trigger Selector ???? (Frame Start)
 		impl().getCamera()->TriggerSelector.SetValue(TriggerSelector_FrameStart);
 
 		WsoLogInfo("Software Trigger setup completed");
@@ -773,45 +788,45 @@ bool wso_device::ColorCamera::isCameraStreaming(void)
 void wso_device::ColorCamera::setupHwTriggerSetting(bool bContinuous)
 {
 	try {
-		// 1. Acquisition 중단
+		// 1. Acquisition ???
 		if (impl().getCamera()->IsStreaming()) {
 			impl().getCamera()->EndAcquisition();
 		}
 
-		// 6. Trigger Selector 설정 (Frame Start)
+		// 6. Trigger Selector ???? (Frame Start)
 		impl().getCamera()->TriggerSelector.SetValue(TriggerSelector_FrameStart);
 
-		// 3. Trigger Source를 Software로 설정
+		// 3. Trigger Source?? Software?? ????
 		impl().getCamera()->TriggerSource.SetValue(TriggerSource_Line3);
 
-		// 4. Trigger Activation을 ReadOut으로 설정
+		// 4. Trigger Activation?? ReadOut???? ????
 		impl().getCamera()->TriggerActivation.SetValue(TriggerActivation_RisingEdge);
 
-		// 4. Trigger Overlap을 ReadOut으로 설정
+		// 4. Trigger Overlap?? ReadOut???? ????
 		impl().getCamera()->TriggerOverlap.SetValue(TriggerOverlap_ReadOut);
 
-		// 4. LineSelector를 Line2로 설정
+		// 4. LineSelector?? Line2?? ????
 		impl().getCamera()->LineSelector.SetValue(LineSelector_Line2);
 
-		// 4. LineMode를 Output로 설정
+		// 4. LineMode?? Output?? ????
 		impl().getCamera()->LineMode.SetValue(LineMode_Output);
 
-		// 4. LineSource를 Output로 설정
+		// 4. LineSource?? Output?? ????
 		impl().getCamera()->LineSource.SetValue(LineSource_ExposureActive);
 
-		// 4. LineSelector를 Line2로 설정
+		// 4. LineSelector?? Line2?? ????
 		impl().getCamera()->LineSelector.SetValue(LineSelector_Line3);
 
-		// 4. LineMode를 Output로 설정
+		// 4. LineMode?? Output?? ????
 		impl().getCamera()->LineMode.SetValue(LineMode_Input);
 
-		// 5. Acquisition Mode 설정 (Continuous 또는 MultiFrame)
+		// 5. Acquisition Mode ???? (Continuous ??? MultiFrame)
 		//if (bContinuous)
 		//	impl().getCamera()->AcquisitionMode.SetValue(AcquisitionMode_Continuous);
 		//else
 		//	impl().getCamera()->AcquisitionMode.SetValue(AcquisitionMode_MultiFrame);
 
-		// 2. Trigger Mode 활성화
+		// 2. Trigger Mode ????
 		impl().getCamera()->TriggerMode.SetValue(TriggerMode_On);
 
 		WsoLogInfo("Hardware trigger setup completed");
@@ -866,6 +881,120 @@ void wso_device::ColorCamera::startOriginalMode(void)
 void wso_device::ColorCamera::pauseOriginalMode(void)
 {
 	impl().originalMode = false;
+}
+
+// Capture one-call worker body: bounded, cancellable acquisition. Modeled on
+// acquireCameraCaptureData(), but reports how it ended instead of running silently.
+// Runs on the caller's thread (the capture one-call calls it from its worker).
+int wso_device::ColorCamera::acquireCaptureFrames(int* framesAcquired)
+{
+	if (framesAcquired) {
+		*framesAcquired = 0;
+	}
+
+	if (!isInitiated()) {
+		return wso_domain::CAP_STAGE_CAMERA;
+	}
+	if (impl().liveMode || impl().captureMode) {
+		return wso_domain::CAP_STAGE_BUSY;
+	}
+
+	impl().captureCancel = false;
+	impl().captureMode = true;
+
+	int result = wso_domain::CAP_STAGE_OK;
+	int frames = 0;
+
+	try {
+		setupCameraTriggerOnOffOnly(false);
+
+		uint32_t width = getFrameWidth();
+		uint32_t height = getFrameHeight();
+		int nPixelFormat = impl().getCamera()->PixelFormat.GetValue();
+		int nBytesPerPixel = getBytesPerPixel();
+		uint32_t frameSize = getFrameSizeForBpp(nBytesPerPixel);
+		unsigned char* buffer = impl().sonyFrameBuffer;
+
+		uint32_t nTotalFrameCount;
+		if (getAcquisitionMode() == AcquisitionMode_SingleFrame) {
+			nTotalFrameCount = 1;
+		}
+		else {
+			nTotalFrameCount = (uint32_t)impl().getCamera()->AcquisitionFrameCount.GetValue();
+		}
+
+		WsoLogInfo("[COLOR-CAP] begin pf=" + std::to_string(nPixelFormat)
+			+ " w=" + std::to_string(width) + " h=" + std::to_string(height)
+			+ " total=" + std::to_string(nTotalFrameCount));
+
+		impl().getCamera()->BeginAcquisition();
+
+		int consecutiveTimeouts = 0;
+		for (uint32_t frameCount = 0; frameCount < nTotalFrameCount;) {
+			if (impl().captureCancel) {
+				result = wso_domain::CAP_STAGE_CANCELLED;
+				break;
+			}
+
+			try {
+				impl().rawImage = impl().getCamera()->GetNextImage(1000);
+			}
+			catch (const Spinnaker::Exception&) {
+				// Timeout or transient read fault: re-check cancel, retry a few times.
+				if (impl().captureCancel) {
+					result = wso_domain::CAP_STAGE_CANCELLED;
+					break;
+				}
+				if (++consecutiveTimeouts >= 3) {
+					WsoLogError("[COLOR-CAP] GetNextImage timed out 3x - aborting");
+					result = wso_domain::CAP_STAGE_CAMERA;
+					break;
+				}
+				continue;
+			}
+			consecutiveTimeouts = 0;
+
+			std::memcpy(buffer, impl().rawImage->GetData(), frameSize);
+			{
+				unique_lock<mutex> lock(impl().mutexLock);
+				CallbackRegistry::getInstance()->runColorCameraImageCaptured(buffer, width, height, frameCount, nTotalFrameCount, getFlipMode(), nPixelFormat, nBytesPerPixel);
+			}
+			++frameCount;
+			++frames;
+		}
+
+		impl().getCamera()->EndAcquisition();
+	}
+	catch (const std::exception& e) {
+		WsoLogError("[COLOR-CAP] exception: " + std::string(e.what()));
+		try {
+			impl().getCamera()->EndAcquisition();
+		}
+		catch (...) {
+		}
+		result = wso_domain::CAP_STAGE_CAMERA;
+	}
+	catch (...) {
+		WsoLogError("[COLOR-CAP] unknown exception");
+		result = wso_domain::CAP_STAGE_CAMERA;
+	}
+
+	impl().captureMode = false;
+	if (framesAcquired) {
+		*framesAcquired = frames;
+	}
+	WsoLogInfo("[COLOR-CAP] end result=" + std::to_string(result) + " frames=" + std::to_string(frames));
+	return result;
+}
+
+void wso_device::ColorCamera::cancelCaptureFrames(void)
+{
+	impl().captureCancel = true;
+}
+
+bool wso_device::ColorCamera::isCaptureMode(void) const
+{
+	return impl().captureMode;
 }
 
 int wso_device::ColorCamera::getFrameWidth(void) const
@@ -929,22 +1058,35 @@ void wso_device::ColorCamera::setCameraSettings(ColorCameraSettingParam params)
 {
 	try
 	{
-		/////현재의 Width, Height 값에 안맞는 offset 값을 넣으면 문제가 생기므로, 처음에 0,0으로 초기화를 먼저 시켜준다.
+		/////?????? Width, Height ???? ??´? offset ???? ?????? ?????? ??????, o???? 0,0???? ?????? ???? ???????.
+		// 순서 중요(실측 제약 반영): 이 카메라는 Mono8 에서 binning 최소가 2 이고,
+		// binning 에 따라 ROI(Width/Height) 최대가 달라진다(bin2 에서 Width max=2736, bin1 에서 5472).
+		// 따라서 (1) pixelFormat 먼저 ? Mono8 의 'binning>=2' 제약을 먼저 해제(예: Bayer 로 전환)
+		//        (2) binning     ? Bayer 에서는 1 허용
+		//        (3) binning 확정 후 ROI ? Width/Height max 가 목표 binning 에 맞음
+		// 이 순서라야 Mono8/bin2 → Bayer/bin1 전환에서 OutOfRange(Width 3648>2736, Binning 1<2) 없이 성공한다.
+		setPixelFormat(params.pixelFormat);
+		setBinningHorizontal(params.binningHorizontal);
+		setBinningVertical(params.binningVertical);
+
+		// Width/Height 변경 시 기존 offset 이 범위를 벗어날 수 있으니 offset 을 먼저 0 으로 초기화.
 		setROI_X_Offset(0);
 		setROI_Y_Offset(0);
-		///
 		setROI_X_Width(params.roi_x_width);
 		setROI_Y_Height(params.roi_y_height);
 		setROI_X_Offset(params.roi_x_offset);
 		setROI_Y_Offset(params.roi_y_offset);
+
 		setExposureTime(params.exposure_time);
 		setAcquisitionMode(params.acqusitionMode);
 		setAcquisitionFrameCount(params.acqusitionFrameCount);
-		setPixelFormat(params.pixelFormat);
-		setBinningHorizontal(params.binningHorizontal);
-		setBinningVertical(params.binningVertical);
 		setGain(params.gain);
 		setAdcBitDepth(params.adcDepthIndex);
+
+		// [임시 계측] 요청값 vs 실제 적용값. 진단 후 제거.
+		WsoLogInfo("[SET] req pf=" + std::to_string(params.pixelFormat) + " binH=" + std::to_string(params.binningHorizontal)
+			+ " -> now pf=" + std::to_string(getPixelFormat()) + " binH=" + std::to_string(getBinningHorizontal())
+			+ " binV=" + std::to_string(getBinningVertical()));
 
 		auto& camsets = impl().cameraSets;
 		camsets.roi_x_width = params.roi_x_width;
@@ -965,6 +1107,101 @@ void wso_device::ColorCamera::setCameraSettings(ColorCameraSettingParam params)
 		auto elog = e.what();
 		WsoLogError("Exception occurred during ColorCamera Set!");
 		WsoLogError(elog);
+	}
+}
+
+bool wso_device::ColorCamera::setCameraSettingsChecked(const ColorCameraSettingParam& params)
+{
+	setCameraSettings(params);
+
+	try {
+		bool ok = getPixelFormat() == params.pixelFormat
+			&& getBinningHorizontal() == params.binningHorizontal
+			&& getBinningVertical() == params.binningVertical
+			&& getROI_X_Width() == params.roi_x_width
+			&& getROI_Y_Height() == params.roi_y_height
+			&& getROI_X_Offset() == params.roi_x_offset
+			&& getROI_Y_Offset() == params.roi_y_offset
+			&& getAcquisitionMode() == params.acqusitionMode
+			&& getAdcBitDepth() == params.adcDepthIndex;
+
+		// Frame count only matters (and is only re-checked) in MultiFrame mode (2).
+		if (ok && params.acqusitionMode == 2) {
+			ok = getAcquisitionFrameCount() == params.acqusitionFrameCount;
+		}
+
+		if (!ok) {
+			WsoLogError("[COLOR-CAP] settings verify mismatch: req pf=" + std::to_string(params.pixelFormat)
+				+ " binH=" + std::to_string(params.binningHorizontal) + " binV=" + std::to_string(params.binningVertical)
+				+ " roi=" + std::to_string(params.roi_x_width) + "x" + std::to_string(params.roi_y_height)
+				+ "+" + std::to_string(params.roi_x_offset) + "+" + std::to_string(params.roi_y_offset)
+				+ " acqMode=" + std::to_string(params.acqusitionMode) + " acqCount=" + std::to_string(params.acqusitionFrameCount)
+				+ " / act pf=" + std::to_string(getPixelFormat())
+				+ " binH=" + std::to_string(getBinningHorizontal()) + " binV=" + std::to_string(getBinningVertical())
+				+ " roi=" + std::to_string(getROI_X_Width()) + "x" + std::to_string(getROI_Y_Height())
+				+ "+" + std::to_string(getROI_X_Offset()) + "+" + std::to_string(getROI_Y_Offset())
+				+ " acqMode=" + std::to_string(getAcquisitionMode()) + " acqCount=" + std::to_string(getAcquisitionFrameCount()));
+		}
+		return ok;
+	}
+	catch (const std::exception& e) {
+		WsoLogError("[COLOR-CAP] settings verify exception: " + std::string(e.what()));
+		return false;
+	}
+	catch (...) {
+		return false;
+	}
+}
+
+bool wso_device::ColorCamera::squareRoi(void)
+{
+	try
+	{
+		if (impl().getCamera()->IsStreaming())
+		{
+			impl().getCamera()->EndAcquisition();
+		}
+
+		// Read the currently applied ROI (already binned / format-set by setCameraSettings).
+		int w = (int)impl().getCamera()->Width.GetValue();
+		int h = (int)impl().getCamera()->Height.GetValue();
+		int ox = (int)impl().getCamera()->OffsetX.GetValue();
+		int oy = (int)impl().getCamera()->OffsetY.GetValue();
+
+		int side = (w < h) ? w : h;
+
+		// The square side must satisfy both Width and Height increments.
+		int winc = (int)impl().getCamera()->Width.GetInc();
+		int hinc = (int)impl().getCamera()->Height.GetInc();
+		int sideStep = (winc > hinc) ? winc : hinc;
+		if (sideStep < 1) { sideStep = 1; }
+		side -= (side % sideStep);
+		if (side <= 0) { return false; }
+
+		// Center the square inside the current window; align to offset increments.
+		int oxInc = (int)impl().getCamera()->OffsetX.GetInc();
+		int oyInc = (int)impl().getCamera()->OffsetY.GetInc();
+		if (oxInc < 1) { oxInc = 1; }
+		if (oyInc < 1) { oyInc = 1; }
+		int newOx = ox + (w - side) / 2; newOx -= (newOx % oxInc);
+		int newOy = oy + (h - side) / 2; newOy -= (newOy % oyInc);
+
+		// Shrink size first, then move the offset (offset range grows once size shrinks).
+		setROI_X_Width(side);
+		setROI_Y_Height(side);
+		setROI_X_Offset(newOx);
+		setROI_Y_Offset(newOy);
+
+		WsoLogInfo("[SQUARE] " + std::to_string(w) + "x" + std::to_string(h)
+			+ " -> " + std::to_string(side) + "x" + std::to_string(side)
+			+ " off(" + std::to_string(newOx) + "," + std::to_string(newOy) + ")");
+		return true;
+	}
+	catch (const std::exception& e)
+	{
+		WsoLogError("Exception occurred during ColorCamera squareRoi!");
+		WsoLogError(e.what());
+		return false;
 	}
 }
 
@@ -1271,6 +1508,62 @@ bool wso_device::ColorCamera::saveConfigToIniFile()
 ColorCamera::ColorCameraImpl& wso_device::ColorCamera::impl(void) const
 {
 	return *d_ptr;
+}
+
+bool wso_device::ColorCamera::recoverCameraAfterFault(void)
+{
+	// Called from init retry catch handlers, below the C ABI boundary ? must never
+	// throw. Resets the (possibly locked/streaming) device and waits for it to
+	// re-enumerate so the caller can retry with a valid, writable handle.
+	try {
+		if (impl().pCam && impl().pCam->IsValid()) {
+			try { if (impl().pCam->IsStreaming()) impl().pCam->EndAcquisition(); }
+			catch (...) {}
+			try { impl().pCam->DeviceReset.Execute(); }
+			catch (...) {}
+		}
+
+		// The old handle is invalid after a device reset; drop it before re-enumerating.
+		impl().pCam = nullptr;
+		impl().camList.Clear();
+
+		if (!impl().systemPtr) {
+			impl().systemPtr = System::GetInstance();
+		}
+
+		// USB3 re-enumeration after DeviceReset can take several seconds. Poll with a
+		// bounded timeout instead of a tight/infinite spin. UpdateCameras() forces a
+		// fresh enumeration; GetCameras() alone would return the stale cached list.
+		const int kTimeoutMs = 15000;
+		const int kPollMs = 200;
+		unsigned int numCameras = 0;
+		for (int waited = 0; waited < kTimeoutMs; waited += kPollMs) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(kPollMs));
+			impl().systemPtr->UpdateCameras();
+			impl().camList = impl().systemPtr->GetCameras();
+			numCameras = impl().camList.GetSize();
+			if (numCameras > 0) {
+				break;
+			}
+		}
+
+		if (numCameras == 0) {
+			WsoLogError("Color camera did not re-enumerate after device reset");
+			return false;
+		}
+
+		impl().pCam = impl().camList.GetByIndex(0);
+		impl().pCam->Init();
+		return true;
+	}
+	catch (const std::exception& e) {
+		WsoLogError("Color camera fault recovery failed: " + std::string(e.what()));
+		return false;
+	}
+	catch (...) {
+		WsoLogError("Color camera fault recovery failed: unknown exception");
+		return false;
+	}
 }
 
 void wso_device::ColorCamera::acquireCameraData(void)
@@ -1654,14 +1947,14 @@ void wso_device::ColorCamera::acquireCameraOffsetROIData(void)
 		if (impl().getCamera()->IsStreaming())
 			impl().getCamera()->EndAcquisition();
 
-		// Width, Height 설정
+		// Width, Height ????
 		setROI_X_Offset(0);
 		setROI_Y_Offset(0);
 		setROI_X_Width(nRoiWidth);
 		setROI_Y_Height(nRoiHeight);
 
 		//SetEventMode(true);
-		// Software Trigger 설정
+		// Software Trigger ????
 		setupSoftwareTrigger();
 
 		impl().getCamera()->BeginAcquisition();
@@ -1674,7 +1967,7 @@ void wso_device::ColorCamera::acquireCameraOffsetROIData(void)
 
 			for (int i = 0; i < totalFrameCount; ++i)
 			{
-				// liveMode 체크를 뮤텍스로 보호
+				// liveMode u??? ??????? ???
 				{
 					unique_lock<mutex> lock(impl().mutexLock);
 					if (!impl().liveMode)
@@ -1814,14 +2107,14 @@ void wso_device::ColorCamera::acquireCaptureCameraOffsetROIData(void)
 		if (impl().getCamera()->IsStreaming())
 			impl().getCamera()->EndAcquisition();
 
-		// Width, Height 설정
+		// Width, Height ????
 		setROI_X_Offset(0);
 		setROI_Y_Offset(0);
 		setROI_X_Width(nRoiWidth);
 		setROI_Y_Height(nRoiHeight);
 
 		//SetEventMode(true);
-		// Software Trigger 설정
+		// Software Trigger ????
 		setupSoftwareTrigger(2); // Multiframe
 		setAcquisitionFrameCount(totalFrameCount);
 
@@ -1831,7 +2124,7 @@ void wso_device::ColorCamera::acquireCaptureCameraOffsetROIData(void)
 
 		for (int i = 0; i < totalFrameCount; ++i)
 		{
-			// liveMode 체크를 뮤텍스로 보호
+			// liveMode u??? ??????? ???
 			//{
 			//	unique_lock<mutex> lock(impl().mutexLock);
 			//	if (!impl().liveMode)
@@ -1965,7 +2258,7 @@ void wso_device::ColorCamera::acquireCameraRollSwTrigOverlapLive(void)
 		int nMaxWidth = getROI_Max_Width();
 		int nMaxHeight = getROI_Max_Height();
 
-		// Width, Height 설정
+		// Width, Height ????
 		setROI_X_Offset(0);
 		setROI_Y_Offset(0);
 		setROI_X_Width(nMaxWidth);
@@ -1977,7 +2270,7 @@ void wso_device::ColorCamera::acquireCameraRollSwTrigOverlapLive(void)
 		setROI_Y_Offset(nOffsetY);
 
 		//SetEventMode(true);
-		// Software Trigger 설정
+		// Software Trigger ????
 		setupSoftwareTrigger();
 
 		impl().getCamera()->BeginAcquisition();
@@ -1987,7 +2280,7 @@ void wso_device::ColorCamera::acquireCameraRollSwTrigOverlapLive(void)
 
 			for (int i = 0; i < totalFrameCount; ++i)
 			{
-				// liveMode 체크를 뮤텍스로 보호
+				// liveMode u??? ??????? ???
 				{
 					unique_lock<mutex> lock(impl().mutexLock);
 					if (!impl().liveMode)
@@ -2092,11 +2385,11 @@ void wso_device::ColorCamera::acquireCameraRollSwTrigOverlapCapture(void)
 		if (impl().getCamera()->IsStreaming())
 			impl().getCamera()->EndAcquisition();
 
-		// Width, Height 설정
+		// Width, Height ????
 		int nMaxWidth = getROI_Max_Width();
 		int nMaxHeight = getROI_Max_Height();
 
-		// Width, Height 설정
+		// Width, Height ????
 		setROI_X_Offset(0);
 		setROI_Y_Offset(0);
 		setROI_X_Width(nMaxWidth);
@@ -2107,7 +2400,7 @@ void wso_device::ColorCamera::acquireCameraRollSwTrigOverlapCapture(void)
 		setROI_X_Offset(nOffsetX);
 		setROI_Y_Offset(nOffsetY);
 
-		// Software Trigger 설정
+		// Software Trigger ????
 		setupSoftwareTrigger(2); // Multiframe
 		setAcquisitionFrameCount(totalFrameCount);
 
@@ -2182,15 +2475,15 @@ void wso_device::ColorCamera::acquireCameraRollHwTriggerCaptureData(void)
 		{
 			impl().rawImage = impl().getCamera()->GetNextImage(3000);
 
-			// 정상적으로 이미지를 받은 경우
+			// ?????????? ??????? ???? ???
 			std::memcpy(buffer, impl().rawImage->GetData(), frameSize);
 		}
 		catch (const Spinnaker::Exception& e)
 		{
-			// 타임아웃 또는 기타 오류 발생 시
+			// ????? ??? ??? ???? ??? ??
 			LogD() << "Failed to get image at frame " << frameCount << ": " << e.what();
 
-			// buffer를 채워서 회색 이미지 생성
+			// buffer?? a???? ??? ????? ????
 			std::memset(buffer, 0x80, frameSize);
 		}
 
@@ -2223,18 +2516,18 @@ bool wso_device::ColorCamera::onSequencer(void)
 		{
 			impl().getCamera()->SequencerSetSelector.SetValue(i);
 
-			// Set i의 카메라 파라미터 설정
-			//impl().getCamera()->ExposureTime.SetValue(2000);  // 20ms 노출 시간
-			//impl().getCamera()->Gain.SetValue(2.0);            // 낮은 게인
+			// Set i?? ???? ?????? ????
+			//impl().getCamera()->ExposureTime.SetValue(2000);  // 20ms ???? ?ð?
+			//impl().getCamera()->Gain.SetValue(2.0);            // ???? ????
 			impl().getCamera()->OffsetX.SetValue(0);         
 			impl().getCamera()->OffsetY.SetValue(0);
 
-			impl().getCamera()->Width.SetValue(rois[i].width);          // ROI 폭
-			impl().getCamera()->Height.SetValue(rois[i].height);         // ROI 높이
-			impl().getCamera()->OffsetX.SetValue(rois[i].offsetX);         // X 오프셋
-			impl().getCamera()->OffsetY.SetValue(rois[i].offsetY);         // Y 오프셋
+			impl().getCamera()->Width.SetValue(rois[i].width);          // ROI ??
+			impl().getCamera()->Height.SetValue(rois[i].height);         // ROI ????
+			impl().getCamera()->OffsetX.SetValue(rois[i].offsetX);         // X ??????
+			impl().getCamera()->OffsetY.SetValue(rois[i].offsetY);         // Y ??????
 
-			// Set 0의 Sequencer 트리거 설정
+			// Set 0?? Sequencer ????? ????
 			impl().getCamera()->SequencerTriggerSource.SetValue(SequencerTriggerSource_FrameStart);
 			impl().getCamera()->SequencerTriggerActivation.SetValue(SequencerTriggerActivation_RisingEdge);
 
@@ -2245,7 +2538,7 @@ bool wso_device::ColorCamera::onSequencer(void)
 
 			impl().getCamera()->SequencerSetNext.SetValue(nIndexNextSet);
 
-			// Set i 저장
+			// Set i ????
 			impl().getCamera()->SequencerSetSave.Execute();
 
 			LogD() << "Sequencer Set " << i << " configured and saved";
@@ -2253,17 +2546,17 @@ bool wso_device::ColorCamera::onSequencer(void)
 
 		////////////////////////////////////////////////////////////////////////////////////////////
 
-		// 6. 시작 세트 지정
+		// 6. ???? ??? ????
 		impl().getCamera()->SequencerSetStart.SetValue(0);
 
-		// 7. Sequencer Configuration 모드를 Off로 설정 (설정 완료)
+		// 7. Sequencer Configuration ??? Off?? ???? (???? ???)
 		impl().getCamera()->SequencerConfigurationMode.SetValue(SequencerConfigurationMode_Off);
 
-		// 8. Sequencer 설정 유효성 검사
+		// 8. Sequencer ???? ????? ???
 		if (impl().getCamera()->SequencerConfigurationValid.GetValue() == SequencerConfigurationValid_Yes) {
 			LogD() << "Sequencer configuration is valid";
 
-			// 9. Sequencer 모드 활성화
+			// 9. Sequencer ??? ????
 			impl().getCamera()->SequencerMode.SetValue(SequencerMode_On);
 			LogD() << "Sequencer mode activated for BFS-U3-122S6C";
 
@@ -2282,7 +2575,7 @@ bool wso_device::ColorCamera::onSequencer(void)
 		LogD() << "Exception occurred during Sequencer setup!";
 		LogD() << elog;
 
-		// 예외 발생 시 Sequencer 비활성화
+		// ???? ??? ?? Sequencer ??????
 		try {
 			impl().getCamera()->SequencerMode.SetValue(SequencerMode_Off);
 			impl().getCamera()->SequencerConfigurationMode.SetValue(SequencerConfigurationMode_Off);
@@ -2321,18 +2614,18 @@ bool wso_device::ColorCamera::setSequencer(std::vector<LsoCaptureFrameROI> param
 		{
 			impl().getCamera()->SequencerSetSelector.SetValue(i);
 
-			// Set i의 카메라 파라미터 설정
-			//impl().getCamera()->ExposureTime.SetValue(2000);  // 20ms 노출 시간
-			//impl().getCamera()->Gain.SetValue(2.0);            // 낮은 게인
+			// Set i?? ???? ?????? ????
+			//impl().getCamera()->ExposureTime.SetValue(2000);  // 20ms ???? ?ð?
+			//impl().getCamera()->Gain.SetValue(2.0);            // ???? ????
 			impl().getCamera()->OffsetX.SetValue(0);
 			impl().getCamera()->OffsetY.SetValue(0);
 
-			impl().getCamera()->Width.SetValue(paramList[i].width);          // ROI 폭
-			impl().getCamera()->Height.SetValue(paramList[i].height);         // ROI 높이
-			impl().getCamera()->OffsetX.SetValue(paramList[i].offsetX);         // X 오프셋
-			impl().getCamera()->OffsetY.SetValue(paramList[i].offsetY);         // Y 오프셋
+			impl().getCamera()->Width.SetValue(paramList[i].width);          // ROI ??
+			impl().getCamera()->Height.SetValue(paramList[i].height);         // ROI ????
+			impl().getCamera()->OffsetX.SetValue(paramList[i].offsetX);         // X ??????
+			impl().getCamera()->OffsetY.SetValue(paramList[i].offsetY);         // Y ??????
 
-			// Set 0의 Sequencer 트리거 설정
+			// Set 0?? Sequencer ????? ????
 			impl().getCamera()->SequencerTriggerSource.SetValue(SequencerTriggerSource_FrameStart);
 			impl().getCamera()->SequencerTriggerActivation.SetValue(SequencerTriggerActivation_RisingEdge);
 
@@ -2343,7 +2636,7 @@ bool wso_device::ColorCamera::setSequencer(std::vector<LsoCaptureFrameROI> param
 
 			impl().getCamera()->SequencerSetNext.SetValue(nIndexNextSet);
 
-			// Set i 저장
+			// Set i ????
 			impl().getCamera()->SequencerSetSave.Execute();
 
 			LogD() << "Sequencer Set " << i << " configured and saved";
@@ -2351,17 +2644,17 @@ bool wso_device::ColorCamera::setSequencer(std::vector<LsoCaptureFrameROI> param
 
 		////////////////////////////////////////////////////////////////////////////////////////////
 
-		// 6. 시작 세트 지정
+		// 6. ???? ??? ????
 		impl().getCamera()->SequencerSetStart.SetValue(0);
 
-		// 7. Sequencer Configuration 모드를 Off로 설정 (설정 완료)
+		// 7. Sequencer Configuration ??? Off?? ???? (???? ???)
 		impl().getCamera()->SequencerConfigurationMode.SetValue(SequencerConfigurationMode_Off);
 
-		// 8. Sequencer 설정 유효성 검사
+		// 8. Sequencer ???? ????? ???
 		if (impl().getCamera()->SequencerConfigurationValid.GetValue() == SequencerConfigurationValid_Yes) {
 			LogD() << "Sequencer configuration is valid";
 
-			// 9. Sequencer 모드 활성화
+			// 9. Sequencer ??? ????
 			impl().getCamera()->SequencerMode.SetValue(SequencerMode_On);
 			LogD() << "Sequencer mode activated for BFS-U3-122S6C";
 
@@ -2380,7 +2673,7 @@ bool wso_device::ColorCamera::setSequencer(std::vector<LsoCaptureFrameROI> param
 		LogD() << "Exception occurred during Sequencer setup!";
 		LogD() << elog;
 
-		// 예외 발생 시 Sequencer 비활성화
+		// ???? ??? ?? Sequencer ??????
 		try {
 			impl().getCamera()->SequencerMode.SetValue(SequencerMode_Off);
 			impl().getCamera()->SequencerConfigurationMode.SetValue(SequencerConfigurationMode_Off);
@@ -2416,7 +2709,7 @@ std::vector<std::vector<LsoCaptureFrameROI>> wso_device::ColorCamera::dividePara
 	while (currentIndex < nFrameCount) {
 		std::vector<LsoCaptureFrameROI> chunk;
 
-		// 현재 청크에 최대 8개 또는 남은 개수만큼 추가
+		// ???? u??? ??? 8?? ??? ???? ??????? ???
 		int endIndex = std::min((int)(currentIndex + chunkSize), nFrameCount);
 
 		for (int i = currentIndex; i < endIndex; ++i) {
@@ -2484,6 +2777,12 @@ void wso_device::ColorCamera::acquireCameraCaptureData(void)
 
 	int nPixelFormat = impl().getCamera()->PixelFormat.GetValue();
 	int nBytesPerPixel = getBytesPerPixel();
+
+	// [임시 계측] 캡처 시점의 실제 카메라 상태(포맷/binning/해상도) 확인용. 진단 후 제거.
+	WsoLogInfo("[CAP] pf=" + std::to_string(nPixelFormat) + " (0=Mono8,4=BayerRG8) binH="
+		+ std::to_string(getBinningHorizontal()) + " binV=" + std::to_string(getBinningVertical())
+		+ " w=" + std::to_string(width) + " h=" + std::to_string(height)
+		+ " bpp=" + std::to_string(nBytesPerPixel));
 
 	uint32_t frameSize = getFrameSizeForBpp(nBytesPerPixel);
 
@@ -2574,7 +2873,7 @@ void wso_device::ColorCamera::OnSpinnakerCameraEvent(std::string eventName)
 
 		if (strEventName == "EventExposureEnd")
 		{
-			// ExposureEnd 이벤트 처리
+			// ExposureEnd ???? o??
 			try {
 
 				auto t0 = steady_clock::now();
@@ -2613,7 +2912,7 @@ void wso_device::ColorCamera::OnSpinnakerCameraEvent(std::string eventName)
 				double totalms = duration<double, std::milli>(t8 - t0).count();
 				LogD() << "Event Total 1 Frame = " << totalms;
 
-				// 콜백 실행 (필요시 CallbackRegistry에 추가)
+				// ??? ???? (???? CallbackRegistry?? ???)
 				//CallbackRegistry::getInstance()->runColorCameraExposureEndEvent(frameID, timestamp);
 			}
 			catch (const std::exception& e) {
@@ -2622,7 +2921,7 @@ void wso_device::ColorCamera::OnSpinnakerCameraEvent(std::string eventName)
 		}
 		//else if (strEventName == "EventError")
 		//{
-		//	// Error 이벤트 처리
+		//	// Error ???? o??
 		//	try {
 		//		uint64_t errorCode = impl().getCamera()->EventErrorCode.GetValue();
 		//		uint64_t timestamp = impl().getCamera()->EventErrorTimestamp.GetValue();
@@ -2635,7 +2934,7 @@ void wso_device::ColorCamera::OnSpinnakerCameraEvent(std::string eventName)
 		//}
 		//else if (strEventName == "EventSerialPortReceive")
 		//{
-		//	// SerialPortReceive 이벤트 처리
+		//	// SerialPortReceive ???? o??
 		//	try {
 		//		uint64_t timestamp = impl().getCamera()->EventSerialPortReceiveTimestamp.GetValue();
 		//		std::string serialData = impl().getCamera()->EventSerialData.GetValue().c_str();
@@ -2678,25 +2977,25 @@ void wso_device::ColorCamera::SetEventMode(bool enableEvents)
 
 		if (enableEvents)
 		{
-			// DeviceEventHandler 생성 (아직 생성되지 않은 경우)
+			// DeviceEventHandler ???? (???? ???????? ???? ???)
 			if (!impl().m_deviceEventHandler) {
 				impl().m_deviceEventHandler = std::make_unique<ColorCameraDeviceEventHandler>(this);
 			}
 
-			// ExposureEnd 이벤트 설정 및 핸들러 등록
+			// ExposureEnd ???? ???? ?? ??? ???
 			impl().getCamera()->EventSelector.SetValue(EventSelector_ExposureEnd);
 			impl().getCamera()->EventNotification.SetValue(EventNotification_On);
 			//impl().getCamera()->RegisterEventHandler(*m_deviceEventHandler, "EventExposureEnd");
 			impl().getCamera()->RegisterEventHandler(*(impl().m_deviceEventHandler));
 			LogD() << "ExposureEnd event enabled and handler registered";
 
-			//// Error 이벤트 설정 및 핸들러 등록
+			//// Error ???? ???? ?? ??? ???
 			//impl().getCamera()->EventSelector.SetValue(EventSelector_Error);
 			//impl().getCamera()->EventNotification.SetValue(EventNotification_On);
 			//impl().getCamera()->RegisterEventHandler(*m_deviceEventHandler, "EventError");
 			//WsoLogInfo("Error event enabled and handler registered");
 
-			//// SerialPortReceive 이벤트 설정 및 핸들러 등록 (필요한 경우)
+			//// SerialPortReceive ???? ???? ?? ??? ??? (????? ???)
 			//impl().getCamera()->EventSelector.SetValue(EventSelector_SerialPortReceive);
 			//impl().getCamera()->EventNotification.SetValue(EventNotification_On);
 			//impl().getCamera()->RegisterEventHandler(*m_deviceEventHandler, "EventSerialPortReceive");
@@ -2706,7 +3005,7 @@ void wso_device::ColorCamera::SetEventMode(bool enableEvents)
 		}
 		else
 		{
-			// EventHandler 등록 해제
+			// EventHandler ??? ????
 			if (impl().m_deviceEventHandler) {
 				try {
 					impl().getCamera()->UnregisterEventHandler(*(impl().m_deviceEventHandler));
@@ -2717,7 +3016,7 @@ void wso_device::ColorCamera::SetEventMode(bool enableEvents)
 				}
 			}
 
-			// 모든 이벤트 비활성화
+			// ??? ???? ??????
 			impl().getCamera()->EventSelector.SetValue(EventSelector_ExposureEnd);
 			impl().getCamera()->EventNotification.SetValue(EventNotification_Off);
 

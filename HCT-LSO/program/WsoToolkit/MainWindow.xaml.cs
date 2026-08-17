@@ -41,13 +41,25 @@ namespace WsoToolkit
             DatabaseRepository.CreateResultDirectory();
         }
 
-        private void StartupButton_Click(object sender, RoutedEventArgs e)
+        private async void StartupButton_Click(object sender, RoutedEventArgs e)
         {
+            // Hardware initialization performs blocking USB I/O deep in the native
+            // layer and must not run on the UI thread — a stalled device would
+            // freeze the whole app. Run it on a background thread so the UI stays
+            // responsive and the init log streams live.
             Mouse.OverrideCursor = Cursors.Wait;
-            if (StartWsoSystem())
+            StartupButton.IsEnabled = false;
+
+            bool result = await Task.Run(() => StartWsoSystem());
+
+            if (result)
             {
-                StartupButton.IsEnabled = false;
                 ReleaseButton.IsEnabled = true;
+            }
+            else
+            {
+                // Initialization failed — re-enable so the user can retry.
+                StartupButton.IsEnabled = true;
             }
             Mouse.OverrideCursor = null;
         }

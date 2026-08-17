@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
@@ -28,6 +28,7 @@ namespace WsoToolkit
         public LsoScanTestWindow()
         {
             _onColorCaptureImageCaptured = new WsoCallback.ColorCameraImageCaptured(this.OnColorCameraCaptureFrameCaptured);
+            _onColorCaptureCompleted = new WsoCallback.ColorCaptureCompleted(this.OnColorCaptureCompleted);
             _onColorLiveFrameCaptured = new WsoCallback.ColorCameraFrameCaptured(this.OnColorCameraFrameCaptured);
 
             _onCorneaLeftFrameCaptured = new WsoCallback.CorneaCameraFrameCaptured(this.OnCorneaCameraLeftFrameCaptured);
@@ -45,6 +46,21 @@ namespace WsoToolkit
 
         private void Window_Closed(object sender, EventArgs e)
         {
+            // Stop a running capture one-call first (cancels + joins the native worker).
+            if (LsoCamera.IsCapturing())
+            {
+                LsoCamera.StopColorCapture();
+            }
+
+            myColorPreview.CloseAdjustmentWindow();
+
+            // If the aiming (mono live) is on, stop it first (IR LED off + param restore + live pause).
+            // Do this before pausing color live so the IR LED is reliably turned off.
+            if (IsRetinaPreviewing_())
+            {
+                StopRetinaPreview_();
+            }
+
             if (IsColorCameraLive())
             {
                 PauseColorCameraLive();
@@ -57,11 +73,43 @@ namespace WsoToolkit
 
         private void myBtStartScan_Click(object sender, RoutedEventArgs e)
         {
+            System.Console.WriteLine("myBtStartScan_Click");
+            if (LsoCamera.IsCapturing())
+            {
+                return; // capture one-call in progress - the camera session is busy
+            }
+            if (IsRetinaPreviewing_())
+            {
+                StopRetinaPreview_();
+            }
+            else
+            {
+                // If color live (Bayer) is running, stop it first, then start the mono aiming live.
+                // (They share the one color camera, so the two lives are mutually exclusive.)
+                if (IsColorCameraLive())
+                {
+                    PauseColorCameraLive();
+                }
+                StartRetinaPreview_();
+            }
 
+            ShowRetinaPreview_();
         }
 
         private void myBtCapture_Click(object sender, RoutedEventArgs e)
         {
+            System.Console.WriteLine("myBtCapture_Click");
+            if (LsoCamera.IsCapturing())
+            {
+                return; // capture one-call in progress
+            }
+            if (IsRetinaPreviewing_())
+            {
+                StopRetinaPreview_();
+            }
+
+            ShowColorPreview_();
+
             if (IsColorCameraLive())
             {
                 PauseColorCameraLive();
@@ -74,6 +122,17 @@ namespace WsoToolkit
 
         private void myBtCaptureSlide_Click(object sender, RoutedEventArgs e)
         {
+            if (LsoCamera.IsCapturing())
+            {
+                return; // capture one-call in progress
+            }
+            if (IsRetinaPreviewing_())
+            {
+                StopRetinaPreview_();
+            }
+
+            ShowColorPreview_();
+
             if (IsColorCameraLive())
             {
                 PauseColorCameraLive();
@@ -86,6 +145,16 @@ namespace WsoToolkit
 
         private void myBtStartColorCameraLive_Click(object sender, RoutedEventArgs e)
         {
+            if (LsoCamera.IsCapturing())
+            {
+                return; // capture one-call in progress
+            }
+            // If the aiming (mono live) is on, stop it first (restores Bayer params) before color live.
+            if (IsRetinaPreviewing_())
+            {
+                StopRetinaPreview_();
+            }
+
             myColorPreview.ClearReviewImages();
 
             if (IsColorCameraLive())
@@ -102,6 +171,11 @@ namespace WsoToolkit
                 myBtStartColorCameraLive.Content = "Pause Color Live";
                 StartColorCameraLive();
             }
+        }
+
+        private void myCbPreviewMonoMode_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            commitPreviewMonoMode_();
         }
 
         private void myBtCorneaStart_Click(object sender, RoutedEventArgs e)
@@ -122,6 +196,18 @@ namespace WsoToolkit
 
         private void myBtSettingColorCamera_Click(object sender, RoutedEventArgs e)
         {
+            if (LsoCamera.IsCapturing())
+            {
+                return; // capture one-call in progress - do not read/write params mid-session
+            }
+            // Stop the aiming preview before opening the settings window, so the preview's
+            // live params (e.g. Mono8) are not read into it and values applied there are not
+            // rolled back by StopPreview's restore.
+            if (IsRetinaPreviewing_())
+            {
+                StopRetinaPreview_();
+            }
+
             var window = new ColorCameraSettingWindow(_scanTestModel) { Owner = this };
             window.ShowDialog();
         }
@@ -201,6 +287,19 @@ namespace WsoToolkit
             commitScanSettingTextBox_(sender as TextBox);
         }
 
+        // Reads the selected pattern back from the board into the panel, so the shown values
+        // can be compared against the INI-backed ones instead of only ever being written out.
+        private void myBtLoad_Click(object sender, RoutedEventArgs e)
+        {
+            int nPatternId = myCbPatternID.SelectedIndex;
+            if (nPatternId < 0)
+            {
+                return;
+            }
+
+            loadScannerControlParam_(nPatternId);
+        }
+
         private void myBtApply_Click(object sender, RoutedEventArgs e)
         {
             int nPatternId = myCbPatternID.SelectedIndex;
@@ -209,7 +308,13 @@ namespace WsoToolkit
                 return;
             }
 
-            applyScannerControlParam_(nPatternId);
+            if (!applyScannerControlParam_(nPatternId))
+            {
+                MessageBox.Show($"Apply scanner parameters failed! (patternId={nPatternId})\r\n"
+                    + "Galvo. Pattern Size must be non-zero - press Load to read the board's current profile first.");
+                return;
+            }
+
             _scanTestModel.SaveConfigToIniFile();
         }
 
@@ -380,12 +485,36 @@ namespace WsoToolkit
         private void myCheckAlignGuide_CheckedNUnchecked(object sender, RoutedEventArgs e)
         {
             myColorPreview.IsOverlayAlignGuide = myCheckAlignGuide.IsChecked == true;
+
+            corneaPreview1.IsStageControlEnabled = myCheckAlignGuide.IsChecked == true;
+            corneaPreview2.IsStageControlEnabled = myCheckAlignGuide.IsChecked == true;
+            corneaPreview3.IsStageControlEnabled = myCheckAlignGuide.IsChecked == true;
+
+            corneaPreview1.IsOverlayFocusGuide = myCheckAlignGuide.IsChecked == true;
+            corneaPreview2.IsOverlayFocusGuide = myCheckAlignGuide.IsChecked == true;
+            corneaPreview3.IsOverlayFocusGuide = myCheckAlignGuide.IsChecked == true;
         }
 
+
+        private void myBtImageAdjust_Click(object sender, RoutedEventArgs e)
+        {
+            myColorPreview.OpenImageAdjustment();
+        }
         #endregion Align Guide
 
         private void myBtCaptureHWTrig_Click(object sender, RoutedEventArgs e)
         {
+            if (LsoCamera.IsCapturing())
+            {
+                return; // capture one-call in progress
+            }
+            if (IsRetinaPreviewing_())
+            {
+                StopRetinaPreview_();
+            }
+
+            ShowColorPreview_();
+
             readyToCapture_(PreviewDisplayMode.REVIEW);
 
             if (IsColorCameraLive())
@@ -411,6 +540,17 @@ namespace WsoToolkit
 
         private void myBtCaptureROI_Click(object sender, RoutedEventArgs e)
         {
+            if (LsoCamera.IsCapturing())
+            {
+                return; // capture one-call in progress
+            }
+            if (IsRetinaPreviewing_())
+            {
+                StopRetinaPreview_();
+            }
+
+            ShowColorPreview_();
+
             if (IsColorCameraLive())
             {
                 PauseColorCameraLive();

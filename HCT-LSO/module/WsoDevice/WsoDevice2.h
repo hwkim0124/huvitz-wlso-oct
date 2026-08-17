@@ -34,7 +34,7 @@ namespace wso_device
 	constexpr int DEV_FLAG_NOT_SOURCE_LEDS = (1 << 2);
 	constexpr int DEV_FLAG_NOT_MOTORS = (1 << 3);
 	constexpr int DEV_FLAG_NOT_OCT_GRAB = (1 << 4);
-	constexpr int DEV_FLAG_NOT_SLO_GRAB = (1 << 5);
+	constexpr int DEV_FLAG_NOT_LSO_SCAN = (1 << 5);
 	constexpr int DEV_FLAG_NOT_OPENCL = (1 << 6);
 	constexpr int DEV_FLAG_NOT_MAINBOARD = (1 << 7);
 
@@ -159,13 +159,11 @@ namespace wso_device
 	constexpr std::uint8_t IR_CAMERA_AGAIN_VALUE2 = 2;
 	constexpr std::uint8_t IR_CAMERA_AGAIN_VALUE3 = 4;
 	constexpr std::uint8_t IR_CAMERA_AGAIN_VALUE4 = 8;
+	constexpr std::float_t IR_CAMERA_AGAIN_INIT = 1.0f;
+
 	constexpr std::float_t IR_CAMERA_DGAIN_MIN = 0.0f;
 	constexpr std::float_t IR_CAMERA_DGAIN_MAX = 8.0f;
 	constexpr std::float_t IR_CAMERA_DGAIN_INIT = 1.0f;
-
-	constexpr std::uint16_t IR_CAMERA_EXPOSURE_TIME1 = 0x03BC;
-	constexpr std::uint16_t IR_CAMERA_EXPOSURE_TIME2 = 0x0706;
-
 
 	// Control Value
 	////////////////////////////////////////////////////////////////////////////////////////////
@@ -188,8 +186,7 @@ namespace wso_device
 	constexpr unsigned char USB_NOTI_PID = 0x85;
 	constexpr unsigned long USB_TIMEOUT = 12000; // 3000; // 15000;
 
-	constexpr const char* USB_MAIN_BOARD_DESC = "SLO_CTRL";
-	constexpr const char* USB_SUB_BOARD_DESC = "RTCAM_CTRL";
+	constexpr const char* USB_MAIN_BOARD_DESC = "LSO_CTRL";
 	constexpr std::uint32_t USB_BOARD_ADDR = 0x80000000;
 
 
@@ -209,15 +206,6 @@ namespace wso_device
 		RMON_LOW_CODE1 = 1,
 		RMON_LOW_CODE2 = 2,
 		RMON_RSI_CODE = 3
-	};
-
-	enum class IrCameraId : unsigned char
-	{
-		CORNEA_LEFT = 0x00,
-		CORNEA_RIGHT = 0x01,
-		RETINA = 0x00, // 0x02,
-		CORNEA_LOWER = 0x01, // 0x03,
-		UNKNOWN = 0x00
 	};
 
 	enum class PacketType : unsigned char
@@ -269,10 +257,11 @@ namespace wso_device
 		LOAD_SM_DEFAULT = 0x0105,
 		MOT_VMOVE = 0x0106,
 		SMOTSTOP = 0x0107,
+		SET_IRCAM_MIRROR = 0x0204,
 		IRCAM = 0x0205,
 		IRLED = 0x0206,
-		INTFIXA = 0x0207,
-		EXTFIXA = 0x0208,
+		SET_IRCAM_OMODE = 0x0207,
+		SET_IRCAM_FORMAT = 0x0208,
 		RNGELED = 0x0209,
 		RNGFLED = 0x020A,
 		PNL_LED = 0x020B,

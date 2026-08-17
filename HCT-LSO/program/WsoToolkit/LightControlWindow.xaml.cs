@@ -15,6 +15,7 @@ using WsoNativeLib;
 namespace WsoToolkit
 {
     using static WsoNativeLib.WsoDevice;
+    using static utils.NumberUtil;
     public partial class LightControlWindow : Window
     {
         bool _isDraggingStarted = false;
@@ -91,7 +92,16 @@ namespace WsoToolkit
         
         private void EditWhite_KeyDown(object sender, KeyEventArgs e)
         {
-            DeviceLights.SetLightIntensity(LightType.LsoWhite, (ushort)sliderWhite.Value);
+            if (e.Key != Key.Enter)
+            {
+                return;
+            }
+
+            int value = ToInt(editWhite.Text);
+            if (value >= sliderWhite.Minimum && value <= sliderWhite.Maximum)
+            {
+                sliderWhite.Value = value;
+            }
         }
 
         private void BtnWhiteOff_Click(object sender, RoutedEventArgs e)
@@ -133,7 +143,16 @@ namespace WsoToolkit
 
         private void EditRetina_KeyDown(object sender, KeyEventArgs e)
         {
-            DeviceLights.SetLightIntensity(LightType.RetinaIr, (ushort)sliderRetina.Value);
+            if (e.Key != Key.Enter)
+            {
+                return;
+            }
+
+            int value = ToInt(editRetina.Text);
+            if (value >= sliderRetina.Minimum && value <= sliderRetina.Maximum)
+            {
+                sliderRetina.Value = value;
+            }
         }
 
         private void BtnRetinaOff_Click(object sender, RoutedEventArgs e)
@@ -175,7 +194,16 @@ namespace WsoToolkit
 
         private void EditCornea1_KeyDown(object sender, KeyEventArgs e)
         {
-            DeviceLights.SetLightIntensity(LightType.CorneaIrLeft, (ushort)sliderCornea1.Value);
+            if (e.Key != Key.Enter)
+            {
+                return;
+            }
+
+            int value = ToInt(editCornea1.Text);
+            if (value >= sliderCornea1.Minimum && value <= sliderCornea1.Maximum)
+            {
+                sliderCornea1.Value = value;
+            }
         }
 
         private void BtnCorneaOff1_Click(object sender, RoutedEventArgs e)
@@ -212,7 +240,16 @@ namespace WsoToolkit
 
         private void EditCornea2_KeyDown(object sender, KeyEventArgs e)
         {
-            DeviceLights.SetLightIntensity(LightType.CorneaIrRight, (ushort)sliderCornea2.Value);
+            if (e.Key != Key.Enter)
+            {
+                return;
+            }
+
+            int value = ToInt(editCornea2.Text);
+            if (value >= sliderCornea2.Minimum && value <= sliderCornea2.Maximum)
+            {
+                sliderCornea2.Value = value;
+            }
         }
 
         private void BtnCorneaOff2_Click(object sender, RoutedEventArgs e)

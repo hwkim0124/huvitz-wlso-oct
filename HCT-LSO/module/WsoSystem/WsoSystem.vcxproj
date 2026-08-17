@@ -159,6 +159,7 @@
     <ClInclude Include="Controller.h" />
     <ClInclude Include="exts_calibration.h" />
     <ClInclude Include="exts_configuration.h" />
+    <ClInclude Include="exts_device_camera.h" />
     <ClInclude Include="exts_device_lights.h" />
     <ClInclude Include="exts_device_motors.h" />
     <ClInclude Include="exts_fixation.h" />
@@ -189,6 +190,7 @@
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="exts_calibration.cpp" />
     <ClCompile Include="exts_configuration.cpp" />
+    <ClCompile Include="exts_device_camera.cpp" />
     <ClCompile Include="exts_device_lights.cpp" />
     <ClCompile Include="exts_device_motors.cpp" />
     <ClCompile Include="exts_fixation.cpp" />

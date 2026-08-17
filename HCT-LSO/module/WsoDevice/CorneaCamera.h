@@ -4,8 +4,6 @@
 #include "InfraredCamera.h"
 
 
-
-
 namespace wso_device
 {
 	class MainBoard;
@@ -14,20 +12,15 @@ namespace wso_device
 	{
 	public:
 		CorneaCamera();
-		CorneaCamera(MainBoard* board, CameraType type, std::uint8_t epid);
+		CorneaCamera(MainBoard* board, IrCameraType type);
 		virtual ~CorneaCamera();
 
 	public:
 		virtual bool initializeCorneaCamera(void);
 
-		virtual bool setAnalogGain(float gain, bool control = true) override;
-		virtual bool setDigitalGain(float gain, bool control = true) override;
-
+		bool handleFrameData(int index, unsigned char* frameData) override;
 		bool loadCalibParamFromProfile(void) override;
 		bool saveCalibParamToProfile(void) override;
-
-		virtual bool loadConfigFromIniFile(void) override;
-		virtual bool saveConfigToIniFile(void) override;
 
 	private:
 		struct CorneaCameraImpl;
@@ -35,4 +28,3 @@ namespace wso_device
 		CorneaCameraImpl& impl(void) const;
 	};
 }
-

@@ -35,7 +35,7 @@
                 <Label x:Name="label601" Content="X Stage" Style="{StaticResource HeaderStyle}"/>
                 <StackPanel Grid.Row="1" Orientation="Horizontal">
                     <Slider x:Name="sliderXstage" Style="{StaticResource SliderStyle}" HorizontalAlignment="Left" Width="200" Margin="8,0,0,0" ValueChanged="SliderXstage_ValueChanged" Thumb.DragStarted="SliderXstage_DragStarted" Thumb.DragCompleted="SliderXstage_DragCompleted"/>
-                    <TextBox x:Name="editXstagePos" Style="{StaticResource TextBoxS1Style}" Margin="8,0,0,0"/>
+                    <TextBox x:Name="editXstagePos" Style="{StaticResource TextBoxS1Style}" Margin="8,0,0,0" KeyDown="EditXstagePos_KeyDown"/>
                     <TextBox x:Name="editXstageValue" Style="{StaticResource TextBoxS1Style}" Margin="4,0,12,0"/>
                 </StackPanel>
                 <StackPanel Grid.Row="2" Orientation="Horizontal" FlowDirection="RightToLeft" Margin="0,8,0,24">
@@ -55,7 +55,7 @@
                 <Label x:Name="label602" Content="Y Stage" Style="{StaticResource HeaderStyle}"/>
                 <StackPanel Grid.Row="1" Orientation="Horizontal">
                     <Slider x:Name="sliderYstage" Style="{StaticResource SliderStyle}" HorizontalAlignment="Left" Width="200" Margin="8,0,0,0" ValueChanged="SliderYstage_ValueChanged" Thumb.DragStarted="SliderYstage_DragStarted" Thumb.DragCompleted="SliderYstage_DragCompleted"/>
-                    <TextBox x:Name="editYstagePos" Style="{StaticResource TextBoxS1Style}" Margin="8,0,0,0"/>
+                    <TextBox x:Name="editYstagePos" Style="{StaticResource TextBoxS1Style}" Margin="8,0,0,0" KeyDown="EditYstagePos_KeyDown"/>
                     <TextBox x:Name="editYstageValue" Style="{StaticResource TextBoxS1Style}" Margin="4,0,12,0"/>
                 </StackPanel>
                 <StackPanel Grid.Row="2" Orientation="Horizontal" FlowDirection="RightToLeft" Margin="0,8,0,24">
@@ -75,7 +75,7 @@
                 <Label x:Name="label603" Content="Z Stage" Style="{StaticResource HeaderStyle}"/>
                 <StackPanel Grid.Row="1" Orientation="Horizontal">
                     <Slider x:Name="sliderZstage" Style="{StaticResource SliderStyle}" HorizontalAlignment="Left" Width="200" Margin="8,0,0,0" ValueChanged="SliderZstage_ValueChanged" Thumb.DragStarted="SliderZstage_DragStarted" Thumb.DragCompleted="SliderZstage_DragCompleted"/>
-                    <TextBox x:Name="editZstagePos" Style="{StaticResource TextBoxS1Style}" Margin="8,0,0,0"/>
+                    <TextBox x:Name="editZstagePos" Style="{StaticResource TextBoxS1Style}" Margin="8,0,0,0" KeyDown="EditZstagePos_KeyDown"/>
                     <TextBox x:Name="editZstageValue" Style="{StaticResource TextBoxS1Style}" Margin="4,0,12,0"/>
                 </StackPanel>
                 <StackPanel Grid.Row="2" Orientation="Horizontal" FlowDirection="RightToLeft" Margin="0,8,0,24">
@@ -95,7 +95,7 @@
                 <Label x:Name="label321" Content="Swing" Style="{StaticResource HeaderStyle}"/>
                 <StackPanel Grid.Row="1" Orientation="Horizontal">
                     <Slider x:Name="sliderSwing" Style="{StaticResource SliderStyle}" HorizontalAlignment="Left" Width="200" Margin="8,0,0,0" ValueChanged="SliderSwing_ValueChanged" Thumb.DragStarted="SliderSwing_DragStarted" Thumb.DragCompleted="SliderSwing_DragCompleted"/>
-                    <TextBox x:Name="editSwingPos" Style="{StaticResource TextBoxS1Style}" Margin="8,0,0,0"/>
+                    <TextBox x:Name="editSwingPos" Style="{StaticResource TextBoxS1Style}" Margin="8,0,0,0" KeyDown="EditSwingPos_KeyDown"/>
                     <TextBox x:Name="editSwingValue" Style="{StaticResource TextBoxS1Style}" Margin="4,0,12,0"/>
                 </StackPanel>
                 <StackPanel Grid.Row="2" Orientation="Horizontal" FlowDirection="RightToLeft" Margin="0,8,0,24">

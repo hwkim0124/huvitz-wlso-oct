@@ -174,20 +174,21 @@
                 <Label x:Name="label13" Content="Pattern" Style="{StaticResource LabelStyle}" Grid.Row="1" Grid.Column="1"/>
                 <Label x:Name="label14" Content="Range" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="1"/>
                 <Label x:Name="label15" Content="Points" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="3"/>
-                <Label x:Name="label21" Content="Offset XY" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="5"/>
-                <Label x:Name="label22" Content="Scale XY" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="5"/>
+                <Label x:Name="label21" Content="Offset XY" Style="{StaticResource LabelStyle}" Grid.Row="1" Grid.Column="5"/>
+                <Label x:Name="label22" Content="Scale XY" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="5"/>
                 <ComboBox x:Name="cmbScanPattern" Style="{StaticResource ComboBoxStyle}" Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="3" Width="220" />
                 <ComboBox x:Name="cmbScanRange" Style="{StaticResource ComboBoxStyle}" Grid.Row="2" Grid.Column="2"/>
                 <ComboBox x:Name="cmbScanPoints" Style="{StaticResource ComboBoxStyle}" Grid.Row="2" Grid.Column="4" />
-                <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="3">
+                <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="5">
                     <CheckBox x:Name="checkNotGrabbing" Content="Not Grabbing" Style="{StaticResource CheckBoxStyle}" />
                     <CheckBox x:Name="checkIsAnterior" Content="Anterior Mode" Style="{StaticResource CheckBoxStyle}" Margin="12, 0, 0, 0" Click="CheckIsAnterior_Click"/>
+                    <CheckBox x:Name="checkFullRangeDomain" Content="Full Range" Style="{StaticResource CheckBoxStyle}" Margin="12, 0, 0, 0"/>
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="6" Grid.ColumnSpan="2">
+                <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="6" Grid.ColumnSpan="2">
                     <ComboBox x:Name="cmbScanOffsetX" Style="{StaticResource ComboBoxStyle}" Width="60"/>
                     <ComboBox x:Name="cmbScanOffsetY" Style="{StaticResource ComboBoxStyle}" Width="60" Margin="4,0,0,0"/>
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="6" Grid.ColumnSpan="2">
+                <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="6" Grid.ColumnSpan="2">
                     <TextBox x:Name="editScanScaleX" Style="{StaticResource TextBoxS1Style}" Width="60"/>
                     <TextBox x:Name="editScanScaleY" Style="{StaticResource TextBoxS1Style}" Width="60" Margin="4,0,0,0"/>
                 </StackPanel>

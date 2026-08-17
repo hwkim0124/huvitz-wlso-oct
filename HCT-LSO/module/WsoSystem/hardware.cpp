@@ -86,6 +86,32 @@ bool wso_system::Hardware::initializeOctScanner(void)
 				}
 			}
 		}
+
+		if (auto* galv = board->getGalvanometer(); galv) {
+			galv->initializeGalvanometer();
+		}
+	}
+	return false;
+}
+
+bool wso_system::Hardware::initializeLsoScanner(void)
+{
+	if (auto* board = getMainBoard(); board) {
+		if (board->isLsoScannerNotInUse()) {
+			return true;
+		}
+		else {
+			if (auto* lso = board->getLsoScanner(); lso) {
+				if (!lso->initializeLsoScanner()) {
+					WsoLogError("Failed to initialize LSO scanner");
+					return false;
+				}
+				else {
+					WsoLogInfo("LSO scanner initialized");
+					return true;
+				}
+			}
+		}
 	}
 	return false;
 }
@@ -122,22 +148,22 @@ void wso_system::Hardware::connectStepMotorPositionChanged(MotorType type, StepM
 	return;
 }
 
-void wso_system::Hardware::connectCorneaCameraImageCaptured(CameraType type, CorneaCameraFrameCaptured clb)
+void wso_system::Hardware::connectCorneaCameraImageCaptured(CorneaCameraFrameCaptured clbLeft, CorneaCameraFrameCaptured clbRight, CorneaCameraFrameCaptured clbLower)
 {
 	if (auto* inst = CallbackRegistry::getInstance(); inst) {
-		if (type == CameraType::IR_CORNEA_LEFT) {
-			inst->setCorneaLeftCameraFrameCaptured(clb);
-		}
-		else if (type == CameraType::IR_CORNEA_RIGHT) {
-			inst->setCorneaRightCameraFrameCaptured(clb);
-		}
-		else if (type == CameraType::IR_CORNEA_LOWER) {
-			inst->setCorneaLowerCameraFrameCaptured(clb);
-		}
-		else if (type == CameraType::IR_RETINA) {
-			inst->setRetinaCameraFrameCaptured(clb);
-		}
+		inst->setCorneaLeftCameraFrameCaptured(clbLeft);
+		inst->setCorneaRightCameraFrameCaptured(clbRight);
+		inst->setCorneaLowerCameraFrameCaptured(clbLower);
 	}
+	return;
+}
+
+void wso_system::Hardware::connectRetinaCameraImageCaptured(RetinaCameraFrameCaptured clbFrame)
+{
+	if (auto* inst = CallbackRegistry::getInstance(); inst) {
+		inst->setRetinaCameraFrameCaptured(clbFrame);
+	}
+	return;
 }
 
 void wso_system::Hardware::connectColorCameraFrameCaptured(ColorCameraFrameCaptured clb)
@@ -211,22 +237,22 @@ void wso_system::Hardware::disconnectStepMotorPositionChanged(MotorType type)
 	return;
 }
 
-void wso_system::Hardware::disconnectCorneaCameraImageCaptured(CameraType type)
+void wso_system::Hardware::disconnectCorneaCameraImageCaptured(void)
 {
 	if (auto* inst = CallbackRegistry::getInstance(); inst) {
-		if (type == CameraType::IR_CORNEA_LEFT) {
-			inst->setCorneaLeftCameraFrameCaptured(nullptr);
-		}
-		else if (type == CameraType::IR_CORNEA_RIGHT) {
-			inst->setCorneaRightCameraFrameCaptured(nullptr);
-		}
-		else if (type == CameraType::IR_CORNEA_LOWER) {
-			inst->setCorneaLowerCameraFrameCaptured(nullptr);
-		}
-		else if (type == CameraType::IR_RETINA) {
-			inst->setRetinaCameraFrameCaptured(nullptr);
-		}
+		inst->setCorneaLeftCameraFrameCaptured(nullptr);
+		inst->setCorneaRightCameraFrameCaptured(nullptr);
+		inst->setCorneaLowerCameraFrameCaptured(nullptr);
 	}
+	return;
+}
+
+void wso_system::Hardware::disconnectRetinaCameraImageCaptured(void)
+{
+	if (auto* inst = CallbackRegistry::getInstance(); inst) {
+		inst->setRetinaCameraFrameCaptured(nullptr);
+	}
+	return;
 }
 
 void wso_system::Hardware::disconnectColorCameraFrameCaptured(void)

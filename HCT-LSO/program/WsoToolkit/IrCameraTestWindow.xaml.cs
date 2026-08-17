@@ -88,7 +88,7 @@ namespace WsoToolkit
         /////////////////////////////////////////////////////////////////////////////////////////////
         private void BtnStartCamera_Click(object sender, RoutedEventArgs e)
         {
-            if (IsCorneaCameraLeftPreviewing())
+            if (IsCorneaCameraPreviewing())
             {
                 btnStartCamera.Content = "Start Camera";
                 CloseCorneaCameraPreview();

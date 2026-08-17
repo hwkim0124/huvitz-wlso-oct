@@ -278,20 +278,14 @@ bool wso_device::UsbComm::writeAddress(std::uint32_t addr, std::uint8_t* buff, s
 	return false;
 }
 
-bool wso_device::UsbComm::readIrCameraFrame(CameraType type, std::uint8_t* buff, std::uint32_t size)
+bool wso_device::UsbComm::readIrCameraFrame(IrCameraType type, std::uint8_t* buff, std::uint32_t size)
 {
 	bool ret = false;
-	if (type == CameraType::IR_CORNEA_LEFT) {
+	if (type == IrCameraType::RETINA) {
 		ret = getUsbPort()->receiveFromIr1(buff, size, true);
 	}
-	else if (type == CameraType::IR_CORNEA_RIGHT) {
+	else {
 		ret = getUsbPort()->receiveFromIr2(buff, size, true);
-	}
-	else if (type == CameraType::IR_CORNEA_LOWER) {
-		ret = getUsbPort()->receiveFromIr2(buff, size, true);
-	}
-	else if (type == CameraType::IR_RETINA) {
-		ret = getUsbPort()->receiveFromIr1(buff, size, true);
 	}
 
 	if (!ret) {
@@ -1405,6 +1399,37 @@ bool wso_device::UsbComm::IrCameraExposureTime(std::uint8_t cid, std::uint16_t i
 	msg->packet.ctrl7.c1 = cid;
 	msg->packet.ctrl7.s1 = ints;
 	attachCRC(msg->packet.ctrl7.crc);
+	return sendMsgCmd(msg);
+}
+
+bool wso_device::UsbComm::IrCameraStreamFormat(std::uint8_t format)
+{
+	lock_guard<mutex> lock(impl().mutexControl);
+	MsgCommand* msg = getMsgCommand(CommandType::SET_IRCAM_FORMAT, 1);
+	msg->packet.ctrl1.c1 = format;
+	attachCRC(msg->packet.ctrl1.crc);
+	return sendMsgCmd(msg);
+}
+
+bool wso_device::UsbComm::IrCameraMirrorMode(std::uint8_t cid, std::uint8_t hflip, std::uint8_t vflip)
+{
+	lock_guard<mutex> lock(impl().mutexControl);
+	MsgCommand* msg = getMsgCommand(CommandType::SET_IRCAM_MIRROR, 3);
+	msg->packet.ctrl9.c1 = cid;
+	msg->packet.ctrl9.c2 = hflip;
+	msg->packet.ctrl9.c3 = vflip;
+	attachCRC(msg->packet.ctrl9.crc);
+	return sendMsgCmd(msg);
+}
+
+bool wso_device::UsbComm::IrCameraOutputMode(std::uint8_t cid, std::uint8_t mode, std::uint8_t type)
+{
+	lock_guard<mutex> lock(impl().mutexControl);
+	MsgCommand* msg = getMsgCommand(CommandType::SET_IRCAM_OMODE, 3);
+	msg->packet.ctrl9.c1 = cid;
+	msg->packet.ctrl9.c2 = mode;
+	msg->packet.ctrl9.c3 = type;
+	attachCRC(msg->packet.ctrl9.crc);
 	return sendMsgCmd(msg);
 }
 

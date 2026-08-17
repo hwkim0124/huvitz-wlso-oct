@@ -27,7 +27,7 @@ namespace wso_device
 		void uninitialize(void);
 
 		void setInitParameters();
-		void setDefaultParameters(bool update = true);
+		bool setDefaultParameters(bool update = true);
 
 		void startLiveMode(void);
 		void pauseLiveMode(void);
@@ -54,6 +54,15 @@ namespace wso_device
 		void startOriginalMode(void);
 		void pauseOriginalMode(void);
 
+		// Capture one-call support: runs the bounded N-frame acquisition loop (N from the
+		// applied acquisition mode/count) on the CALLING thread, firing the registered image
+		// callback per frame. Cancellable via cancelCaptureFrames(). Returns a
+		// wso_domain::ColorCaptureStage value (OK / CANCELLED / CAMERA / BUSY) and reports
+		// the actually acquired count through framesAcquired. Never throws.
+		int acquireCaptureFrames(int* framesAcquired);
+		void cancelCaptureFrames(void);
+		bool isCaptureMode(void) const;
+
 		int getFrameWidth(void) const;
 		int getFrameHeight(void) const;
 		int getFrameSizeInBytes(void) const;
@@ -61,6 +70,12 @@ namespace wso_device
 
 		ColorCameraSettingParam& getCameraSettings(void);
 		void setCameraSettings(ColorCameraSettingParam params);
+
+		// setCameraSettings + re-read verification of the structural/acquisition fields
+		// (pixel format, binning, ROI, acq mode/count, ADC). Tunables (exposure, gain) are
+		// camera-quantized and therefore not compared. Returns false on mismatch so a
+		// partial/silent apply cannot go unnoticed. Never throws.
+		bool setCameraSettingsChecked(const ColorCameraSettingParam& params);
 
 		unsigned int getROI_Max_Width();
 		unsigned int getROI_Max_Height();
@@ -72,6 +87,11 @@ namespace wso_device
 		void setROI_Y_Height(unsigned int val);
 		void setROI_X_Offset(unsigned int val);
 		void setROI_Y_Offset(unsigned int val);
+
+		// Crops the currently applied ROI to a centered square (side = min(width, height))
+		// so a non-square preview frame can fill a square view. Reads the actual applied
+		// Width/Height, so it is robust to binning/increment rounding. Never throws.
+		bool squareRoi(void);
 
 		unsigned int getExposureTime();
 		void setExposureTime(unsigned int val);
@@ -137,6 +157,10 @@ namespace wso_device
 
 		void acquireCameraCaptureData(void);
 		int getBytesPerPixel();
+
+		// Recovers a faulted Spinnaker camera (device reset + bounded re-enumerate)
+		// so the init retry path can reuse a valid, writable handle. Never throws.
+		bool recoverCameraAfterFault(void);
 
 	private :
 		void SetEventMode(bool enableEvents);

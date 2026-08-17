@@ -1,0 +1,90 @@
+<Window x:Class="WsoToolkit.ImageAdjustmentWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WsoToolkit"
+        xmlns:oxy="http://oxyplot.org/wpf"
+        mc:Ignorable="d"
+        Title="Image Adjustment" Height="500" Width="400" WindowStartupLocation="CenterOwner" Closing="Window_Closing">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Brightness Control -->
+        <Grid Grid.Row="0" Grid.Column="0">
+            <Label Content="Brightness : " Style="{StaticResource LabelStyle}"/>
+        </Grid>
+        <Grid Grid.Row="0" Grid.Column="1" Margin="5">
+            <Slider x:Name="mySliderBright" TickFrequency="1" SmallChange="1" LargeChange="10" 
+                    Minimum="-127" Maximum="127" IsSnapToTickEnabled="True" 
+                    VerticalAlignment="Center" Foreground="Gray" 
+                    ValueChanged="mySliderBright_ValueChanged"/>
+        </Grid>
+        <Grid Grid.Row="0" Grid.Column="2">
+            <TextBox x:Name="myTbBright" Style="{StaticResource TextBoxS1Style}" 
+                     Text="{Binding ElementName=mySliderBright, Path=Value}" 
+                     HorizontalAlignment="Center" KeyDown="myTbBright_KeyDown"/>
+        </Grid>
+
+        <!-- Radial Correction Checkbox -->
+        <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
+            <CheckBox x:Name="myCheckRadialCorrection" Content="Radial Correction : " 
+                      Style="{StaticResource CheckBoxStyle}" Margin="10"
+                      Checked="myCheckRadialCorrection_CheckedNUnChecked" 
+                      Unchecked="myCheckRadialCorrection_CheckedNUnChecked"/>
+        </Grid>
+        <Grid Grid.Row="1" Grid.Column="2">
+            <TextBox x:Name="myTbRadialCorrection" Style="{StaticResource TextBoxS1Style}" 
+                     Text="1" HorizontalAlignment="Center" 
+                     KeyDown="myTbRadialCorrection_KeyDown"/>
+        </Grid>
+
+        <!-- OxyPlot Control for Curve Editing -->
+        <Grid Grid.Row="2" Grid.RowSpan="3" Grid.Column="0" Grid.ColumnSpan="3" Margin="10">
+            <Border BorderBrush="Gray" BorderThickness="1">
+                <oxy:PlotView x:Name="plotView" 
+                              Model="{Binding PlotModel}"
+                              Background="White"
+                              MouseDown="PlotView_MouseDown"
+                              MouseMove="PlotView_MouseMove"
+                              MouseUp="PlotView_MouseUp">
+                </oxy:PlotView>
+            </Border>
+        </Grid>
+        
+        <!--Use Remove Reflected Light-->
+        <Grid Grid.Row="5" Grid.ColumnSpan="2">
+            <CheckBox x:Name="myCheckUseRemoveReflectedLight" Content="Use Remove Reflected Light" 
+                      Style="{StaticResource CheckBoxStyle}" Margin="10"
+                      Checked="myCheckUse_CheckedNUnChecked" 
+                      Unchecked="myCheckUse_CheckedNUnChecked"/>
+        </Grid>
+        <!-- Buttons -->
+        <Grid Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="3" Margin="5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="1" x:Name="myBtReset" Content="Reset" 
+                    Style="{StaticResource ButtonM1Style}" 
+                    Click="myBtReset_Click" Width="80" Margin="5"/>
+            <Button Grid.Column="2" x:Name="myBtClose" Content="Close" 
+                    Style="{StaticResource ButtonM1Style}" 
+                    Click="myBtClose_Click" Width="80" Margin="5"/>
+        </Grid>
+    </Grid>
+</Window>

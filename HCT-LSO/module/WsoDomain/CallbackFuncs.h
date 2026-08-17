@@ -99,8 +99,15 @@ namespace wso_domain
 		int32_t,			// frame count
 		int32_t,			// total frame count
 		int32_t,			// flip mode
-		int32_t,			// Pixel Format 
+		int32_t,			// Pixel Format
 		int32_t				// bytes Per Pixel
+		)>::type;
+
+	// Completion notice for the color-camera capture one-call. Fired exactly once per
+	// started capture, on the native capture worker thread (consumers must marshal).
+	using ColorCaptureCompleted = std::add_pointer<void(__stdcall)(
+		int32_t,			// result (ColorCaptureStage)
+		int32_t				// frames actually acquired
 		)>::type;
 
 	// Color Camera Data Callback type

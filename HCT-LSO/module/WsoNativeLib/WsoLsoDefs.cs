@@ -38,5 +38,26 @@ namespace WsoNativeLib
             Bit12 = 2,      // 12 bit
             UNKNOWN = -1
         }
+
+        // Mono aiming-preview drive mode for the color camera one-call preview API.
+        public enum ColorMonoPreviewMode : int
+        {
+            SensorMono8 = 0,  // camera Mono8 + binning 2x2 (half pixel resolution)
+            BayerSwGray = 1,  // camera BayerRG8 + binning 1x1 (full resolution), grayscale at display side
+        }
+
+        // Result/stage codes for the color capture one-call (mirror of native ColorCaptureStage).
+        // Start return: Ok/Busy/Param/Scanner (no completion callback follows a non-Ok start).
+        // Completion callback: Ok/Camera/Cancelled/Fault (how the acquisition ended).
+        public enum ColorCaptureStage : int
+        {
+            Ok = 0,
+            Busy = 1,
+            Param = 2,
+            Scanner = 3,
+            Camera = 4,
+            Cancelled = 5,
+            Fault = 9,
+        }
     }
 }

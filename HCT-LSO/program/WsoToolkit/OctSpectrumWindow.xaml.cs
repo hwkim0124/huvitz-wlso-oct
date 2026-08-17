@@ -32,7 +32,7 @@ namespace WsoToolkit
 
             _onCorneaLeftFrameCaptured = new WsoCallback.CorneaCameraFrameCaptured(this.OnCorneaLeftFrameCaptured);
             _onCorneaRightFrameCaptured = new WsoCallback.CorneaCameraFrameCaptured(this.OnCorneaRightFrameCaptured);
-            _onCorneaRetinaFrameCaptured = new WsoCallback.CorneaCameraFrameCaptured(this.OnCorneaRetinaFrameCaptured);
+            _onRetinaCameraFrameCaptured = new WsoCallback.RetinaCameraFrameCaptured(this.OnRetinaCameraFrameCaptured);
 
             _onJoystickButtonPressed = new WsoCallback.JoystickButtonPressed(this.OnJoystickButtonPressed);
 

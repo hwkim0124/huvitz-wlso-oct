@@ -135,6 +135,20 @@ namespace WsoToolkit
             DeviceMotors.MoveStepMotorByPositionOffsetAsync(MotorType.Swing, step);
         }
 
+        private void EditSwingPos_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Enter)
+            {
+                return;
+            }
+
+            int value = ToInt(editSwingPos.Text);
+            if (value >= sliderSwing.Minimum && value <= sliderSwing.Maximum)
+            {
+                sliderSwing.Value = value;
+            }
+        }
+
         private void SliderXstage_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             if (!_isDraggingStarted && !_isPositionChanged)
@@ -176,6 +190,20 @@ namespace WsoToolkit
             int step = ToInt(editXstageValue.Text);
             step = Math.Max(Math.Min(step, 1000), 10) * +1;
             DeviceMotors.MoveStepMotorByPositionOffsetAsync(MotorType.StageX, step);
+        }
+
+        private void EditXstagePos_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Enter)
+            {
+                return;
+            }
+
+            int value = ToInt(editXstagePos.Text);
+            if (value >= sliderXstage.Minimum && value <= sliderXstage.Maximum)
+            {
+                sliderXstage.Value = value;
+            }
         }
 
         private void SliderYstage_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -221,6 +249,20 @@ namespace WsoToolkit
             DeviceMotors.MoveStepMotorByPositionOffsetAsync(MotorType.StageY, step);
         }
 
+        private void EditYstagePos_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Enter)
+            {
+                return;
+            }
+
+            int value = ToInt(editYstagePos.Text);
+            if (value >= sliderYstage.Minimum && value <= sliderYstage.Maximum)
+            {
+                sliderYstage.Value = value;
+            }
+        }
+
         private void SliderZstage_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             if (!_isDraggingStarted && !_isPositionChanged)
@@ -262,6 +304,20 @@ namespace WsoToolkit
             int step = ToInt(editZstageValue.Text);
             step = Math.Max(Math.Min(step, 1000), 10) * +1;
             DeviceMotors.MoveStepMotorByPositionOffsetAsync(MotorType.StageZ, step);
+        }
+
+        private void EditZstagePos_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Enter)
+            {
+                return;
+            }
+
+            int value = ToInt(editZstagePos.Text);
+            if (value >= sliderZstage.Minimum && value <= sliderZstage.Maximum)
+            {
+                sliderZstage.Value = value;
+            }
         }
 
         private void BtnChinrestStop_Click(object sender, RoutedEventArgs e)

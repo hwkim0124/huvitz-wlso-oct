@@ -26,13 +26,15 @@ namespace wso_system
 	public:
 		bool initializeBoardDevices(void);
 		bool initializeOctScanner(void);
+		bool initializeLsoScanner(void);
 
 		void connectJoystickButtonPressed(JoystickButtonPressedCallback clb);
 		void connectOptimizeButtonPressed(OptimizeButtonPressedCallback clb);
 		void connectAdapterLensAttached(AdapterLensAttachedCallback clb);
 		void connectStepMotorPositionChanged(MotorType type, StepMotorPositionChanged clb);
 
-		void connectCorneaCameraImageCaptured(CameraType type, CorneaCameraFrameCaptured clb);
+		void connectCorneaCameraImageCaptured(CorneaCameraFrameCaptured clbLeft, CorneaCameraFrameCaptured clbRight, CorneaCameraFrameCaptured clbLower);
+		void connectRetinaCameraImageCaptured(RetinaCameraFrameCaptured clbFrame);
 
 		void connectColorCameraFrameCaptured(ColorCameraFrameCaptured clb);
 	    void connectColorCameraSeqROIFrameCaptured(ColorCameraSeqROIFrameCaptured clb);
@@ -47,7 +49,8 @@ namespace wso_system
 		void releaseAdapterLensAttached(void);
 
 		void disconnectStepMotorPositionChanged(MotorType type);
-		void disconnectCorneaCameraImageCaptured(CameraType type);
+		void disconnectCorneaCameraImageCaptured(void);
+		void disconnectRetinaCameraImageCaptured(void);
 
 		void disconnectColorCameraFrameCaptured(void);
 		void disconnectColorCameraSeqROIFrameCaptured(void);

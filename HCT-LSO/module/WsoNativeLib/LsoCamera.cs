@@ -76,7 +76,37 @@ namespace WsoNativeLib
         private static extern void getColorCameraSettingParam(out LsoColorCameraSettingParam param);
 
         [DllImport(LibraryName)]
-        private static extern void setColorCameraSettingParam(ref LsoColorCameraSettingParam param);
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool setColorCameraSettingParam(ref LsoColorCameraSettingParam param);
+
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool squareColorCameraRoi();
+
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool startColorCameraMonoPreview(int mode, ColorCameraFrameCaptured cb);
+
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool stopColorCameraMonoPreview();
+
+        [DllImport(LibraryName)]
+        private static extern int startColorCameraColorCapture(ref LsoColorCameraSettingParam param, int scanPatternId, ColorCameraImageCaptured cb, ColorCaptureCompleted onCompleted);
+
+        [DllImport(LibraryName)]
+        private static extern int startColorCameraColorCaptureComposed(ref LsoColorCameraSettingParam param, int scanPatternId, int subFrameCount, ColorCameraImageCaptured cb, ColorCaptureCompleted onCompleted);
+
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool stopColorCameraColorCapture();
+
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool isColorCameraCapturing();
+
+        [DllImport(LibraryName)]
+        private static extern int getLastColorCaptureError(StringBuilder buf, int len);
 
 
         // Public methods
@@ -183,16 +213,82 @@ namespace WsoNativeLib
             return;
         }
 
-        public static void SetCameraParameters(ref LsoColorCameraSettingParam param)
+        // Applies camera settings. While a live/capture session is active, structural fields
+        // are camera-locked: tunables (exposure/gain) still apply, structural fields are
+        // ignored and false is returned. Stop the session before structural changes.
+        public static bool SetCameraParameters(ref LsoColorCameraSettingParam param)
         {
-            setColorCameraSettingParam(ref param);
-            return;
+            return setColorCameraSettingParam(ref param);
         }
 
         public static void GetCameraParameters(out LsoColorCameraSettingParam param)
         {
             getColorCameraSettingParam(out param);
             return;
+        }
+
+        // Crops the current ROI to a centered square (side = min(width, height)).
+        // Applied while acquisition is stopped; returns false if the camera is absent.
+        public static bool SquareRoi()
+        {
+            return squareColorCameraRoi();
+        }
+
+        // One-call mono square preview: native sets params (Mono8/Bayer) -> square ROI -> IR LED ->
+        // scanner IR pattern -> live. Caller keeps 'cb' alive in a long-lived field (GC).
+        public static bool StartColorMonoPreview(ColorMonoPreviewMode mode, ColorCameraFrameCaptured cb)
+        {
+            return startColorCameraMonoPreview((int)mode, cb);
+        }
+
+        // Stops the mono square preview: live pause + IR off + scanner pause + restore saved params.
+        public static bool StopColorMonoPreview()
+        {
+            return stopColorCameraMonoPreview();
+        }
+
+        // One-call color capture: native runs IR off -> preset apply(checked) -> scanner grab
+        // -> worker acquisition -> scanner pause -> completedCallback(result, framesAcquired).
+        // Ok means the worker started; completion is reported exactly once via the callback.
+        // Keep BOTH delegates alive in long-lived fields (P/Invoke GC rule).
+        public static ColorCaptureStage StartColorCapture(ref LsoColorCameraSettingParam param,
+            ColorCameraImageCaptured frameCallback, ColorCaptureCompleted completedCallback,
+            int scanPatternId = (int)LsoScannerPatternId.COLOR)
+        {
+            return (ColorCaptureStage)startColorCameraColorCapture(ref param, scanPatternId, frameCallback, completedCallback);
+        }
+
+        // One-call color capture with native subframe composition: the consumer receives ONE
+        // composed image (frameCount=0, totalFrameCount=1) just before the completion callback,
+        // and only when the capture completed every band - a cancelled or failed capture reports
+        // through the completion callback alone.
+        // subFrameCount <= 0 derives the band count from the acquired frame count.
+        // Keep BOTH delegates alive in long-lived fields (P/Invoke GC rule).
+        public static ColorCaptureStage StartColorCaptureComposed(ref LsoColorCameraSettingParam param,
+            ColorCameraImageCaptured composedCallback, ColorCaptureCompleted completedCallback,
+            int subFrameCount = 0, int scanPatternId = (int)LsoScannerPatternId.COLOR)
+        {
+            return (ColorCaptureStage)startColorCameraColorCaptureComposed(ref param, scanPatternId, subFrameCount, composedCallback, completedCallback);
+        }
+
+        // Cancels a running capture and joins the native worker (partial frames are reported
+        // to the completion callback as Cancelled). Never call this from the frame/completed
+        // callback itself.
+        public static bool StopColorCapture()
+        {
+            return stopColorCameraColorCapture();
+        }
+
+        public static bool IsCapturing()
+        {
+            return isColorCameraCapturing();
+        }
+
+        public static string GetLastCaptureError()
+        {
+            var buf = new StringBuilder(256);
+            getLastColorCaptureError(buf, buf.Capacity);
+            return buf.ToString();
         }
     }
 }

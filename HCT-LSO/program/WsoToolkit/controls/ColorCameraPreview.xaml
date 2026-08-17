@@ -1,0 +1,10 @@
+<UserControl x:Class="WsoToolkit.controls.ColorCameraPreview"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:WsoToolkit.controls">
+    <Grid>
+        <!-- 렌더링/리뷰/이미지 보정/저장은 기존 LsoScanImagePreview 를 그대로 재사용(합성).
+             하드 사이즈(1024x1072)는 code-behind 에서 해제하여 부모 크기에 맞춘다. -->
+        <controls:LsoScanImagePreview x:Name="myImagePreview"/>
+    </Grid>
+</UserControl>

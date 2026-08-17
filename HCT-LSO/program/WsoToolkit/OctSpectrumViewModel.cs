@@ -19,7 +19,7 @@ namespace WsoToolkit
     {
         WsoCallback.CorneaCameraFrameCaptured _onCorneaLeftFrameCaptured;
         WsoCallback.CorneaCameraFrameCaptured _onCorneaRightFrameCaptured;
-        WsoCallback.CorneaCameraFrameCaptured _onCorneaRetinaFrameCaptured;
+        WsoCallback.RetinaCameraFrameCaptured _onRetinaCameraFrameCaptured;
 
         WsoCallback.JoystickButtonPressed _onJoystickButtonPressed;
 
@@ -120,18 +120,16 @@ namespace WsoToolkit
 
             corneaPreview1.Callback = _onCorneaLeftFrameCaptured;
             corneaPreview2.Callback = _onCorneaRightFrameCaptured;
-            retinaPreview.Callback = _onCorneaRetinaFrameCaptured;
+            retinaPreview.Callback = _onRetinaCameraFrameCaptured;
 
-            corneaPreview1.Play();
-            corneaPreview2.Play();
-            retinaPreview.Play();
+            CorneaCamera.StartPreview(_onCorneaLeftFrameCaptured, _onCorneaRightFrameCaptured, null);
+            RetinaCamera.StartPreview(_onRetinaCameraFrameCaptured);
         }
 
         public void CloseCorneaCameraPreview()
         {
-            corneaPreview1.Stop();
-            corneaPreview2.Stop();
-            retinaPreview.Stop();
+            CorneaCamera.ClosePreview();
+            RetinaCamera.ClosePreview();
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -405,7 +403,7 @@ namespace WsoToolkit
             }, DispatcherPriority.Background);
         }
 
-        private void OnCorneaRetinaFrameCaptured(IntPtr data, int width, int height)
+        private void OnRetinaCameraFrameCaptured(IntPtr data, int width, int height)
         {
             if (data == 0) return;
 
@@ -414,7 +412,7 @@ namespace WsoToolkit
 
             _retinaPending = true;
             Dispatcher.BeginInvoke(() => {
-                retinaPreview.CallbackCorneaCameraFrame(data, width, height);
+                retinaPreview.CallbackRetinaCameraFrame(data, width, height);
                 _retinaPending = false;
             }, DispatcherPriority.Background);
         }

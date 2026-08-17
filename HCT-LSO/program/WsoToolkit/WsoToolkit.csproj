@@ -20,7 +20,7 @@
   </Target>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="call postbuild.bat $(OutputPath) $(SolutionDir)\deploy\$(Configuration)&#xD;&#xA;" />
+	  <Exec Command="call postbuild.bat $(OutputPath) $(SolutionDir)..\..\..\..\build\$(Configuration)\runtime" />
   </Target>
 
   <ItemGroup>

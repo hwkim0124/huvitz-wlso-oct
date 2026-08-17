@@ -30,13 +30,13 @@ namespace wso_device
 		virtual bool loadCalibParamFromProfile(void) ;
 		virtual bool saveCalibParamToProfile(void) ;
 
-		virtual bool loadConfigFromIniFile(void);
-		virtual bool saveConfigToIniFile(void);
-
 	protected:
 		MainBoard* getMainBoard(void) const;
 		static IniFile* getConfigIniFile(void);
 		static bool openConfigIniFile(wstring path);
+
+		virtual bool loadConfigFromIniFile(void);
+		virtual bool saveConfigToIniFile(void);
 
 	private:
 		struct BoardComponentImpl;

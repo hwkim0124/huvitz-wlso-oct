@@ -118,12 +118,12 @@ bool wso_device::BoardComponent::openConfigIniFile(wstring path)
 
 bool wso_device::BoardComponent::loadConfigFromIniFile(void)
 {
-	return true;
+	return false;
 }
 
 bool wso_device::BoardComponent::saveConfigToIniFile(void)
 {
-	return true;
+	return false;
 }
 
 BoardComponent::BoardComponentImpl& wso_device::BoardComponent::impl(void) const

@@ -20,7 +20,6 @@
             </Grid>
             <Grid Grid.Row="1" Grid.Column="0" Margin="4, 0, 4, 0">
                 <Label x:Name="lblStatus" Content="Cornea Camera" Style="{StaticResource LabelStyle}"/>
-                <CheckBox x:Name="checkSwitch" Content="ON" Style="{StaticResource CheckBoxStyle}" Click="CheckSwitch_Click" HorizontalAlignment="Right" Margin="0,0,8,0"/>
             </Grid>
         </Grid>
     </Grid>

@@ -47,6 +47,7 @@ namespace wso_domain
 		bool isPhasingEnface = false;
 		bool isNotFocusAlign = false;
 		bool isNotImageGrabbing = false;
+		bool isFullRangeDomain = false;
 	};
 
 	struct OctProtocolDescript
@@ -87,6 +88,7 @@ namespace wso_domain
 		bool isNotImageGrabbing = false;
 		bool isFastRasterScan = false;
 		bool isPreviewPattern = false;
+		bool isFullRangeDomain = false;
 
 	public:
 		void initAsDefault()
@@ -159,6 +161,7 @@ namespace wso_domain
 			this->isPhasingEnface = param.isPhasingEnface;
 			this->isNotFocusAlign = param.isNotFocusAlign;
 			this->isNotImageGrabbing = param.isNotImageGrabbing;
+			this->isFullRangeDomain = param.isFullRangeDomain;
 		}
 
 		void fetchToInitParam(OctProtocolInitParam& param)
@@ -194,6 +197,7 @@ namespace wso_domain
 			param.isPhasingEnface = this->isPhasingEnface;
 			param.isNotFocusAlign = this->isNotFocusAlign;
 			param.isNotImageGrabbing = this->isNotImageGrabbing;
+			param.isFullRangeDomain = this->isFullRangeDomain;
 		}
 
 		bool isOD(void) const {

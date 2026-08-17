@@ -149,9 +149,17 @@ namespace wso_board
 
     //////////////////////////////////////////////////////////////////////////////////////////////
     typedef struct {
-        S16 InPos;
-        S16 OutPos;
+        S32 InPos;
+        S32 OutPos;
     } InOutPos_st;
+
+    typedef struct {
+        S32 ColorModePos;
+        S32 BlueFAF_Pos;
+        S32 GreenFAF_Pos;
+        S32 ICGA_Pos;
+        S32 Reserved;
+    } LsoFilter_CaplPos_st;
     
     typedef struct {
         U32 crc;
@@ -162,8 +170,9 @@ namespace wso_board
         S32 oct_focus_motor_0D_pos;
         InOutPos_st ReturnMirrorPos;
         InOutPos_st OCT_AntLensPos; // OCT Anterior Lens position.
+        LsoFilter_CaplPos_st LsoFilter_CalPos;
     } MotorCalPos_st;
-
+    
     typedef struct {
         S32 CurPos;
         S32 PI_status; // bit0: LOW PI hit, bit1: high PI hit
@@ -346,6 +355,7 @@ namespace wso_board
     typedef struct {
         S16 offsetX;
         S16 offsetY;
+        float rotation_angle; // rotation angle in degrees (-180.0 to +180.0)
     } Galvano_Dynamic_st;
 
     typedef struct {

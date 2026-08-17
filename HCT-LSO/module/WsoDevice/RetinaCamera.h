@@ -14,20 +14,20 @@ namespace wso_device
 	{
 	public:
 		RetinaCamera();
-		RetinaCamera(MainBoard* board, CameraType type, std::uint8_t epid);
+		RetinaCamera(MainBoard* board, IrCameraType type);
 		virtual ~RetinaCamera();
 
 	public:
 		virtual bool initializeRetinaCamera(void);
 
-		virtual bool setAnalogGain(float gain, bool control = true) override;
-		virtual bool setDigitalGain(float gain, bool control = true) override;
+		bool setAnalogGain(float gain, bool control = true);
+		bool setDigitalGain(float gain, bool control = true);
+		float getAnalogGain(void) const;
+		float getDigitalGain(void) const;
 
+		bool handleFrameData(int index, unsigned char* frameData) override;
 		bool loadCalibParamFromProfile(void) override;
 		bool saveCalibParamToProfile(void) override;
-
-		virtual bool loadConfigFromIniFile(void) override;
-		virtual bool saveConfigToIniFile(void) override;
 
 	private:
 		struct RetinaCameraImpl;

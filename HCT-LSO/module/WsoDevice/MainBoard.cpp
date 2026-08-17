@@ -44,7 +44,6 @@
 #include <chrono>
 #include <thread>
 #include <sstream>
-#include <fstream>
 #include <iostream>
 #include <unordered_map>
 
@@ -58,9 +57,7 @@ using namespace std;
 struct MainBoard::MainBoardImpl
 {
 	unique_ptr<HbsDataProfile> hbsProfile;
-	unique_ptr<HbsDataProfile> subProfile;
 	UsbComm usbComm;
-	UsbComm subComm;
 	
 	int lcdFixationRow;
 	int lcdFixationCol;
@@ -91,7 +88,6 @@ struct MainBoard::MainBoardImpl
 
 	void initMainBoardImpl() {
 		hbsProfile = make_unique<HbsDataProfile>();
-		subProfile = make_unique<HbsDataProfile>();
 
 		deviceInitFlags = { DEV_FLAG_NORMAL };
 		initiated = false;
@@ -103,7 +99,6 @@ struct MainBoard::MainBoardImpl
 		stageMotors.clear();
 
 		usbComm.setBoardDescript(USB_MAIN_BOARD_DESC);
-		subComm.setBoardDescript(USB_SUB_BOARD_DESC);
 	}
 };
 
@@ -111,10 +106,8 @@ struct MainBoard::MainBoardImpl
 MainBoard::MainBoard() :
 	d_ptr(make_unique<MainBoardImpl>())
 {
-	impl().irCameras.emplace_back(new RetinaCamera(this, CameraType::IR_RETINA, USB_IR1_PID)); // use Camera Id : 0
-	impl().irCameras.emplace_back(new CorneaCamera(this, CameraType::IR_CORNEA_LOWER, USB_IR2_PID)); // use Camera Id : 1
-	impl().irCameras.emplace_back(new CorneaCamera(this, CameraType::IR_CORNEA_LEFT, USB_IR1_PID));
-	impl().irCameras.emplace_back(new CorneaCamera(this, CameraType::IR_CORNEA_RIGHT, USB_IR2_PID));
+	impl().irCameras.emplace_back(new RetinaCamera(this, IrCameraType::RETINA)); // use Camera Id : 0
+	impl().irCameras.emplace_back(new CorneaCamera(this, IrCameraType::ANTERIOR)); // use Camera Id : 1
 
 	impl().colorCamera = make_unique<ColorCamera>(this);
 
@@ -212,7 +205,6 @@ void wso_device::MainBoard::releaseMainBoard(void)
 		getColorCamera()->uninitialize();
 
 		getUsbComm().releaseChannel();
-		getSubComm().releaseChannel();
 	}
 	catch (...) {
 	}
@@ -327,30 +319,16 @@ bool wso_device::MainBoard::initiateBoardComponents(int* numWarns)
 		warns += 1;
 	}
 
-	if (!initiateCorneaCamera(CameraType::IR_CORNEA_LEFT)) {
+	if (!initiateCorneaCamera()) {
 		warns += 1;
 	}
-
-	if (!initiateCorneaCamera(CameraType::IR_CORNEA_RIGHT)) {
-		warns += 1;
-	}
-	
-	if (!initiateCorneaCamera(CameraType::IR_CORNEA_LOWER)) {
-		warns += 1;
-	}
-
+	/*
 	if (!initiateColorCamera()) {
 		warns += 1;
 	}
-
-	if (!getLsoScanner()->initializeLsoScanner()) {
-		WsoLogWarn("Failed to initialize LSO scanner");
-		warns += 1;
-	}
-	getGalvanometer()->initializeGalvanometer();
+	*/
 	return true;
 }
-
 
 bool wso_device::MainBoard::initiateRetinaCamera(void)
 {
@@ -399,16 +377,15 @@ bool wso_device::MainBoard::initiateRetinaCamera(void)
 	return (warns == 0);
 }
 
-bool wso_device::MainBoard::initiateCorneaCamera(CameraType type)
+bool wso_device::MainBoard::initiateCorneaCamera(void)
 {
 	int warns = 0;
 	string strMessage = "";
 
-	auto* camera = getCorneaCamera(type);
+	auto* camera = getCorneaCamera();
 	auto name = camera->getCameraName();
-	auto camId = camera->getCameraId();
 	if (!camera->initializeCorneaCamera()) {
-		strMessage = std::format("Cornea IR camera not initialized, name: {}, camId: {}", name, (int)(camId));
+		strMessage = std::format("Cornea IR camera not initialized");
 		WsoLogWarn(strMessage);
 		warns += 1;
 	}
@@ -420,7 +397,7 @@ bool wso_device::MainBoard::initiateCorneaCamera(CameraType type)
 			for (int i = 0; i < 20; i++) {
 				this_thread::sleep_for(chrono::milliseconds(50));
 				if (camera->getErrorCount() > 0) {
-					strMessage = std::format("Cornea IR camera frame error, name: {}, camId: {}", name, (int)(camId));
+					strMessage = std::format("Cornea IR camera frame error");
 					WsoLogWarn(strMessage);
 					warns += 1;
 					is_error = true;
@@ -431,26 +408,31 @@ bool wso_device::MainBoard::initiateCorneaCamera(CameraType type)
 
 			if (!is_error) {
 				if (camera->getFrameCount() == 0) {
-					strMessage = std::format("Cornea IR camera frame error, name: {}, camId: {}", name, (int)(camId));
+					strMessage = std::format("Cornea IR camera frame error");
 					WsoLogWarn(strMessage);
 					warns += 1;
 				}
 				else {
-					strMessage = std::format("Cornea IR camera frame tested, name: {}, camId: {}", name, (int)(camId));
+					strMessage = std::format("Cornea IR camera frame tested");
 					WsoLogInfo(strMessage);
 				}
 			}
 		}
 		else {
-			strMessage = std::format("Failed to start cornea IR camera stream, name: {}, camId: {}", name, (int)(camId));
+			strMessage = std::format("Failed to start cornea IR camera stream");
 			WsoLogWarn(strMessage);
 			warns += 1;
 		}
 	}
 
 	if (!warns) {
-		strMessage = std::format("Cornea IR camera, name: {}, camId: {}", name, (int)(camId));
-		LogD() << strMessage << camera->getAnalogGain() << ", dgain: " << camera->getDigitalGain();
+		auto again1 = camera->getAnalogGain(IrCameraId::CORNEA_LEFT);
+		auto again2 = camera->getAnalogGain(IrCameraId::CORNEA_RIGHT);
+		auto again3 = camera->getAnalogGain(IrCameraId::CORNEA_LOWER);
+		auto dgain1 = camera->getDigitalGain(IrCameraId::CORNEA_LEFT);
+		auto dgain2 = camera->getDigitalGain(IrCameraId::CORNEA_RIGHT);
+		auto dgain3 = camera->getDigitalGain(IrCameraId::CORNEA_LOWER);
+		LogD() << "Cornea IR camera, initial again: " << again1 << ", " << again2 << ", " << again3 << ", dgain: " << dgain1 << ", " << dgain2 << ", " << dgain3;
 	}
 	return (warns == 0);
 }
@@ -532,6 +514,11 @@ bool wso_device::MainBoard::isOctGrabberNotInUse(void) const
 	return (impl().deviceInitFlags & DEV_FLAG_NOT_OCT_GRAB) == DEV_FLAG_NOT_OCT_GRAB;
 }
 
+bool wso_device::MainBoard::isLsoScannerNotInUse(void) const
+{
+	return (impl().deviceInitFlags & DEV_FLAG_NOT_LSO_SCAN) == DEV_FLAG_NOT_LSO_SCAN;
+}
+
 bool wso_device::MainBoard::isOpenClNotInUse(void) const
 {
 	return (impl().deviceInitFlags & DEV_FLAG_NOT_OPENCL) == DEV_FLAG_NOT_OPENCL;
@@ -556,23 +543,6 @@ bool wso_device::MainBoard::openFTDIdevices(void)
 			break;
 		}
 	}
-	/////////////////////////////////////////////////////////////////////////////
-
-	/////////////////////////////////////////////////////////////////////////////
-	// Sub Board
-	for (int i = 0; i < USB_RESET_RETRY_MAX; i++) {
-		if (!getSubComm().openChannel(false)) {
-			LogD() << "Failed to open USB sub channel, retrying ... ";
-			resetSubChannel();
-			this_thread::sleep_for(chrono::milliseconds(USB_RESET_RETRY_DELAY));
-		}
-		else {
-			openUsb = true;
-			LogD() << "USB sub channel opened, desc: " << getUsbComm().getBoardDescript();
-			break;
-		}
-	}
-	/////////////////////////////////////////////////////////////////////////////
 	return openUsb;
 }
 
@@ -659,27 +629,6 @@ bool wso_device::MainBoard::loadHostBufferTable(void)
 	}
 	else {
 		LogD() << "Failed to load HBS table entries from main-board";
-		return false;
-	}
-
-	///////////////////////////////////////////////////////////////
-	// SubBoard
-	auto* hbsSub = getSubDataProfile();
-
-	hbsSub->setHbsDataComm(&impl().subComm);
-	if (hbsSub->loadHbsTableHeader(true)) {
-		LogD() << "HBS table descriptor loaded from sub-board";
-	}
-	else {
-		LogD() << "Failed to load HBS table descriptor from sub-board";
-		return false;
-	}
-
-	if (hbsSub->loadHbsTableEntries(true)) {
-		LogD() << "HBS table entries loaded from sub-board";
-	}
-	else {
-		LogD() << "Failed to load HBS table entries from sub-board";
 		return false;
 	}
 	return true;
@@ -1029,21 +978,10 @@ wso_board::HbsDataProfile* wso_device::MainBoard::getHbsDataProfile(void) const
 	return impl().hbsProfile.get();
 }
 
-wso_board::HbsDataProfile* wso_device::MainBoard::getSubDataProfile(void) const
-{
-	return impl().subProfile.get();
-}
-
 UsbComm& wso_device::MainBoard::getUsbComm(void) const
 {
 	return impl().usbComm;
 }
-
-UsbComm& wso_device::MainBoard::getSubComm(void) const
-{
-	return impl().subComm;
-}
-
 
 SldLaserDriver* wso_device::MainBoard::getSldLaserDriver(void) const
 {
@@ -1153,44 +1091,12 @@ SwingMotor* wso_device::MainBoard::getSwingMotor(void) const
 
 RetinaCamera* wso_device::MainBoard::getRetinaCamera(void) const
 {
-	return (RetinaCamera*)getInfraredCamera(CameraType::IR_RETINA);
+	return (RetinaCamera*)getInfraredCamera(IrCameraType::RETINA);
 }
 
-CorneaCamera* wso_device::MainBoard::getCorneaLeftCamera(void) const
+CorneaCamera* wso_device::MainBoard::getCorneaCamera(void) const
 {
-	return (CorneaCamera*)getInfraredCamera(CameraType::IR_CORNEA_LEFT);
-}
-
-CorneaCamera* wso_device::MainBoard::getCorneaRightCamera(void) const
-{
-	return (CorneaCamera*)getInfraredCamera(CameraType::IR_CORNEA_RIGHT);
-}
-
-CorneaCamera* wso_device::MainBoard::getCorneaLowerCamera(void) const
-{
-	return (CorneaCamera*)getInfraredCamera(CameraType::IR_CORNEA_LOWER);
-}
-
-CorneaCamera* wso_device::MainBoard::getCorneaCamera(CameraType type) const
-{
-	CorneaCamera* pCamera = nullptr;
-
-	switch (type)
-	{
-	case CameraType::IR_CORNEA_LEFT:
-		pCamera = (CorneaCamera*)getInfraredCamera(CameraType::IR_CORNEA_LEFT);
-		break;
-	case CameraType::IR_CORNEA_RIGHT:
-		pCamera = (CorneaCamera*)getInfraredCamera(CameraType::IR_CORNEA_RIGHT);
-		break;
-	case CameraType::IR_CORNEA_LOWER:
-		pCamera = (CorneaCamera*)getInfraredCamera(CameraType::IR_CORNEA_LOWER);
-		break;
-	case CameraType::IR_RETINA:
-		pCamera = (CorneaCamera*)getInfraredCamera(CameraType::IR_RETINA);
-		break;
-	}
-	return pCamera;
+	return (CorneaCamera*)getInfraredCamera(IrCameraType::ANTERIOR);
 }
 
 ColorCamera* wso_device::MainBoard::getColorCamera(void)
@@ -1246,11 +1152,11 @@ StageMotor* wso_device::MainBoard::getStageMotor(StageMotorType type) const
 	return nullptr;
 }
 
-InfraredCamera* wso_device::MainBoard::getInfraredCamera(CameraType type) const
+InfraredCamera* wso_device::MainBoard::getInfraredCamera(IrCameraType type) const
 {
 	for (int i = 0; i < impl().irCameras.size(); i++) {
 		InfraredCamera* irCam = impl().irCameras[i].get();
-		if (irCam->getType() == type) {
+		if (irCam->getCameraType() == type) {
 			return irCam;
 		}
 	}

@@ -41,6 +41,21 @@ namespace wso_domain
 		}
 	};
 
+	// Result/stage codes for the color-camera capture one-call.
+	// start return value: OK / BUSY / PARAM / SCANNER (pre-acquisition failures;
+	// no completion callback follows a non-OK start).
+	// completion callback: OK / CAMERA / CANCELLED / FAULT (how the acquisition ended).
+	enum ColorCaptureStage : int
+	{
+		CAP_STAGE_OK = 0,
+		CAP_STAGE_BUSY = 1,
+		CAP_STAGE_PARAM = 2,
+		CAP_STAGE_SCANNER = 3,
+		CAP_STAGE_CAMERA = 4,
+		CAP_STAGE_CANCELLED = 5,
+		CAP_STAGE_FAULT = 9,
+	};
+
 	struct LsoCaptureFrameROI
 	{
 		int width = 0;

@@ -46,31 +46,17 @@ namespace WsoToolkit
             corneaPreview2.Callback = _onCorneaRightFrameCaptured;
             corneaPreview3.Callback = _onCorneaLowerFrameCaptured;
 
-            corneaPreview1.Play();
-            corneaPreview2.Play();
-            corneaPreview3.Play();
+            CorneaCamera.StartPreview(_onCorneaLeftFrameCaptured, _onCorneaRightFrameCaptured, _onCorneaLowerFrameCaptured);
         }
 
         public void CloseCorneaCameraPreview()
         {
-            corneaPreview1.Stop();
-            corneaPreview2.Stop();
-            corneaPreview3.Stop();
+            CorneaCamera.ClosePreview();
         }
 
-        public bool IsCorneaCameraLeftPreviewing()
+        public bool IsCorneaCameraPreviewing()
         {
-            return CorneaCamera.IsPreviewing(CameraType.IrCorneaLeft);
-        }
-
-        public bool IsCorneaCameraRightPreviewing()
-        {
-            return CorneaCamera.IsPreviewing(CameraType.IrCorneaRight);
-        }
-
-        public bool IsCorneaCameraLowerPreviewing()
-        {
-            return CorneaCamera.IsPreviewing(CameraType.IrCorneaLower);
+            return CorneaCamera.IsPreviewing();
         }
 
         private void GetCorneaCameraConfig()

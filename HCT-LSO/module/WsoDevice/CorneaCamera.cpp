@@ -10,6 +10,9 @@ using namespace std;
 
 struct CorneaCamera::CorneaCameraImpl
 {
+	float again[4];
+	float dgain[4];
+
 	CorneaCameraImpl()
 	{
 		initializeCorneaCameraImpl();
@@ -17,25 +20,26 @@ struct CorneaCamera::CorneaCameraImpl
 
 	void initializeCorneaCameraImpl(void)
 	{
+		for (int i = 0; i < 3; i++) {
+			again[i] = IR_CAMERA_AGAIN_INIT;
+			dgain[i] = IR_CAMERA_DGAIN_INIT;
+		}
 	}
 };
 
 
 CorneaCamera::CorneaCamera() :
 	d_ptr(make_unique<CorneaCameraImpl>()), InfraredCamera()
-{
-}
+{}
 
 
-CorneaCamera::CorneaCamera(MainBoard* board, CameraType type, std::uint8_t epid) :
-	d_ptr(make_unique<CorneaCameraImpl>()), InfraredCamera(board, type, epid)
-{
-}
+CorneaCamera::CorneaCamera(MainBoard* board, IrCameraType type) :
+	d_ptr(make_unique<CorneaCameraImpl>()), InfraredCamera(board, type)
+{}
 
 
 CorneaCamera::~CorneaCamera()
-{
-}
+{}
 
 
 bool wso_device::CorneaCamera::initializeCorneaCamera(void)
@@ -43,11 +47,44 @@ bool wso_device::CorneaCamera::initializeCorneaCamera(void)
 	if (!InfraredCamera::initializeInfraredCamera()) {
 		return false;
 	}
+	setActiveViewPreset(IrCameraViewPreset::LOWER_LEFT_RIGHT);
 	// loadParamsFromProfile();
-	loadConfigFromIniFile();
 	return true;
 }
 
+
+bool wso_device::CorneaCamera::handleFrameData(int index, unsigned char* frameData)
+{
+	static auto image = vector<uint8_t>(IR_CAMERA_IMAGE_WIDTH * IR_CAMERA_IMAGE_HEIGHT);
+	auto frame_h = getFrameHeight();
+
+	if (!InfraredCamera::handleFrameData(index, frameData)) {
+		LogD() << "Ir anterior camera, handle frame data invalid!";
+	}
+
+	for (uint32_t i = 0; i < frame_h; i++) {
+		copy(frameData + i * IR_CAMERA_FRAME_WIDTH + IR_CAMERA_FRAME_PADD_SIZE, frameData + (i + 1) * IR_CAMERA_FRAME_WIDTH, image.begin() + i * IR_CAMERA_IMAGE_WIDTH);
+	}
+
+	auto preset = getActiveViewPreset();
+	if ((preset == IrCameraViewPreset::LOWER_ONLY && index == 0) ||
+		(preset == IrCameraViewPreset::LOWER_LEFT && index == 0) || 
+		(preset == IrCameraViewPreset::LOWER_RIGHT && index == 0) || 
+	    (preset == IrCameraViewPreset::LOWER_LEFT_RIGHT && index == 0)) {
+		CallbackRegistry::getInstance()->runCorneaLowerCameraFrameCaptured(image.data(), IR_CAMERA_IMAGE_WIDTH, IR_CAMERA_IMAGE_HEIGHT);
+	}
+	else if ((preset == IrCameraViewPreset::LEFT_ONLY && index == 0) ||
+		(preset == IrCameraViewPreset::LOWER_LEFT && index == 1) ||
+		(preset == IrCameraViewPreset::LOWER_LEFT_RIGHT && index == 1)) {
+		CallbackRegistry::getInstance()->runCorneaLeftCameraFrameCaptured(image.data(), IR_CAMERA_IMAGE_WIDTH, IR_CAMERA_IMAGE_HEIGHT);
+	}
+	else if ((preset == IrCameraViewPreset::RIGHT_ONLY && index == 0) ||
+		(preset == IrCameraViewPreset::LOWER_RIGHT && index == 1) ||
+		(preset == IrCameraViewPreset::LOWER_LEFT_RIGHT && index == 2)) {
+		CallbackRegistry::getInstance()->runCorneaRightCameraFrameCaptured(image.data(), IR_CAMERA_IMAGE_WIDTH, IR_CAMERA_IMAGE_HEIGHT);
+	}
+	return true;
+}
 
 bool wso_device::CorneaCamera::loadCalibParamFromProfile(void)
 {
@@ -56,7 +93,7 @@ bool wso_device::CorneaCamera::loadCalibParamFromProfile(void)
 		return;
 	}
 
-	uint8_t data = BoardConfig::corneaCameraAgain();
+	uint8_t data = BoardConfig::CorneaCameraAgain();
 	float gain;
 	float a_gain, d_gain;
 
@@ -82,7 +119,7 @@ bool wso_device::CorneaCamera::loadCalibParamFromProfile(void)
 	setAnalogGain(gain, false);
 	a_gain = gain;
 
-	data = BoardConfig::corneaCameraDgain();
+	data = BoardConfig::CorneaCameraDgain();
 	gain = (float)(data >> 5);
 	gain += (float)((data & 0x1F) * exp2(-5));
 
@@ -103,124 +140,15 @@ bool wso_device::CorneaCamera::saveCalibParamToProfile(void)
 	}
 
 	float gain = getAnalogGain();
-	BoardConfig::corneaCameraAgain(true, getAnalogGainData(gain));
+	BoardConfig::CorneaCameraAgain(true, getAnalogGainData(gain));
 
 	gain = getDigitalGain();
-	BoardConfig::corneaCameraDgain(true, getDigitalGainData(gain));
+	BoardConfig::CorneaCameraDgain(true, getDigitalGainData(gain));
 
 	BoardConfig::setModified(true);
 	*/
 	return true;
 }
-
-
-bool wso_device::CorneaCamera::setAnalogGain(float gain, bool control)
-{
-	if (!InfraredCamera::setAnalogGain(gain, control)) {
-		return false;
-	}
-	saveConfigToIniFile();
-	return true;
-}
-
-bool wso_device::CorneaCamera::setDigitalGain(float gain, bool control)
-{
-	if (!InfraredCamera::setDigitalGain(gain, control)) {
-		return false;
-	}
-	saveConfigToIniFile();
-	return true;
-}
-
-bool wso_device::CorneaCamera::loadConfigFromIniFile()
-{
-	bool bRet = false;
-
-	try
-	{
-		IniFile* ini = getConfigIniFile();
-		if (!ini) {
-			return false;
-		}
-
-		CameraType type = getType();
-		float fAgain = 0;
-		float fDgain = 0;
-
-		if (type == CameraType::IR_CORNEA_LEFT)
-		{
-			fAgain = (float)ini->ReadInt(L"CorneaCameraLeft", L"Again");
-			fDgain = (float)ini->ReadInt(L"CorneaCameraLeft", L"Dgain");
-		}
-		else if (type == CameraType::IR_CORNEA_RIGHT)
-		{
-			fAgain = (float)ini->ReadInt(L"CorneaCameraRight", L"Again");
-			fDgain = (float)ini->ReadInt(L"CorneaCameraRight", L"Dgain");
-		}
-		else if (type == CameraType::IR_CORNEA_LOWER)
-		{
-			fAgain = (float)ini->ReadInt(L"CorneaCameraLower", L"Again");
-			fDgain = (float)ini->ReadInt(L"CorneaCameraLower", L"Dgain");
-		}
-
-		setAnalogGain(fAgain, true);
-		setDigitalGain(fDgain, true);
-
-		bRet = true;
-	}
-	catch (exception ex)
-	{
-		bRet = false;
-	}
-	return bRet;
-}
-
-
-bool wso_device::CorneaCamera::saveConfigToIniFile()
-{
-	bool bRet = false;
-
-	try
-	{
-		IniFile* ini = getConfigIniFile();
-		if (!ini) {
-			return false;
-		}
-
-		CameraType type = getType();
-		float fAgain = getAnalogGain();
-		float fDgain = getDigitalGain();
-
-		if (type == CameraType::IR_CORNEA_LEFT) // Left
-		{
-			ini->WriteInt(L"CorneaCameraLeft", L"Again", (int)fAgain);
-			ini->WriteInt(L"CorneaCameraLeft", L"Dgain", (int)fDgain);
-		}
-		else if (type == CameraType::IR_CORNEA_RIGHT) // Right
-		{
-			ini->WriteInt(L"CorneaCameraRight", L"Again", (int)fAgain);
-			ini->WriteInt(L"CorneaCameraRight", L"Dgain", (int)fDgain);
-		}
-		else if (type == CameraType::IR_CORNEA_LOWER) // Lower
-		{
-			ini->WriteInt(L"CorneaCameraLower", L"Again", (int)fAgain);
-			ini->WriteInt(L"CorneaCameraLower", L"Dgain", (int)fDgain);
-		}
-		else
-		{
-			throw exception();
-		}
-
-		bRet = true;
-	}
-	catch (exception ex)
-	{
-		bRet = false;
-	}
-
-	return bRet;
-}
-
 
 CorneaCamera::CorneaCameraImpl& wso_device::CorneaCamera::impl(void) const
 {

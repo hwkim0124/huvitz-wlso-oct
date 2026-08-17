@@ -51,7 +51,7 @@
                 <Button x:Name="CalibrationButton" Content="System Calibration" Width="200" Margin="0,12,0,0" Style="{StaticResource ButtonStyle}" Click="CalibrationButton_Click" />
 
             </StackPanel>
-            <Border Style="{StaticResource BorderStyle}" Grid.Column="1" Grid.ColumnSpan="6" Grid.RowSpan="5"/>
+            <Border Style="{StaticResource BorderStyle}" Grid.Column="1" Grid.ColumnSpan="5" Grid.RowSpan="3"/>
         </Grid>
 
         <ListBox x:Name="LogMsgListBox" Grid.Row="2" Margin="0,12,0,0" Height="480" ScrollViewer.VerticalScrollBarVisibility="Visible">

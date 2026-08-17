@@ -18,17 +18,6 @@ namespace wso_system
 		void WSOSYSTEM_DLL_API __stdcall releaseOptimizeButtonPressed(void);
 		void WSOSYSTEM_DLL_API __stdcall releaseAdapterLensAttached(void);
 
-		// Cornea Camera
-		///////////////////////////////////////////////////////////////////////////////////////////
-		bool WSOSYSTEM_DLL_API __stdcall startCorneaCameraPreview(CameraType type, CorneaCameraFrameCaptured clb);
-		bool WSOSYSTEM_DLL_API __stdcall closeCorneaCameraPreview(CameraType type);
-		bool WSOSYSTEM_DLL_API __stdcall isCorneaCameraPreviewing(CameraType type);
-		float WSOSYSTEM_DLL_API __stdcall getCorneaCameraAgain(CameraType type);
-		float WSOSYSTEM_DLL_API __stdcall getCorneaCameraDgain(CameraType type);
-		bool WSOSYSTEM_DLL_API __stdcall setCorneaCameraAgain(CameraType type, float value);
-		bool WSOSYSTEM_DLL_API __stdcall setCorneaCameraDgain(CameraType type, float value);
-
-
 		// Chinrest
 		///////////////////////////////////////////////////////////////////////////////////////////
 		bool WSOSYSTEM_DLL_API __stdcall moveChinrestUp(void);

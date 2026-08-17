@@ -99,6 +99,8 @@ namespace WsoNativeLib
             public bool isNotFocusAlign;
             [MarshalAs(UnmanagedType.I1)]
             public bool isNotImageGrabbing;
+            [MarshalAs(UnmanagedType.I1)]
+            public bool isFullRangeDomain;
 
             public OctProtocolInitParam()
             {
@@ -133,6 +135,7 @@ namespace WsoNativeLib
                 isPhasingEnface = false;
                 isNotFocusAlign = false;
                 isNotImageGrabbing = false;
+                isFullRangeDomain = false;
             }
         }
 

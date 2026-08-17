@@ -154,11 +154,6 @@ namespace WsoToolkit.controls
         {
             if (data == 0) return;
 
-            if (checkSwitch.IsChecked == false)
-            {
-                return;
-            }
-
             // Stride for 8-bit grayscale. 
             nint step = width * 1;
 
@@ -308,36 +303,6 @@ namespace WsoToolkit.controls
         private void UserControl_Unloaded(object sender, RoutedEventArgs e)
         {
             _stopwatch.Stop();
-        }
-
-        public void Play()
-        {
-            if (!CorneaCamera.IsPreviewing(CameraType))
-            {
-                if (Callback != null)
-                {
-                    CorneaCamera.StartPreview(CameraType, Callback);
-                }
-            }
-            checkSwitch.IsChecked = true;
-        }
-
-        public void Stop()
-        {
-            CorneaCamera.ClosePreview(CameraType);
-            checkSwitch.IsChecked = false;
-        }
-
-        private void CheckSwitch_Click(object sender, RoutedEventArgs e)
-        {
-            if (checkSwitch.IsChecked == true)
-            {
-                Play(); 
-            }
-            else
-            {
-                Stop();
-            }
         }
 
         public void SaveFrameImage(string filename = "")

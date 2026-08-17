@@ -29,10 +29,13 @@ namespace WsoNativeLib
         public delegate void AdapterLensAttached(int type);
 
 
-        // Cornea Camera
+        // Infrared Camera
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         public delegate void CorneaCameraFrameCaptured(nint data, int width, int height);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate void RetinaCameraFrameCaptured(nint data, int width, int height);
 
 
         // Color Camera
@@ -51,6 +54,12 @@ namespace WsoNativeLib
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         public delegate void ColorCameraImageCaptured(IntPtr data, int width, int height, int frameCount, int totalFrameCount, int flipMode, int nPixelFormat, int nBytesPerPixel);
+
+        // Completion notice for the color-camera capture one-call. Fired exactly once per
+        // started capture, on the native capture worker thread - marshal to a Dispatcher
+        // before touching UI state. result = (int)ColorCaptureStage.
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate void ColorCaptureCompleted(int result, int framesAcquired);
 
 
         // OCT Scanning 

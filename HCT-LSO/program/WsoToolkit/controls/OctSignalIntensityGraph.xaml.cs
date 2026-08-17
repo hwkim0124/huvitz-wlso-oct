@@ -313,7 +313,7 @@ namespace WsoToolkit.controls
             var line1 = new LineSeries
             {
                 StrokeThickness = 1,
-                Title = "Intensity",
+                Title = "Intensity", 
                 Color = OxyColors.Red
             };
 

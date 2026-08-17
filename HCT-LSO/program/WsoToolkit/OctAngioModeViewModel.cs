@@ -154,16 +154,12 @@ namespace WsoToolkit
             corneaPreview2.IsOverlayFocusGuide = true;
             corneaPreview3.IsOverlayFocusGuide = true;
 
-            corneaPreview1.Play();
-            corneaPreview2.Play();
-            corneaPreview3.Play();
+            CorneaCamera.StartPreview(_onCorneaLeftFrameCaptured, _onCorneaRightFrameCaptured, _onCorneaLowerFrameCaptured);
         }
 
         public void CloseCorneaCameraPreview()
         {
-            corneaPreview1.Stop();
-            corneaPreview2.Stop();
-            corneaPreview3.Stop();
+            CorneaCamera.ClosePreview();
         }
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////

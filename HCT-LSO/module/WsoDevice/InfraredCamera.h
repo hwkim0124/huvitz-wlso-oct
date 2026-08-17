@@ -20,7 +20,7 @@ namespace wso_device
 	{
 	public:
 		InfraredCamera();
-		InfraredCamera(MainBoard* board, CameraType type, std::uint8_t epid);
+		InfraredCamera(MainBoard* board, IrCameraType type);
 		virtual ~InfraredCamera();
 
 		InfraredCamera(InfraredCamera&& rhs);
@@ -31,51 +31,49 @@ namespace wso_device
 	public:
 		virtual bool initializeInfraredCamera(void);
 		bool isInitiated(void) const;
-
-		// void setCallback(InfraredCameraFrameCallback* callback);
 		bool isPlaying(void) const;
+
 		bool play(void);
 		void pause(void);
 		int getErrorCount(void);
 		int getFrameCount(void);
 
-		virtual bool setAnalogGain(float gain, bool control = true);
-		virtual bool setDigitalGain(float gain, bool control = true);
-		virtual float getAnalogGain(void) const;
-		virtual float getDigitalGain(void) const;
+		bool setActiveViewPreset(IrCameraViewPreset preset);
+		IrCameraViewPreset getActiveViewPreset(void) const;
+		bool setMirrorMode(IrCameraId camId, IrCameraMirrorMode hflip, IrCameraMirrorMode vflip);
+		bool setOutputMode(IrCameraId camId, IrCameraOutputMode mode, IrCameraTestPattern pattern);
 
-		bool setExposureTime(bool highSpeed = false);
-		bool isExposureTimeForHighSpeed(void);
+		bool setAnalogGain(IrCameraId camId, float gain, bool control = true);
+		bool setDigitalGain(IrCameraId camId, float gain, bool control = true);
+		float getAnalogGain(IrCameraId camId) const;
+		float getDigitalGain(IrCameraId camId) const;
 
 		std::uint8_t getAnalogGainData(float gain) const;
 		std::uint8_t getDigitalGainData(float gain) const;
 
-		bool isCorneaLeftCamera(void) const;
-		bool isCorneaRightCamera(void) const;
-		bool isCorneaLowerCamera(void) const;
 		bool isRetinaCamera(void) const;
+		bool isAnteriorCamera(void) const;
 
-		CameraType getType(void) const;
+		IrCameraType getCameraType(void) const;
 		IrCameraId getCameraId(void) const;
+		int getCameraIndex(IrCameraId camId) const;
+
 		std::string getCameraName(void) const;
 		std::uint8_t* getBuffer(void) const;
 		std::uint32_t getFrameWidth(void) const;
 		std::uint32_t getFrameHeight(void) const;
-		std::uint32_t getFrameSize(void) const;
+		std::uint32_t getFrameDataSize(void) const;
 
-		bool captureFrame(std::uint8_t* frame) const;
-		// bool captureFrame(cpp_util::CvImage& image) const;
-		bool captureFrame(OctFrameImageDescript& image) const;
-
-		/*
-		bool loadConfig(SloConfig::CameraSettings* dset);
-		bool saveConfig(SloConfig::CameraSettings* dset);
-		*/
+		std::uint32_t getStreamWidth(void) const;
+		std::uint32_t getStreamHeight(void) const;
+		std::uint32_t getStreamDataSize(void) const;
+		std::uint32_t getNumFramesInStream(void) const;
 
 	protected:
 		MainBoard* getMainBoard(void) const;
 
-		void acquireCameraData(void);
+		void acquireCameraStream(void);
+		virtual bool handleFrameData(int index, unsigned char* frameData);
 		bool recoverFromUsbError(void);
 		bool isValidFrameHeader(unsigned char* buff);
 

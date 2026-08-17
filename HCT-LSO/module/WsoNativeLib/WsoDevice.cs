@@ -56,11 +56,23 @@ namespace WsoNativeLib
 
         public enum CameraType : int
         {
-            IrCorneaLeft = 0x00,
-            IrCorneaRight = 0x01,
-            IrCorneaLower = 0x02,
-            IrRetina = 0x03, 
+            IrRetina = 0x00,
+            IrCorneaLower = 0x01,
+            IrCorneaLeft = 0x02,
+            IrCorneaRight = 0x03,
             ColorFundus = 0x04 
+        }
+
+        public enum IrCameraViewPreset : int
+        {
+            Default = 0x00,
+            LowerOnly = 0x01,
+            LeftOnly = 0x02,
+            LowerLeft = 0x03,
+            RightOnly = 0x04,
+            LowerRight = 0x05,
+            LeftRight = 0x06,
+            LowerLeftRight = 0x07
         }
 
         public enum QldApcMode : int

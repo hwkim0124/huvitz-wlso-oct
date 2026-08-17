@@ -5,7 +5,6 @@
 #include "UsbPort.h"
 
 #include <atomic>
-#include <functional>
 #include <mutex>
 
 
@@ -20,35 +19,38 @@ struct InfraredCamera::InfraredCameraImpl
 	UsbComm* usbComm;
 	std::uint8_t epid;
 	bool initiated;
+
 	unsigned int errorCount;
 	unsigned int frameCount;
 
-	uint8_t buffer[IR_CAMERA_FRAME_DATA_SIZE];
+	vector<uint8_t> buffer;
 	uint32_t frameWidth;
 	uint32_t frameHeight;
-	// OctFrameImage descript;
+
+	float again[4];
+	float dgain[4];
 
 	atomic<bool> playing;
+	atomic<bool> workerRunning;
 	thread worker;
 
-	unsigned short value;
-	unsigned short valueMin = 0;
-	unsigned short valueMax = 255;
-	unsigned short valueStep = 1;
-
-	float analogGain;
-	float digitalGain;
-	uint16_t exposureTime;
-
-	CameraType type;
-	// InfraredCameraFrameCallback* callback;
+	IrCameraType type;
+	IrCameraViewPreset preset;
 	mutex mutexLock;
 
-	InfraredCameraImpl() : board(nullptr), playing(false), initiated(false), errorCount(0), frameCount(0),
-		analogGain(IR_CAMERA_AGAIN_VALUE1), value(IR_CAMERA_INTENSITY),
-		digitalGain(IR_CAMERA_DGAIN_INIT), exposureTime(IR_CAMERA_EXPOSURE_TIME1),
-		buffer{ 0 }, frameWidth(IR_CAMERA_FRAME_WIDTH), frameHeight(IR_CAMERA_FRAME_HEIGHT)
+	InfraredCameraImpl() : board(nullptr), playing(false), workerRunning(false), initiated(false), errorCount(0), frameCount(0),
+		frameWidth(IR_CAMERA_FRAME_WIDTH), frameHeight(IR_CAMERA_FRAME_HEIGHT), 
+		type(IrCameraType::RETINA), preset(IrCameraViewPreset::DEFAULT), epid(USB_IR1_PID), usbComm(nullptr)
 	{
+		implementInfraredCameraImpl();
+	}
+
+	void implementInfraredCameraImpl(void)
+	{
+		for (int i = 0; i < 4; i++) {
+			again[i] = IR_CAMERA_AGAIN_INIT;
+			dgain[i] = IR_CAMERA_DGAIN_INIT;
+		}
 	}
 };
 
@@ -59,19 +61,13 @@ InfraredCamera::InfraredCamera() :
 }
 
 
-wso_device::InfraredCamera::InfraredCamera(MainBoard* board, CameraType type, std::uint8_t epid) :
+wso_device::InfraredCamera::InfraredCamera(MainBoard* board, IrCameraType type) :
 	d_ptr(make_unique<InfraredCameraImpl>())
 {
 	impl().type = type;
 	impl().board = board;
-	impl().epid = epid;
-
-	if (type == CameraType::IR_CORNEA_LEFT || type == CameraType::IR_CORNEA_RIGHT) {
-		impl().usbComm = &(impl().board->getSubComm());
-	}
-	else {
-		impl().usbComm = &(impl().board->getUsbComm());
-	}
+	impl().epid = (type == IrCameraType::RETINA ? USB_IR1_PID : USB_IR2_PID);
+	impl().usbComm = &(impl().board->getUsbComm());
 }
 
 
@@ -96,36 +92,18 @@ bool wso_device::InfraredCamera::initializeInfraredCamera(void)
 	if (impl().board == nullptr) {
 		return false;
 	}
-
-	/*
-	// impl().board = board;
-	InfraredCameraId camId = (impl().type == CameraType::CORNEA ? InfraredCameraId::CORNEA : InfraredCameraId::RETINA);
-	impl().camId = camId;
-	impl().epid = (camId == InfraredCameraId::CORNEA ? USB_IR1_PID : USB_IR2_PID);
-	// impl().callback = nullptr;
-	*/
 	impl().initiated = true;
 
 	UsbComm& usbComm = *impl().usbComm;
-	auto camId = getCameraId();
-	bool res = usbComm.IrCameraControl(static_cast<unsigned char>(camId), CTRL_OFF);
+	auto type = getCameraType();
+	bool res = usbComm.IrCameraControl(static_cast<unsigned char>(type), CTRL_OFF);
 	return res;
 }
-
 
 bool wso_device::InfraredCamera::isInitiated(void) const
 {
 	return impl().initiated;
 }
-
-/*
-void wso_device::InfraredCamera::setCallback(InfraredCameraFrameCallback* callback)
-{
-	unique_lock<mutex> lock(impl().mutexLock);
-	impl().callback = callback;
-	return;
-}
-*/
 
 bool wso_device::InfraredCamera::isPlaying(void) const
 {
@@ -139,20 +117,19 @@ bool wso_device::InfraredCamera::play(void)
 		return false;
 	}
 
-
-	// if (isPlaying()) {
 	pause();
-	// }
-
-
+	
 	UsbComm& usbComm = *impl().usbComm;
-	auto camId = getCameraId();
-	bool ret = usbComm.IrCameraControl(static_cast<unsigned char>(camId), CTRL_ON);
+	auto type = getCameraType();
+	bool ret = usbComm.IrCameraControl(static_cast<unsigned char>(type), CTRL_ON);
 
+	// Set before spawning so a pause() that races right after play() reliably
+	// observes the worker as alive and waits for it (see pause()).
 	impl().playing = true;
-	impl().worker = thread{ &InfraredCamera::acquireCameraData, this };
+	impl().workerRunning = true;
 	impl().errorCount = 0;
 	impl().frameCount = 0;
+	impl().worker = thread{ &InfraredCamera::acquireCameraStream, this };
 	return ret;
 }
 
@@ -165,17 +142,39 @@ void wso_device::InfraredCamera::pause(void)
 
 	// if (isPlaying()) {
 	impl().playing = false;
+
 	if (impl().worker.joinable()) {
+		// The acquisition worker may be blocked inside a synchronous FT_ReadPipe
+		// that never returns when the camera is not streaming (the read path does
+		// not honor the pipe timeout). Clearing 'playing' is not enough: the worker
+		// only re-checks it between reads. Abort the read pipe so the pending
+		// transfer fails fast, letting the worker observe playing==false and exit.
+		// Once the first abort makes a read fail, the pipe is flagged unavailable
+		// and any subsequent read fast-fails, so the worker exits within an
+		// iteration or two. The loop is BOUNDED on purpose: if the driver does not
+		// unblock the in-flight synchronous read, this degrades to a plain join()
+		// (same as before) rather than spinning on abort forever.
+		constexpr int IR_CAMERA_PAUSE_ABORT_MAX = 250;  // ~5s ceiling (250 x 20ms)
+		UsbPort* port = impl().usbComm->getUsbPort();
+		for (int i = 0; i < IR_CAMERA_PAUSE_ABORT_MAX && impl().workerRunning; i++) {
+			port->abortPipe(impl().epid);
+			std::this_thread::sleep_for(std::chrono::milliseconds(20));
+		}
 		impl().worker.join();
+
+		// The abort above makes the pending read fail, which flags the pipe as
+		// errored (UsbPort::receive). That failure was intentional, not an I/O
+		// fault, so clear the flag ? otherwise the pipe would report unavailable
+		// and the next play() could never read a frame again.
+		port->setPipeError(impl().epid, false);
 	}
 
 	UsbComm& usbComm = *impl().usbComm;
-	auto camId = getCameraId();
-	usbComm.IrCameraControl(static_cast<unsigned char>(camId), CTRL_OFF);
+	auto type = getCameraType();
+	usbComm.IrCameraControl(static_cast<unsigned char>(type), CTRL_OFF);
 	// }
 	return;
 }
-
 
 int wso_device::InfraredCamera::getErrorCount(void)
 {
@@ -188,26 +187,68 @@ int wso_device::InfraredCamera::getFrameCount(void)
 	return impl().frameCount;
 }
 
+bool wso_device::InfraredCamera::setActiveViewPreset(IrCameraViewPreset preset)
+{
+	UsbComm& usbComm = *impl().usbComm;
+	auto format = static_cast<unsigned char>(preset);
+	bool result = usbComm.IrCameraStreamFormat(format);
 
-bool wso_device::InfraredCamera::setAnalogGain(float gain, bool control)
+	if (result) {
+		impl().preset = preset;
+		auto name = getCameraName();
+		LogD() << name << ", set active view preset : " << static_cast<int>(preset);
+	}
+	else {
+		auto name = getCameraName();
+		LogD() << name << ", set active view preset failed!";
+	}
+	return result;
+}
+
+IrCameraViewPreset wso_device::InfraredCamera::getActiveViewPreset(void) const
+{
+	return impl().preset;
+}
+
+bool wso_device::InfraredCamera::setMirrorMode(IrCameraId camId, IrCameraMirrorMode hflip, IrCameraMirrorMode vflip)
+{
+	UsbComm& usbComm = *impl().usbComm;
+	auto cid = static_cast<unsigned char>(camId);
+	auto h = static_cast<unsigned char>(hflip);
+	auto v = static_cast<unsigned char>(vflip);
+	auto result = usbComm.IrCameraMirrorMode(cid, h, v);
+	return result;
+}
+
+bool wso_device::InfraredCamera::setOutputMode(IrCameraId camId, IrCameraOutputMode mode, IrCameraTestPattern pattern)
+{
+	UsbComm& usbComm = *impl().usbComm;
+	auto cid = static_cast<unsigned char>(camId);
+	auto m = static_cast<unsigned char>(mode);
+	auto p = static_cast<unsigned char>(pattern);
+	auto result = usbComm.IrCameraOutputMode(cid, m, p);
+	return result;
+}
+
+bool wso_device::InfraredCamera::setAnalogGain(IrCameraId camId, float gain, bool control)
 {
 	if (!isInitiated()) {
 		return false;
 	}
 
-	impl().analogGain = gain;
+	auto index = getCameraIndex(camId);
+	impl().again[index] = gain;
 
 	if (control) {
 		unsigned char data = getAnalogGainData(gain);
 
 		UsbComm& usbComm = *impl().usbComm;
-		auto camId = getCameraId();
 		bool ret = usbComm.IrCameraAnalogGain(static_cast<unsigned char>(camId), (uint8_t)data);
 		if (ret) {
-			LogDebug() << "Ir camera, set analog gain, value: " << gain;
+			LogDebug() << "Ir camera id: " << static_cast<int>(camId) << ", set analog gain, value: " << gain;
 		}
 		else {
-			LogDebug() << "Ir camera, set analog gain failed!";
+			LogDebug() << "Ir camera id: " << static_cast<int>(camId) << ", set analog gain failed!";
 		}
 		return ret;
 	}
@@ -216,8 +257,7 @@ bool wso_device::InfraredCamera::setAnalogGain(float gain, bool control)
 	}
 }
 
-
-bool wso_device::InfraredCamera::setDigitalGain(float gain, bool control)
+bool wso_device::InfraredCamera::setDigitalGain(IrCameraId camId, float gain, bool control)
 {
 	if (!isInitiated()) {
 		return false;
@@ -225,7 +265,9 @@ bool wso_device::InfraredCamera::setDigitalGain(float gain, bool control)
 
 	gain = (gain < IR_CAMERA_DGAIN_MIN ? IR_CAMERA_DGAIN_MIN : gain);
 	gain = (gain > IR_CAMERA_DGAIN_MAX ? IR_CAMERA_DGAIN_MAX : gain);
-	impl().digitalGain = gain;
+
+	auto index = getCameraIndex(camId);
+	impl().dgain[index] = gain;	
 
 	if (control) {
 		// dgain = x + y * 2^-5
@@ -237,13 +279,12 @@ bool wso_device::InfraredCamera::setDigitalGain(float gain, bool control)
 		unsigned char data = (x << 5) + y;
 
 		UsbComm& usbComm = *impl().usbComm;
-		auto camId = getCameraId();
 		bool ret = usbComm.IrCameraDigitalGain(static_cast<unsigned char>(camId), data);
 		if (ret) {
-			LogDebug() << "Ir camera, set digital gain, value: " << gain;
+			LogDebug() << "Ir camera id: " << static_cast<int>(camId) << ", set digital gain, value: " << gain;
 		}
 		else {
-			LogDebug() << "Ir camera, set digital gain failed!";
+			LogDebug() << "Ir camera id: " << static_cast<int>(camId) << ", set digital gain failed!";
 		}
 		return ret;
 	}
@@ -252,32 +293,18 @@ bool wso_device::InfraredCamera::setDigitalGain(float gain, bool control)
 	}
 }
 
-
-float wso_device::InfraredCamera::getAnalogGain(void) const
+float wso_device::InfraredCamera::getAnalogGain(IrCameraId camId) const
 {
-	return impl().analogGain;
+	auto index = getCameraIndex(camId);
+	auto gain = impl().again[index];
+	return gain;
 }
 
-
-float wso_device::InfraredCamera::getDigitalGain(void) const
+float wso_device::InfraredCamera::getDigitalGain(IrCameraId camId) const
 {
-	return impl().digitalGain;
-}
-
-
-bool wso_device::InfraredCamera::setExposureTime(bool highSpeed)
-{
-	impl().exposureTime = (highSpeed ? IR_CAMERA_EXPOSURE_TIME1 : IR_CAMERA_EXPOSURE_TIME2);
-	UsbComm& usbComm = *impl().usbComm;
-	auto camId = getCameraId();
-	bool ret = usbComm.IrCameraExposureTime(static_cast<unsigned char>(camId), impl().exposureTime);
-	return ret;
-}
-
-
-bool wso_device::InfraredCamera::isExposureTimeForHighSpeed(void)
-{
-	return (impl().exposureTime == IR_CAMERA_EXPOSURE_TIME1);
+	auto index = getCameraIndex(camId);
+	auto gain = impl().dgain[index];
+	return gain;
 }
 
 
@@ -317,7 +344,6 @@ std::uint8_t wso_device::InfraredCamera::getAnalogGainData(float gain) const
 	else {
 		// throw std::runtime_error("Invalid analog gain value");
 	}
-
 	unsigned char data = first + second;
 	return data;
 }
@@ -329,75 +355,48 @@ std::uint8_t wso_device::InfraredCamera::getDigitalGainData(float gain) const
 	x = static_cast<unsigned char>(std::floor(gain));
 	y = static_cast<unsigned char>((gain - x) * 32);
 	unsigned char data = (x << 5) + y;
-
 	return data;
-}
-
-
-bool wso_device::InfraredCamera::isCorneaLeftCamera(void) const
-{
-	return getType() == CameraType::IR_CORNEA_LEFT;
-}
-
-bool wso_device::InfraredCamera::isCorneaRightCamera(void) const
-{
-	return getType() == CameraType::IR_CORNEA_RIGHT;
-}
-
-bool wso_device::InfraredCamera::isCorneaLowerCamera(void) const
-{
-	return getType() == CameraType::IR_CORNEA_LOWER;
 }
 
 bool wso_device::InfraredCamera::isRetinaCamera(void) const
 {
-	return getType() == CameraType::IR_RETINA;
+	return getCameraType() == IrCameraType::RETINA;
 }
 
-CameraType wso_device::InfraredCamera::getType(void) const
+bool wso_device::InfraredCamera::isAnteriorCamera(void) const
+{
+	return getCameraType() == IrCameraType::ANTERIOR;
+}
+
+IrCameraType wso_device::InfraredCamera::getCameraType(void) const
 {
 	return impl().type;
 }
 
-IrCameraId wso_device::InfraredCamera::getCameraId(void) const
+int wso_device::InfraredCamera::getCameraIndex(IrCameraId camId) const
 {
-	auto type = getType();
-	if (type == CameraType::IR_CORNEA_LEFT) {
-		return IrCameraId::CORNEA_LEFT;
+	int index = static_cast<int>(camId);
+	if (index < 0 || index >= static_cast<int>(IrCameraId::NUMBER_OF_ITEMS)) {
+		return 0;
 	}
-	else if (type == CameraType::IR_CORNEA_RIGHT) {
-		return IrCameraId::CORNEA_RIGHT;
-	}
-	else if (type == CameraType::IR_CORNEA_LOWER) {
-		return IrCameraId::CORNEA_LOWER;
-	}
-	else if (type == CameraType::IR_RETINA) {
-		return IrCameraId::RETINA;
-	}
-	return IrCameraId::UNKNOWN;
+	return index;
 }
 
 std::string wso_device::InfraredCamera::getCameraName(void) const
 {
-	auto type = getType();
-	if (type == CameraType::IR_CORNEA_LEFT) {
-		return "Cornea-Left Ir Camera";
-	}
-	else if (type == CameraType::IR_CORNEA_RIGHT) {
-		return "Cornea-Right Ir Camera";
-	}
-	else if (type == CameraType::IR_CORNEA_LOWER) {
-		return "Cornea-Lower Ir Camera";
-	}
-	else if (type == CameraType::IR_RETINA) {
+	auto type = getCameraType();
+	if (type == IrCameraType::RETINA) {
 		return "Retina Ir Camera";
+	}
+	else if (type == IrCameraType::ANTERIOR) {
+		return "Anterior Ir Camera";
 	}
 	return std::string();
 }
 
 std::uint8_t* wso_device::InfraredCamera::getBuffer(void) const
 {
-	return impl().buffer;
+	return impl().buffer.data();
 }
 
 
@@ -413,72 +412,38 @@ std::uint32_t wso_device::InfraredCamera::getFrameHeight(void) const
 }
 
 
-std::uint32_t wso_device::InfraredCamera::getFrameSize(void) const
+std::uint32_t wso_device::InfraredCamera::getFrameDataSize(void) const
 {
 	return getFrameWidth() * getFrameHeight();
 }
 
-
-bool wso_device::InfraredCamera::captureFrame(std::uint8_t* frame) const
+std::uint32_t wso_device::InfraredCamera::getStreamWidth(void) const
 {
-	if (!frame) {
-		return false;
-	}
-
-	unique_lock<mutex> lock(impl().mutexLock);
-	memcpy(frame, impl().buffer, getFrameSize());
-	return true;
+	return getFrameWidth() * getNumFramesInStream();
 }
 
-/*
-bool wso_device::InfraredCamera::captureFrame(CppUtil::CvImage& image) const
+std::uint32_t wso_device::InfraredCamera::getStreamHeight(void) const
 {
-	uint8_t frame[IR_CAMERA_FRAME_DATA_SIZE];
-	if (captureFrame(frame)) {
-		image.fromBitsData(frame, getFrameWidth(), getFrameHeight());
-		return true;
-	}
-	return false;
-}
-*/
-
-bool wso_device::InfraredCamera::captureFrame(OctFrameImageDescript& image) const
-{
-	static uint8_t frame[IR_CAMERA_FRAME_DATA_SIZE];
-	if (captureFrame(frame)) {
-		image.setup(frame, getFrameWidth(), getFrameHeight());
-		return true;
-	}
-	return false;
+	return getFrameHeight();
 }
 
-
-/*
-bool wso_device::InfraredCamera::loadConfig(SloConfig::CameraSettings * dset)
+std::uint32_t wso_device::InfraredCamera::getStreamDataSize(void) const
 {
-	CameraItem* item = dset->getCameraItem(getType());
-	if (item != nullptr) {
-		setAnalogGain(item->analogGain());
-		setDigitalGain(item->digitalGain());
-		// LogDebug() << "retina a-gain: " << item->analogGain() << ", d-gain: " << item->digitalGain();
-		return true;
-	}
-	return false;
+	return getStreamWidth() * getStreamHeight();
 }
 
-
-bool wso_device::InfraredCamera::saveConfig(SloConfig::CameraSettings * dset)
+std::uint32_t wso_device::InfraredCamera::getNumFramesInStream(void) const
 {
-	CameraItem* item = dset->getCameraItem(getType());
-	if (item != nullptr) {
-		item->analogGain() = getAnalogGain();
-		item->digitalGain() = getDigitalGain();
-		return true;
+	if (impl().preset == IrCameraViewPreset::LOWER_LEFT ||
+		impl().preset == IrCameraViewPreset::LOWER_RIGHT || 
+		impl().preset == IrCameraViewPreset::LEFT_RIGHT) {
+		return 2;
 	}
-	return false;
+	else if (impl().preset == IrCameraViewPreset::LOWER_LEFT_RIGHT) {
+		return 3;
+	}
+	return 1;
 }
-*/
-
 
 InfraredCamera::InfraredCameraImpl& wso_device::InfraredCamera::impl(void) const
 {
@@ -491,16 +456,21 @@ MainBoard* wso_device::InfraredCamera::getMainBoard(void) const
 	return impl().board;
 }
 
-
-void wso_device::InfraredCamera::acquireCameraData(void)
+void wso_device::InfraredCamera::acquireCameraStream(void)
 {
-	unsigned char* buff = impl().buffer;
-	uint32_t width = impl().frameWidth;
-	uint32_t height = impl().frameHeight;
-	uint32_t size = (width * height);
-	uint8_t epid = impl().epid;
+	auto width = getStreamWidth();
+	auto height = getStreamHeight();
+	auto ssize = getStreamDataSize();
+	auto fsize = getFrameDataSize();
+	auto frame_w = getFrameWidth();
+	auto frame_h = getFrameHeight();
 
-	auto image = vector<uint8_t>(IR_CAMERA_IMAGE_WIDTH * IR_CAMERA_IMAGE_HEIGHT);
+	auto type = getCameraType();
+	auto nframes = getNumFramesInStream();
+
+	impl().buffer.assign(ssize, 0);
+	auto fdata = vector<uint8_t>(fsize);
+	auto pbuff = getBuffer();
 
 	UsbComm& usbComm = *impl().usbComm;
 
@@ -513,49 +483,44 @@ void wso_device::InfraredCamera::acquireCameraData(void)
 		bool result = false;
 		{
 			unique_lock<mutex> lock(impl().mutexLock);
-			result = usbComm.readIrCameraFrame(impl().type, buff, size);
+			result = usbComm.readIrCameraFrame(type, pbuff, ssize);
 		}
 
 		if (result) {
-			if (isValidFrameHeader(buff)) {
-				impl().errorCount = 0;
-				impl().frameCount = 1;
+			for (int n = 0; n < nframes; n++) {
+				for (int i = 0; i < frame_h; i++) {
+					auto* p1 = pbuff + width * i + frame_w * n;
+					copy(p1, p1 + frame_w, fdata.begin() + i * frame_w);
+				}
+				handleFrameData(n, fdata.data());
 			}
-			else {
-				if (impl().errorCount == 0) {
-					LogError() << getCameraName() << ", fame header invalid!";
-					impl().errorCount = 1;
-				}
-			}
-
-			{
-				for (uint32_t i = 0; i < height; i++) {
-					copy(buff + i * IR_CAMERA_FRAME_WIDTH + IR_CAMERA_FRAME_PADD_SIZE, buff + (i + 1) * IR_CAMERA_FRAME_WIDTH, image.begin() + i * IR_CAMERA_IMAGE_WIDTH);
-				}
-
-				if (isCorneaLeftCamera()) {
-					CallbackRegistry::getInstance()->runCorneaLeftCameraFrameCaptured(image.data(), IR_CAMERA_IMAGE_WIDTH, IR_CAMERA_IMAGE_HEIGHT);
-				}
-				else if (isCorneaRightCamera()) {
-					CallbackRegistry::getInstance()->runCorneaRightCameraFrameCaptured(image.data(), IR_CAMERA_IMAGE_WIDTH, IR_CAMERA_IMAGE_HEIGHT);
-				}
-				else if (isCorneaLowerCamera()) {
-					CallbackRegistry::getInstance()->runCorneaLowerCameraFrameCaptured(image.data(), IR_CAMERA_IMAGE_WIDTH, IR_CAMERA_IMAGE_HEIGHT);
-				}
-				else if (isRetinaCamera()) {
-					CallbackRegistry::getInstance()->runRetinaCameraFrameCaptured(image.data(), IR_CAMERA_IMAGE_WIDTH, IR_CAMERA_IMAGE_HEIGHT);
-				}
-			}
-
 			std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		}
 		else {
 			std::this_thread::sleep_for(std::chrono::milliseconds(50));
 		}
 	}
+
+	// Signal to pause() that the worker has fully exited so it can stop aborting
+	// the read pipe and join without blocking.
+	impl().workerRunning = false;
 	return;
 }
 
+bool wso_device::InfraredCamera::handleFrameData(int index, unsigned char* frameData)
+{
+	if (isValidFrameHeader(frameData)) {
+		impl().errorCount = 0;
+		impl().frameCount = 1;
+		return true;
+	}
+	else {
+		if (impl().errorCount == 0) {
+			impl().errorCount = 1;
+		}
+	}
+	return false;
+}
 
 bool wso_device::InfraredCamera::isValidFrameHeader(unsigned char* buff)
 {
@@ -588,8 +553,8 @@ bool wso_device::InfraredCamera::recoverFromUsbError(void)
 		usbComm.TestCommand(impl().epid);
 		std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		usbComm.getUsbPort()->abortPipe(impl().epid);
-		auto camId = getCameraId();
-		usbComm.IrCameraControl(static_cast<unsigned char>(camId), CTRL_ON);
+		auto type = getCameraType();
+		usbComm.IrCameraControl(static_cast<unsigned char>(type), CTRL_ON);
 		impl().errorCount++;
 
 		/*

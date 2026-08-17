@@ -11,6 +11,7 @@
 
 externs/*
 program/TestWsoSystem/obj/
+program/LSO_DevKit
 
 # ---------------------------------------------------------------------
 # Repo-specific output folders (resolve under HCT-LSO/)
