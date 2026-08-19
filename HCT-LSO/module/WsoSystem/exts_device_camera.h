@@ -19,6 +19,10 @@ namespace wso_system
 		bool WSOSYSTEM_DLL_API __stdcall setCorneaCameraAgain(IrCameraId camId, float value);
 		bool WSOSYSTEM_DLL_API __stdcall setCorneaCameraDgain(IrCameraId camId, float value);
 		bool WSOSYSTEM_DLL_API __stdcall setCorneaCameraViewPreset(IrCameraViewPreset preset);
+		bool WSOSYSTEM_DLL_API __stdcall setCorneaCameraMirrorMode(IrCameraId camId, IrCameraMirrorMode hflip, IrCameraMirrorMode vflip);
+		bool WSOSYSTEM_DLL_API __stdcall setCorneaCameraOutputMode(IrCameraId camId, IrCameraOutputMode mode, IrCameraTestPattern pattern, int option);
+		bool WSOSYSTEM_DLL_API __stdcall getCorneaCameraMirrorMode(IrCameraId camId, IrCameraMirrorMode* hflip, IrCameraMirrorMode* vflip);
+		bool WSOSYSTEM_DLL_API __stdcall getCorneaCameraOutputMode(IrCameraId camId, IrCameraOutputMode* mode, IrCameraTestPattern* pattern, int* option);
 
 		// Retina Camera
 		///////////////////////////////////////////////////////////////////////////////////////////

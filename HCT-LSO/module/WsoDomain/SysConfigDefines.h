@@ -19,6 +19,11 @@ namespace wso_domain
 		float dgain_lower = 0.0f;
 	};
 
+	struct RetinaCameraConfigParam {
+		float again = 0.0f;
+		float dgain = 0.0f;
+	};
+
 	struct LcdFixationParam {
 		int row = 0;
 		int col = 0;

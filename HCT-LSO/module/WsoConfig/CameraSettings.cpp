@@ -6,20 +6,24 @@ using namespace wso_config;
 
 struct CameraSettings::CameraSettingsImpl
 {
-	CorneaCameraConfigParam param;
+	CorneaCameraConfigParam cornea;
+	RetinaCameraConfigParam retina;
 
 	CameraSettingsImpl() {
 		initializeCameraSettingsImpl();
 	}
 
 	void initializeCameraSettingsImpl(void) {
-		param.again_left = IR_CORNEA_AGAIN_INIT;
-		param.again_right = IR_CORNEA_AGAIN_INIT;
-		param.again_lower = IR_CORNEA_AGAIN_INIT;
+		cornea.again_left = IR_CORNEA_AGAIN_INIT;
+		cornea.again_right = IR_CORNEA_AGAIN_INIT;
+		cornea.again_lower = IR_CORNEA_AGAIN_INIT;
 
-		param.dgain_left = IR_CORNEA_DGAIN_INIT;
-		param.dgain_right = IR_CORNEA_DGAIN_INIT;
-		param.dgain_lower = IR_CORNEA_DGAIN_INIT;
+		cornea.dgain_left = IR_CORNEA_DGAIN_INIT;
+		cornea.dgain_right = IR_CORNEA_DGAIN_INIT;
+		cornea.dgain_lower = IR_CORNEA_DGAIN_INIT;
+
+		retina.again = 1.0f;
+		retina.dgain = 1.0f;
 	}
 };
 
@@ -89,26 +93,47 @@ void wso_config::CameraSettings::resetToDefaultValues(void)
 
 CorneaCameraConfigParam* wso_config::CameraSettings::getCorneaCameraConfigParam(void) const
 {
-	return &impl().param;
+	return &impl().cornea;
+}
+
+RetinaCameraConfigParam* wso_config::CameraSettings::getRetinaCameraConfigParam(void) const
+{
+	return &impl().retina;
 }
 
 void wso_config::CameraSettings::setCorneaCameraConfigParam(const CorneaCameraConfigParam& param)
 {
-	impl().param = param;
+	impl().cornea = param;
 	return;
+}
+
+void wso_config::CameraSettings::setRetinaCameraConfigParam(const RetinaCameraConfigParam& param)
+{
+	impl().retina = param;
+	return;
+}
+
+float wso_config::CameraSettings::getRetinaAgain(void) const
+{
+	return impl().retina.again;
+}
+
+float wso_config::CameraSettings::getRetinaDgain(void) const
+{
+	return impl().retina.dgain;
 }
 
 float wso_config::CameraSettings::getCorneaAgain(CameraType type) const
 {
 	auto value = 0.0f;
 	if (type == CameraType::IR_CORNEA_LEFT) {
-		value = impl().param.again_left;
+		value = impl().cornea.again_left;
 	}
 	else if (type == CameraType::IR_CORNEA_RIGHT) {
-		value = impl().param.again_right;
+		value = impl().cornea.again_right;
 	}
 	else if (type == CameraType::IR_CORNEA_LOWER) {
-		value = impl().param.again_lower;
+		value = impl().cornea.again_lower;
 	}
 	return value;
 }
@@ -117,28 +142,38 @@ float wso_config::CameraSettings::getCorneaDgain(CameraType type) const
 {
 	auto value = 0.0f;
 	if (type == CameraType::IR_CORNEA_LEFT) {
-		value = impl().param.dgain_left;
+		value = impl().cornea.dgain_left;
 	}
 	else if (type == CameraType::IR_CORNEA_RIGHT) {
-		value = impl().param.dgain_right;
+		value = impl().cornea.dgain_right;
 	}
 	else if (type == CameraType::IR_CORNEA_LOWER) {
-		value = impl().param.dgain_lower;
+		value = impl().cornea.dgain_lower;
 	}
 	return value;
+}
+
+void wso_config::CameraSettings::setRetinaAgain(float value)
+{
+	impl().retina.again = value;
+}
+
+void wso_config::CameraSettings::setRetinaDgain(float value)
+{
+	impl().retina.dgain = value;
 }
 
 
 void wso_config::CameraSettings::setCorneaAgain(CameraType type, float value)
 {
 	if (type == CameraType::IR_CORNEA_LEFT) {
-		impl().param.again_left = value;
+		impl().cornea.again_left = value;
 	}
 	else if (type == CameraType::IR_CORNEA_RIGHT) {
-		impl().param.again_right = value;
+		impl().cornea.again_right = value;
 	}
 	else if (type == CameraType::IR_CORNEA_LOWER) {
-		impl().param.again_lower = value;
+		impl().cornea.again_lower = value;
 	}
 	return;
 }
@@ -146,13 +181,13 @@ void wso_config::CameraSettings::setCorneaAgain(CameraType type, float value)
 void wso_config::CameraSettings::setCorneaDgain(CameraType type, float value)
 {
 	if (type == CameraType::IR_CORNEA_LEFT) {
-		impl().param.dgain_left = value;
+		impl().cornea.dgain_left = value;
 	}
 	else if (type == CameraType::IR_CORNEA_RIGHT) {
-		impl().param.dgain_right = value;
+		impl().cornea.dgain_right = value;
 	}
 	else if (type == CameraType::IR_CORNEA_LOWER) {
-		impl().param.dgain_lower = value;
+		impl().cornea.dgain_lower = value;
 	}
 	return;
 }

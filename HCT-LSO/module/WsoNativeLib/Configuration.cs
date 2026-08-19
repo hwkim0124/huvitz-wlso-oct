@@ -26,10 +26,17 @@ namespace WsoNativeLib
         private static extern bool obtainCorneaCameraConfigParam(ref CorneaCameraConfigParam param);
 
         [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool obtainRetinaCameraConfigParam(ref RetinaCameraConfigParam param);
+
+        [DllImport(LibraryName)]
         private static extern void submitInternalFixationPreset(InternalFixationPreset param);
 
         [DllImport(LibraryName)]
         private static extern void submitCorneaCameraConfigParam(CorneaCameraConfigParam param);
+
+        [DllImport(LibraryName)]
+        private static extern void submitRetinaCameraConfigParam(RetinaCameraConfigParam param);
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
@@ -66,6 +73,12 @@ namespace WsoNativeLib
             return obtainCorneaCameraConfigParam(ref param);
         }
 
+        public static bool ObtainRetinaCameraConfig(out RetinaCameraConfigParam param)
+        {
+            param = new RetinaCameraConfigParam();
+            return obtainRetinaCameraConfigParam(ref param);
+        }
+
         public static void SubmitInternalFixationPreset(InternalFixationPreset param)
         {
             submitInternalFixationPreset(param);
@@ -74,7 +87,12 @@ namespace WsoNativeLib
         {
             submitCorneaCameraConfigParam(param);
         }
-        
+
+        public static void SubmitRetinaCameraConfig(RetinaCameraConfigParam param)
+        {
+            submitRetinaCameraConfigParam(param);
+        }
+
         public static bool ImportSystemConfigFile()
         {
             return importSystemConfigFile();

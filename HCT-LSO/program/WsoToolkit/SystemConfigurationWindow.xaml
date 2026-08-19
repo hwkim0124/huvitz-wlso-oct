@@ -101,9 +101,11 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="12"/>
                     </Grid.RowDefinitions>
-                    <Label x:Name="label301" Content="Cornea Ir Camera" Style="{StaticResource HeaderStyle}" Grid.Row="1" Grid.ColumnSpan="2"/>
+                    <Label x:Name="label301" Content="Cornea IR Camera" Style="{StaticResource HeaderStyle}" Grid.Row="1" Grid.ColumnSpan="2"/>
                     <Label x:Name="label302" Content="A-Gain" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="1"/>
                     <TextBox x:Name="editCorneaAgain1" Style="{StaticResource TextBoxStyle}" Grid.Column="2" Grid.Row="2" PreviewTextInput="FloatTextBox_PreviewTextInput"/>
                     <Label x:Name="label303" Content="D-Gain" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="3"/>
@@ -119,7 +121,13 @@
                     <Label x:Name="label308" Content="(Left)" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="5" HorizontalAlignment="Left"/>
                     <Label x:Name="label309" Content="(Right)" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="5" HorizontalAlignment="Left"/>
                     <Label x:Name="label310" Content="(Lower)" Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="5" HorizontalAlignment="Left"/>
-                    <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="6" Grid.RowSpan="6"/>
+                    <Label x:Name="label311" Content="Retina IR Camera" Style="{StaticResource HeaderStyle}" Grid.Row="5" Grid.ColumnSpan="2"/>
+                    <Label x:Name="label312" Content="A-Gain" Style="{StaticResource LabelStyle}" Grid.Row="6" Grid.Column="1"/>
+                    <TextBox x:Name="editRetinaAgain" Style="{StaticResource TextBoxStyle}" Grid.Column="2" Grid.Row="6" PreviewTextInput="FloatTextBox_PreviewTextInput"/>
+                    <Label x:Name="label313" Content="D-Gain" Style="{StaticResource LabelStyle}" Grid.Row="6" Grid.Column="3"/>
+                    <TextBox x:Name="editRetinaDgain" Style="{StaticResource TextBoxStyle}" Grid.Column="4" Grid.Row="6" PreviewTextInput="FloatTextBox_PreviewTextInput"/>
+
+                    <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="6" Grid.RowSpan="8"/>
                 </Grid>
             </StackPanel>
         </Grid>

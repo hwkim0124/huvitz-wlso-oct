@@ -3,10 +3,41 @@
 
 #include "FTD3XX.h"
 
+#include <chrono>
 #include <mutex>
+#include <thread>
 
 using namespace wso_device;
 using namespace std;
+
+
+// FT_STATUS is an unvalued enum, so a raw value in a log tells nobody anything.
+// The values worth naming here are the ones the stream pipes actually produce:
+// 19 when the camera is not sending, 20 when a pending read was cancelled.
+static const char* getFtStatusName(FT_STATUS status)
+{
+	switch (status) {
+	case FT_OK:						return "FT_OK";
+	case FT_INVALID_HANDLE:			return "FT_INVALID_HANDLE";
+	case FT_DEVICE_NOT_FOUND:		return "FT_DEVICE_NOT_FOUND";
+	case FT_DEVICE_NOT_OPENED:		return "FT_DEVICE_NOT_OPENED";
+	case FT_IO_ERROR:				return "FT_IO_ERROR";
+	case FT_INSUFFICIENT_RESOURCES:	return "FT_INSUFFICIENT_RESOURCES";
+	case FT_INVALID_PARAMETER:		return "FT_INVALID_PARAMETER";
+	case FT_INVALID_ARGS:			return "FT_INVALID_ARGS";
+	case FT_NOT_SUPPORTED:			return "FT_NOT_SUPPORTED";
+	case FT_TIMEOUT:				return "FT_TIMEOUT";
+	case FT_OPERATION_ABORTED:		return "FT_OPERATION_ABORTED";
+	case FT_RESERVED_PIPE:			return "FT_RESERVED_PIPE";
+	case FT_IO_PENDING:				return "FT_IO_PENDING";
+	case FT_IO_INCOMPLETE:			return "FT_IO_INCOMPLETE";
+	case FT_BUSY:					return "FT_BUSY";
+	case FT_NO_SYSTEM_RESOURCES:	return "FT_NO_SYSTEM_RESOURCES";
+	case FT_DEVICE_NOT_CONNECTED:	return "FT_DEVICE_NOT_CONNECTED";
+	case FT_OTHER_ERROR:			return "FT_OTHER_ERROR";
+	default:						return "FT_UNKNOWN";
+	}
+}
 
 
 // FT_HANDLE SloMain_FT601_Handle = nullptr;
@@ -96,6 +127,10 @@ bool wso_device::UsbPort::openPort(const std::string& desc, bool useNotification
 	impl().pidReadIr1 = readIr1;
 	impl().pidReadIr2 = readIr2;
 	impl().pidReadSlo = readIr2;
+	// Was never assigned, yet closePort() passes it to FT_FlushPipe/setPipeError.
+	// getIndexOfPipe() maps an unknown pid to index 0, so an uninitialized value
+	// there silently clears the command-read error flag.
+	impl().pidNotification = USB_NOTI_PID;
 
 	char argv[64] = { 0 };
 	memcpy(argv, desc.c_str(), desc.size());
@@ -108,8 +143,10 @@ bool wso_device::UsbPort::openPort(const std::string& desc, bool useNotification
 		else {
 			FT_SetPipeTimeout(impl().handle, impl().pidReadCmd, impl().timeout);
 			FT_SetPipeTimeout(impl().handle, impl().pidWriteCmd, impl().timeout);
-			FT_SetPipeTimeout(impl().handle, impl().pidReadIr1, impl().timeout);
-			FT_SetPipeTimeout(impl().handle, impl().pidReadIr2, impl().timeout);
+			// The camera stream pipes are deliberately left at the driver default
+			// timeout. A 12s timeout there means an acquisition worker blocked on a
+			// non-streaming camera cannot be stopped without cancelling its read,
+			// and cancelling is what produces FT_OPERATION_ABORTED.
 
 			FT_FlushPipe(impl().handle, impl().pidReadCmd);
 			FT_FlushPipe(impl().handle, impl().pidWriteCmd);
@@ -293,7 +330,7 @@ bool wso_device::UsbPort::receive(unsigned char* buff, unsigned long size, bool 
 bool wso_device::UsbPort::receiveFromIr1(unsigned char* buff, unsigned long size, bool check)
 {
 	uint8_t epid = impl().pidReadIr1;
-	bool ret = receive(epid, buff, size, check);
+	bool ret = receiveStream(epid, buff, size);
 	return ret;
 }
 
@@ -301,7 +338,7 @@ bool wso_device::UsbPort::receiveFromIr1(unsigned char* buff, unsigned long size
 bool wso_device::UsbPort::receiveFromIr2(unsigned char* buff, unsigned long size, bool check)
 {
 	uint8_t epid = impl().pidReadIr2;
-	bool ret = receive(epid, buff, size, check);
+	bool ret = receiveStream(epid, buff, size);
 	return ret;
 }
 
@@ -309,8 +346,55 @@ bool wso_device::UsbPort::receiveFromIr2(unsigned char* buff, unsigned long size
 bool wso_device::UsbPort::receiveFromSlo(unsigned char* buff, unsigned long size, bool check)
 {
 	uint8_t epid = impl().pidReadSlo;
-	bool ret = receive(epid, buff, size, check);
+	bool ret = receiveStream(epid, buff, size);
 	return ret;
+}
+
+
+// Bulk-IN read for the camera stream pipes.
+//
+// Two properties matter here and both differ from receive()/receive2():
+//
+//  - A frame is read in USB_STREAM_CHUNK_SIZE pieces. A zero-length chunk in the
+//    middle of a frame is not an error, it just means the sender has not caught up
+//    yet: yield and keep reading, because dropping a half-read frame would leave
+//    the pipe offset by the unread remainder and every later frame would fail the
+//    line-header check.
+//  - A failure leaves the pipe untouched: no FT_AbortPipe, no pipe-error latch.
+//    Aborting cancels any read still pending on that pipe (FT_OPERATION_ABORTED),
+//    and the latch is only ever cleared by closePort(), so a single stalled read
+//    used to disable the camera for the rest of the session. Callers recover by
+//    simply reading again.
+bool wso_device::UsbPort::receiveStream(unsigned char epid, unsigned char* buff, unsigned long size)
+{
+	if (!isAvailable(epid)) {
+		return false;
+	}
+
+	unsigned long n_total = 0;
+	while (n_total < size) {
+		unsigned long n_left = size - n_total;
+		unsigned long n_want = (n_left < USB_STREAM_CHUNK_SIZE ? n_left : USB_STREAM_CHUNK_SIZE);
+		unsigned long n_read = 0;
+
+		FT_STATUS ret = FT_ReadPipe(impl().handle, epid, buff + n_total, n_want, &n_read, NULL);
+		if (FT_FAILED(ret)) {
+			LogDebug() << "FT_ReadPipe() failed, epid: " << static_cast<int>(epid)
+				<< ", status: " << getFtStatusName(ret) << " (" << ret << ")";
+			return false;
+		}
+
+		if (n_read == 0) {
+			if (n_total == 0) {
+				// Nothing at all: the camera is not streaming yet. Not an error.
+				return false;
+			}
+			this_thread::sleep_for(chrono::milliseconds(1));
+			continue;
+		}
+		n_total += n_read;
+	}
+	return true;
 }
 
 
@@ -355,7 +439,7 @@ bool wso_device::UsbPort::receive(unsigned char epid, unsigned char* buff, unsig
 			else {
 				// If the timeout (default 5 seconds) occurred, FT_ReadPipe returns with
 				// an error code FT_TIMEOUT.
-				LogDebug() << "FT_ReadPipe() returned with error: " << ret;
+				LogDebug() << "FT_ReadPipe() returned with error: " << getFtStatusName(ret) << " (" << ret << ")";
 				break;
 			}
 		}
@@ -363,7 +447,7 @@ bool wso_device::UsbPort::receive(unsigned char epid, unsigned char* buff, unsig
 	catch (...) {
 		throw runtime_error("FT_ReadPipe() error!");
 	}
-	LogDebug() << "UsbPort::receive() failed!, epid=%x" << epid;
+	LogDebug() << "UsbPort::receive() failed!, epid: " << static_cast<int>(epid);
 
 	FT_AbortPipe(impl().handle, epid);
 	setPipeError(epid, true);
@@ -417,14 +501,14 @@ bool wso_device::UsbPort::receive2(unsigned char epid, unsigned char* buff, unsi
 					}
 				}
 				else {
-					LogDebug() << "FT_GetOverlappedResult() returned with error: " << ftStatus;
+					LogDebug() << "FT_GetOverlappedResult() returned with error: " << getFtStatusName(ftStatus) << " (" << ftStatus << ")";
 					break;
 				}
 			}
 			else {
 				// If the timeout (default 5 seconds) occurred, FT_ReadPipe returns with
 				// an error code FT_TIMEOUT.
-				LogDebug() << "FT_ReadPipe() returned with error: " << ftStatus;
+				LogDebug() << "FT_ReadPipe() returned with error: " << getFtStatusName(ftStatus) << " (" << ftStatus << ")";
 				break;
 			}
 		}
@@ -483,7 +567,7 @@ bool wso_device::UsbPort::send(unsigned char* buff, unsigned long size, bool che
 				}
 			}
 			else {
-				LogDebug() << "FT_WritePipe() returned with error: " << ret;
+				LogDebug() << "FT_WritePipe() returned with error: " << getFtStatusName(ret) << " (" << ret << ")";
 				break;
 			}
 		}
@@ -491,7 +575,7 @@ bool wso_device::UsbPort::send(unsigned char* buff, unsigned long size, bool che
 	catch (...) {
 		throw runtime_error("FT_WritePipe() error!");
 	}
-	LogDebug() << "UsbPort::send() failed!, epid=%x" << epid;
+	LogDebug() << "UsbPort::send() failed!, epid: " << static_cast<int>(epid);
 
 	FT_AbortPipe(impl().handle, epid);
 	setPipeError(epid, true);

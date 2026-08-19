@@ -75,6 +75,35 @@ namespace WsoNativeLib
             LowerLeftRight = 0x07
         }
 
+        public enum IrCameraMirrorMode : int
+        {
+            MirrorOff = 0x00,
+            MirrorOn = 0x01
+        }
+
+        public enum IrCameraOutputMode : int
+        {
+            Normal = 0x00,
+            TestPattern = 0x01
+        }
+
+        public enum IrCameraTestPattern : int
+        {
+            Standard = 0x00,
+            TopBottomBar = 0x04, 
+            LeftRightBar = 0x08,
+            Random = 0x01,
+            Square = 0x12, 
+            Black = 0x03
+        }
+
+        public enum IrCameraTestOption : int
+        {
+            None = 0x00,    
+            RollingBar = 0x40,
+            Transparent = 0x80 
+        }
+
         public enum QldApcMode : int
         {
             APC_MODE = 0,

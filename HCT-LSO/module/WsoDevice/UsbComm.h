@@ -167,7 +167,7 @@ namespace wso_device
 		bool GalvanoRasterFastX(std::uint16_t tid, std::uint16_t lines, std::int16_t xoffs, std::int16_t yoffs);
 		bool GalvanoRasterFastY(std::uint16_t tid, std::uint16_t lines, std::int16_t xoffs, std::int16_t yoffs);
 
-		bool LcdFixationControl(std::uint8_t row, std::uint8_t col);
+		bool LcdFixationControl(std::uint16_t row, std::uint16_t col);
 		bool LcdFixationParameters(std::uint8_t bright, std::uint8_t blink, std::uint16_t period, std::uint16_t ontime, std::uint8_t type);
 
 		bool FpgaWrite(std::uint32_t buff_addr, std::uint32_t flash_addr, std::uint32_t size, std::uint32_t calc_crc);

@@ -159,7 +159,7 @@ namespace wso_board
         S32 GreenFAF_Pos;
         S32 ICGA_Pos;
         S32 Reserved;
-    } LsoFilter_CaplPos_st;
+    } LsoFilter_CalPos_st;
     
     typedef struct {
         U32 crc;
@@ -170,7 +170,7 @@ namespace wso_board
         S32 oct_focus_motor_0D_pos;
         InOutPos_st ReturnMirrorPos;
         InOutPos_st OCT_AntLensPos; // OCT Anterior Lens position.
-        LsoFilter_CaplPos_st LsoFilter_CalPos;
+        LsoFilter_CalPos_st LsoFilter_CalPos;
     } MotorCalPos_st;
     
     typedef struct {

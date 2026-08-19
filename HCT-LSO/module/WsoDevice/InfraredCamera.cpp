@@ -36,11 +36,16 @@ struct InfraredCamera::InfraredCameraImpl
 
 	IrCameraType type;
 	IrCameraViewPreset preset;
+	IrCameraMirrorMode horzFlip[4];
+	IrCameraMirrorMode vertFlip[4];
+	IrCameraOutputMode outputMode[4];
+	IrCameraTestPattern testPattern[4];
+	int patternOption[4];
 	mutex mutexLock;
 
 	InfraredCameraImpl() : board(nullptr), playing(false), workerRunning(false), initiated(false), errorCount(0), frameCount(0),
-		frameWidth(IR_CAMERA_FRAME_WIDTH), frameHeight(IR_CAMERA_FRAME_HEIGHT), 
-		type(IrCameraType::RETINA), preset(IrCameraViewPreset::DEFAULT), epid(USB_IR1_PID), usbComm(nullptr)
+		frameWidth(IR_CAMERA_FRAME_WIDTH), frameHeight(IR_CAMERA_FRAME_HEIGHT), epid(USB_IR1_PID), usbComm(nullptr),
+		type(IrCameraType::RETINA), preset(IrCameraViewPreset::DEFAULT)
 	{
 		implementInfraredCameraImpl();
 	}
@@ -50,6 +55,11 @@ struct InfraredCamera::InfraredCameraImpl
 		for (int i = 0; i < 4; i++) {
 			again[i] = IR_CAMERA_AGAIN_INIT;
 			dgain[i] = IR_CAMERA_DGAIN_INIT;
+			horzFlip[i] = IrCameraMirrorMode::MIRROR_OFF;
+			vertFlip[i] = IrCameraMirrorMode::MIRROR_OFF;
+			outputMode[i] = IrCameraOutputMode::NORMAL;
+			testPattern[i] = IrCameraTestPattern::STANDARD;
+			patternOption[i] = 0;
 		}
 	}
 };
@@ -117,11 +127,21 @@ bool wso_device::InfraredCamera::play(void)
 		return false;
 	}
 
-	pause();
-	
+	// Only stop when there is something to stop. An unconditional pause() puts a
+	// camera-off command on the wire immediately before the camera-on below.
+	if (isPlaying() || impl().worker.joinable()) {
+		pause();
+	}
+
+	// Program the sensor gains before enabling the stream, not after.
+	applyGainSettings();
+
 	UsbComm& usbComm = *impl().usbComm;
 	auto type = getCameraType();
-	bool ret = usbComm.IrCameraControl(static_cast<unsigned char>(type), CTRL_ON);
+	if (!usbComm.IrCameraControl(static_cast<unsigned char>(type), CTRL_ON)) {
+		LogD() << getCameraName() << ", failed to turn camera on";
+		return false;
+	}
 
 	// Set before spawning so a pause() that races right after play() reliably
 	// observes the worker as alive and waits for it (see pause()).
@@ -130,7 +150,7 @@ bool wso_device::InfraredCamera::play(void)
 	impl().errorCount = 0;
 	impl().frameCount = 0;
 	impl().worker = thread{ &InfraredCamera::acquireCameraStream, this };
-	return ret;
+	return true;
 }
 
 
@@ -144,29 +164,32 @@ void wso_device::InfraredCamera::pause(void)
 	impl().playing = false;
 
 	if (impl().worker.joinable()) {
-		// The acquisition worker may be blocked inside a synchronous FT_ReadPipe
-		// that never returns when the camera is not streaming (the read path does
-		// not honor the pipe timeout). Clearing 'playing' is not enough: the worker
-		// only re-checks it between reads. Abort the read pipe so the pending
-		// transfer fails fast, letting the worker observe playing==false and exit.
-		// Once the first abort makes a read fail, the pipe is flagged unavailable
-		// and any subsequent read fast-fails, so the worker exits within an
-		// iteration or two. The loop is BOUNDED on purpose: if the driver does not
-		// unblock the in-flight synchronous read, this degrades to a plain join()
-		// (same as before) rather than spinning on abort forever.
-		constexpr int IR_CAMERA_PAUSE_ABORT_MAX = 250;  // ~5s ceiling (250 x 20ms)
-		UsbPort* port = impl().usbComm->getUsbPort();
-		for (int i = 0; i < IR_CAMERA_PAUSE_ABORT_MAX && impl().workerRunning; i++) {
-			port->abortPipe(impl().epid);
+		// Let the worker drain and exit on its own. It re-checks 'playing' between
+		// reads, and its reads are chunked against a pipe left at the driver's
+		// default timeout, so it returns within one chunk timeout even when the
+		// camera is sending nothing at all. Cancelling the pending read instead
+		// would make it fail with FT_OPERATION_ABORTED, which is indistinguishable
+		// in the log from a real I/O fault.
+		constexpr int IR_CAMERA_DRAIN_WAIT_MAX = 300;  // ~6s ceiling (300 x 20ms)
+		for (int i = 0; i < IR_CAMERA_DRAIN_WAIT_MAX && impl().workerRunning; i++) {
 			std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		}
-		impl().worker.join();
 
-		// The abort above makes the pending read fail, which flags the pipe as
-		// errored (UsbPort::receive). That failure was intentional, not an I/O
-		// fault, so clear the flag ? otherwise the pipe would report unavailable
-		// and the next play() could never read a frame again.
-		port->setPipeError(impl().epid, false);
+		if (impl().workerRunning) {
+			// Fallback only, for a driver that does not honor the pipe timeout:
+			// abort to unblock the read. The FT_OPERATION_ABORTED that results is
+			// expected here. Clear the pipe-error flag afterwards in case something
+			// latched it, otherwise the next play() would never read a frame again.
+			constexpr int IR_CAMERA_ABORT_MAX = 100;  // ~2s ceiling (100 x 20ms)
+			UsbPort* port = impl().usbComm->getUsbPort();
+			LogD() << getCameraName() << ", acquisition worker did not drain, aborting read pipe";
+			for (int i = 0; i < IR_CAMERA_ABORT_MAX && impl().workerRunning; i++) {
+				port->abortPipe(impl().epid);
+				std::this_thread::sleep_for(std::chrono::milliseconds(20));
+			}
+			port->setPipeError(impl().epid, false);
+		}
+		impl().worker.join();
 	}
 
 	UsbComm& usbComm = *impl().usbComm;
@@ -217,6 +240,13 @@ bool wso_device::InfraredCamera::setMirrorMode(IrCameraId camId, IrCameraMirrorM
 	auto h = static_cast<unsigned char>(hflip);
 	auto v = static_cast<unsigned char>(vflip);
 	auto result = usbComm.IrCameraMirrorMode(cid, h, v);
+	LogD() << "IR camera id: " << static_cast<int>(camId) << ", set mirror mode, hflip: " << static_cast<int>(hflip) << ", vflip: " << static_cast<int>(vflip) << ", result: " << result;
+
+	if (result) {
+		auto index = getCameraIndex(camId);
+		impl().horzFlip[index] = hflip;
+		impl().vertFlip[index] = vflip;
+	}
 	return result;
 }
 
@@ -227,7 +257,53 @@ bool wso_device::InfraredCamera::setOutputMode(IrCameraId camId, IrCameraOutputM
 	auto m = static_cast<unsigned char>(mode);
 	auto p = static_cast<unsigned char>(pattern);
 	auto result = usbComm.IrCameraOutputMode(cid, m, p);
+	LogD() << "IR camera id: " << static_cast<int>(camId) << ", set output mode: " << static_cast<int>(mode) << ", test pattern: " << static_cast<int>(pattern) << ", result: " << result;
+
+	if (result) {
+		auto index = getCameraIndex(camId);
+		impl().outputMode[index] = mode;
+		impl().testPattern[index] = pattern;
+		impl().patternOption[index] = 0;
+	}
 	return result;
+}
+
+bool wso_device::InfraredCamera::setOutputMode(IrCameraId camId, IrCameraOutputMode mode, IrCameraTestPattern pattern, int option)
+{
+	UsbComm& usbComm = *impl().usbComm;
+	auto cid = static_cast<unsigned char>(camId);
+	auto m = static_cast<unsigned char>(mode);
+	auto p = static_cast<unsigned char>(pattern);
+	auto o = static_cast<unsigned char>(option);
+
+	auto flag = p | o;
+	auto result = usbComm.IrCameraOutputMode(cid, m, flag);
+	LogD() << "IR camera id: " << static_cast<int>(camId) << ", set output mode: " << static_cast<int>(mode) << ", test pattern: " << static_cast<int>(pattern) << ", option: " << option << ", result: " << result;
+
+	if (result) {
+		auto index = getCameraIndex(camId);
+		impl().outputMode[index] = mode;
+		impl().testPattern[index] = pattern;
+		impl().patternOption[index] = option;
+	}
+	return result;
+}
+
+void wso_device::InfraredCamera::getMirrorMode(IrCameraId camId, IrCameraMirrorMode& hflip, IrCameraMirrorMode& vflip) const
+{
+	auto index = getCameraIndex(camId);
+	hflip = impl().horzFlip[index];
+	vflip = impl().vertFlip[index];
+	return;
+}
+
+void wso_device::InfraredCamera::getOutputMode(IrCameraId camId, IrCameraOutputMode & mode, IrCameraTestPattern & pattern, int & option) const
+{
+	auto index = getCameraIndex(camId);
+	mode = impl().outputMode[index];
+	pattern = impl().testPattern[index];
+	option = impl().patternOption[index];
+	return;
 }
 
 bool wso_device::InfraredCamera::setAnalogGain(IrCameraId camId, float gain, bool control)
@@ -240,15 +316,15 @@ bool wso_device::InfraredCamera::setAnalogGain(IrCameraId camId, float gain, boo
 	impl().again[index] = gain;
 
 	if (control) {
-		unsigned char data = getAnalogGainData(gain);
+		auto data = getAnalogGainData(gain);
 
 		UsbComm& usbComm = *impl().usbComm;
 		bool ret = usbComm.IrCameraAnalogGain(static_cast<unsigned char>(camId), (uint8_t)data);
 		if (ret) {
-			LogDebug() << "Ir camera id: " << static_cast<int>(camId) << ", set analog gain, value: " << gain;
+			LogDebug() << "Ir camera id: " << static_cast<int>(camId) << ", set a-gain, value: " << gain;
 		}
 		else {
-			LogDebug() << "Ir camera id: " << static_cast<int>(camId) << ", set analog gain failed!";
+			LogDebug() << "Ir camera id: " << static_cast<int>(camId) << ", set a-gain failed!";
 		}
 		return ret;
 	}
@@ -263,28 +339,19 @@ bool wso_device::InfraredCamera::setDigitalGain(IrCameraId camId, float gain, bo
 		return false;
 	}
 
-	gain = (gain < IR_CAMERA_DGAIN_MIN ? IR_CAMERA_DGAIN_MIN : gain);
-	gain = (gain > IR_CAMERA_DGAIN_MAX ? IR_CAMERA_DGAIN_MAX : gain);
-
 	auto index = getCameraIndex(camId);
 	impl().dgain[index] = gain;	
 
 	if (control) {
-		// dgain = x + y * 2^-5
-		// bit (7:5) = x
-		// bit (4:0) = y
-		unsigned char x, y;
-		x = static_cast<unsigned char>(std::floor(gain));
-		y = static_cast<unsigned char>((gain - x) * 32);
-		unsigned char data = (x << 5) + y;
+		auto data = getDigitalGainData(gain);
 
 		UsbComm& usbComm = *impl().usbComm;
 		bool ret = usbComm.IrCameraDigitalGain(static_cast<unsigned char>(camId), data);
 		if (ret) {
-			LogDebug() << "Ir camera id: " << static_cast<int>(camId) << ", set digital gain, value: " << gain;
+			LogDebug() << "IR camera id: " << static_cast<int>(camId) << ", set d-gain, value: " << gain;
 		}
 		else {
-			LogDebug() << "Ir camera id: " << static_cast<int>(camId) << ", set digital gain failed!";
+			LogDebug() << "IR camera id: " << static_cast<int>(camId) << ", set d-gain failed!";
 		}
 		return ret;
 	}
@@ -307,9 +374,17 @@ float wso_device::InfraredCamera::getDigitalGain(IrCameraId camId) const
 	return gain;
 }
 
-
 std::uint8_t wso_device::InfraredCamera::getAnalogGainData(float gain) const
 {
+	auto value = (uint8_t)gain;
+	const int AGAIN_MIN = 1;
+	const int AGAIN_MAX = 31;
+
+	value = (value < AGAIN_MIN ? AGAIN_MIN : value);
+	value = (value > AGAIN_MAX ? AGAIN_MAX : value);
+	return value;
+
+	/*
 	// bit (7:5) : ignore
 	// bit (4)   : second stage (0:1x), (1:1.25x)
 	// bit (3:0) : first stage (1:1x), (2:2x), (4:4x), (8:8x
@@ -346,16 +421,26 @@ std::uint8_t wso_device::InfraredCamera::getAnalogGainData(float gain) const
 	}
 	unsigned char data = first + second;
 	return data;
+	*/
 }
 
 
 std::uint8_t wso_device::InfraredCamera::getDigitalGainData(float gain) const
 {
+	auto value = (uint8_t)gain;
+	const int DGAIN_MIN = 1;
+	const int DGAIN_MAX = 15;
+
+	value = (value < DGAIN_MIN ? DGAIN_MIN : value);
+	value = (value > DGAIN_MAX ? DGAIN_MAX : value);
+	return value;
+	/*
 	unsigned char x, y;
 	x = static_cast<unsigned char>(std::floor(gain));
 	y = static_cast<unsigned char>((gain - x) * 32);
 	unsigned char data = (x << 5) + y;
 	return data;
+	*/
 }
 
 bool wso_device::InfraredCamera::isRetinaCamera(void) const
@@ -505,6 +590,11 @@ void wso_device::InfraredCamera::acquireCameraStream(void)
 	// the read pipe and join without blocking.
 	impl().workerRunning = false;
 	return;
+}
+
+bool wso_device::InfraredCamera::applyGainSettings(void)
+{
+	return true;
 }
 
 bool wso_device::InfraredCamera::handleFrameData(int index, unsigned char* frameData)

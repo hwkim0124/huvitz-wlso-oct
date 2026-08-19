@@ -388,6 +388,23 @@ bool wso_config::SysConfigFile::loadSectionOfCamera(CameraSettings* cset, tinyxm
 			return false;
 		}
 	}
+
+	items = group->FirstChildElement("RetinaIr");
+	if (items != nullptr)
+	{
+		child = items->FirstChild();
+		if (child != nullptr && (elem = child->ToElement()) != nullptr) {
+			if (checkXMLResult(elem->QueryFloatAttribute("again", &fValue))) {
+				cset->setRetinaAgain(fValue);
+			}
+			if (checkXMLResult(elem->QueryFloatAttribute("dgain", &fValue))) {
+				cset->setRetinaDgain(fValue);
+			}
+		}
+		else {
+			return false;
+		}
+	}
 	return true;
 }
 
@@ -713,6 +730,14 @@ bool wso_config::SysConfigFile::saveSectionOfCamera(const CameraSettings* cset, 
 	list->LinkEndChild(item);
 	item->SetAttribute("again", cset->getCorneaAgain(CameraType::IR_CORNEA_LOWER));
 	item->SetAttribute("dgain", cset->getCorneaDgain(CameraType::IR_CORNEA_LOWER));
+
+	list = pdoc->NewElement("RetinaIr");
+	group->LinkEndChild(list);
+
+	item = pdoc->NewElement("Retina");
+	list->LinkEndChild(item);
+	item->SetAttribute("again", cset->getRetinaAgain());
+	item->SetAttribute("dgain", cset->getRetinaDgain());
 	return true;
 }
 

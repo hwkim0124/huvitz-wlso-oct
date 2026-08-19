@@ -47,7 +47,21 @@ namespace WsoNativeLib
         [return: MarshalAs(UnmanagedType.I1)]
         private static extern bool setCorneaCameraDgain(int type, float value);
 
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool setCorneaCameraOutputMode(int type, int mode, int pattern, int option);
 
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool setCorneaCameraMirrorMode(int type, int horzFlip, int vertFlip);
+
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool getCorneaCameraMirrorMode(int type, out int horzFlip, out int vertFlip);
+
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool getCorneaCameraOutputMode(int type, out int mode, out int pattern, out int option);
 
 
         // Public methods
@@ -91,5 +105,35 @@ namespace WsoNativeLib
         {
             return setCorneaCameraDgain((int)type, value);
         }
+
+        public static bool SetOutputMode(CameraType type, IrCameraOutputMode mode, IrCameraTestPattern pattern, int option)
+        {
+            return setCorneaCameraOutputMode((int)type, (int)mode, (int)pattern, option);
+        }
+
+        public static bool SetMirrorMode(CameraType type, IrCameraMirrorMode horzFlip, IrCameraMirrorMode vertFlip)
+        {
+            return setCorneaCameraMirrorMode((int)type, (int)horzFlip, (int)vertFlip);
+        }
+
+        public static bool GetMirrorMode(CameraType type, out IrCameraMirrorMode horzFlip, out IrCameraMirrorMode vertFlip)
+        {
+            int horz, vert;
+            bool result = getCorneaCameraMirrorMode((int)type, out horz, out vert);
+            horzFlip = (IrCameraMirrorMode)horz;
+            vertFlip = (IrCameraMirrorMode)vert;
+            return result;
+        }
+
+        public static bool GetOutputMode(CameraType type, out IrCameraOutputMode mode, out IrCameraTestPattern pattern, out int option)
+        {
+            int m, p, o;
+            bool result = getCorneaCameraOutputMode((int)type, out m, out p, out o);
+            mode = (IrCameraOutputMode)m;
+            pattern = (IrCameraTestPattern)p;
+            option = (int)o;
+            return result;
+        }
+
     }
 }

@@ -109,6 +109,19 @@ bool wso_system::Configuration::applySystemConfiguration(void)
 				}
 			}
 		}
+
+		if (auto* camera = config->getCameraSettings(); camera) {
+			if (auto* board = Hardware::getInstance()->getMainBoard(); board) {
+				if (auto* cornea = board->getCorneaCamera(); cornea) {
+					auto param = camera->getCorneaCameraConfigParam();
+					cornea->applyConfigParameters(*param);
+				}
+				if (auto* retina = board->getRetinaCamera(); retina) {
+					auto param = camera->getRetinaCameraConfigParam();
+					retina->applyConfigParameters(*param);
+				}
+			}
+		}
 		/*
 		if (auto* camera = config->getCameraSetting(); camera) {
 			if (auto* board = Hardware::getInstance()->getMainBoard(); board) {

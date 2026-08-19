@@ -48,6 +48,7 @@ namespace wso_device
 
 		bool receive(unsigned char epid, unsigned char* buff, unsigned long size, bool check = true);
 		bool receive2(unsigned char epid, unsigned char* buff, unsigned long size, bool check = true);
+		bool receiveStream(unsigned char epid, unsigned char* buff, unsigned long size);
 		bool send(unsigned char* buff, unsigned long size, bool check = true);
 
 	protected:

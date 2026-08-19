@@ -31,6 +31,18 @@ namespace WsoNativeLib
         }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+        public struct RetinaCameraConfigParam
+        {
+            public float again;
+            public float dgain;
+            public RetinaCameraConfigParam()
+            {
+                again = 1.0f;
+                dgain = 1.0f;
+            }
+        }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
         public struct FixationPoint
         {
             public int x;

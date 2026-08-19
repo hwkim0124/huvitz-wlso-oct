@@ -144,17 +144,25 @@ namespace wso_domain
 	enum class IrCameraOutputMode : unsigned char
 	{
 		NORMAL = 0x00,
-		TEST = 0x01,
-		NUMBER_OF_ITEMS = (TEST + 1)
+		TEST_PATTERN = 0x01,
+		NUMBER_OF_ITEMS = (TEST_PATTERN + 1)
 	};
 
 	enum class IrCameraTestPattern : unsigned char
 	{
-		TYPE1 = 0x00,
-		TYPE2 = 0x01,
-		TYPE3 = 0x02,
-		TYPE4 = 0x03,
-		NUMBER_OF_ITEMS = (TYPE4 + 1)
+		STANDARD = 0x00,
+		TOP_BOTTOM_BAR = 0x04,
+		LEFT_RIGHT_BAR = 0x08,
+		RANDOM = 0x01,
+		SQUARE = 0x12,
+		BLACK = 0x03
+	};
+
+	enum class IrCameraTestOption : unsigned char
+	{
+		NONE = 0x00,
+		ROLLING_BAR_FLAG = 0x40, 
+		TRANSPARENT_FLAG = 0x80 
 	};
 
 	enum class IrAnteriorViewWidth : unsigned int

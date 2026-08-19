@@ -47,20 +47,58 @@ bool wso_device::CorneaCamera::initializeCorneaCamera(void)
 	if (!InfraredCamera::initializeInfraredCamera()) {
 		return false;
 	}
+	// The anterior stream is the merged one, so this camera owns the stitch mask.
+	// LOWER_LEFT_RIGHT selects all three sensors.
 	setActiveViewPreset(IrCameraViewPreset::LOWER_LEFT_RIGHT);
+	setMirrorMode(IrCameraId::CORNEA_LEFT, IrCameraMirrorMode::MIRROR_OFF, IrCameraMirrorMode::MIRROR_OFF);
+	setMirrorMode(IrCameraId::CORNEA_RIGHT, IrCameraMirrorMode::MIRROR_OFF, IrCameraMirrorMode::MIRROR_OFF);
+	setMirrorMode(IrCameraId::CORNEA_LOWER, IrCameraMirrorMode::MIRROR_OFF, IrCameraMirrorMode::MIRROR_OFF);
+
+	setOutputMode(IrCameraId::CORNEA_LEFT, IrCameraOutputMode::NORMAL, IrCameraTestPattern::STANDARD, 0);
+	setOutputMode(IrCameraId::CORNEA_RIGHT, IrCameraOutputMode::NORMAL, IrCameraTestPattern::STANDARD, 0);
+	setOutputMode(IrCameraId::CORNEA_LOWER, IrCameraOutputMode::NORMAL, IrCameraTestPattern::STANDARD, 0);
 	// loadParamsFromProfile();
 	return true;
 }
 
+void wso_device::CorneaCamera::applyConfigParameters(CorneaCameraConfigParam param)
+{
+	setAnalogGain(IrCameraId::CORNEA_LEFT, param.again_left, true);
+	setAnalogGain(IrCameraId::CORNEA_RIGHT, param.again_right, true);
+	setAnalogGain(IrCameraId::CORNEA_LOWER, param.again_lower, true);
+
+	setDigitalGain(IrCameraId::CORNEA_LEFT, param.dgain_left, true);
+	setDigitalGain(IrCameraId::CORNEA_RIGHT, param.dgain_right, true);
+	setDigitalGain(IrCameraId::CORNEA_LOWER, param.dgain_lower, true);
+	return;
+}
+
+bool wso_device::CorneaCamera::applyGainSettings(void)
+{
+	constexpr IrCameraId camIds[] = { IrCameraId::CORNEA_LOWER, IrCameraId::CORNEA_LEFT, IrCameraId::CORNEA_RIGHT };
+
+	bool result = true;
+	for (auto camId : camIds) {
+		auto again = getAnalogGain(camId);
+		auto dgain = getDigitalGain(camId);
+		result = InfraredCamera::setAnalogGain(camId, again, true) && result;
+		result = InfraredCamera::setDigitalGain(camId, dgain, true) && result;
+	}
+	return result;
+}
 
 bool wso_device::CorneaCamera::handleFrameData(int index, unsigned char* frameData)
 {
-	static auto image = vector<uint8_t>(IR_CAMERA_IMAGE_WIDTH * IR_CAMERA_IMAGE_HEIGHT);
 	auto frame_h = getFrameHeight();
 
 	if (!InfraredCamera::handleFrameData(index, frameData)) {
 		LogD() << "Ir anterior camera, handle frame data invalid!";
 	}
+
+	static auto image = vector<uint8_t>(IR_CAMERA_IMAGE_WIDTH * IR_CAMERA_IMAGE_HEIGHT);
+	static auto img_lower = vector<uint8_t>(IR_CAMERA_IMAGE_WIDTH * IR_CAMERA_IMAGE_HEIGHT);
+	static auto img_left = vector<uint8_t>(IR_CAMERA_IMAGE_WIDTH * IR_CAMERA_IMAGE_HEIGHT);
+	static auto img_right = vector<uint8_t>(IR_CAMERA_IMAGE_WIDTH * IR_CAMERA_IMAGE_HEIGHT);
 
 	for (uint32_t i = 0; i < frame_h; i++) {
 		copy(frameData + i * IR_CAMERA_FRAME_WIDTH + IR_CAMERA_FRAME_PADD_SIZE, frameData + (i + 1) * IR_CAMERA_FRAME_WIDTH, image.begin() + i * IR_CAMERA_IMAGE_WIDTH);
@@ -71,17 +109,20 @@ bool wso_device::CorneaCamera::handleFrameData(int index, unsigned char* frameDa
 		(preset == IrCameraViewPreset::LOWER_LEFT && index == 0) || 
 		(preset == IrCameraViewPreset::LOWER_RIGHT && index == 0) || 
 	    (preset == IrCameraViewPreset::LOWER_LEFT_RIGHT && index == 0)) {
-		CallbackRegistry::getInstance()->runCorneaLowerCameraFrameCaptured(image.data(), IR_CAMERA_IMAGE_WIDTH, IR_CAMERA_IMAGE_HEIGHT);
+		img_lower.assign(image.begin(), image.end());
+		CallbackRegistry::getInstance()->runCorneaLowerCameraFrameCaptured(img_lower.data(), IR_CAMERA_IMAGE_WIDTH, IR_CAMERA_IMAGE_HEIGHT);
 	}
 	else if ((preset == IrCameraViewPreset::LEFT_ONLY && index == 0) ||
 		(preset == IrCameraViewPreset::LOWER_LEFT && index == 1) ||
 		(preset == IrCameraViewPreset::LOWER_LEFT_RIGHT && index == 1)) {
-		CallbackRegistry::getInstance()->runCorneaLeftCameraFrameCaptured(image.data(), IR_CAMERA_IMAGE_WIDTH, IR_CAMERA_IMAGE_HEIGHT);
+		img_left.assign(image.begin(), image.end());
+		CallbackRegistry::getInstance()->runCorneaLeftCameraFrameCaptured(img_left.data(), IR_CAMERA_IMAGE_WIDTH, IR_CAMERA_IMAGE_HEIGHT);
 	}
 	else if ((preset == IrCameraViewPreset::RIGHT_ONLY && index == 0) ||
 		(preset == IrCameraViewPreset::LOWER_RIGHT && index == 1) ||
 		(preset == IrCameraViewPreset::LOWER_LEFT_RIGHT && index == 2)) {
-		CallbackRegistry::getInstance()->runCorneaRightCameraFrameCaptured(image.data(), IR_CAMERA_IMAGE_WIDTH, IR_CAMERA_IMAGE_HEIGHT);
+		img_right.assign(image.begin(), image.end());
+		CallbackRegistry::getInstance()->runCorneaRightCameraFrameCaptured(img_right.data(), IR_CAMERA_IMAGE_WIDTH, IR_CAMERA_IMAGE_HEIGHT);
 	}
 	return true;
 }

@@ -28,6 +28,17 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::obtainCorneaCameraConfigParam(Corne
 	return false;
 }
 
+bool WSOSYSTEM_DLL_API __stdcall wso_system::obtainRetinaCameraConfigParam(RetinaCameraConfigParam* param)
+{
+	if (auto* config = SystemConfig::getInstance(); config) {
+		if (auto* data = config->getCameraSettings()->getRetinaCameraConfigParam(); data) {
+			*param = *data;
+			return true;
+		}
+	}
+	return false;
+}
+
 void WSOSYSTEM_DLL_API __stdcall wso_system::submitInternalFixationPreset(InternalFixationPreset param)
 {
 	if (auto* config = SystemConfig::getInstance(); config) {
@@ -41,6 +52,14 @@ void WSOSYSTEM_DLL_API __stdcall wso_system::submitCorneaCameraConfigParam(Corne
 {
 	if (auto* config = SystemConfig::getInstance(); config) {
 		config->getCameraSettings()->setCorneaCameraConfigParam(param);
+	}
+	return;
+}
+
+void WSOSYSTEM_DLL_API __stdcall wso_system::submitRetinaCameraConfigParam(RetinaCameraConfigParam param)
+{
+	if (auto* config = SystemConfig::getInstance(); config) {
+		config->getCameraSettings()->setRetinaCameraConfigParam(param);
 	}
 	return;
 }

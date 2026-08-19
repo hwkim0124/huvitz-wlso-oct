@@ -28,10 +28,6 @@ namespace WsoToolkit
         FocusMotorWindow? _focusMotorWindow = null;
         StageMotorWindow? _stageMotorWindow = null;
 
-        private void InitializeWindowControls()
-        {
-            GetCorneaCameraConfig();
-        }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// Cornea Camera
@@ -47,11 +43,27 @@ namespace WsoToolkit
             corneaPreview3.Callback = _onCorneaLowerFrameCaptured;
 
             CorneaCamera.StartPreview(_onCorneaLeftFrameCaptured, _onCorneaRightFrameCaptured, _onCorneaLowerFrameCaptured);
+            cmbViewFormat.IsEnabled = false;
+            cmbHorzFlip.IsEnabled = false;
+            cmbVertFlip.IsEnabled = false;
+            cmbOutputMode.IsEnabled = false;
+            cmbTestPattern.IsEnabled = false;
+
+            checkRollingBar.IsEnabled = false;
+            checkTransparent.IsEnabled = false;
         }
 
         public void CloseCorneaCameraPreview()
         {
             CorneaCamera.ClosePreview();
+            cmbViewFormat.IsEnabled = true;
+            cmbHorzFlip.IsEnabled = true;
+            cmbVertFlip.IsEnabled = true;
+            cmbOutputMode.IsEnabled = true;
+            cmbTestPattern.IsEnabled = true;
+
+            checkRollingBar.IsEnabled = true;
+            checkTransparent.IsEnabled = true;
         }
 
         public bool IsCorneaCameraPreviewing()
@@ -59,40 +71,119 @@ namespace WsoToolkit
             return CorneaCamera.IsPreviewing();
         }
 
-        private void GetCorneaCameraConfig()
+        private void ReflectCorneaChannelControls()
         {
-            var dgain = CorneaCamera.GetDigitalGain(CameraType.IrCorneaLeft);
-            var again = CorneaCamera.GetAnalogGain(CameraType.IrCorneaLeft);
-            editCorneaAgain1.Text = again.ToString("F1");
-            editCorneaDgain1.Text = dgain.ToString("F1");
+            var cameraType = GetCameraTypeSelected();
 
-            dgain = CorneaCamera.GetDigitalGain(CameraType.IrCorneaRight);
-            again = CorneaCamera.GetAnalogGain(CameraType.IrCorneaRight);
-            editCorneaAgain2.Text = again.ToString("F1");
-            editCorneaDgain2.Text = dgain.ToString("F1");
+            var again = CorneaCamera.GetAnalogGain(cameraType);
+            var dgain = CorneaCamera.GetDigitalGain(cameraType);
+            var mode = IrCameraOutputMode.Normal;
+            var pattern = IrCameraTestPattern.Standard;
+            var horzFlip = IrCameraMirrorMode.MirrorOff;
+            var vertFlip = IrCameraMirrorMode.MirrorOff;
+            int option = 0;
 
-            dgain = CorneaCamera.GetDigitalGain(CameraType.IrCorneaLower);
-            again = CorneaCamera.GetAnalogGain(CameraType.IrCorneaLower);
-            editCorneaAgain3.Text = again.ToString("F1");
-            editCorneaDgain3.Text = dgain.ToString("F1");
+            CorneaCamera.GetOutputMode(cameraType, out mode, out pattern, out option);
+            CorneaCamera.GetMirrorMode(cameraType, out horzFlip, out vertFlip);
+
+            editCorneaAgain.Text = again.ToString("F0");
+            editCorneaDgain.Text = dgain.ToString("F0");
+            cmbOutputMode.SelectedIndex = (int)mode;
+            cmbTestPattern.SelectedIndex = GetIndexOfTestPattern(pattern);
+            cmbHorzFlip.SelectedIndex = (int)horzFlip;
+            cmbVertFlip.SelectedIndex = (int)vertFlip;
+
+            var rolled = ((option & (int)IrCameraTestOption.RollingBar) == (int)IrCameraTestOption.RollingBar);
+            checkRollingBar.IsChecked = rolled;
+            var trans = ((option & (int)IrCameraTestOption.Transparent) == (int)IrCameraTestOption.Transparent);
+            checkTransparent.IsChecked = trans;
+            return;
         }
 
-        private void SetCorneaCameraConfig()
+        private int GetIndexOfTestPattern(IrCameraTestPattern pattern)
         {
-            var again = ToFloat(editCorneaAgain1.Text);
-            var dgain = ToFloat(editCorneaDgain1.Text);
-            CorneaCamera.SetDigitalGain(CameraType.IrCorneaLeft, dgain);
-            CorneaCamera.SetAnalogGain(CameraType.IrCorneaLeft, again);
+            switch (pattern)
+            {
+                case IrCameraTestPattern.Standard: return 0;
+                case IrCameraTestPattern.TopBottomBar: return 1;
+                case IrCameraTestPattern.LeftRightBar: return 2;
+                case IrCameraTestPattern.Random: return 3;
+                case IrCameraTestPattern.Square: return 4;
+                case IrCameraTestPattern.Black: return 5;
+            }
+            return 0;
+        }
 
-            again = ToFloat(editCorneaAgain2.Text);
-            dgain = ToFloat(editCorneaDgain2.Text);
-            CorneaCamera.SetDigitalGain(CameraType.IrCorneaRight, dgain);
-            CorneaCamera.SetAnalogGain(CameraType.IrCorneaRight, again);
+        private void UpdateCorneaOutputMode()
+        {
+            var type = GetCameraTypeSelected();
 
-            again = ToFloat(editCorneaAgain3.Text);
-            dgain = ToFloat(editCorneaDgain3.Text);
-            CorneaCamera.SetDigitalGain(CameraType.IrCorneaLower, dgain);
-            CorneaCamera.SetAnalogGain(CameraType.IrCorneaLower, again);
+            int mode = cmbOutputMode.SelectedIndex;
+            var pattern = GetTestPatternSelected();
+            var option = GetPatternOptionSelected();
+            if (mode < 0 || pattern < 0)
+            {
+                return;
+            }
+            CorneaCamera.SetOutputMode(type, (IrCameraOutputMode)mode, pattern, option);
+        }
+
+        private void UpdateCorneaMirrorMode()
+        {
+            var type = GetCameraTypeSelected();
+
+            int hflip = cmbHorzFlip.SelectedIndex;
+            int vflip = cmbVertFlip.SelectedIndex;
+            if (hflip < 0 || vflip < 0)
+            {
+                return;
+            }
+            CorneaCamera.SetMirrorMode(type, (IrCameraMirrorMode)hflip, (IrCameraMirrorMode)vflip);
+        }
+
+        private CameraType GetCameraTypeSelected()
+        {
+            int index = cmbCorneaChannel.SelectedIndex;
+            if (index < 0)
+            {
+                throw new InvalidOperationException("No cornea camera channel selected.");
+            }
+            return index switch
+            {
+                0 => CameraType.IrCorneaLower,
+                1 => CameraType.IrCorneaRight,
+                2 => CameraType.IrCorneaLeft,
+                _ => throw new ArgumentOutOfRangeException()
+            };
+        }
+
+        private IrCameraTestPattern GetTestPatternSelected()
+        {
+            int index = cmbTestPattern.SelectedIndex;
+            return index switch
+            {
+                0 => IrCameraTestPattern.Standard,
+                1 => IrCameraTestPattern.TopBottomBar,
+                2 => IrCameraTestPattern.LeftRightBar,
+                3 => IrCameraTestPattern.Random,
+                4 => IrCameraTestPattern.Square,
+                5 => IrCameraTestPattern.Black,
+                _ => IrCameraTestPattern.Standard
+            };
+        }
+
+        private int GetPatternOptionSelected()
+        {
+            int option = 0;
+            if (checkRollingBar.IsChecked == true)
+            {
+                option |= (int)IrCameraTestOption.RollingBar;
+            }
+            if (checkTransparent.IsChecked == true)
+            {
+                option |= (int)IrCameraTestOption.Transparent;
+            }
+            return option;
         }
 
 

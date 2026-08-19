@@ -54,6 +54,13 @@ using namespace wso_board;
 using namespace std;
 
 
+// Startup probe for the IR cameras: poll until the first frame lands rather than
+// always burning the whole window, so a healthy camera costs a few tens of ms and
+// a slow first frame still gets a few seconds before it is called a failure.
+constexpr int IR_CAMERA_PROBE_MAX = 60;		// ~3s ceiling (60 x 50ms)
+constexpr int IR_CAMERA_PROBE_DELAY = 50;
+
+
 struct MainBoard::MainBoardImpl
 {
 	unique_ptr<HbsDataProfile> hbsProfile;
@@ -344,8 +351,11 @@ bool wso_device::MainBoard::initiateRetinaCamera(void)
 
 		if (camera->play()) {
 			bool is_error = false;
-			for (int i = 0; i < 20; i++) {
-				this_thread::sleep_for(chrono::milliseconds(50));
+			for (int i = 0; i < IR_CAMERA_PROBE_MAX; i++) {
+				this_thread::sleep_for(chrono::milliseconds(IR_CAMERA_PROBE_DELAY));
+				if (camera->getFrameCount() > 0) {
+					break;
+				}
 				if (camera->getErrorCount() > 0) {
 					WsoLogWarn("Retina IR camera frame error");
 					warns += 1;
@@ -394,8 +404,11 @@ bool wso_device::MainBoard::initiateCorneaCamera(void)
 
 		if (camera->play()) {
 			bool is_error = false;
-			for (int i = 0; i < 20; i++) {
-				this_thread::sleep_for(chrono::milliseconds(50));
+			for (int i = 0; i < IR_CAMERA_PROBE_MAX; i++) {
+				this_thread::sleep_for(chrono::milliseconds(IR_CAMERA_PROBE_DELAY));
+				if (camera->getFrameCount() > 0) {
+					break;
+				}
 				if (camera->getErrorCount() > 0) {
 					strMessage = std::format("Cornea IR camera frame error");
 					WsoLogWarn(strMessage);

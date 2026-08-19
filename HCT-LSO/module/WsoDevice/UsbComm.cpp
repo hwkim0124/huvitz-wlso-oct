@@ -1730,13 +1730,13 @@ bool wso_device::UsbComm::GalvanoRasterFastY(std::uint16_t tid, std::uint16_t li
 	return sendMsgCmd(msg, reply);
 }
 
-bool wso_device::UsbComm::LcdFixationControl(std::uint8_t row, std::uint8_t col)
+bool wso_device::UsbComm::LcdFixationControl(std::uint16_t row, std::uint16_t col)
 {
 	lock_guard<mutex> lock(impl().mutexControl);
-	MsgCommand* msg = getMsgCommand(CommandType::LCDFIXA, 2);
-	msg->packet.ctrl2.c1 = row;
-	msg->packet.ctrl2.c2 = col;
-	attachCRC(msg->packet.ctrl2.crc);
+	MsgCommand* msg = getMsgCommand(CommandType::LCDFIXA, 4);
+	msg->packet.ctrl14.s1 = row;
+	msg->packet.ctrl14.s2 = col;
+	attachCRC(msg->packet.ctrl14.crc);
 	return sendMsgCmd(msg);
 }
 

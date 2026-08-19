@@ -42,6 +42,9 @@ namespace wso_device
 		IrCameraViewPreset getActiveViewPreset(void) const;
 		bool setMirrorMode(IrCameraId camId, IrCameraMirrorMode hflip, IrCameraMirrorMode vflip);
 		bool setOutputMode(IrCameraId camId, IrCameraOutputMode mode, IrCameraTestPattern pattern);
+		bool setOutputMode(IrCameraId camId, IrCameraOutputMode mode, IrCameraTestPattern pattern, int option);
+		void getMirrorMode(IrCameraId camId, IrCameraMirrorMode& hflip, IrCameraMirrorMode& vflip) const;
+		void getOutputMode(IrCameraId camId, IrCameraOutputMode& mode, IrCameraTestPattern& pattern, int& option) const;
 
 		bool setAnalogGain(IrCameraId camId, float gain, bool control = true);
 		bool setDigitalGain(IrCameraId camId, float gain, bool control = true);
@@ -73,6 +76,9 @@ namespace wso_device
 		MainBoard* getMainBoard(void) const;
 
 		void acquireCameraStream(void);
+		// Pushes the cached gains to the sensor(s) this camera owns. Called from
+		// play() before the stream is enabled; each subclass knows its camera ids.
+		virtual bool applyGainSettings(void);
 		virtual bool handleFrameData(int index, unsigned char* frameData);
 		bool recoverFromUsbError(void);
 		bool isValidFrameHeader(unsigned char* buff);

@@ -2,6 +2,7 @@
 
 #include "WsoDevice2.h"
 #include "InfraredCamera.h"
+#include <SysConfigDefines.h>
 
 
 
@@ -24,6 +25,9 @@ namespace wso_device
 		bool setDigitalGain(float gain, bool control = true);
 		float getAnalogGain(void) const;
 		float getDigitalGain(void) const;
+
+		void applyConfigParameters(RetinaCameraConfigParam param);
+		bool applyGainSettings(void) override;
 
 		bool handleFrameData(int index, unsigned char* frameData) override;
 		bool loadCalibParamFromProfile(void) override;

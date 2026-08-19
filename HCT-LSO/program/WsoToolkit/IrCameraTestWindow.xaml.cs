@@ -15,10 +15,10 @@ using WsoToolkit.utils;
 
 namespace WsoToolkit
 {
+    using static utils.NumberUtil;
+
     public partial class IrCameraTestWindow : Window
     {
-        // bool _isDraggingStarted = false;
-
         public IrCameraTestWindow()
         {
             InitializeComponent();
@@ -34,17 +34,33 @@ namespace WsoToolkit
         {
 
         }
+        
+        private void InitializeWindowControls()
+        {
+            cmbCorneaChannel.ItemsSource = new string[] { "Lower", "Right", "Left" };
+            cmbOutputMode.ItemsSource = new string[] { "Normal", "Test Pattern" };
+            cmbTestPattern.ItemsSource = new string[] { "Standard", "TopBottomBar", "LeftRightBar", "Random", "Square", "Black" };
+            cmbHorzFlip.ItemsSource = new string[] { "Off", "On" };
+            cmbVertFlip.ItemsSource = new string[] { "Off", "On" };
+            cmbViewFormat.ItemsSource = new string[] { "Lower", "Left", "Lower+Left", "Right", "Lower+Right", "Left+Right", "Lower+Left+Right" };
+
+            checkCorneaAlign.IsChecked = false;
+            checkCorneaFocus.IsChecked = false;
+            checkRollingBar.IsChecked = false;
+            checkTransparent.IsChecked = false;
+
+            cmbCorneaChannel.SelectedIndex = 0;
+            cmbViewFormat.SelectedIndex = 6;
+        }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             InitializeWindowControls();
+            ReflectCorneaChannelControls();
 
-            btnStartCamera.Content = "Stop Camera";
-            StartCorneaCameraPreview();
-
-            corneaPreview1.IsOverlayAlignGuide = true;
-            corneaPreview2.IsOverlayAlignGuide = true;
-            corneaPreview3.IsOverlayAlignGuide = true;
+            corneaPreview1.IsOverlayAlignGuide = false;
+            corneaPreview2.IsOverlayAlignGuide = false;
+            corneaPreview3.IsOverlayAlignGuide = false;
 
             corneaPreview1.IsOverlayFocusGuide = false;
             corneaPreview2.IsOverlayFocusGuide= false;
@@ -53,14 +69,6 @@ namespace WsoToolkit
             corneaPreview1.IsStageControlEnabled = true;
             corneaPreview2.IsStageControlEnabled = true;
             corneaPreview3.IsStageControlEnabled = true;
-
-            checkAlignGuide1.IsChecked = true;
-            checkAlignGuide2.IsChecked = true;
-            checkAlignGuide3.IsChecked = true;
-
-            checkFocusGuide1.IsChecked = false;
-            checkFocusGuide2.IsChecked = false;
-            checkFocusGuide3.IsChecked = false;
         }
 
         private void Window_Closed(object sender, EventArgs e)
@@ -146,68 +154,11 @@ namespace WsoToolkit
         
         private void BtnShowConfig_Click(object sender, RoutedEventArgs e)
         {
-            //var window = new SystemConfigWindow { Owner = this };
-            // window.ShowDialog();
-        }
-
-        private void EditCorneaAgain1_KeyDown(object sender, KeyEventArgs e)
-        {
-            SetCorneaCameraConfig();
-        }
-
-        private void EditCorneaDgain1_KeyDown(object sender, KeyEventArgs e)
-        {
-            SetCorneaCameraConfig();
-        }
-
-        private void EditCorneaAgain2_KeyDown(object sender, KeyEventArgs e)
-        {
-            SetCorneaCameraConfig();
-        }
-
-        private void EditCorneaDgain2_KeyDown(object sender, KeyEventArgs e)
-        {
-            SetCorneaCameraConfig();
-        }
-
-        private void EditCorneaAgain3_KeyDown(object sender, KeyEventArgs e)
-        {
-            SetCorneaCameraConfig();
-        }
-
-        private void EditCorneaDgain3_KeyDown(object sender, KeyEventArgs e)
-        {
-            SetCorneaCameraConfig();
-        }
-
-        private void checkAlignGuide1_Click(object sender, RoutedEventArgs e)
-        {
-            corneaPreview1.IsOverlayAlignGuide = checkAlignGuide1.IsChecked == true;
-        }
-
-        private void checkAlignGuide2_Click(object sender, RoutedEventArgs e)
-        {
-            corneaPreview2.IsOverlayAlignGuide = checkAlignGuide2.IsChecked == true;
-        }
-
-        private void checkAlignGuide3_Click(object sender, RoutedEventArgs e)
-        {
-            corneaPreview3.IsOverlayAlignGuide = checkAlignGuide3.IsChecked == true;
-        }
-
-        private void checkFocusGuide1_Click(object sender, RoutedEventArgs e)
-        {
-            corneaPreview1.IsOverlayFocusGuide = checkFocusGuide1.IsChecked == true;
-        }
-
-        private void checkFocusGuide2_Click(object sender, RoutedEventArgs e)
-        {
-            corneaPreview2.IsOverlayFocusGuide = checkFocusGuide2.IsChecked == true;
-        }
-
-        private void checkFocusGuide3_Click(object sender, RoutedEventArgs e)
-        {
-            corneaPreview3.IsOverlayFocusGuide= checkFocusGuide3.IsChecked == true;
+            var window = new SystemConfigurationWindow
+            {
+                Owner = this
+            };
+            window.ShowDialog();
         }
 
         private void BtnSaveFrame_Click(object sender, RoutedEventArgs e)
@@ -216,6 +167,110 @@ namespace WsoToolkit
             corneaPreview2.SaveFrameImage();
             corneaPreview3.SaveFrameImage();
             MsgBoxUtil.ShowInfo("Cornea frame images saved in cornea folder.");
+        }
+
+        private void CmbCorneaChannel_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var comboBox = sender as ComboBox;
+            if (comboBox != null && comboBox.IsDropDownOpen)
+            {
+                ReflectCorneaChannelControls();
+            }
+        }
+
+        private void CmbOutputMode_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var comboBox = sender as ComboBox;
+            if (comboBox != null && comboBox.IsDropDownOpen)
+            {
+                UpdateCorneaOutputMode();
+            }
+        }
+
+        private void CmbTestPattern_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var comboBox = sender as ComboBox;
+            if (comboBox != null && comboBox.IsDropDownOpen)
+            {
+                UpdateCorneaOutputMode();
+            }
+        }
+
+        private void CmbHorzFlip_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var comboBox = sender as ComboBox;
+            if (comboBox != null && comboBox.IsDropDownOpen)
+            {
+                UpdateCorneaMirrorMode();
+            }
+        }
+
+        private void CmbVertFlip_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var comboBox = sender as ComboBox;
+            if (comboBox != null && comboBox.IsDropDownOpen)
+            {
+                UpdateCorneaMirrorMode();
+            }
+        }
+
+        private void CheckCorneaAlign_Click(object sender, RoutedEventArgs e)
+        {
+            corneaPreview1.IsOverlayAlignGuide = checkCorneaAlign.IsChecked == true;
+            corneaPreview2.IsOverlayAlignGuide = checkCorneaAlign.IsChecked == true;
+            corneaPreview3.IsOverlayAlignGuide = checkCorneaAlign.IsChecked == true;
+        }
+
+        private void CheckCorneaFocus_Click(object sender, RoutedEventArgs e)
+        {
+            corneaPreview1.IsOverlayFocusGuide = checkCorneaFocus.IsChecked == true;
+            corneaPreview2.IsOverlayFocusGuide = checkCorneaFocus.IsChecked == true;
+            corneaPreview3.IsOverlayFocusGuide = checkCorneaFocus.IsChecked == true;
+        }
+
+        private void EditCorneaAgain_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                var type = GetCameraTypeSelected();
+                var again = ToFloat(editCorneaAgain.Text);
+                CorneaCamera.SetAnalogGain(type, again);
+            }
+        }
+
+        private void EditCorneaDgain_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                var type = GetCameraTypeSelected();
+                var dgain = ToFloat(editCorneaDgain.Text);
+                CorneaCamera.SetDigitalGain(type, dgain);
+            }
+        }
+
+        private void CmbViewFormat_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            int index = cmbViewFormat.SelectedIndex;
+            if (index < 0)
+            {
+                return;
+            }
+
+            var comboBox = sender as ComboBox;
+            if (comboBox != null && comboBox.IsDropDownOpen)
+            {
+                CorneaCamera.SetCameraViewPreset((WsoDevice.IrCameraViewPreset)(index + 1));
+            }
+        }
+
+        private void CheckRollingBar_Click(object sender, RoutedEventArgs e)
+        {
+            UpdateCorneaOutputMode();
+        }
+
+        private void CheckTransparent_Click(object sender, RoutedEventArgs e)
+        {
+            UpdateCorneaOutputMode();
         }
     }
 }

@@ -42,52 +42,49 @@
 
             <Grid Margin="0,16,8,0">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="30"/>
-                    <ColumnDefinition Width="80"/>
-                    <ColumnDefinition Width="80"/>
-                    <ColumnDefinition Width="80"/>
-                    <ColumnDefinition Width="80"/>
-                    <ColumnDefinition Width="20"/>
+                    <ColumnDefinition Width="16"/>
                     <ColumnDefinition Width="70"/>
                     <ColumnDefinition Width="70"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition/>
+                    <ColumnDefinition Width="50"/>
+                    <ColumnDefinition Width="90"/>
+                    <ColumnDefinition Width="90"/>
+                    <ColumnDefinition Width="60"/>
+                    <ColumnDefinition Width="70"/>
+                    <ColumnDefinition Width="24"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="8"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="12"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="24"/>
                 </Grid.RowDefinitions>
-                <Label x:Name="label301" Content="Cornea Ir - Left" Style="{StaticResource HeaderStyle}" Grid.Row="1" Grid.ColumnSpan="2"/>
-                <Label x:Name="label302" Content="Analog Gain" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="1"/>
-                <TextBox x:Name="editCorneaAgain1" Style="{StaticResource TextBoxStyle}" Grid.Column="2" Grid.Row="2" KeyDown="EditCorneaAgain1_KeyDown"/>
-                <Label x:Name="label303" Content="Digital Gain" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="3"/>
-                <TextBox x:Name="editCorneaDgain1" Style="{StaticResource TextBoxStyle}" Grid.Column="4" Grid.Row="2" KeyDown="EditCorneaDgain1_KeyDown"/>
-                <CheckBox x:Name="checkAlignGuide1" Content="Align" Style="{StaticResource CheckBoxStyle}" Grid.Row="2" Grid.Column="6" Click="checkAlignGuide1_Click"/>
-                <CheckBox x:Name="checkFocusGuide1" Content="Focus" Style="{StaticResource CheckBoxStyle}" Grid.Row="2" Grid.Column="7" Click="checkFocusGuide1_Click"/>
-
-                <Label x:Name="label401" Content="Cornea Ir - Right" Style="{StaticResource HeaderStyle}" Grid.Row="3" Grid.ColumnSpan="2"/>
-                <Label x:Name="label402" Content="Analog Gain" Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="1"/>
-                <TextBox x:Name="editCorneaAgain2" Style="{StaticResource TextBoxStyle}" Grid.Column="2" Grid.Row="4" KeyDown="EditCorneaAgain2_KeyDown"/>
-                <Label x:Name="label403" Content="Digital Gain" Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="3"/>
-                <TextBox x:Name="editCorneaDgain2" Style="{StaticResource TextBoxStyle}" Grid.Column="4" Grid.Row="4" KeyDown="EditCorneaDgain2_KeyDown"/>
-                <CheckBox x:Name="checkAlignGuide2" Content="Align" Style="{StaticResource CheckBoxStyle}" Grid.Row="4" Grid.Column="6" Click="checkAlignGuide2_Click"/>
-                <CheckBox x:Name="checkFocusGuide2" Content="Focus" Style="{StaticResource CheckBoxStyle}" Grid.Row="4" Grid.Column="7" Click="checkFocusGuide2_Click"/>
-
-                <Label x:Name="label501" Content="Cornea Ir - Lower" Style="{StaticResource HeaderStyle}" Grid.Row="5" Grid.ColumnSpan="2"/>
-                <Label x:Name="label502" Content="Analog Gain" Style="{StaticResource LabelStyle}" Grid.Row="6" Grid.Column="1"/>
-                <TextBox x:Name="editCorneaAgain3" Style="{StaticResource TextBoxStyle}" Grid.Column="2" Grid.Row="6" KeyDown="EditCorneaAgain3_KeyDown"/>
-                <Label x:Name="label503" Content="Digital Gain" Style="{StaticResource LabelStyle}" Grid.Row="6" Grid.Column="3"/>
-                <TextBox x:Name="editCorneaDgain3" Style="{StaticResource TextBoxStyle}" Grid.Column="4" Grid.Row="6" KeyDown="EditCorneaDgain3_KeyDown"/>
-                <CheckBox x:Name="checkAlignGuide3" Content="Align" Style="{StaticResource CheckBoxStyle}" Grid.Row="6" Grid.Column="6" Click="checkAlignGuide3_Click"/>
-                <CheckBox x:Name="checkFocusGuide3" Content="Focus" Style="{StaticResource CheckBoxStyle}" Grid.Row="6" Grid.Column="7" Click="checkFocusGuide3_Click"/>
-
-                <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="9" Grid.RowSpan="8"/>
+                <Label x:Name="label101" Content="Cornea IR Camera" Style="{StaticResource HeaderStyle2}" Margin="12,0,0,0" Grid.Row="1" Grid.ColumnSpan="3"/>
+                <Label x:Name="label102" Content="Channel" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="1" />
+                <ComboBox x:Name="cmbCorneaChannel" Style="{StaticResource ComboBoxStyle}" Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="2" Width="100" SelectionChanged="CmbCorneaChannel_SelectionChanged"/>
+                <CheckBox x:Name="checkCorneaAlign" Content="Align Line" Style="{StaticResource CheckBoxStyle}" Grid.Row="2" Grid.Column="4" Click="CheckCorneaAlign_Click"/>
+                <CheckBox x:Name="checkCorneaFocus" Content="Focus Line" Style="{StaticResource CheckBoxStyle}" Grid.Row="2" Grid.Column="5" Click="CheckCorneaFocus_Click"/>
+                <Label x:Name="label103" Content="A-gain" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="1"/>
+                <TextBox x:Name="editCorneaAgain" Style="{StaticResource TextBoxStyle}" Width="60" Grid.Row="3" Grid.Column="2" KeyDown="EditCorneaAgain_KeyDown"/>
+                <Label x:Name="label104" Content="[1~31]" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="3"/>
+                <Label x:Name="label105" Content="D-gain" Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="1"/>
+                <TextBox x:Name="editCorneaDgain" Style="{StaticResource TextBoxStyle}" Width="60" Grid.Row="4" Grid.Column="2" KeyDown="EditCorneaDgain_KeyDown"/>
+                <Label x:Name="label106" Content="[1~15]" Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="3"/>
+                <Label x:Name="label107" Content="Output Mode" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="4"/>
+                <ComboBox x:Name="cmbOutputMode" Style="{StaticResource ComboBoxStyle}" Grid.Row="3" Grid.Column="5" Grid.ColumnSpan="1" Width="90" SelectionChanged="CmbOutputMode_SelectionChanged"/>
+                <Label x:Name="label108" Content="Test Pattern" Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="4"/>
+                <ComboBox x:Name="cmbTestPattern" Style="{StaticResource ComboBoxStyle}" Grid.Row="4" Grid.Column="5" Grid.ColumnSpan="1" Width="90" SelectionChanged="CmbTestPattern_SelectionChanged"/>
+                <Label x:Name="label109" Content="H-flip" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="6"/>
+                <ComboBox x:Name="cmbHorzFlip" Style="{StaticResource ComboBoxStyle}" Grid.Row="3" Grid.Column="7" Grid.ColumnSpan="1" Width="70" SelectionChanged="CmbHorzFlip_SelectionChanged"/>
+                <ComboBox x:Name="cmbVertFlip" Style="{StaticResource ComboBoxStyle}" Grid.Row="4" Grid.Column="7" Grid.ColumnSpan="1" Width="70" SelectionChanged="CmbVertFlip_SelectionChanged"/>
+                <Label x:Name="label110" Content="V-flip" Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="6"/>
+                <Label x:Name="label111" Content="View Format" Style="{StaticResource LabelStyle}" Grid.Row="1" Grid.Column="4"/>
+                <ComboBox x:Name="cmbViewFormat" Style="{StaticResource ComboBoxStyle}" Grid.Row="1" Grid.Column="5" Grid.ColumnSpan="2" Width="150" SelectionChanged="CmbViewFormat_SelectionChanged"/>
+                <CheckBox x:Name="checkRollingBar" Content="Rolling Bar" Style="{StaticResource CheckBoxStyle}" Grid.Row="5" Grid.Column="5" Click="CheckRollingBar_Click"/>
+                <CheckBox x:Name="checkTransparent" Content="Transparent" Style="{StaticResource CheckBoxStyle}" Grid.Row="5" Grid.Column="6" Grid.ColumnSpan="2" Click="CheckTransparent_Click"/>
+                <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="9" Grid.RowSpan="9"/>
             </Grid>
         </StackPanel>
     </Grid>

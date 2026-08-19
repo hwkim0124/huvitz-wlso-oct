@@ -186,6 +186,11 @@ namespace wso_device
 	constexpr unsigned char USB_NOTI_PID = 0x85;
 	constexpr unsigned long USB_TIMEOUT = 12000; // 3000; // 15000;
 
+	// Camera stream pipes are read in chunks rather than one transfer per frame,
+	// so that a stalled stream is noticed within one chunk instead of blocking on
+	// a whole-frame read. The bulk-IN pipes are left at the driver default timeout.
+	constexpr unsigned long USB_STREAM_CHUNK_SIZE = 16384;
+
 	constexpr const char* USB_MAIN_BOARD_DESC = "LSO_CTRL";
 	constexpr std::uint32_t USB_BOARD_ADDR = 0x80000000;
 

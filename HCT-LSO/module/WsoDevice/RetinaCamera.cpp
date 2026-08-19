@@ -42,15 +42,32 @@ RetinaCamera::~RetinaCamera()
 {
 }
 
-
 bool wso_device::RetinaCamera::initializeRetinaCamera(void)
 {
 	if (!InfraredCamera::initializeInfraredCamera()) {
 		return false;
 	}
-	setActiveViewPreset(IrCameraViewPreset::DEFAULT);
 	// loadParamsFromProfile();
+
+	setMirrorMode(IrCameraId::RETINA, IrCameraMirrorMode::MIRROR_OFF, IrCameraMirrorMode::MIRROR_OFF);
+	setOutputMode(IrCameraId::RETINA, IrCameraOutputMode::NORMAL, IrCameraTestPattern::STANDARD, 0);
 	return true;
+}
+
+void wso_device::RetinaCamera::applyConfigParameters(RetinaCameraConfigParam param)
+{
+	setAnalogGain(param.again);
+	setDigitalGain(param.dgain);
+	return;
+}
+
+bool wso_device::RetinaCamera::applyGainSettings(void)
+{
+	auto again = getAnalogGain();
+	auto dgain = getDigitalGain();
+	bool result = setAnalogGain(again, true);
+	result = setDigitalGain(dgain, true) && result;
+	return result;
 }
 
 bool wso_device::RetinaCamera::setAnalogGain(float gain, bool control)

@@ -215,6 +215,12 @@ namespace wso_device
 			struct {
 				std::uint16_t s1;
 				std::uint16_t s2;
+				std::uint8_t crc[PACKET_CRC_SIZE];
+			} ctrl14;
+
+			struct {
+				std::uint16_t s1;
+				std::uint16_t s2;
 				std::uint16_t s3;
 				std::uint8_t crc[PACKET_CRC_SIZE];
 			} scan1;

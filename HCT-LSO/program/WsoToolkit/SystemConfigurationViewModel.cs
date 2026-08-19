@@ -17,12 +17,14 @@ namespace WsoToolkit
         private void ReflectConfigSettings()
         {
             ReflectCorneaCameraSettings();
+            ReflectRetinaCameraSettings();
             ReflectInternalFixationSettings();
         }
 
         private void UploadConfigSettings()
         {
             UploadCorneaCameraSettings();
+            UploadRetinaCameraSettings();
             UploadInternalFixationSettings();
         }
 
@@ -30,12 +32,21 @@ namespace WsoToolkit
         {
             if (Configuration.ObtainCorneaCameraConfig(out var param))
             {
-                editCorneaAgain1.Text = param.again_left.ToString("F1");
-                editCorneaDgain1.Text = param.dgain_left.ToString("F1");
-                editCorneaAgain2.Text = param.again_right.ToString("F1");
-                editCorneaDgain2.Text = param.dgain_right.ToString("F1");
-                editCorneaAgain3.Text = param.again_lower.ToString("F1");
-                editCorneaDgain3.Text = param.dgain_lower.ToString("F1");
+                editCorneaAgain1.Text = param.again_left.ToString("F0");
+                editCorneaDgain1.Text = param.dgain_left.ToString("F0");
+                editCorneaAgain2.Text = param.again_right.ToString("F0");
+                editCorneaDgain2.Text = param.dgain_right.ToString("F0");
+                editCorneaAgain3.Text = param.again_lower.ToString("F0");
+                editCorneaDgain3.Text = param.dgain_lower.ToString("F0");
+            }
+        }
+
+        private void ReflectRetinaCameraSettings()
+        {
+            if (Configuration.ObtainRetinaCameraConfig(out var param))
+            {
+                editRetinaAgain.Text = param.again.ToString("F0");
+                editRetinaDgain.Text = param.dgain.ToString("F0");
             }
         }
 
@@ -81,6 +92,14 @@ namespace WsoToolkit
             param.dgain_lower = ToFloat(editCorneaDgain3.Text);
 
             Configuration.SubmitCorneaCameraConfig(param);
+        }
+
+        private void UploadRetinaCameraSettings()
+        {
+            var param = new WsoConfig.RetinaCameraConfigParam();
+            param.again = ToFloat(editRetinaAgain.Text);
+            param.dgain = ToFloat(editRetinaDgain.Text);
+            Configuration.SubmitRetinaCameraConfig(param);
         }
 
         private void UploadInternalFixationSettings()

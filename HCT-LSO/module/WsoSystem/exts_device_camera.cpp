@@ -79,6 +79,40 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::setCorneaCameraViewPreset(IrCameraV
 	return false;
 }
 
+bool WSOSYSTEM_DLL_API __stdcall wso_system::setCorneaCameraMirrorMode(IrCameraId camId, IrCameraMirrorMode hflip, IrCameraMirrorMode vflip)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getCorneaCamera(); p) {
+		return p->setMirrorMode(camId, hflip, vflip);
+	}
+	return false;
+}
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::setCorneaCameraOutputMode(IrCameraId camId, IrCameraOutputMode mode, IrCameraTestPattern pattern, int option)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getCorneaCamera(); p) {
+		return p->setOutputMode(camId, mode, pattern, option);
+	}
+	return false;
+}
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::getCorneaCameraMirrorMode(IrCameraId camId, IrCameraMirrorMode* hflip, IrCameraMirrorMode* vflip)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getCorneaCamera(); p) {
+		p->getMirrorMode(camId, *hflip, *vflip);
+		return true;
+	}
+	return false;
+}
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::getCorneaCameraOutputMode(IrCameraId camId, IrCameraOutputMode* mode, IrCameraTestPattern* pattern, int* option)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getCorneaCamera(); p) {
+		p->getOutputMode(camId, *mode, *pattern, *option);
+		return true;
+	}
+	return false;
+}
+
 bool WSOSYSTEM_DLL_API __stdcall wso_system::startRetinaCameraPreview(RetinaCameraFrameCaptured clbFrame)
 {
 	if (auto* inst = Hardware::getInstance(); inst) {
