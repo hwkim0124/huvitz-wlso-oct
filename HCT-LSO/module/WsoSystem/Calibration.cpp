@@ -362,8 +362,8 @@ bool wso_system::Calibration::obtainSystemCalibration(SystemCalibration* sys_cal
 	if (auto* board = Hardware::getInstance()->getMainBoard(); board) {
 		if (auto* profile = board->getHbsDataProfile(); profile) {
 			if (auto* param = profile->getHbsCalibMotorSets(); param) {
-				sys_calib->diopterParam.octFocusZeroPos = param->MotorCalPos.oct_focus_motor_0D_pos;
-				sys_calib->diopterParam.lsoFocusZeroPos = param->MotorCalPos.lso_focus_motor_0D_pos;
+				sys_calib->motorParam.octFocusZeroDioptPos = param->MotorCalPos.oct_focus_motor_0D_pos;
+				sys_calib->motorParam.lsoFocusZeroDioptPos = param->MotorCalPos.lso_focus_motor_0D_pos;
 
 				sys_calib->motorParam.referRetinaOriginPos = param->MotorCalPos.REF_RetinaPos;
 				sys_calib->motorParam.referCorneaOriginPos = param->MotorCalPos.REF_CorneaPos;
@@ -372,6 +372,11 @@ bool wso_system::Calibration::obtainSystemCalibration(SystemCalibration* sys_cal
 				sys_calib->motorParam.returnMirror.outPos = param->MotorCalPos.ReturnMirrorPos.OutPos;
 				sys_calib->motorParam.octAnteriorLens.inPos = param->MotorCalPos.OCT_AntLensPos.InPos;
 				sys_calib->motorParam.octAnteriorLens.outPos = param->MotorCalPos.OCT_AntLensPos.OutPos;
+
+				sys_calib->motorParam.lsoFilter.colorModePos = param->MotorCalPos.LsoFilter_CalPos.ColorModePos;
+				sys_calib->motorParam.lsoFilter.blueFafPos = param->MotorCalPos.LsoFilter_CalPos.BlueFAF_Pos;
+				sys_calib->motorParam.lsoFilter.greenFafPos = param->MotorCalPos.LsoFilter_CalPos.GreenFAF_Pos;
+				sys_calib->motorParam.lsoFilter.icgaPos = param->MotorCalPos.LsoFilter_CalPos.ICGA_Pos;
 			}
 
 			if (auto* param = profile->getHbsCalibOctParams(); param) {
@@ -427,8 +432,8 @@ bool wso_system::Calibration::submitSystemCalibration(const SystemCalibration* s
 	if (auto* board = Hardware::getInstance()->getMainBoard(); board) {
 		if (auto* profile = board->getHbsDataProfile(); profile) {
 			if (auto* param = const_cast<HbsCalibMotorSets*>(profile->getHbsCalibMotorSets()); param) {
-				param->MotorCalPos.oct_focus_motor_0D_pos = sys_calib->diopterParam.octFocusZeroPos;
-				param->MotorCalPos.lso_focus_motor_0D_pos = sys_calib->diopterParam.lsoFocusZeroPos;
+				param->MotorCalPos.oct_focus_motor_0D_pos = sys_calib->motorParam.octFocusZeroDioptPos;
+				param->MotorCalPos.lso_focus_motor_0D_pos = sys_calib->motorParam.lsoFocusZeroDioptPos;
 
 				param->MotorCalPos.REF_RetinaPos = sys_calib->motorParam.referRetinaOriginPos;
 				param->MotorCalPos.REF_CorneaPos = sys_calib->motorParam.referCorneaOriginPos;
@@ -437,6 +442,11 @@ bool wso_system::Calibration::submitSystemCalibration(const SystemCalibration* s
 				param->MotorCalPos.ReturnMirrorPos.OutPos = sys_calib->motorParam.returnMirror.outPos;
 				param->MotorCalPos.OCT_AntLensPos.InPos = sys_calib->motorParam.octAnteriorLens.inPos;
 				param->MotorCalPos.OCT_AntLensPos.OutPos = sys_calib->motorParam.octAnteriorLens.outPos;
+
+				param->MotorCalPos.LsoFilter_CalPos.ColorModePos = sys_calib->motorParam.lsoFilter.colorModePos;
+				param->MotorCalPos.LsoFilter_CalPos.BlueFAF_Pos = sys_calib->motorParam.lsoFilter.blueFafPos;
+				param->MotorCalPos.LsoFilter_CalPos.GreenFAF_Pos = sys_calib->motorParam.lsoFilter.greenFafPos;
+				param->MotorCalPos.LsoFilter_CalPos.ICGA_Pos = sys_calib->motorParam.lsoFilter.icgaPos;
 			}
 
 			if (auto* param = const_cast<HbsCalibOctParams*>(profile->getHbsCalibOctParams()); param) {

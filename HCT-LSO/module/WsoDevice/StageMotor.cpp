@@ -212,11 +212,11 @@ bool wso_device::StageMotor::controlStop(void)
 	}
 
 	UsbComm& usbComm = getMainBoard()->getUsbComm();
-	if (usbComm.MotorStop(getMotorId())) {
+	if (usbComm.StepMotorStop(getMotorId())) {
 		impl().stopped = true;
 		return true;
 	}
-	LogDebug() << "StageMotor::controlHome() failed!, name =" << getName();
+	LogDebug() << "StageMotor::controlStop() failed!, name =" << getName();
 	return false;
 }
 

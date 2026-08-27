@@ -55,6 +55,8 @@ namespace wso_device
 		virtual bool loadCalibParamFromProfile(void) override;
 		virtual bool saveCalibParamToProfile(void) override;
 
+		bool isAtPiPostion(void);
+
 	private:
 		struct OctPolarMotorImpl;
 		std::unique_ptr<OctPolarMotorImpl> d_ptr;

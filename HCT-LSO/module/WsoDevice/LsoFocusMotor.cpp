@@ -188,6 +188,22 @@ bool wso_device::LsoFocusMotor::saveConfigToIniFile()
 	return bRet;
 }
 
+bool wso_device::LsoFocusMotor::isAtPiPostion(void)
+{
+	if (auto* board = getMainBoard(); board) {
+		if (auto* p = board->getHbsDataProfile(); p) {
+			if (p->loadGpioStatus()) {
+				auto* gpio = p->getHbsGpioStatus();
+				auto status = gpio->PIstatus;
+				if (status & (0x01 << 3)) {
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
 LsoFocusMotor::LsoFocusMotorImpl& wso_device::LsoFocusMotor::impl(void) const
 {
 	return *d_ptr;

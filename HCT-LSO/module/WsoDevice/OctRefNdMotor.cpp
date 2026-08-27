@@ -54,6 +54,22 @@ bool wso_device::OctRefNdMotor::initializeOctRefNdMotor(void)
 	return StepMotor::initializeStepMotor();
 }
 
+bool wso_device::OctRefNdMotor::isAtPiPostion(void)
+{
+	if (auto* board = getMainBoard(); board) {
+		if (auto* p = board->getHbsDataProfile(); p) {
+			if (p->loadGpioStatus()) {
+				auto* gpio = p->getHbsGpioStatus();
+				auto status = gpio->PIstatus;
+				if (status & (0x01 << 14)) {
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
 
 OctRefNdMotor::OctRefNdMotorImpl& wso_device::OctRefNdMotor::impl(void) const
 {

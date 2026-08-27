@@ -37,6 +37,8 @@ namespace wso_device
 		virtual bool loadConfigFromIniFile(void) override;
 		virtual bool saveConfigToIniFile(void) override;
 
+		bool isAtPiPostion(void);
+
 	private:
 		struct LsoFocusMotorImpl;
 		std::unique_ptr<LsoFocusMotorImpl> d_ptr;

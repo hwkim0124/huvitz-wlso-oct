@@ -221,6 +221,22 @@ bool wso_device::OctPolarMotor::saveCalibParamToProfile(void)
 	return false;
 }
 
+bool wso_device::OctPolarMotor::isAtPiPostion(void)
+{
+	if (auto* board = getMainBoard(); board) {
+		if (auto* p = board->getHbsDataProfile(); p) {
+			if (p->loadGpioStatus()) {
+				auto* gpio = p->getHbsGpioStatus();
+				auto status = gpio->PIstatus;
+				if (status & (0x01 << 2)) {
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
 
 OctPolarMotor::OctPolarMotorImpl& wso_device::OctPolarMotor::impl(void) const
 {

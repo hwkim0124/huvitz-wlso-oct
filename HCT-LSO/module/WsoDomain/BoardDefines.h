@@ -50,16 +50,19 @@ namespace wso_domain
         unsigned short greenIntensity;
     };
 
-    struct DiopterCalibration
-    {
-        int octFocusZeroPos;
-        int lsoFocusZeroPos;
-    };
-
     struct FilterCalibration
     {
-        short inPos;
-        short outPos;
+        int inPos;
+        int outPos;
+    };
+
+    struct LsoFilterCalibration
+    {
+        int colorModePos;
+        int blueFafPos;
+        int greenFafPos;
+        int icgaPos;
+        int reserved;
     };
 
     struct MotorCalibration
@@ -67,8 +70,11 @@ namespace wso_domain
         int referRetinaOriginPos;
         int referCorneaOriginPos;
         int polarOriginPos;
+        int lsoFocusZeroDioptPos;
+        int octFocusZeroDioptPos;
         FilterCalibration returnMirror;
         FilterCalibration octAnteriorLens;
+        LsoFilterCalibration lsoFilter;
     };
 
     struct SystemCalibration
@@ -79,7 +85,6 @@ namespace wso_domain
         OctGalvanometerCalibration octGalvano;
         SldCalibration sldParam;
         LedCalibration ledParam;
-        DiopterCalibration diopterParam;
         MotorCalibration motorParam;
     };
 }

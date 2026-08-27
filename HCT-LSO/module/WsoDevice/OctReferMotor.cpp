@@ -247,6 +247,22 @@ bool wso_device::OctReferMotor::isAtUpperSideByOrigin(bool isCornea) const
 	return false;
 }
 
+bool wso_device::OctReferMotor::isAtPiPostion(void)
+{
+	if (auto* board = getMainBoard(); board) {
+		if (auto* p = board->getHbsDataProfile(); p) {
+			if (p->loadGpioStatus()) {
+				auto* gpio = p->getHbsGpioStatus();
+				auto status = gpio->PIstatus;
+				if (status & (0x01 << 1)) {
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
 bool wso_device::OctReferMotor::loadCalibParamFromProfile(void)
 {
 	if (auto p = getMainBoard()->getHbsDataProfile()->getHbsCalibMotorSets(); p) {

@@ -48,6 +48,8 @@ namespace wso_device
 		bool isAtLowerSideByOrigin(bool isCornea = false) const;
 		bool isAtUpperSideByOrigin(bool isCornea = false) const;
 
+		bool isAtPiPostion(void);
+
 		virtual bool loadCalibParamFromProfile(void) override;
 		virtual bool saveCalibParamToProfile(void) override;
 

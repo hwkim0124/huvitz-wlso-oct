@@ -160,6 +160,22 @@ bool wso_device::RetMirrorMotor::saveCalibParamToProfile(void)
 	return false;
 }
 
+bool wso_device::RetMirrorMotor::isAtPiPostion(void)
+{
+	if (auto* board = getMainBoard(); board) {
+		if (auto* p = board->getHbsDataProfile(); p) {
+			if (p->loadGpioStatus()) {
+				auto* gpio = p->getHbsGpioStatus();
+				auto status = gpio->PIstatus;
+				if (status & (0x01 << 12)) {
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
 
 RetMirrorMotor::RetMirrorMotorImpl& wso_device::RetMirrorMotor::impl(void) const
 {

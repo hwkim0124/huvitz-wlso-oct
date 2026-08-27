@@ -54,6 +54,72 @@ bool wso_device::ChinRestMotor::initializeChinRestMotor(void)
 	return StepMotor::initializeStepMotor();
 }
 
+bool wso_device::ChinRestMotor::startMovingUp(void)
+{
+	if (auto* board = getMainBoard(); board) {
+		auto& comm = board->getUsbComm();
+		const int UPWARD = 1;
+		if (comm.StepMotorVertMove(getMotorId(), UPWARD)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool wso_device::ChinRestMotor::startMovingDown(void)
+{
+	if (auto* board = getMainBoard(); board) {
+		auto& comm = board->getUsbComm();
+		const int DOWNWARD = 0;
+		if (comm.StepMotorVertMove(getMotorId(), DOWNWARD)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool wso_device::ChinRestMotor::stopMoving(void)
+{
+	if (auto* board = getMainBoard(); board) {
+		auto& comm = board->getUsbComm();
+		if (comm.StepMotorStop(getMotorId())) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool wso_device::ChinRestMotor::isAtUpperLimit(void)
+{
+	if (auto* board = getMainBoard(); board) {
+		if (auto* p = board->getHbsDataProfile(); p) {
+			if (p->loadGpioStatus()) {
+				auto* gpio = p->getHbsGpioStatus();
+				auto status = gpio->PIstatus;
+				if (status & (0x01 << 16)) {
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
+bool wso_device::ChinRestMotor::isAtLowerLimit(void)
+{
+	if (auto* board = getMainBoard(); board) {
+		if (auto* p = board->getHbsDataProfile(); p) {
+			if (p->loadGpioStatus()) {
+				auto* gpio = p->getHbsGpioStatus();
+				auto status = gpio->PIstatus;
+				if (status & (0x01 << 15)) {
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
 
 ChinRestMotor::ChinRestMotorImpl& wso_device::ChinRestMotor::impl(void) const
 {

@@ -113,7 +113,8 @@ namespace wso_device
 		bool MotorJogg(std::uint8_t mid, int delta);
 		bool MotorMove(std::uint8_t mid, int pos);
 		bool MotorHome(std::uint8_t mid);
-		bool MotorStop(std::uint8_t mid);
+		bool StepMotorStop(std::uint8_t mid);
+		bool StepMotorVertMove(std::uint8_t mid, std::uint8_t dir);
 
 		//motor velocity move
 		bool MotorMoveVelocity(std::uint8_t mid, std::uint8_t dir);

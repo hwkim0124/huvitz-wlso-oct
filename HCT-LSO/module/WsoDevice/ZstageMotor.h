@@ -25,6 +25,8 @@ namespace wso_device
 	public:
 		bool initializeZstageMotor(void);
 
+		bool isAtPiPostion(void);
+
 	private:
 		struct ZstageMotorImpl;
 		std::unique_ptr<ZstageMotorImpl> d_ptr;

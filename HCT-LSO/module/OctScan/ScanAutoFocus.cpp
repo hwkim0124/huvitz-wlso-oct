@@ -1168,7 +1168,7 @@ bool oct_scan::ScanAutoFocus::isAtPlusDioptEnd(void)
 		dover = true;
 	}
 
-	auto pos_end = motor->isEndOfUpperPosition();
+	auto pos_end = motor->isAtMaxPosition();
 	auto dir_dpt = isMovingToPlusDiopt();
 	return ((pos_end || dover) && dir_dpt);
 }
@@ -1185,7 +1185,7 @@ bool oct_scan::ScanAutoFocus::isAtMinusDioptEnd(void)
 		dover = true;
 	}
 
-	auto pos_end = motor->isEndOfLowerPosition();
+	auto pos_end = motor->isAtMinPosition();
 	auto dir_dpt = isMovingToMinusDiopt();
 	return ((pos_end || dover) && dir_dpt);
 }

@@ -26,6 +26,8 @@ namespace wso_device
 	public:
 		bool initializeOctRefNdMotor(void);
 
+		bool isAtPiPostion(void);
+
 	private:
 		struct OctRefNdMotorImpl;
 		std::unique_ptr<OctRefNdMotorImpl> d_ptr;

@@ -124,7 +124,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStepMotorToCenter(MotorType typ
 bool WSOSYSTEM_DLL_API __stdcall wso_system::isStepMotorAtUpperEnd(MotorType type)
 {
 	if (auto* motor = Hardware::getInstance()->getStepMotor(type); motor) {
-		auto result = motor->isEndOfUpperPosition();
+		auto result = motor->isAtMaxPosition();
 		return result;
 	}
 	return false;
@@ -133,7 +133,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::isStepMotorAtUpperEnd(MotorType typ
 bool WSOSYSTEM_DLL_API __stdcall wso_system::isStepMotorAtLowerEnd(MotorType type)
 {
 	if (auto* motor = Hardware::getInstance()->getStepMotor(type); motor) {
-		auto result = motor->isEndOfLowerPosition();
+		auto result = motor->isAtMinPosition();
 		return result;
 	}
 	return false;
@@ -219,7 +219,7 @@ float WSOSYSTEM_DLL_API __stdcall wso_system::getStepMotorValueAtPosition(MotorT
 
 bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStageLeft(void)
 {
-	if (auto* motor = Hardware::getInstance()->getStepMotor(MotorType::STAGE_X); motor) {
+	if (auto* motor = Hardware::getInstance()->getMainBoard()->getXstageMotor(); motor) {
 		return motor->moveVelocity(0);
 	}
 	return false;
@@ -227,7 +227,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStageLeft(void)
 
 bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStageRight(void)
 {
-	if (auto* motor = Hardware::getInstance()->getStepMotor(MotorType::STAGE_X); motor) {
+	if (auto* motor = Hardware::getInstance()->getMainBoard()->getXstageMotor(); motor) {
 		return motor->moveVelocity(1);
 	}
 	return false;
@@ -235,7 +235,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStageRight(void)
 
 bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStageUp(void)
 {
-	if (auto* motor = Hardware::getInstance()->getStepMotor(MotorType::STAGE_Y); motor) {
+	if (auto* motor = Hardware::getInstance()->getMainBoard()->getYstageMotor(); motor) {
 		return motor->moveVelocity(1);
 	}
 	return false;
@@ -243,7 +243,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStageUp(void)
 
 bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStageDown(void)
 {
-	if (auto* motor = Hardware::getInstance()->getStepMotor(MotorType::STAGE_Y); motor) {
+	if (auto* motor = Hardware::getInstance()->getMainBoard()->getYstageMotor(); motor) {
 		return motor->moveVelocity(0);
 	}
 	return false;
@@ -251,7 +251,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStageDown(void)
 
 bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStageForward(void)
 {
-	if (auto* motor = Hardware::getInstance()->getStepMotor(MotorType::STAGE_Z); motor) {
+	if (auto* motor = Hardware::getInstance()->getMainBoard()->getZstageMotor(); motor) {
 		return motor->moveVelocity(0);
 	}
 	return false;
@@ -259,7 +259,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStageForward(void)
 
 bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStageBackward(void)
 {
-	if (auto* motor = Hardware::getInstance()->getStepMotor(MotorType::STAGE_Z); motor) {
+	if (auto* motor = Hardware::getInstance()->getMainBoard()->getZstageMotor(); motor) {
 		return motor->moveVelocity(1);
 	}
 	return false;
@@ -267,7 +267,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStageBackward(void)
 
 bool WSOSYSTEM_DLL_API __stdcall wso_system::stopStageX(void)
 {
-	if (auto* motor = Hardware::getInstance()->getStepMotor(MotorType::STAGE_X); motor) {
+	if (auto* motor = Hardware::getInstance()->getMainBoard()->getXstageMotor(); motor) {
 		return motor->stopVelocity();
 	}
 	return false;
@@ -275,7 +275,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::stopStageX(void)
 
 bool WSOSYSTEM_DLL_API __stdcall wso_system::stopStageY(void)
 {
-	if (auto* motor = Hardware::getInstance()->getStepMotor(MotorType::STAGE_Y); motor) {
+	if (auto* motor = Hardware::getInstance()->getMainBoard()->getYstageMotor(); motor) {
 		return motor->stopVelocity();
 	}
 	return false;
@@ -283,7 +283,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::stopStageY(void)
 
 bool WSOSYSTEM_DLL_API __stdcall wso_system::stopStageZ(void)
 {
-	if (auto* motor = Hardware::getInstance()->getStepMotor(MotorType::STAGE_Z); motor) {
+	if (auto* motor = Hardware::getInstance()->getMainBoard()->getZstageMotor(); motor) {
 		return motor->stopVelocity();
 	}
 	return false;
@@ -298,142 +298,235 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::stopStageAll(void)
 	return result;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isSwingMotorAtHighLimit(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isStageAtLeftEnd(void)
 {
-	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
-		auto result = p->isSwingMotorAtHighLimit();
-		return result;
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getXstageMotor(); p) {
+		return p->isAtMinPosition();
 	}
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isSwingMotorAtLowLimit(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isStageAtRightEnd(void)
 {
-	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
-		auto result = p->isSwingMotorAtLowLimit();
-		return result;
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getXstageMotor(); p) {
+		return p->isAtMaxPosition();
 	}
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isOctFocusMotorAtOrigin(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isStageAtLowerEnd(void)
 {
-	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
-		auto result = p->isOctFocusMotorAtOrigin();
-		return result;
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getYstageMotor(); p) {
+		return p->isAtMinPosition();
 	}
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isOctPolarMotorAtOrigin(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isStageAtUpperEnd(void)
 {
-	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
-		auto result = p->isOctPolarMotorAtOrigin();
-		return result;  
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getYstageMotor(); p) {
+		return p->isAtMaxPosition();
 	}
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isOctReferMotorAtOrigin(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isStageAtForwardEnd(void)
 {
-	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
-		auto result = p->isOctReferMotorAtOrigin();
-		return result;
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getZstageMotor(); p) {
+		return p->isAtMaxPosition();
 	}
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isOctRefNdMotorAtOrigin(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isStageAtBackwardEnd(void)
 {
-	return false;
-}
-
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isLsoFocusMotorAtOrigin(void)
-{
-	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
-		auto result = p->isLsoFocusMotorAtOrigin();
-		return result;
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getZstageMotor(); p) {
+		return p->isAtMinPosition();
 	}
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isRetMirrorMotorAtOrigin(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::moveSwingLeft(void)
 {
-	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
-		auto result = p->isRetMirrorMotorAtOrigin();
-		return result;
+	if (auto* motor = Hardware::getInstance()->getMainBoard()->getSwingMotor(); motor) {
+		return motor->moveVelocity(0);
 	}
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isOctAntLensMotorAtOrigin(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::moveSwingRight(void)
 {
-	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
-		auto result = p->isOctAntLensMotorAtOrigin();
-		return result;
+	if (auto* motor = Hardware::getInstance()->getMainBoard()->getSwingMotor(); motor) {
+		return motor->moveVelocity(1);
 	}
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isLsoFilterMotorAtOrigin(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::stopSwingMove(void)
 {
-	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
-		auto result = p->isLsoFilterMotorAtOrigin();
-		return result;
+	if (auto* motor = Hardware::getInstance()->getMainBoard()->getSwingMotor(); motor) {
+		return motor->stopVelocity();
 	}
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isXstageMotorAtHighLimit(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isSwingAtLeftEnd(void)
 {
-	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
-		auto result = p->isXstageMotorAtHighLimit();
-		return result;
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getSwingMotor(); p) {
+		return p->isAtMinPosition();
 	}
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isXstageMotorAtLowLimit(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isSwingAtRightEnd(void)
 {
-	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
-		auto result = p->isXstageMotorAtLowLimit();
-		return result;
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getSwingMotor(); p) {
+		return p->isAtMaxPosition();
 	}
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isYstageMotorAtHighLimit(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::moveChinrestUp(void)
 {
-	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
-		auto result = p->isYstageMotorAtHighLimit();
-		return result;
+	if (auto* motor = Hardware::getInstance()->getMainBoard()->getChinRestMotor(); motor) {
+		return motor->startMovingUp();
 	}
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isYstageMotorAtLowLimit(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::moveChinrestDown(void)
 {
-	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
-		auto result = p->isYstageMotorAtLowLimit();
-		return result;
+	if (auto* motor = Hardware::getInstance()->getMainBoard()->getChinRestMotor(); motor) {
+		return motor->startMovingDown();
 	}
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isZstageMotorAtHighLimit(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::stopChinrestMove(void)
 {
-	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
-		auto result = p->isZstageMotorAtHighLimit();
-		return result;
+	if (auto* motor = Hardware::getInstance()->getMainBoard()->getChinRestMotor(); motor) {
+		return motor->stopMoving();
 	}
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isZstageMotorAtLowLimit(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isChinrestAtUpperEnd(void)
 {
-	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
-		auto result = p->isZstageMotorAtLowLimit();
-		return result;
+	if (auto* motor = Hardware::getInstance()->getMainBoard()->getChinRestMotor(); motor) {
+		return motor->isAtUpperLimit();
 	}
 	return false;
 }
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isChinrestAtLowerEnd(void)
+{
+	if (auto* motor = Hardware::getInstance()->getMainBoard()->getChinRestMotor(); motor) {
+		return motor->isAtLowerLimit();
+	}
+	return false;
+}
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isOctRefNdMotorAtPiPosition(void)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getOctRefNdMotor(); p) {
+		return p->isAtPiPostion();
+	}
+	return false;
+}
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isOctAntLensMotorAtPiPosition(void)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getOctAntLensMotor(); p) {
+		return p->isAtPiPostion();
+	}
+	return false;
+}
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isRetMirrorMotorAtPiPosition(void)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getRetMirrorMotor(); p) {
+		return p->isAtPiPostion();
+	}
+	return false;
+}
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isLsoFilterMotorAtPiPosition(void)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getLsoFilterMotor(); p) {
+		return p->isAtPiPostion();
+	}
+	return false;
+}
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isLsoFocusMotorAtPiPosition(void)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getLsoFocusMotor(); p) {
+		return p->isAtPiPostion();
+	}
+	return false;
+}
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isOctPolarMotorAtPiPosition(void)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getOctPolarMotor(); p) {
+		return p->isAtPiPostion();
+	}
+	return false;
+}
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isOctReferMotorAtPiPosition(void)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getOctReferMotor(); p) {
+		return p->isAtPiPostion();
+	}
+	return false;
+}
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isOctFocusMotorAtPiPosition(void)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getOctFocusMotor(); p) {
+		return p->isAtPiPostion();
+	}
+	return false;
+}
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isSwingMotorAtPiPosition(void)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getSwingMotor(); p) {
+		return p->isAtPiPostion();
+	}
+	return false;
+}
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isZstageMotorAtPiPosition(void)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getZstageMotor(); p) {
+		return p->isAtPiPostion();
+	}
+	return false;
+}
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isXstageMotorAtPiPosition(void)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getXstageMotor(); p) {
+		return p->isAtPiPostion();
+	}
+	return false;
+}
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isYstageMotorAtUpperLimit(void)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getYstageMotor(); p) {
+		return p->isAtUpperLimit();
+	}
+	return false;
+}
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isYstageMotorAtLowerLimit(void)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getYstageMotor(); p) {
+		return p->isAtLowerLimit();
+	}
+	return false;
+}
+

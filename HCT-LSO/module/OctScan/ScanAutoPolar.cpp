@@ -1121,7 +1121,7 @@ bool oct_scan::ScanAutoPolar::isMovingToMinusDegree(void)
 bool oct_scan::ScanAutoPolar::isAtPlusDegreeEnd(void)
 {
 	auto* motor = getMainBoard()->getOctPolarMotor();
-	auto pos_end = motor->isEndOfUpperPosition();
+	auto pos_end = motor->isAtMaxPosition();
 	auto dir_deg = isMovingToPlusDegree();
 	return (pos_end && dir_deg);
 }
@@ -1130,7 +1130,7 @@ bool oct_scan::ScanAutoPolar::isAtPlusDegreeEnd(void)
 bool oct_scan::ScanAutoPolar::isAtMinusDegreeEnd(void)
 {
 	auto* motor = getMainBoard()->getOctPolarMotor();
-	auto pos_end = motor->isEndOfLowerPosition();
+	auto pos_end = motor->isAtMinPosition();
 	auto dir_deg = isMovingToMinusDegree();
 	return (pos_end && dir_deg);
 }

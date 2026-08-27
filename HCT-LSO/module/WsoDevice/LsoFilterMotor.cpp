@@ -164,6 +164,22 @@ bool wso_device::LsoFilterMotor::saveCalibParamToProfile(void)
 	return false;
 }
 
+bool wso_device::LsoFilterMotor::isAtPiPostion(void)
+{
+	if (auto* board = getMainBoard(); board) {
+		if (auto* p = board->getHbsDataProfile(); p) {
+			if (p->loadGpioStatus()) {
+				auto* gpio = p->getHbsGpioStatus();
+				auto status = gpio->PIstatus;
+				if (status & (0x01 << 10)) {
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
 
 LsoFilterMotor::LsoFilterMotorImpl& wso_device::LsoFilterMotor::impl(void) const
 {

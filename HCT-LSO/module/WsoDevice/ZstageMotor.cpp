@@ -61,6 +61,22 @@ bool wso_device::ZstageMotor::initializeZstageMotor(void)
 	return StepMotor::initializeStepMotor();
 }
 
+bool wso_device::ZstageMotor::isAtPiPostion(void)
+{
+	if (auto* board = getMainBoard(); board) {
+		if (auto* p = board->getHbsDataProfile(); p) {
+			if (p->loadGpioStatus()) {
+				auto* gpio = p->getHbsGpioStatus();
+				auto status = gpio->PIstatus;
+				if (status & (0x01 << 5)) {
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
 
 ZstageMotor::ZstageMotorImpl& wso_device::ZstageMotor::impl(void) const
 {

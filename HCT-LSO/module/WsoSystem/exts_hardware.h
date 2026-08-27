@@ -18,15 +18,6 @@ namespace wso_system
 		void WSOSYSTEM_DLL_API __stdcall releaseOptimizeButtonPressed(void);
 		void WSOSYSTEM_DLL_API __stdcall releaseAdapterLensAttached(void);
 
-		// Chinrest
-		///////////////////////////////////////////////////////////////////////////////////////////
-		bool WSOSYSTEM_DLL_API __stdcall moveChinrestUp(void);
-		bool WSOSYSTEM_DLL_API __stdcall moveChinrestDown(void);
-		bool WSOSYSTEM_DLL_API __stdcall stopChinrestMove(void);
-		bool WSOSYSTEM_DLL_API __stdcall isChinrestAtUpperEnd(void);
-		bool WSOSYSTEM_DLL_API __stdcall isChinrestAtLowerEnd(void);
-
-
 		// Device Status
 		///////////////////////////////////////////////////////////////////////////////////////////
 		bool WSOSYSTEM_DLL_API __stdcall getDeviceSideOnPatient(EyeSide* side);

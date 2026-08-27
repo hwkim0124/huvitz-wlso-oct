@@ -261,17 +261,18 @@ namespace WsoToolkit
             Func<bool, string> boolToIntStr = value => value ? "1" : "0";
 
             // editOdOs.Text = boolToIntStr(DeviceMotors.IsOdOsStatusFlagSet());
-            editCrestPi.Text = boolToIntStr(DeviceMotors.IsChinrestAtUpperEnd()) + " | " + boolToIntStr(DeviceMotors.IsChinrestAtLowerEnd());
-            editSwingPi.Text = boolToIntStr(DeviceMotors.IsSwingMotorAtHighLimit()) + " | " + boolToIntStr(DeviceMotors.IsSwingMotorAtLowLimit());
-            editXstagePi.Text = boolToIntStr(DeviceMotors.IsXstageMotorAtHighLimit()) + " | " + boolToIntStr(DeviceMotors.IsXstageMotorAtLowLimit());
-            editYstagePi.Text = boolToIntStr(DeviceMotors.IsYstageMotorAtHighLimit()) + " | " + boolToIntStr(DeviceMotors.IsYstageMotorAtLowLimit());
-            editZstagePi.Text = boolToIntStr(DeviceMotors.IsZstageMotorAtHighLimit()) + " | " + boolToIntStr(DeviceMotors.IsZstageMotorAtLowLimit());
+            editCrestPi.Text = boolToIntStr(StageMotors.IsChinrestAtUpperEnd()) + " | " + boolToIntStr(StageMotors.IsChinrestAtLowerEnd());
+            editXstagePi.Text = boolToIntStr(StageMotors.IsXstageMotorAtPiPosition());
+            editYstagePi.Text = boolToIntStr(StageMotors.IsYstageMotorAtUpperLimit()) + " | " + boolToIntStr(StageMotors.IsYstageMotorAtLowerLimit());
+            editZstagePi.Text = boolToIntStr(StageMotors.IsZstageMotorAtPiPosition());
+            editSwingPi.Text = boolToIntStr(StageMotors.IsSwingMotorAtPiPosition());
 
-            editLsoFocusPi.Text = boolToIntStr(DeviceMotors.IsLsoFocusMotorAtOrigin());
-            editOctFocusPi.Text = boolToIntStr(DeviceMotors.IsOctFocusMotorAtOrigin());
-            editOctReferPi.Text = boolToIntStr(DeviceMotors.IsOctReferMotorAtOrigin());
-            editOctPolarPi.Text = boolToIntStr(DeviceMotors.IsOctPolarMotorAtOrigin());
-            editMirrorPi.Text = boolToIntStr(DeviceMotors.IsRetMirrorMotorAtOrigin());
+            editLsoFocusPi.Text = boolToIntStr(DeviceMotors.IsLsoFocusMotorAtPiPosition());
+            editLsoFilterPi.Text = boolToIntStr(DeviceMotors.IsLsoFilterMotorAtPiPosition());
+            editOctPolarPi.Text = boolToIntStr(DeviceMotors.IsOctPolarMotorAtPiPosition());
+            editOctReferPi.Text = boolToIntStr(DeviceMotors.IsOctReferMotorAtPiPosition());
+            editOctFocusPi.Text = boolToIntStr(DeviceMotors.IsOctFocusMotorAtPiPosition());
+            editMirrorPi.Text = boolToIntStr(DeviceMotors.IsRetMirrorMotorAtPiPosition());
         }
     }
 }

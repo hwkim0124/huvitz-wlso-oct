@@ -129,7 +129,8 @@ namespace WsoToolkit
         {
             Mouse.OverrideCursor = Cursors.Wait;
             ReleaseMotorCallbacks();
-            DeviceMotors.StopChinrestMove();
+            StageMotors.StopChinrestMove();
+            StageMotors.StopStageAll();
 
             _timer.Stop();
 
@@ -761,17 +762,17 @@ namespace WsoToolkit
 
         private void BtnChinrestStop_Click(object sender, RoutedEventArgs e)
         {
-            DeviceMotors.StopChinrestMove();
+            StageMotors.StopChinrestMove();
         }
 
         private void BtnChinrestDown_Click(object sender, RoutedEventArgs e)
         {
-            DeviceMotors.MoveChinrestDown();
+            StageMotors.MoveChinrestDown();
         }
 
         private void BtnChinrestUp_Click(object sender, RoutedEventArgs e)
         {
-            DeviceMotors.MoveChinrestUp();
+            StageMotors.MoveChinrestUp();
         }
 
     }

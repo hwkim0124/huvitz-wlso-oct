@@ -1279,12 +1279,24 @@ bool wso_device::UsbComm::MotorHome(std::uint8_t mid)
 	return sendMsgCmd(msg);
 }
 
-bool wso_device::UsbComm::MotorStop(std::uint8_t mid)
+bool wso_device::UsbComm::StepMotorStop(std::uint8_t mid)
 {
 	lock_guard<mutex> lock(impl().mutexControl);
-	MsgCommand* msg = getMsgCommand(CommandType::XZ_STOP, 1);
-	msg->packet.ctrl1.c1 = mid;
-	attachCRC(msg->packet.ctrl1.crc);
+	MsgCommand* msg = getMsgCommand(CommandType::SMOTSTOP, 2);
+	msg->packet.ctrl2.c1 = 1; // Unit Id.
+	msg->packet.ctrl2.c1 = mid;
+	attachCRC(msg->packet.ctrl2.crc);
+	return sendMsgCmd(msg);
+}
+
+bool wso_device::UsbComm::StepMotorVertMove(std::uint8_t mid, std::uint8_t dir)
+{
+	lock_guard<mutex> lock(impl().mutexControl);
+	MsgCommand* msg = getMsgCommand(CommandType::MOT_VMOVE, 3);
+	msg->packet.ctrl9.c1 = 1;	 // Unit Id.
+	msg->packet.ctrl9.c2 = mid;
+	msg->packet.ctrl9.c3 = dir;  // 1 : Up, 0 : Down.
+	attachCRC(msg->packet.ctrl9.crc);
 	return sendMsgCmd(msg);
 }
 

@@ -36,6 +36,9 @@ namespace wso_system
 		float WSOSYSTEM_DLL_API __stdcall getStepMotorValue(MotorType type);
 		float WSOSYSTEM_DLL_API __stdcall getStepMotorValueAtPosition(MotorType type, int pos);
 
+
+		// Stage Motors 
+		///////////////////////////////////////////////////////////////////////////////////////////
 		bool WSOSYSTEM_DLL_API __stdcall moveStageLeft(void);
 		bool WSOSYSTEM_DLL_API __stdcall moveStageRight(void);
 		bool WSOSYSTEM_DLL_API __stdcall moveStageUp(void);
@@ -47,26 +50,44 @@ namespace wso_system
 		bool WSOSYSTEM_DLL_API __stdcall stopStageZ(void);
 		bool WSOSYSTEM_DLL_API __stdcall stopStageAll(void);
 
+		bool WSOSYSTEM_DLL_API __stdcall isStageAtLeftEnd(void);
+		bool WSOSYSTEM_DLL_API __stdcall isStageAtRightEnd(void);
+		bool WSOSYSTEM_DLL_API __stdcall isStageAtLowerEnd(void);
+		bool WSOSYSTEM_DLL_API __stdcall isStageAtUpperEnd(void);
+		bool WSOSYSTEM_DLL_API __stdcall isStageAtForwardEnd(void);
+		bool WSOSYSTEM_DLL_API __stdcall isStageAtBackwardEnd(void);
+
+		bool WSOSYSTEM_DLL_API __stdcall moveSwingLeft(void);
+		bool WSOSYSTEM_DLL_API __stdcall moveSwingRight(void);
+		bool WSOSYSTEM_DLL_API __stdcall stopSwingMove(void);
+
+		bool WSOSYSTEM_DLL_API __stdcall isSwingAtLeftEnd(void);
+		bool WSOSYSTEM_DLL_API __stdcall isSwingAtRightEnd(void);
+		
+		// Chinrest
+		///////////////////////////////////////////////////////////////////////////////////////////
+		bool WSOSYSTEM_DLL_API __stdcall moveChinrestUp(void);
+		bool WSOSYSTEM_DLL_API __stdcall moveChinrestDown(void);
+		bool WSOSYSTEM_DLL_API __stdcall stopChinrestMove(void);
+		bool WSOSYSTEM_DLL_API __stdcall isChinrestAtUpperEnd(void);
+		bool WSOSYSTEM_DLL_API __stdcall isChinrestAtLowerEnd(void);
+
 		// PI Sensor Vaule
 		///////////////////////////////////////////////////////////////////////////////////////////
-		bool WSOSYSTEM_DLL_API __stdcall isOctFocusMotorAtOrigin(void);
-		bool WSOSYSTEM_DLL_API __stdcall isOctPolarMotorAtOrigin(void);
-		bool WSOSYSTEM_DLL_API __stdcall isOctReferMotorAtOrigin(void);
-		bool WSOSYSTEM_DLL_API __stdcall isOctRefNdMotorAtOrigin(void);
-		bool WSOSYSTEM_DLL_API __stdcall isLsoFocusMotorAtOrigin(void);
-		bool WSOSYSTEM_DLL_API __stdcall isRetMirrorMotorAtOrigin(void);
-		bool WSOSYSTEM_DLL_API __stdcall isOctAntLensMotorAtOrigin(void);
-		bool WSOSYSTEM_DLL_API __stdcall isLsoFilterMotorAtOrigin(void);
+		bool WSOSYSTEM_DLL_API __stdcall isOctRefNdMotorAtPiPosition(void);
+		bool WSOSYSTEM_DLL_API __stdcall isOctAntLensMotorAtPiPosition(void);
+		bool WSOSYSTEM_DLL_API __stdcall isRetMirrorMotorAtPiPosition(void);
+		bool WSOSYSTEM_DLL_API __stdcall isLsoFilterMotorAtPiPosition(void);
+		bool WSOSYSTEM_DLL_API __stdcall isLsoFocusMotorAtPiPosition(void);
+		bool WSOSYSTEM_DLL_API __stdcall isOctPolarMotorAtPiPosition(void);
+		bool WSOSYSTEM_DLL_API __stdcall isOctReferMotorAtPiPosition(void);
+		bool WSOSYSTEM_DLL_API __stdcall isOctFocusMotorAtPiPosition(void);
+		bool WSOSYSTEM_DLL_API __stdcall isSwingMotorAtPiPosition(void);
+		bool WSOSYSTEM_DLL_API __stdcall isZstageMotorAtPiPosition(void);
+		bool WSOSYSTEM_DLL_API __stdcall isXstageMotorAtPiPosition(void);
 
-		bool WSOSYSTEM_DLL_API __stdcall isSwingMotorAtHighLimit(void);
-		bool WSOSYSTEM_DLL_API __stdcall isSwingMotorAtLowLimit(void);
-		bool WSOSYSTEM_DLL_API __stdcall isXstageMotorAtHighLimit(void);
-		bool WSOSYSTEM_DLL_API __stdcall isXstageMotorAtLowLimit(void);
-		bool WSOSYSTEM_DLL_API __stdcall isYstageMotorAtHighLimit(void);
-		bool WSOSYSTEM_DLL_API __stdcall isYstageMotorAtLowLimit(void);
-		bool WSOSYSTEM_DLL_API __stdcall isZstageMotorAtHighLimit(void);
-		bool WSOSYSTEM_DLL_API __stdcall isZstageMotorAtLowLimit(void);
-
+		bool WSOSYSTEM_DLL_API __stdcall isYstageMotorAtUpperLimit(void);
+		bool WSOSYSTEM_DLL_API __stdcall isYstageMotorAtLowerLimit(void);
 	}
 
 }

@@ -141,7 +141,7 @@ namespace wso_device
 
 			struct {
 				std::uint8_t c1;
-				std::float_t c2;
+				std::float_t f1;
 				std::uint8_t crc[PACKET_CRC_SIZE];
 			} ctrl3;
 

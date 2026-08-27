@@ -218,7 +218,7 @@ bool wso_device::OctFocusMotor::isEndOfPlusDiopter(void) const
 {
 	// return (getCurrentDiopter() >= MOTOR_OCT_FOCUS_DIOPTER_MAX ? true : false) ;
 	// return isEndOfUpperPosition();
-	return isEndOfLowerPosition();
+	return isAtMinPosition();
 }
 
 
@@ -226,7 +226,23 @@ bool wso_device::OctFocusMotor::isEndOfMinusDiopter(void) const
 {
 	// return (getCurrentDiopter() <= MOTOR_OCT_FOCUS_DIOPTER_MIN ? true : false) ;
 	// return isEndOfLowerPosition();
-	return isEndOfUpperPosition();
+	return isAtMaxPosition();
+}
+
+bool wso_device::OctFocusMotor::isAtPiPostion(void)
+{
+	if (auto* board = getMainBoard(); board) {
+		if (auto* p = board->getHbsDataProfile(); p) {
+			if (p->loadGpioStatus()) {
+				auto* gpio = p->getHbsGpioStatus();
+				auto status = gpio->PIstatus;
+				if (status & (0x01 << 0)) {
+					return true;
+				}
+			}
+		}
+	}
+	return false;
 }
 
 bool wso_device::OctFocusMotor::loadCalibParamFromProfile(void)

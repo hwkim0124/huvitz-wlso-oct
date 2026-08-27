@@ -50,9 +50,9 @@ bool wso_device::CorneaCamera::initializeCorneaCamera(void)
 	// The anterior stream is the merged one, so this camera owns the stitch mask.
 	// LOWER_LEFT_RIGHT selects all three sensors.
 	setActiveViewPreset(IrCameraViewPreset::LOWER_LEFT_RIGHT);
-	setMirrorMode(IrCameraId::CORNEA_LEFT, IrCameraMirrorMode::MIRROR_OFF, IrCameraMirrorMode::MIRROR_OFF);
-	setMirrorMode(IrCameraId::CORNEA_RIGHT, IrCameraMirrorMode::MIRROR_OFF, IrCameraMirrorMode::MIRROR_OFF);
-	setMirrorMode(IrCameraId::CORNEA_LOWER, IrCameraMirrorMode::MIRROR_OFF, IrCameraMirrorMode::MIRROR_OFF);
+	setMirrorMode(IrCameraId::CORNEA_LEFT, IrCameraMirrorMode::MIRROR_OFF, IrCameraMirrorMode::MIRROR_ON);
+	setMirrorMode(IrCameraId::CORNEA_RIGHT, IrCameraMirrorMode::MIRROR_ON, IrCameraMirrorMode::MIRROR_OFF);
+	setMirrorMode(IrCameraId::CORNEA_LOWER, IrCameraMirrorMode::MIRROR_ON, IrCameraMirrorMode::MIRROR_OFF);
 
 	setOutputMode(IrCameraId::CORNEA_LEFT, IrCameraOutputMode::NORMAL, IrCameraTestPattern::STANDARD, 0);
 	setOutputMode(IrCameraId::CORNEA_RIGHT, IrCameraOutputMode::NORMAL, IrCameraTestPattern::STANDARD, 0);

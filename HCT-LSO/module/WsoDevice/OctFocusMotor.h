@@ -55,6 +55,7 @@ namespace wso_device
 
 		bool isEndOfPlusDiopter(void) const;
 		bool isEndOfMinusDiopter(void) const;
+		bool isAtPiPostion(void);
 
 		virtual bool loadCalibParamFromProfile(void) override;
 		virtual bool saveCalibParamToProfile(void) override;

@@ -105,7 +105,8 @@ namespace WsoToolkit
         {
             Mouse.OverrideCursor = Cursors.Wait;
             ReleaseMotorCallbacks();
-            DeviceMotors.StopChinrestMove();
+            StageMotors.StopChinrestMove();
+            StageMotors.StopStageAll();
 
             _timer.Stop();
 

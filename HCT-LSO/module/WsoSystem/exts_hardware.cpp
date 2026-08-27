@@ -42,51 +42,6 @@ void WSOSYSTEM_DLL_API __stdcall wso_system::releaseAdapterLensAttached(void)
 	return;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::moveChinrestUp(void)
-{
-	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
-		auto result = p->moveChinrestUp();
-		return result;
-	}
-	return false;
-}
-
-bool WSOSYSTEM_DLL_API __stdcall wso_system::moveChinrestDown(void)
-{
-	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
-		auto result = p->moveChinrestDown();
-		return result;
-	}
-	return false;
-}
-
-bool WSOSYSTEM_DLL_API __stdcall wso_system::stopChinrestMove(void)
-{
-	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
-		auto result = p->stopChinrest();
-		return result;
-	}
-	return false;
-}
-
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isChinrestAtUpperEnd(void)
-{
-	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
-		auto b = p->isChinrestAtHighLimit();
-		return b;
-	}
-	return false;
-}
-
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isChinrestAtLowerEnd(void)
-{
-	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {
-		auto b = p->isChinrestAtLowLimit();
-		return b;
-	}
-	return false;
-}
-
 bool WSOSYSTEM_DLL_API __stdcall wso_system::getDeviceSideOnPatient(EyeSide* side)
 {
 	if (auto* p = Hardware::getInstance()->getMainBoard(); p) {

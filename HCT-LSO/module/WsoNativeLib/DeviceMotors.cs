@@ -93,81 +93,39 @@ namespace WsoNativeLib
         [DllImport(LibraryName)]
         private static extern float getStepMotorValueAtPosition(int type, int pos);
 
-        [DllImport(LibraryName)]
-        [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool moveChinrestUp();
+
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool moveChinrestDown();
+        private static extern bool isOctRefNdMotorAtPiPosition();
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool stopChinrestMove();
+        private static extern bool isOctAntLensMotorAtPiPosition();
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool isChinrestAtUpperEnd();
+        private static extern bool isRetMirrorMotorAtPiPosition();
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool isChinrestAtLowerEnd();
+        private static extern bool isLsoFilterMotorAtPiPosition();
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool isSwingMotorAtHighLimit();
+        private static extern bool isLsoFocusMotorAtPiPosition();
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool isSwingMotorAtLowLimit();
+        private static extern bool isOctPolarMotorAtPiPosition();
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool isOctFocusMotorAtOrigin();
+        private static extern bool isOctReferMotorAtPiPosition();
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool isOctPolarMotorAtOrigin();
-
-        [DllImport(LibraryName)]
-        [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool isOctReferMotorAtOrigin();
-
-        [DllImport(LibraryName)]
-        [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool isOctRefNdMotorAtOrigin();
-
-        [DllImport(LibraryName)]
-        [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool isRetMirrorMotorAtOrigin();
-
-        [DllImport(LibraryName)]
-        [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool isLsoFocusMotorAtOrigin();
-
-        [DllImport(LibraryName)]
-        [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool isXstageMotorAtHighLimit();
-
-        [DllImport(LibraryName)]
-        [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool isXstageMotorAtLowLimit();
-
-        [DllImport(LibraryName)]
-        [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool isYstageMotorAtHighLimit();
-
-        [DllImport(LibraryName)]
-        [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool isYstageMotorAtLowLimit();
-
-        [DllImport(LibraryName)]
-        [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool isZstageMotorAtHighLimit();
-
-        [DllImport(LibraryName)]
-        [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool isZstageMotorAtLowLimit();
+        private static extern bool isOctFocusMotorAtPiPosition();
 
 
         // Public methods
@@ -364,94 +322,44 @@ namespace WsoNativeLib
             return getStepMotorValueAtPosition((int)type, pos);
         }
 
-        public static bool MoveChinrestUp()
+        public static bool IsOctRefNdMotorAtPiPosition()
         {
-            return moveChinrestUp();
+            return isOctRefNdMotorAtPiPosition();
         }
 
-        public static bool MoveChinrestDown()
+        public static bool IsOctAntLensMotorAtPiPosition()
         {
-            return moveChinrestDown();
+            return isOctAntLensMotorAtPiPosition();
         }
 
-        public static bool StopChinrestMove()
+        public static bool IsRetMirrorMotorAtPiPosition()
         {
-            return stopChinrestMove();
+            return isRetMirrorMotorAtPiPosition();
         }
 
-        public static bool IsChinrestAtUpperEnd()
+        public static bool IsLsoFilterMotorAtPiPosition()
         {
-            return isChinrestAtUpperEnd();
+            return isLsoFilterMotorAtPiPosition();
         }
 
-        public static bool IsChinrestAtLowerEnd()
+        public static bool IsLsoFocusMotorAtPiPosition()
         {
-            return isChinrestAtLowerEnd();
+            return isLsoFocusMotorAtPiPosition();
         }
 
-        public static bool IsSwingMotorAtHighLimit()
+        public static bool IsOctPolarMotorAtPiPosition()
         {
-            return isSwingMotorAtHighLimit();
+            return isOctPolarMotorAtPiPosition();
         }
 
-        public static bool IsSwingMotorAtLowLimit()
+        public static bool IsOctReferMotorAtPiPosition()
         {
-            return isSwingMotorAtLowLimit();
+            return isOctReferMotorAtPiPosition();
         }
 
-        public static bool IsOctFocusMotorAtOrigin()
+        public static bool IsOctFocusMotorAtPiPosition()
         {
-            return isOctFocusMotorAtOrigin();
-        }
-
-        public static bool IsOctPolarMotorAtOrigin()
-        {
-            return isOctPolarMotorAtOrigin();
-        }
-
-        public static bool IsOctReferMotorAtOrigin()
-        {
-            return isOctReferMotorAtOrigin();
-        }
-
-        public static bool IsRetMirrorMotorAtOrigin()
-        {
-            return isRetMirrorMotorAtOrigin();
-        }
-
-        public static bool IsLsoFocusMotorAtOrigin()
-        {
-            return isLsoFocusMotorAtOrigin();
-        }
-
-        public static bool IsXstageMotorAtHighLimit()
-        {
-            return isXstageMotorAtHighLimit();
-        }
-
-        public static bool IsXstageMotorAtLowLimit()
-        {
-            return isXstageMotorAtLowLimit();
-        }
-
-        public static bool IsYstageMotorAtHighLimit()
-        {
-            return isYstageMotorAtHighLimit();
-        }
-
-        public static bool IsYstageMotorAtLowLimit()
-        {
-            return isYstageMotorAtLowLimit();
-        }
-
-        public static bool IsZstageMotorAtHighLimit()
-        {
-            return isZstageMotorAtHighLimit();
-        }
-
-        public static bool IsZstageMotorAtLowLimit()
-        {
-            return isZstageMotorAtLowLimit();
+            return isOctFocusMotorAtPiPosition();
         }
 
     }

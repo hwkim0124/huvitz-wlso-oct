@@ -26,6 +26,13 @@ namespace wso_device
 	public:
 		bool initializeChinRestMotor(void);
 
+		bool startMovingUp(void);
+		bool startMovingDown(void);
+		bool stopMoving(void);
+
+		bool isAtUpperLimit(void);
+		bool isAtLowerLimit(void);
+
 	private:
 		struct ChinRestMotorImpl;
 		std::unique_ptr<ChinRestMotorImpl> d_ptr;

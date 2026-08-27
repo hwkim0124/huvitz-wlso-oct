@@ -61,16 +61,21 @@ namespace WsoToolkit
             _sysCalib.sldParam.rmonLowCode2 = ToUshort(editLowCode2.Text);
             _sysCalib.sldParam.rmonRsiCode = ToUshort(editRsiCode.Text);
 
-            _sysCalib.diopterParam.octFocusZeroPos = ToInt(editOctFocus.Text);
-            _sysCalib.diopterParam.lsoFocusZeroPos = ToInt(editLsoFocus.Text);
+            _sysCalib.motorParam.octFocusZeroDioptPos = ToInt(editOctFocus.Text);
+            _sysCalib.motorParam.lsoFocusZeroDioptPos = ToInt(editLsoFocus.Text);
 
             _sysCalib.motorParam.referRetinaOriginPos = ToInt(editReferPosRetina.Text);
             _sysCalib.motorParam.referCorneaOriginPos = ToInt(editReferPosCornea.Text);
             _sysCalib.motorParam.polarOriginPos = ToInt(editPolarPos.Text);
-            _sysCalib.motorParam.returnMirror.inPos = ToShort(editRetMirrorInPos.Text);
-            _sysCalib.motorParam.returnMirror.outPos = ToShort(editRetMirrorOutPos.Text);
-            _sysCalib.motorParam.octAnteriorLens.inPos = ToShort(editAntLensInPos.Text);
-            _sysCalib.motorParam.octAnteriorLens.outPos = ToShort(editAntLensOutPos.Text);
+            _sysCalib.motorParam.returnMirror.inPos = ToInt(editRetMirrorInPos.Text);
+            _sysCalib.motorParam.returnMirror.outPos = ToInt(editRetMirrorOutPos.Text);
+            _sysCalib.motorParam.octAnteriorLens.inPos = ToInt(editAntLensInPos.Text);
+            _sysCalib.motorParam.octAnteriorLens.outPos = ToInt(editAntLensOutPos.Text);
+
+            _sysCalib.motorParam.lsoFilter.colorModePos = ToInt(editLsoColorPos.Text);
+            _sysCalib.motorParam.lsoFilter.blueFafPos = ToInt(editLsoBluePos.Text);
+            _sysCalib.motorParam.lsoFilter.greenFafPos = ToInt(editLsoGreenPos.Text);
+            _sysCalib.motorParam.lsoFilter.icgaPos = ToInt(editLsoIcgaPos.Text);
 
             _sysCalib.ledParam.anteriorIrIntensity1 = ToUshort(editLedAntIr1.Text);
             _sysCalib.ledParam.anteriorIrIntensity2 = ToUshort(editLedAntIr2.Text);
@@ -112,8 +117,8 @@ namespace WsoToolkit
             editLowCode2.Text = _sysCalib.sldParam.rmonLowCode2.ToString();
             editRsiCode.Text = _sysCalib.sldParam.rmonRsiCode.ToString();
 
-            editOctFocus.Text = _sysCalib.diopterParam.octFocusZeroPos.ToString();
-            editLsoFocus.Text = _sysCalib.diopterParam.lsoFocusZeroPos.ToString();
+            editOctFocus.Text = _sysCalib.motorParam.octFocusZeroDioptPos.ToString();
+            editLsoFocus.Text = _sysCalib.motorParam.lsoFocusZeroDioptPos.ToString();
 
             editReferPosRetina.Text = _sysCalib.motorParam.referRetinaOriginPos.ToString();
             editReferPosCornea.Text = _sysCalib.motorParam.referCorneaOriginPos.ToString();
@@ -122,6 +127,11 @@ namespace WsoToolkit
             editRetMirrorOutPos.Text = _sysCalib.motorParam.returnMirror.outPos.ToString();
             editAntLensInPos.Text = _sysCalib.motorParam.octAnteriorLens.inPos.ToString();
             editAntLensOutPos.Text = _sysCalib.motorParam.octAnteriorLens.outPos.ToString();
+
+            editLsoColorPos.Text = _sysCalib.motorParam.lsoFilter.colorModePos.ToString();
+            editLsoBluePos.Text = _sysCalib.motorParam.lsoFilter.blueFafPos.ToString();
+            editLsoGreenPos.Text = _sysCalib.motorParam.lsoFilter.greenFafPos.ToString();
+            editLsoIcgaPos.Text = _sysCalib.motorParam.lsoFilter.icgaPos.ToString();
 
             editLedAntIr1.Text = _sysCalib.ledParam.anteriorIrIntensity1.ToString();
             editLedAntIr2.Text = _sysCalib.ledParam.anteriorIrIntensity2.ToString();

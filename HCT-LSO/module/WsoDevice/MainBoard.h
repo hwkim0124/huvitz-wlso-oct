@@ -111,31 +111,6 @@ namespace wso_device
 		bool pullSystemConfigFromMemory(void);
 		bool pushSystemConfigToMemory(void);
 
-		bool moveChinrestUp(void);
-		bool moveChinrestDown(void);
-		bool stopChinrest(void);
-		bool isChinrestAtHighLimit(void);
-		bool isChinrestAtLowLimit(void);
-
-		bool isSwingMotorAtHighLimit(void);
-		bool isSwingMotorAtLowLimit(void);
-		bool isXstageMotorAtHighLimit(void);
-		bool isXstageMotorAtLowLimit(void);
-		bool isYstageMotorAtHighLimit(void);
-		bool isYstageMotorAtLowLimit(void);
-		bool isZstageMotorAtHighLimit(void);
-		bool isZstageMotorAtLowLimit(void);
-
-		bool isOctFocusMotorAtOrigin(void);
-		bool isOctPolarMotorAtOrigin(void);
-		bool isOctReferMotorAtOrigin(void);
-		bool isOctRefNdMotorAtOrigin(void);
-		bool isLsoFocusMotorAtOrigin(void);
-		bool isRetMirrorMotorAtOrigin(void);
-		bool isOctAntLensMotorAtOrigin(void);
-		bool isLsoFilterMotorAtOrigin(void);
-
-
 		/*
 		bool isAdapterLensDetached(void);
 		bool isAnteriorLensAttached(void);

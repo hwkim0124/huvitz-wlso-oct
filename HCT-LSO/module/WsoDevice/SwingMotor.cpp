@@ -59,6 +59,22 @@ bool wso_device::SwingMotor::initializeSwingMotor(void)
 	return StepMotor::initializeStepMotor();
 }
 
+bool wso_device::SwingMotor::isAtPiPostion(void)
+{
+	if (auto* board = getMainBoard(); board) {
+		if (auto* p = board->getHbsDataProfile(); p) {
+			if (p->loadGpioStatus()) {
+				auto* gpio = p->getHbsGpioStatus();
+				auto status = gpio->PIstatus;
+				if (status & (0x01 << 8)) {
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
 
 SwingMotor::SwingMotorImpl& wso_device::SwingMotor::impl(void) const
 {

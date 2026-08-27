@@ -69,8 +69,18 @@ namespace WsoNativeLib
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
         public struct FilterCalibration
         {
-            public short inPos;
-            public short outPos;
+            public int inPos;
+            public int outPos;
+        }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+        public struct LsoFilterCalibration
+        {
+            public int colorModePos;
+            public int blueFafPos;
+            public int greenFafPos;
+            public int icgaPos;
+            public int reserved;
         }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
@@ -79,8 +89,12 @@ namespace WsoNativeLib
             public int referRetinaOriginPos;
             public int referCorneaOriginPos;
             public int polarOriginPos;
+            public int lsoFocusZeroDioptPos;
+            public int octFocusZeroDioptPos;
+
             public FilterCalibration returnMirror;
             public FilterCalibration octAnteriorLens;
+            public LsoFilterCalibration lsoFilter;
         }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
@@ -92,7 +106,6 @@ namespace WsoNativeLib
             public OctGalvanometerCalibration octGalvano;
             public SldCalibration sldParam;
             public LedCalibration ledParam;
-            public DiopterCalibration diopterParam;
             public MotorCalibration motorParam;
         }
     }

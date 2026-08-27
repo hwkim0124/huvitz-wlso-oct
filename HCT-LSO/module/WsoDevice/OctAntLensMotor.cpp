@@ -161,6 +161,22 @@ bool wso_device::OctAntLensMotor::saveCalibParamToProfile(void)
 	return false;
 }
 
+bool wso_device::OctAntLensMotor::isAtPiPostion(void)
+{
+	if (auto* board = getMainBoard(); board) {
+		if (auto* p = board->getHbsDataProfile(); p) {
+			if (p->loadGpioStatus()) {
+				auto* gpio = p->getHbsGpioStatus();
+				auto status = gpio->PIstatus;
+				if (status & (0x01 << 13)) {
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
 
 OctAntLensMotor::OctAntLensMotorImpl& wso_device::OctAntLensMotor::impl(void) const
 {

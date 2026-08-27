@@ -26,6 +26,8 @@ namespace wso_device
 	public:
 		bool initializeSwingMotor(void);
 
+		bool isAtPiPostion(void);
+
 	private:
 		struct SwingMotorImpl;
 		std::unique_ptr<SwingMotorImpl> d_ptr;

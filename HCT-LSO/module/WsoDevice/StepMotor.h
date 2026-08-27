@@ -81,8 +81,8 @@ namespace wso_device
 		void setRangeMin(int value);
 		int getSliderStepSize(void) const;
 
-		virtual bool isEndOfLowerPosition(void) const;
-		virtual bool isEndOfUpperPosition(void) const;
+		virtual bool isAtMinPosition(void) const;
+		virtual bool isAtMaxPosition(void) const;
 		virtual bool isAtLowerSideOfPosition(void) const;
 		virtual bool isAtUpperSideOfPosition(void) const;
 		virtual bool isAtCenterOfPosition(void) const;

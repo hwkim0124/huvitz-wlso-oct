@@ -25,6 +25,9 @@ namespace wso_device
 	public:
 		bool initializeYstageMotor(void);
 
+		bool isAtUpperLimit(void);
+		bool isAtLowerLimit(void);
+
 	private:
 		struct YstageMotorImpl;
 		std::unique_ptr<YstageMotorImpl> d_ptr;

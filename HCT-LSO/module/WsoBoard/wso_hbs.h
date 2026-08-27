@@ -18,6 +18,15 @@ namespace wso_board
 #define HBS_TBL_ITEM_NUM 31 // ACTIVE Table ITEM
 #define BLK_BUF_TBL_NUM 4
 
+#define HBS_TBL_VERSION 1
+#define HBS_TBL_DESCRIPTOR_ADDR 0xFFFF0000
+
+#define MAX_LSO_DAC_SAMPLE_SIZE 8192
+#define MAX_OCT_DAC_SAMPLE_SIZE 16384
+#define MAX_TRAJ_NUM 32
+#define MAX_LSO_TRAJ_NUM 8
+#define MAX_STEP_MOTOR_NUM 13 // 16
+
 #define TBL_BLKBUF_ID 0
 #define TBL_CALBLKBUF_ID 1
 #define TBL_SYSCAL_ID 2         // Reserved. 
@@ -49,15 +58,6 @@ namespace wso_board
 #define TBL_ANT_IR_CAM_1_STATUS_ID 28   // Left
 #define TBL_ANT_IR_CAM_2_STATUS_ID 29   // Right
 
-#define HBS_TBL_VERSION 1
-#define HBS_TBL_DESCRIPTOR_ADDR 0xFFFF0000
-
-#define MAX_LSO_DAC_SAMPLE_SIZE 8192
-#define MAX_OCT_DAC_SAMPLE_SIZE 16384
-#define MAX_TRAJ_NUM 32
-#define MAX_LSO_TRAJ_NUM 8
-#define MAX_STEP_MOTOR_NUM 13 // 16
-
 #define CALIB_IDX_MOTOR_SETS            0
 #define CALIB_IDX_OCT_PARAMS            1
 #define CALIB_IDX_LED_SOURCE	        2
@@ -79,6 +79,7 @@ namespace wso_board
 
 #define CALIB_ACTIVE_REGION             0 
 #define CALIB_BACKUP_REGION             1
+
 
 #pragma pack(push, 8)
 
@@ -125,17 +126,17 @@ namespace wso_board
     } MainBoardVerInfo_st;
 
     typedef struct {
+        S8 SysSerialNo[16];
+        S8 ProcessNo[16];
+        S8 SLD_SN[8];
+    } SysMfgInfo_st;
+
+    typedef struct {
         U32 status; // 0 initializing,1: fail,2 OK
         U32 dev_status;
         U16 DevErrCode[32];
         U16 model_cfg; // model id added , 2018.11.21
     } SysInitStatus_st;
-
-    typedef struct {
-        S8 SysSerialNo[16];
-        S8 ProcessNo[16];
-        S8 SLD_SN[8];
-    } SysMfgInfo_st;
 
     typedef struct // 64bytes
     {
@@ -268,6 +269,17 @@ namespace wso_board
         U16 Bled_intensity;
         U16 Gled_inentity;
     } LED_Info_st;
+
+    typedef struct {
+        float wled_iled_scaling_factor;
+        float wled_vcont_scaling_factor;
+        float bled_iled_scaling_factor;
+        float bled_vcont_scaling_factor;
+        float gled_iled_scaling_factor;
+        float gled_vcont_scaling_factor;
+        float irled_iled_scaling_factor;
+        float irled_vcont_scaling_factor;
+    } LedCurrentScaling_st;
 
 
     //////////////////////////////////////////////////////////////////////////////////////
@@ -458,12 +470,7 @@ namespace wso_board
 
     typedef struct {
         U32 crc;
-        U32 data_size; // data size of bytes of the  effective data from crc(head
-        // data) field to the active end of UserCalblk_st, M/B will
-        // load data_size size at initialization time from flash.Max
-        // 64kbytes.
-        U32 reserved[(0x10000 / 4) - 8]; // 64kbytes-8bytes ,reserved flash space(user
-        // defined data format)
+        LedCurrentScaling_st LedCurrentScaling;
     } CalBlk7_st; // MAX 64kbytes Block size.
 
     //////////////////////////////////////////////////////////////////////////////////////

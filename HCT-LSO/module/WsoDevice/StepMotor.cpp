@@ -306,12 +306,12 @@ bool wso_device::StepMotor::controlStop(void)
 	}
 
 	UsbComm& usbComm = getMainBoard()->getUsbComm();
-	if (usbComm.MotorStop(getMotorId()))
+	if (usbComm.StepMotorStop(getMotorId()))
 	{
 		impl().stopped = true;
 		return true;
 	}
-	LogD() << "StepMotor::controlHome() failed, name: " << getName();
+	LogD() << "StepMotor::controlStop() failed, name: " << getName();
 	return false;
 }
 
@@ -625,7 +625,7 @@ bool wso_device::StepMotor::waitForUpdate(int posOffset, int timeDelay, int coun
 				check = true;
 				break;
 			}
-			if (isEndOfLowerPosition() || isEndOfUpperPosition()) {
+			if (isAtMinPosition() || isAtMaxPosition()) {
 				check = true;
 				break;
 			}
@@ -752,7 +752,7 @@ int wso_device::StepMotor::getSliderStepSize(void) const
 }
 
 
-bool wso_device::StepMotor::isEndOfLowerPosition(void) const
+bool wso_device::StepMotor::isAtMinPosition(void) const
 {
 	if (isStageMotor()) {
 		if (impl().limitStatus[0]) {
@@ -770,7 +770,7 @@ bool wso_device::StepMotor::isEndOfLowerPosition(void) const
 }
 
 
-bool wso_device::StepMotor::isEndOfUpperPosition(void) const
+bool wso_device::StepMotor::isAtMaxPosition(void) const
 {
 	if (isStageMotor()) {
 		if (impl().limitStatus[1]) {

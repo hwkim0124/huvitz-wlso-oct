@@ -6,7 +6,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WsoToolkit"
         mc:Ignorable="d"
-        Title="System Calibration" ResizeMode="NoResize" Width="880" Height="680" Loaded="Window_Loaded" SizeToContent="WidthAndHeight">
+        Title="System Calibration" ResizeMode="NoResize" Width="Auto" Height="Auto" Loaded="Window_Loaded" SizeToContent="WidthAndHeight">
     <Grid Margin="12,12,12,12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -195,6 +195,8 @@
                         <RowDefinition/>
                         <RowDefinition/>
                         <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
                         <RowDefinition Height="12"/>
                     </Grid.RowDefinitions>
                     <Label x:Name="label27" Content="Motor Position Origin" Style="{StaticResource HeaderStyle}" Grid.Row="1" Grid.ColumnSpan="3" Margin="16,0,0,0" HorizontalAlignment="Left"/>
@@ -202,6 +204,7 @@
                     <Label x:Name="label30" Content="Polarization" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="1" Margin="0,0,0,0"/>
                     <Label x:Name="label31" Content="Return Mirror" Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="1" Margin="0,0,0,0"/>
                     <Label x:Name="label32" Content="OCT Ant. Lens" Style="{StaticResource LabelStyle}" Grid.Row="5" Grid.Column="1" Margin="0,0,0,0"/>
+                    <Label x:Name="label39" Content="LSO Filter" Style="{StaticResource LabelStyle}" Grid.Row="6" Grid.Column="1" Margin="0,0,0,0"/>
                     <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="3">
                         <TextBox x:Name="editReferPosRetina" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
                         <Label x:Name="label33" Content="(Retina)" Style="{StaticResource LabelStyle}" Margin="0,0,16,0"/>
@@ -221,7 +224,19 @@
                         <TextBox x:Name="editAntLensOutPos" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
                         <Label x:Name="label38" Content="(Out)" Style="{StaticResource LabelStyle}" Margin="0,0,16,0"/>
                     </StackPanel>
-                    <Border Style="{StaticResource BorderStyle}" BorderThickness="1" Grid.ColumnSpan="6" Grid.RowSpan="7"/>
+                    <StackPanel Orientation="Horizontal" Grid.Row="6" Grid.Column="2" Grid.ColumnSpan="3">
+                        <TextBox x:Name="editLsoColorPos" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                        <Label x:Name="label40" Content="(Color)" Style="{StaticResource LabelStyle}" Margin="0,0,16,0"/>
+                        <TextBox x:Name="editLsoBluePos" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                        <Label x:Name="label41" Content="(Blue)" Style="{StaticResource LabelStyle}" Margin="0,0,16,0"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Grid.Row="7" Grid.Column="2" Grid.ColumnSpan="3">
+                        <TextBox x:Name="editLsoGreenPos" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                        <Label x:Name="label42" Content="(Green)" Style="{StaticResource LabelStyle}" Margin="0,0,16,0"/>
+                        <TextBox x:Name="editLsoIcgaPos" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                        <Label x:Name="label43" Content="(ICGA)" Style="{StaticResource LabelStyle}" Margin="0,0,16,0"/>
+                    </StackPanel>
+                    <Border Style="{StaticResource BorderStyle}" BorderThickness="1" Grid.ColumnSpan="6" Grid.RowSpan="9"/>
                 </Grid>
                 <Grid Margin="0,8,0,0">
                     <Grid.ColumnDefinitions>
