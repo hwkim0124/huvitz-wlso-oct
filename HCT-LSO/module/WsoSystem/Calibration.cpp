@@ -134,6 +134,7 @@ bool wso_system::Calibration::applySystemCalibration(void)
 			board->getOctPolarMotor()->loadCalibParamFromProfile();
 			board->getRetMirrorMotor()->loadCalibParamFromProfile();
 			board->getOctAntLensMotor()->loadCalibParamFromProfile();
+			board->getLsoFilterMotor()->loadCalibParamFromProfile();
 
 			board->getCorneaIrLeftLed()->loadCalibParamFromProfile();
 			board->getCorneaIrRightLed()->loadCalibParamFromProfile();

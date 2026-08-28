@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using System.Printing;
+using System.Security.RightsManagement;
 
 namespace WsoNativeLib
 {
@@ -40,12 +41,20 @@ namespace WsoNativeLib
         private static extern float getCorneaCameraDgain(int type);
 
         [DllImport(LibraryName)]
+        private static extern uint getCorneaCameraExposureTime(int type);
+
+
+        [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
         private static extern bool setCorneaCameraAgain(int type, float value);
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
         private static extern bool setCorneaCameraDgain(int type, float value);
+
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool setCorneaCameraExposureTime(int type, uint value);
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
@@ -96,6 +105,11 @@ namespace WsoNativeLib
             return getCorneaCameraDgain((int)type);
         }
 
+        public static uint GetExposureTime(CameraType type)
+        {
+            return getCorneaCameraExposureTime((int)type);
+        }
+
         public static bool SetAnalogGain(CameraType type, float value)
         {
             return setCorneaCameraAgain((int)type, value);
@@ -104,6 +118,11 @@ namespace WsoNativeLib
         public static bool SetDigitalGain(CameraType type, float value)
         {
             return setCorneaCameraDgain((int)type, value);
+        }
+
+        public static bool SetExposureTime(CameraType type, uint value)
+        {
+            return setCorneaCameraExposureTime((int)type, value);
         }
 
         public static bool SetOutputMode(CameraType type, IrCameraOutputMode mode, IrCameraTestPattern pattern, int option)

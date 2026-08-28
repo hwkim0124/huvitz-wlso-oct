@@ -92,7 +92,6 @@ namespace wso_device
 	constexpr const char* MOTOR_STAGE_Y_NAME = "YstageMotor";
 	constexpr const char* MOTOR_STAGE_Z_NAME = "ZstageMotor";
 	constexpr const char* MOTOR_CHIN_REST_NAME = "ChinRestMotor";
-
 	constexpr const char* MOTOR_UNKNOWN_NAME = "UnknownMotor";
 
 	constexpr std::int32_t MOTOR_OCT_FOCUS_INIT_POS = 1400;

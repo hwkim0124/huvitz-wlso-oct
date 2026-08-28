@@ -590,20 +590,6 @@ bool wso_device::StepMotor::isAsyncMode(void) const
 bool wso_device::StepMotor::waitForUpdate(int posOffset, int timeDelay, int countMax)
 {
 	bool check = false;
-	switch (impl().type) {
-	case StepMotorType::OCT_FOCUS:
-	case StepMotorType::OCT_REFER:
-	case StepMotorType::OCT_POLAR:
-	case StepMotorType::OCT_REFND:
-	case StepMotorType::LSO_FOCUS:
-	case StepMotorType::RET_MIRROR:
-	case StepMotorType::OCT_ANT_LENS:
-	case StepMotorType::LSO_FILTER:
-		break;
-	default:
-		break;
-	}
-
 	// Polling the current position of moving motor.
 	int count = 0;
 	auto initPos = getPosition();
@@ -631,7 +617,7 @@ bool wso_device::StepMotor::waitForUpdate(int posOffset, int timeDelay, int coun
 			}
 		}
 		else {
-			if ((abs(initPos - currPos) <= posOffset) && count >= MOTOR_MOVE_INIT_COUNT) {
+			if ((abs(initPos - currPos) <= posOffset) && count >= countMax) {
 				break;
 			}
 			if (abs(currPos - impl().targetPos) <= posOffset) {

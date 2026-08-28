@@ -28,7 +28,15 @@ namespace WsoNativeLib
             StageX = 0x0A,
             StageY = 0x0B, 
             StageZ = 0x0C, 
-            ChinRest = 0x0F,
+            ChinRest = 0x0D,
+        }
+
+        public enum LsoFilterMode : int
+        {
+            Color = 0x00,
+            BlueFaf = 0x01,
+            GreenFaf = 0x02, 
+            Icga = 0x03 
         }
 
         public enum LightType : int

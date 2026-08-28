@@ -47,6 +47,13 @@ namespace wso_domain
 		NUM_MOTORS = (CHIN_REST + 1)
 	};
 
+	enum class LsoFilterColorMode : int {
+		Color = 0,
+		BlueFAF = 1,
+		GreenFAF = 2,
+		ICGA = 3
+	};
+
 	enum class LightType : unsigned char
 	{
 		LSO_WHITE_LED = 0x00,

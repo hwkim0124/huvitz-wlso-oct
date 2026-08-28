@@ -80,6 +80,11 @@ bool wso_device::RetinaCamera::setDigitalGain(float gain, bool control)
 	return InfraredCamera::setDigitalGain(IrCameraId::RETINA, gain, control);
 }
 
+bool wso_device::RetinaCamera::setExposureTime(unsigned int time, bool control)
+{
+	return InfraredCamera::setExposureTime(IrCameraId::RETINA, time, control);
+}
+
 float wso_device::RetinaCamera::getAnalogGain(void) const
 {
 	return InfraredCamera::getAnalogGain(IrCameraId::RETINA);
@@ -88,6 +93,11 @@ float wso_device::RetinaCamera::getAnalogGain(void) const
 float wso_device::RetinaCamera::getDigitalGain(void) const
 {
 	return InfraredCamera::getDigitalGain(IrCameraId::RETINA);
+}
+
+unsigned int wso_device::RetinaCamera::getExposureTime(void) const
+{
+	return InfraredCamera::getExposureTime(IrCameraId::RETINA);
 }
 
 bool wso_device::RetinaCamera::handleFrameData(int index, unsigned char* frameData)

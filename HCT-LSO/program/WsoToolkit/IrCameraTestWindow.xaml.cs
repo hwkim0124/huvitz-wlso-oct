@@ -247,6 +247,15 @@ namespace WsoToolkit
                 CorneaCamera.SetDigitalGain(type, dgain);
             }
         }
+        private void EditCorneaExposure_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                var type = GetCameraTypeSelected();
+                var value = ToUInt(editCorneaDgain.Text);
+                CorneaCamera.SetExposureTime(type, value);
+            }
+        }
 
         private void CmbViewFormat_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {

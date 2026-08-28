@@ -11,6 +11,7 @@ namespace wso_device
 {
 	class MainBoard;
 
+
 	class WSODEVICE_DLL_API LsoFilterMotor : public StepMotor
 	{
 	public:
@@ -26,18 +27,30 @@ namespace wso_device
 	public:
 		bool initializeLsoFilterMotor(void);
 
-		virtual bool updatePositionToOrigin(int mode) override;
-		virtual bool setCurrentPositionAsOrigin(int mode) override;
+		bool updatePositionToOrigin(int mode) override;
+		bool setCurrentPositionAsOrigin(int mode) override;
 
-		bool updatePositionToMirrorIn(void);
-		bool updatePositionToMirrorOut(void);
-		void setCurrentPositionAsMirrorIn(void);
-		void setCurrentPositionAsMirrorOut(void);
+		bool updatePositionToColor(void);
+		bool updatePositionToBlueFaf(void);
+		bool updatePositionToGreenFaf(void);
+		bool updatePositionToICGA(void);
 
-		virtual int getPositionOfMirrorIn(void) const;
-		virtual int getPositionOfMirrorOut(void) const;
-		virtual void setPositionOfMirrorIn(int pos);
-		virtual void setPositionOfMirrorOut(int pos);
+		void setCurrentPositionAsColor(void);
+		void setCurrentPositionAsBlueFaf(void);
+		void setCurrentPositionAsGreenFaf(void);
+		void setCurrentPositionAsICGA(void);
+
+		int getPositionOfColor(void);
+		int getPositionOfBlueFaf(void);
+		int getPositionOfGreenFaf(void);
+		int getPositionOfICGA(void);
+
+		void setPositionOfColor(int pos);
+		void setPositionOfBlueFaf(int pos);
+		void setPositionOfGreenFaf(int pos);
+		void setPositionOfICGA(int pos);
+
+		int getColorModeIndex(int mode);
 
 		virtual bool loadCalibParamFromProfile(void) override;
 		virtual bool saveCalibParamToProfile(void) override;

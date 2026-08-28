@@ -84,6 +84,9 @@
                 <ComboBox x:Name="cmbViewFormat" Style="{StaticResource ComboBoxStyle}" Grid.Row="1" Grid.Column="5" Grid.ColumnSpan="2" Width="150" SelectionChanged="CmbViewFormat_SelectionChanged"/>
                 <CheckBox x:Name="checkRollingBar" Content="Rolling Bar" Style="{StaticResource CheckBoxStyle}" Grid.Row="5" Grid.Column="5" Click="CheckRollingBar_Click"/>
                 <CheckBox x:Name="checkTransparent" Content="Transparent" Style="{StaticResource CheckBoxStyle}" Grid.Row="5" Grid.Column="6" Grid.ColumnSpan="2" Click="CheckTransparent_Click"/>
+                <Label x:Name="label112" Content="Exposure" Style="{StaticResource LabelStyle}" Grid.Row="5" Grid.Column="1"/>
+                <TextBox x:Name="editCorneaExposure" Style="{StaticResource TextBoxStyle}" Width="60" Grid.Row="5" Grid.Column="2" KeyDown="EditCorneaExposure_KeyDown"/>
+                <Label x:Name="label113" Content="[us]" Style="{StaticResource LabelStyle}" Grid.Row="5" Grid.Column="3"/>
                 <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="9" Grid.RowSpan="9"/>
             </Grid>
         </StackPanel>

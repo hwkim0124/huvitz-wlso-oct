@@ -77,6 +77,7 @@ namespace WsoToolkit
 
             var again = CorneaCamera.GetAnalogGain(cameraType);
             var dgain = CorneaCamera.GetDigitalGain(cameraType);
+            var expos = CorneaCamera.GetExposureTime(cameraType);
             var mode = IrCameraOutputMode.Normal;
             var pattern = IrCameraTestPattern.Standard;
             var horzFlip = IrCameraMirrorMode.MirrorOff;
@@ -88,6 +89,8 @@ namespace WsoToolkit
 
             editCorneaAgain.Text = again.ToString("F0");
             editCorneaDgain.Text = dgain.ToString("F0");
+            editCorneaExposure.Text = expos.ToString();
+
             cmbOutputMode.SelectedIndex = (int)mode;
             cmbTestPattern.SelectedIndex = GetIndexOfTestPattern(pattern);
             cmbHorzFlip.SelectedIndex = (int)horzFlip;

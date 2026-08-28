@@ -36,12 +36,19 @@ namespace WsoNativeLib
         private static extern float getRetinaCameraDgain();
 
         [DllImport(LibraryName)]
+        private static extern uint getRetinaCameraExposureTime();
+
+        [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
         private static extern bool setRetinaCameraAgain(float value);
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
         private static extern bool setRetinaCameraDgain(float value);
+
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool setRetinaCameraExposureTime(uint value);
 
 
         // Public methods
@@ -70,7 +77,12 @@ namespace WsoNativeLib
         {
             return getRetinaCameraDgain();
         }
-        
+
+        public static float getExposureTime()
+        {
+            return getRetinaCameraExposureTime();
+        }
+
         public static bool setAnalogGain(float value)
         {
             return setRetinaCameraAgain(value);
@@ -79,6 +91,11 @@ namespace WsoNativeLib
         public static bool setDigitalGain(float value)
         {
             return setRetinaCameraDgain(value);
+        }
+
+        public static bool setExposureTime(uint value)
+        {
+            return setRetinaCameraExposureTime(value);
         }
     }
 }

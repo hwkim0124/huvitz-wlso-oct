@@ -1404,13 +1404,13 @@ bool wso_device::UsbComm::IrCameraAnalogGain(std::uint8_t cid, std::uint8_t gain
 }
 
 
-bool wso_device::UsbComm::IrCameraExposureTime(std::uint8_t cid, std::uint16_t ints)
+bool wso_device::UsbComm::IrCameraExposureTime(std::uint8_t cid, std::uint32_t time)
 {
 	lock_guard<mutex> lock(impl().mutexControl);
-	MsgCommand* msg = getMsgCommand(CommandType::IRCAM_INT, 3);
-	msg->packet.ctrl7.c1 = cid;
-	msg->packet.ctrl7.s1 = ints;
-	attachCRC(msg->packet.ctrl7.crc);
+	MsgCommand* msg = getMsgCommand(CommandType::IRCAM_INT, 5);
+	msg->packet.ctrl15.c1 = cid;
+	msg->packet.ctrl15.n1 = time;
+	attachCRC(msg->packet.ctrl15.crc);
 	return sendMsgCmd(msg);
 }
 

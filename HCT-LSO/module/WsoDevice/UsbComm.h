@@ -130,7 +130,7 @@ namespace wso_device
 		bool IrCameraControl(std::uint8_t cid, std::uint8_t onoff);
 		bool IrCameraDigitalGain(std::uint8_t cid, std::uint8_t gain);
 		bool IrCameraAnalogGain(std::uint8_t cid, std::uint8_t gain);
-		bool IrCameraExposureTime(std::uint8_t cid, std::uint16_t ints);
+		bool IrCameraExposureTime(std::uint8_t cid, std::uint32_t time);
 		bool IrCameraStreamFormat(std::uint8_t format);
 		bool IrCameraMirrorMode(std::uint8_t cid, std::uint8_t hflip, std::uint8_t vflip);
 		bool IrCameraOutputMode(std::uint8_t cid, std::uint8_t mode, std::uint8_t type);

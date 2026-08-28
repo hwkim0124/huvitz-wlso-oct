@@ -49,13 +49,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStepMotorByPositionOffset(Motor
 bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStepMotorByValue(MotorType type, float value)
 {
 	if (auto* motor = Hardware::getInstance()->getStepMotor(type); motor) {
-		switch (type) {
-			using enum MotorType;
-		case OCT_FOCUS:
-		default:
-			motor->updatePositionByValue(value);
-			break;
-		}
+		return motor->updatePositionByValue(value);
 	}
 	return false;
 }
@@ -63,13 +57,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStepMotorByValue(MotorType type
 bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStepMotorByValueOffset(MotorType type, float offset)
 {
 	if (auto* motor = Hardware::getInstance()->getStepMotor(type); motor) {
-		switch (type) {
-			using enum MotorType;
-		case OCT_FOCUS:
-		default:
-			motor->updatePositionByValueOffset(offset);
-			break;
-		}
+		return motor->updatePositionByValueOffset(offset);
 	}
 	return false;
 }
@@ -77,13 +65,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStepMotorByValueOffset(MotorTyp
 bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStepMotorToOrigin(MotorType type, int mode)
 {
 	if (auto* motor = Hardware::getInstance()->getStepMotor(type); motor) {
-		switch (type) {
-			using enum MotorType;
-			case OCT_FOCUS:
-			default:
-				motor->updatePositionToOrigin(mode);
-				break;
-		}
+		return motor->updatePositionToOrigin(mode);
 	}
 	return false;
 }

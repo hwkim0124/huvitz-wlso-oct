@@ -84,7 +84,7 @@ namespace WsoToolkit
 
             cmbRetMirror.ItemsSource = new string[] { "Mirror In", "Mirror Out" };
             cmbRetMirror.SelectedIndex = 0;
-            cmbLsoFilter.ItemsSource = new string[] { "Filter In", "Filter Out" };
+            cmbLsoFilter.ItemsSource = new string[] { "Color", "Blue", "Green", "ICGA" };
             cmbLsoFilter.SelectedIndex = 0;
             cmbOctRefNd.ItemsSource = new string[] { "Filter In", "Filter Out" };
             cmbOctRefNd.SelectedIndex = 0;
@@ -116,7 +116,7 @@ namespace WsoToolkit
             DeviceMotors.MoveStepMotorPosition(MotorType.RetMirror, _msRetMirror.currPos);
             // DeviceMotors.MoveStepMotorPosition(MotorType.OctRefNd, _msOctRefNd.currPos);
             DeviceMotors.MoveStepMotorPosition(MotorType.OctAntLens, _msOctAntLens.currPos);
-            // DeviceMotors.MoveStepMotorPosition(MotorType.LsoFilter, _msLsoFilter.currPos);
+            DeviceMotors.MoveStepMotorPosition(MotorType.LsoFilter, _msLsoFilter.currPos);
             DeviceMotors.MoveStepMotorPosition(MotorType.Swing, _msSwing.currPos);
             DeviceMotors.MoveStepMotorPosition(MotorType.StageX, _msXstage.currPos);
             DeviceMotors.MoveStepMotorPosition(MotorType.StageY, _msYstage.currPos);
@@ -572,18 +572,33 @@ namespace WsoToolkit
             }
         }
 
+        private void CmbLsoFilter_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
+
         private void BtnLsoFilterSetAs_Click(object sender, RoutedEventArgs e)
         {
             int mode = cmbLsoFilter.SelectedIndex;
             DeviceMotors.SetStepMotorCurrentPositionAsOrigin(MotorType.LsoFilter, mode);
         }
 
-        private void BtnLsoFilterOut_Click(object sender, RoutedEventArgs e)
+        private void BtnLsoFilterIcga_Click(object sender, RoutedEventArgs e)
+        {
+            DeviceMotors.MoveStepMotorToOriginAsync(MotorType.LsoFilter, 3);
+        }
+
+        private void BtnLsoFilterGreen_Click(object sender, RoutedEventArgs e)
+        {
+            DeviceMotors.MoveStepMotorToOriginAsync(MotorType.LsoFilter, 2);
+        }
+
+        private void BtnLsoFilterBlue_Click(object sender, RoutedEventArgs e)
         {
             DeviceMotors.MoveStepMotorToOriginAsync(MotorType.LsoFilter, 1);
         }
 
-        private void BtnLsoFilterIn_Click(object sender, RoutedEventArgs e)
+        private void BtnLsoFilterColor_Click(object sender, RoutedEventArgs e)
         {
             DeviceMotors.MoveStepMotorToOriginAsync(MotorType.LsoFilter, 0);
         }
@@ -774,6 +789,7 @@ namespace WsoToolkit
         {
             StageMotors.MoveChinrestUp();
         }
+
 
     }
 }

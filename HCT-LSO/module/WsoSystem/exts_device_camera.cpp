@@ -55,6 +55,14 @@ float WSOSYSTEM_DLL_API __stdcall wso_system::getCorneaCameraDgain(IrCameraId ca
 	return 0.0f;
 }
 
+unsigned int WSOSYSTEM_DLL_API __stdcall wso_system::getCorneaCameraExposureTime(IrCameraId camId)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getCorneaCamera(); p) {
+		return p->getExposureTime(camId);
+	}
+	return 0;
+}
+
 bool WSOSYSTEM_DLL_API __stdcall wso_system::setCorneaCameraAgain(IrCameraId camId, float value)
 {
 	if (auto* p = Hardware::getInstance()->getMainBoard()->getCorneaCamera(); p) {
@@ -67,6 +75,14 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::setCorneaCameraDgain(IrCameraId cam
 {
 	if (auto* p = Hardware::getInstance()->getMainBoard()->getCorneaCamera(); p) {
 		return p->setDigitalGain(camId, value, true);
+	}
+	return false;
+}
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::setCorneaCameraExposureTime(IrCameraId camId, unsigned int value)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getCorneaCamera(); p) {
+		return p->setExposureTime(camId, value, true);
 	}
 	return false;
 }
@@ -163,6 +179,14 @@ float WSOSYSTEM_DLL_API __stdcall wso_system::getRetinaCameraDgain(void)
 	return 0.0f;
 }
 
+unsigned int WSOSYSTEM_DLL_API __stdcall wso_system::getRetinaCameraExposureTime(void)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getRetinaCamera(); p) {
+		return p->getExposureTime();
+	}
+	return 0;
+}
+
 bool WSOSYSTEM_DLL_API __stdcall wso_system::setRetinaCameraAgain(float value)
 {
 	if (auto* p = Hardware::getInstance()->getMainBoard()->getRetinaCamera(); p) {
@@ -175,6 +199,14 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::setRetinaCameraDgain(float value)
 {
 	if (auto* p = Hardware::getInstance()->getMainBoard()->getRetinaCamera(); p) {
 		return p->setDigitalGain(value, true);
+	}
+	return false;
+}
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::setRetinaCameraExposureTime(unsigned int value)
+{
+	if (auto* p = Hardware::getInstance()->getMainBoard()->getRetinaCamera(); p) {
+		return p->setExposureTime(value, true);
 	}
 	return false;
 }

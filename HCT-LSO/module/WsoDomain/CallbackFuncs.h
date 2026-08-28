@@ -1,5 +1,11 @@
 #pragma once
 
+// DeviceDefines.h is needed for MotorType in StepMotorPositionChanged. Included
+// here rather than relying on include order, because CallbackRegistry.h pulls
+// this header in before DeviceDefines.h.
+#include "WsoDomain2.h"
+#include "DeviceDefines.h"
+
 #include <type_traits>
 #include <string>
 #include <functional>

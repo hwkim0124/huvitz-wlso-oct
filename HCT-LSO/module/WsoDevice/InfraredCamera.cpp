@@ -29,6 +29,7 @@ struct InfraredCamera::InfraredCameraImpl
 
 	float again[4];
 	float dgain[4];
+	unsigned int exposureTime[4];
 
 	atomic<bool> playing;
 	atomic<bool> workerRunning;
@@ -60,6 +61,7 @@ struct InfraredCamera::InfraredCameraImpl
 			outputMode[i] = IrCameraOutputMode::NORMAL;
 			testPattern[i] = IrCameraTestPattern::STANDARD;
 			patternOption[i] = 0;
+			exposureTime[i] = 0;
 		}
 	}
 };
@@ -321,10 +323,7 @@ bool wso_device::InfraredCamera::setAnalogGain(IrCameraId camId, float gain, boo
 		UsbComm& usbComm = *impl().usbComm;
 		bool ret = usbComm.IrCameraAnalogGain(static_cast<unsigned char>(camId), (uint8_t)data);
 		if (ret) {
-			LogDebug() << "Ir camera id: " << static_cast<int>(camId) << ", set a-gain, value: " << gain;
-		}
-		else {
-			LogDebug() << "Ir camera id: " << static_cast<int>(camId) << ", set a-gain failed!";
+			LogDebug() << "Ir camera id: " << static_cast<int>(camId) << ", set a-gain = " << gain;
 		}
 		return ret;
 	}
@@ -348,10 +347,29 @@ bool wso_device::InfraredCamera::setDigitalGain(IrCameraId camId, float gain, bo
 		UsbComm& usbComm = *impl().usbComm;
 		bool ret = usbComm.IrCameraDigitalGain(static_cast<unsigned char>(camId), data);
 		if (ret) {
-			LogDebug() << "IR camera id: " << static_cast<int>(camId) << ", set d-gain, value: " << gain;
+			LogDebug() << "IR camera id: " << static_cast<int>(camId) << ", set d-gain = " << gain;
 		}
-		else {
-			LogDebug() << "IR camera id: " << static_cast<int>(camId) << ", set d-gain failed!";
+		return ret;
+	}
+	else {
+		return true;
+	}
+}
+
+bool wso_device::InfraredCamera::setExposureTime(IrCameraId camId, unsigned int time, bool control)
+{
+	if (!isInitiated()) {
+		return false;
+	}
+
+	auto index = getCameraIndex(camId);
+	impl().exposureTime[index] = time;
+
+	if (control) {
+		UsbComm& usbComm = *impl().usbComm;
+		bool ret = usbComm.IrCameraExposureTime(static_cast<unsigned char>(camId), time);
+		if (ret) {
+			LogDebug() << "Ir camera id: " << static_cast<int>(camId) << ", set exposure time = " << time;
 		}
 		return ret;
 	}
@@ -372,6 +390,13 @@ float wso_device::InfraredCamera::getDigitalGain(IrCameraId camId) const
 	auto index = getCameraIndex(camId);
 	auto gain = impl().dgain[index];
 	return gain;
+}
+
+unsigned int wso_device::InfraredCamera::getExposureTime(IrCameraId camId) const
+{
+	auto index = getCameraIndex(camId);
+	auto time = impl().exposureTime[index];
+	return time;
 }
 
 std::uint8_t wso_device::InfraredCamera::getAnalogGainData(float gain) const

@@ -48,9 +48,12 @@ namespace wso_device
 
 		bool setAnalogGain(IrCameraId camId, float gain, bool control = true);
 		bool setDigitalGain(IrCameraId camId, float gain, bool control = true);
+		bool setExposureTime(IrCameraId camId, unsigned int time, bool control = true);
+
 		float getAnalogGain(IrCameraId camId) const;
 		float getDigitalGain(IrCameraId camId) const;
-
+		unsigned int getExposureTime(IrCameraId camId) const;
+		
 		std::uint8_t getAnalogGainData(float gain) const;
 		std::uint8_t getDigitalGainData(float gain) const;
 

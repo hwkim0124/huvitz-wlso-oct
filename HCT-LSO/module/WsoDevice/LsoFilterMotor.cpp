@@ -9,13 +9,36 @@ using namespace wso_device;
 using namespace std;
 
 
+namespace
+{
+	int clampToMotorRange(const LsoFilterMotor& motor, int pos)
+	{
+		pos = (pos > motor.getRangeMax() ? motor.getRangeMax() : pos);
+		pos = (pos < motor.getRangeMin() ? motor.getRangeMin() : pos);
+		return pos;
+	}
+}
+
+
 struct LsoFilterMotor::LsoFilterMotorImpl
 {
-	int32_t posMirrorIn;
-	int32_t posMirrorOut;
+	int posModeColor;
+	int posModeBlueFaf;
+	int posModeGreenFaf;
+	int posModeIcga;
 
-	LsoFilterMotorImpl() : posMirrorIn(0), posMirrorOut(0)
-	{}
+	LsoFilterMotorImpl()
+	{
+		initializeLsoFilterMotorImpl();
+	}
+
+	void initializeLsoFilterMotorImpl()
+	{
+		posModeColor = 0;
+		posModeBlueFaf = 0;
+		posModeGreenFaf = 0;
+		posModeIcga = 0;
+	}
 };
 
 
@@ -56,7 +79,7 @@ bool wso_device::LsoFilterMotor::initializeLsoFilterMotor(void)
 {
 	if (StepMotor::initializeStepMotor()) {
 		loadCalibParamFromProfile();
-		updatePositionToMirrorOut();
+		updatePositionToColor();
 		return true;
 	}
 	return false;
@@ -65,86 +88,174 @@ bool wso_device::LsoFilterMotor::initializeLsoFilterMotor(void)
 
 bool wso_device::LsoFilterMotor::updatePositionToOrigin(int mode)
 {
-	if (mode == 0) {
-		return updatePositionToMirrorIn();
+	switch (static_cast<LsoFilterColorMode>(getColorModeIndex(mode))) {
+		using enum LsoFilterColorMode;
+	case Color:
+		return updatePositionToColor();
+	case BlueFAF:
+		return updatePositionToBlueFaf();
+	case GreenFAF:
+		return updatePositionToGreenFaf();
+	case ICGA:
+		return updatePositionToICGA();
+	default:
+		break;
 	}
-	else {
-		return updatePositionToMirrorOut();
-	}
+	LogE() << "LSO filter motor: unknown color mode, mode: " << mode;
+	return false;
 }
 
 bool wso_device::LsoFilterMotor::setCurrentPositionAsOrigin(int mode)
 {
-	if (mode == 0) {
-		setCurrentPositionAsMirrorIn();
+	switch (static_cast<LsoFilterColorMode>(getColorModeIndex(mode))) {
+		using enum LsoFilterColorMode;
+	case Color:
+		setCurrentPositionAsColor();
+		return true;
+	case BlueFAF:
+		setCurrentPositionAsBlueFaf();
+		return true;
+	case GreenFAF:
+		setCurrentPositionAsGreenFaf();
+		return true;
+	case ICGA:
+		setCurrentPositionAsICGA();
+		return true;
+	default:
+		break;
 	}
-	else {
-		setCurrentPositionAsMirrorOut();
-	}
-	return true;
+	LogE() << "LSO filter motor: unknown color mode, mode: " << mode;
+	return false;
 }
 
-bool wso_device::LsoFilterMotor::updatePositionToMirrorIn(void)
+bool wso_device::LsoFilterMotor::updatePositionToColor(void)
 {
-	int pos = getPositionOfMirrorIn();
+	int pos = getPositionOfColor();
 	return StepMotor::updatePosition(pos);
 }
 
-bool wso_device::LsoFilterMotor::updatePositionToMirrorOut(void)
+bool wso_device::LsoFilterMotor::updatePositionToBlueFaf(void)
 {
-	int pos = getPositionOfMirrorOut();
+	int pos = getPositionOfBlueFaf();
 	return StepMotor::updatePosition(pos);
 }
 
-void wso_device::LsoFilterMotor::setCurrentPositionAsMirrorIn(void)
+bool wso_device::LsoFilterMotor::updatePositionToGreenFaf(void)
+{
+	int pos = getPositionOfGreenFaf();
+	return StepMotor::updatePosition(pos);
+}
+
+bool wso_device::LsoFilterMotor::updatePositionToICGA(void)
+{
+	int pos = getPositionOfICGA();
+	return StepMotor::updatePosition(pos);
+}
+
+void wso_device::LsoFilterMotor::setCurrentPositionAsColor(void)
 {
 	int pos = getPosition();
-	setPositionOfMirrorIn(pos);
+	setPositionOfColor(pos);
 	return;
 }
 
-void wso_device::LsoFilterMotor::setCurrentPositionAsMirrorOut(void)
+void wso_device::LsoFilterMotor::setCurrentPositionAsBlueFaf(void)
 {
 	int pos = getPosition();
-	setPositionOfMirrorOut(pos);
+	setPositionOfBlueFaf(pos);
 	return;
 }
 
-int wso_device::LsoFilterMotor::getPositionOfMirrorIn(void) const
+void wso_device::LsoFilterMotor::setCurrentPositionAsGreenFaf(void)
 {
-	return impl().posMirrorIn;
-}
-
-int wso_device::LsoFilterMotor::getPositionOfMirrorOut(void) const
-{
-	return impl().posMirrorOut;
-}
-
-void wso_device::LsoFilterMotor::setPositionOfMirrorIn(int pos)
-{
-	pos = (pos > getRangeMax() ? getRangeMax() : pos);
-	pos = (pos < getRangeMin() ? getRangeMin() : pos);
-	impl().posMirrorIn = pos;
+	int pos = getPosition();
+	setPositionOfGreenFaf(pos);
 	return;
 }
 
-void wso_device::LsoFilterMotor::setPositionOfMirrorOut(int pos)
+void wso_device::LsoFilterMotor::setCurrentPositionAsICGA(void)
 {
-	pos = (pos > getRangeMax() ? getRangeMax() : pos);
-	pos = (pos < getRangeMin() ? getRangeMin() : pos);
-	impl().posMirrorOut = pos;
+	int pos = getPosition();
+	setPositionOfICGA(pos);
 	return;
 }
+
+int wso_device::LsoFilterMotor::getPositionOfColor(void)
+{
+	return impl().posModeColor;
+}
+
+int wso_device::LsoFilterMotor::getPositionOfBlueFaf(void)
+{
+	return impl().posModeBlueFaf;
+}
+
+int wso_device::LsoFilterMotor::getPositionOfGreenFaf(void)
+{
+	return impl().posModeGreenFaf;
+}
+
+int wso_device::LsoFilterMotor::getPositionOfICGA(void)
+{
+	return impl().posModeIcga;
+}
+
+void wso_device::LsoFilterMotor::setPositionOfColor(int pos)
+{
+	impl().posModeColor = clampToMotorRange(*this, pos);
+	return;
+}
+
+void wso_device::LsoFilterMotor::setPositionOfBlueFaf(int pos)
+{
+	impl().posModeBlueFaf = clampToMotorRange(*this, pos);
+	return;
+}
+
+void wso_device::LsoFilterMotor::setPositionOfGreenFaf(int pos)
+{
+	impl().posModeGreenFaf = clampToMotorRange(*this, pos);
+	return;
+}
+
+void wso_device::LsoFilterMotor::setPositionOfICGA(int pos)
+{
+	impl().posModeIcga = clampToMotorRange(*this, pos);
+	return;
+}
+
+// The mode value arrives unvalidated from the managed side through
+// moveStepMotorToOrigin(MotorType, int), so this is the one guard point.
+// Returns -1 for any value outside LsoFilterColorMode.
+int wso_device::LsoFilterMotor::getColorModeIndex(int mode)
+{
+	switch (static_cast<LsoFilterColorMode>(mode)) {
+		using enum LsoFilterColorMode;
+	case Color:
+	case BlueFAF:
+	case GreenFAF:
+	case ICGA:
+		return mode;
+	default:
+		break;
+	}
+	return -1;
+}
+
 
 bool wso_device::LsoFilterMotor::loadCalibParamFromProfile(void)
 {
 	if (auto p = getMainBoard()->getHbsDataProfile()->getHbsCalibMotorSets(); p) {
-		/*
-		auto value1 = p->MotorCalPos.ReturnMirrorPos.InPos;
-		auto value2 = p->MotorCalPos.ReturnMirrorPos.OutPos;
-		setPositionOfMirrorIn(value1);
-		setPositionOfMirrorOut(value2);
-		*/
+		const auto& cal = p->MotorCalPos.LsoFilter_CalPos;
+		setPositionOfColor(cal.ColorModePos);
+		setPositionOfBlueFaf(cal.BlueFAF_Pos);
+		setPositionOfGreenFaf(cal.GreenFAF_Pos);
+		setPositionOfICGA(cal.ICGA_Pos);
+		LogD() << "Lso filter motor loaded from profile"
+			<< ", color: " << cal.ColorModePos
+			<< ", blue: " << cal.BlueFAF_Pos
+			<< ", green: " << cal.GreenFAF_Pos
+			<< ", icga: " << cal.ICGA_Pos;
 		return true;
 	}
 	return false;
@@ -153,12 +264,11 @@ bool wso_device::LsoFilterMotor::loadCalibParamFromProfile(void)
 bool wso_device::LsoFilterMotor::saveCalibParamToProfile(void)
 {
 	if (auto p = const_cast<HbsCalibMotorSets*>(getMainBoard()->getHbsDataProfile()->getHbsCalibMotorSets()); p) {
-		/*
-		auto value1 = getPositionOfMirrorIn();
-		auto value2 = getPositionOfMirrorOut();
-		p->MotorCalPos.ReturnMirrorPos.InPos = value1;
-		p->MotorCalPos.ReturnMirrorPos.OutPos = value2;
-		*/
+		auto& cal = p->MotorCalPos.LsoFilter_CalPos;
+		cal.ColorModePos = getPositionOfColor();
+		cal.BlueFAF_Pos = getPositionOfBlueFaf();
+		cal.GreenFAF_Pos = getPositionOfGreenFaf();
+		cal.ICGA_Pos = getPositionOfICGA();
 		return true;
 	}
 	return false;

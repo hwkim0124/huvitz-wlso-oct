@@ -180,12 +180,14 @@
                 <StackPanel Grid.Row="1" Orientation="Horizontal">
                     <Slider x:Name="sliderLsoFilter" ValueChanged="sliderLsoFilter_ValueChanged" Thumb.DragStarted="sliderLsoFilter_DragStarted" Thumb.DragCompleted="SliderLsoFilter_DragCompleted" Style="{StaticResource SliderStyle}" HorizontalAlignment="Left" Width="200" Margin="8,0,0,0"/>
                     <TextBox x:Name="editLsoFilterPos" Style="{StaticResource TextBoxS1Style}" Margin="4,0,0,0" KeyDown="EditLsoFilterPos_KeyDown"/>
-                    <ComboBox x:Name="cmbLsoFilter" Style="{StaticResource ComboBoxStyle}" Width="72" Margin="4,0,12,0"/>
+                    <ComboBox x:Name="cmbLsoFilter" Style="{StaticResource ComboBoxStyle}" Width="72" Margin="4,0,12,0" SelectionChanged="CmbLsoFilter_SelectionChanged"/>
                 </StackPanel>
                 <StackPanel Grid.Row="2" Orientation="Horizontal" FlowDirection="RightToLeft" Margin="0,8,0,24">
                     <Button x:Name="btnLsoFilterSetAs" Content="Set As" Style="{StaticResource ButtonS1Style}" Margin="8,0,24,0" Click="BtnLsoFilterSetAs_Click"/>
-                    <Button x:Name="btnLsoFilterOut" Content="Out" Style="{StaticResource ButtonS1Style}" Margin="0,0,4,0" Click="BtnLsoFilterOut_Click"/>
-                    <Button x:Name="btnLsoFilterIn" Content="In" Style="{StaticResource ButtonS1Style}" Margin="0,0,8,0" Click="BtnLsoFilterIn_Click"/>
+                    <Button x:Name="btnLsoFilterIcga" Content="ICGA" Style="{StaticResource ButtonS1Style}" Margin="0,0,4,0" Click="BtnLsoFilterIcga_Click"/>
+                    <Button x:Name="btnLsoFilterGreen" Content="Green" Style="{StaticResource ButtonS1Style}" Margin="0,0,4,0" Click="BtnLsoFilterGreen_Click"/>
+                    <Button x:Name="btnLsoFilterBlue" Content="Blue" Style="{StaticResource ButtonS1Style}" Margin="0,0,4,0" Click="BtnLsoFilterBlue_Click"/>
+                    <Button x:Name="btnLsoFilterColor" Content="Color" Style="{StaticResource ButtonS1Style}" Margin="0,0,4,0" Click="BtnLsoFilterColor_Click"/>
                 </StackPanel>
                 <Border BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" BorderThickness="1" Grid.RowSpan="3" Margin="0,0,0,10"/>
             </Grid>
