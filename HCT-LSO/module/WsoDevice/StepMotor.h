@@ -27,7 +27,7 @@ namespace wso_device
 		bool initializeStepMotor(void);
 
 		virtual bool updatePosition(int pos);
-		virtual bool updatePositionUseThread(int pos);
+		// virtual bool updatePositionUseThread(int pos);
 		virtual bool updatePositionByOffset(int offset);
 
 		virtual bool updatePositionByValue(float value);
@@ -44,16 +44,10 @@ namespace wso_device
 		bool controlStop(void);
 		bool controlJogg(int delta);
 
-		bool moveVelocity(int direction);
-		bool stopVelocity(void);
+		bool moveInVelocityMode(int direction);
+		bool stopInVelocityMode(void);
 		bool setVelocityProfile(int nAccelStop, int nMinSpeed, int nMaxSpeed);
 		bool setDefaultVelocity(void);
-
-		bool updateStopVelocity();
-		bool controlMoveVelocity(int direction);
-		bool controlStopVelocity();
-		bool controlSetVelocity(int nAccelStop, int nMinSpeed, int nMaxSpeed);
-		bool controlSetDefaultVelocity();
 
 		bool updateStatus(void);
 		void reportStatus(void);

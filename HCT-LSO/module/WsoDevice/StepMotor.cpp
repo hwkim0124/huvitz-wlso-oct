@@ -5,6 +5,8 @@
 
 #include <string>
 #include <sstream>
+#include <atomic>
+#include <mutex>
 
 #include "wso_board.h"
 
@@ -19,7 +21,10 @@ struct StepMotor::StepMotorImpl
 
 	bool asyncMode;
 	int targetPos;
-	bool stopped;
+	// Written by the thread requesting a stop, polled by the thread blocked in
+	// waitForUpdate(). Atomic for visibility; mutexMoveStop below orders it
+	// against the command that clears it.
+	std::atomic<bool> isStopped;
 
 	int curPos;
 	int maxSpeed;
@@ -39,21 +44,22 @@ struct StepMotor::StepMotorImpl
 	int limitStatus[2];
 
 	thread worker;
-	mutex mutexLock;
+	// Held only while sending a move/stop command and publishing isStopped.
+	// Never held across waitForUpdate() or a CallbackRegistry call.
+	mutex mutexMoveStop;
 
 	StepMotorImpl()
-		: asyncMode(false), stopped(true),
+		: asyncMode(false), isStopped(true),
 		smPosMin(0), smPosMax(0), curPos(0), maxSpeed(0), minSpeed(0), accStep(0), 
 		targetPos(0), type(StepMotorType::UNKNOWN), piStatus(0), limitRange{ 0 }, limitStatus{ false },
 		motorWait(0), piHitRefPos(0), piHitMargin(0), piHitLastPos(0), piHitPosError(0)
 	{
 	}
 
-	// 복사 생성자
 	StepMotorImpl(const StepMotorImpl& other)
 		: 
 		asyncMode(other.asyncMode),
-		stopped(other.stopped),
+		isStopped(other.isStopped.load()),
 		type(other.type),
 		curPos(other.curPos),
 		maxSpeed(other.maxSpeed),
@@ -68,14 +74,13 @@ struct StepMotor::StepMotorImpl
 		piHitLastPos(other.piHitLastPos), 
 		piHitPosError(other.piHitPosError),
 		targetPos(other.targetPos)
-		// thread/mutex는 복사 안함(그냥 새로)
 	{
 	}
 
 	StepMotorImpl& operator=(const StepMotorImpl& other) {
 		if (this != &other) {
 			asyncMode = other.asyncMode;
-			stopped = other.stopped;
+			isStopped = other.isStopped.load();
 
 			type = other.type;
 			curPos = other.curPos;
@@ -98,7 +103,6 @@ struct StepMotor::StepMotorImpl
 			limitRange[1] = other.limitRange[1];
 
 			targetPos = other.targetPos;
-			// worker, mutexLock은 복사하지 않음. (초기화 또는 필요시 상태만 리셋)
 		}
 		return *this;
 	}
@@ -174,14 +178,12 @@ bool wso_device::StepMotor::updatePosition(int pos)
 	}
 
 	if (controlMove(pos)) {
-		int pos = getPosition();
-		float value = getCurrentValueByPosition();
-		CallbackRegistry::getInstance()->runStepMotorPositionChanged(getMotorType(), pos, value);
 		return true;
 	}
 	return false;
 }
 
+/*
 bool wso_device::StepMotor::updatePositionUseThread(int pos)
 {
 	if (!isInitiated()) {
@@ -200,18 +202,12 @@ bool wso_device::StepMotor::updatePositionUseThread(int pos)
 			CallbackRegistry::getInstance()->runStepMotorPositionChanged(getMotorType(), curPos, value);
 		}
 	});
-
-	//impl().worker.detach(); // automatically end
 	return true;
 }
+*/
 
 bool wso_device::StepMotor::updatePositionByOffset(int offset)
 {
-	/*
-	if (isStageMotor()) {
-		return controlJogg(offset);
-	}
-	*/
 	int pos = getPosition() + offset;
 	return updatePosition(pos);
 }
@@ -264,11 +260,23 @@ bool wso_device::StepMotor::controlMove(int pos, bool async)
 	impl().targetPos = pos;
 
 	UsbComm& usbComm = getMainBoard()->getUsbComm();
-	if (usbComm.MotorMove(getMotorId(), pos))
+	bool sent = false;
 	{
-		impl().stopped = false;
+		// Sending the command and clearing isStopped must be one step. A stop
+		// arriving in between would set the flag and then be clobbered here,
+		// so waitForUpdate() would never see it and would run to full timeout.
+		lock_guard<mutex> lock(impl().mutexMoveStop);
+		sent = usbComm.MotorMove(getMotorId(), pos);
+		if (sent) {
+			impl().isStopped = false;
+		}
+	}
+
+	if (sent)
+	{
 		async = async || isAsyncMode();
 		if (!async) {
+			// Outside the lock: a stop must be able to interrupt this.
 			return waitForUpdate();
 		}
 		return true;
@@ -284,10 +292,19 @@ bool wso_device::StepMotor::controlHome(void)
 	}
 
 	UsbComm& usbComm = getMainBoard()->getUsbComm();
-	if (usbComm.MotorHome(getMotorId()))
+	bool sent = false;
 	{
-		impl().stopped = false;
+		lock_guard<mutex> lock(impl().mutexMoveStop);
+		sent = usbComm.MotorHome(getMotorId());
+		if (sent) {
+			impl().isStopped = false;
+		}
+	}
+
+	if (sent)
+	{
 		if (!isAsyncMode()) {
+			// Outside the lock: a stop must be able to interrupt this.
 			return waitForUpdate();
 		}
 		return true;
@@ -296,68 +313,70 @@ bool wso_device::StepMotor::controlHome(void)
 	return false;
 }
 
+
+bool wso_device::StepMotor::controlJogg(int delta)
+{
+	UsbComm& usbComm = getMainBoard()->getUsbComm();
+	lock_guard<mutex> lock(impl().mutexMoveStop);
+	if (usbComm.MotorJogg(getMotorId(), delta)) {
+		impl().isStopped = false;
+		return true;
+	}
+	LogD() << "StepMotor::controlJogg() failed, name: " << getName();
+	return false;
+}
+
+
 bool wso_device::StepMotor::controlStop(void)
 {
 	if (!isInitiated()) {
 		return false;
 	}
-	if (impl().stopped) {
+	/*
+	if (!impl().isMoving) {
 		return true;
 	}
+	*/
 
 	UsbComm& usbComm = getMainBoard()->getUsbComm();
-	if (usbComm.StepMotorStop(getMotorId()))
-	{
-		impl().stopped = true;
+	lock_guard<mutex> lock(impl().mutexMoveStop);
+	if (usbComm.StepMotorStop(getMotorId())) {
+		impl().isStopped = true;
 		return true;
 	}
 	LogD() << "StepMotor::controlStop() failed, name: " << getName();
 	return false;
 }
 
-bool wso_device::StepMotor::controlJogg(int delta)
-{
-	UsbComm& usbComm = getMainBoard()->getUsbComm();
-	if (usbComm.MotorJogg(getMotorId(), delta)) {
-		impl().stopped = false;
-		return true;
-	}
-
-	LogD() << "StepMotor::controlJogg() failed, name: " << getName();
-	return false;
-}
-
-bool wso_device::StepMotor::moveVelocity(int direction)
+bool wso_device::StepMotor::moveInVelocityMode(int direction)
 {
 	if (!isInitiated()) {
 		return false;
 	}
 
 	UsbComm& usbComm = getMainBoard()->getUsbComm();
+	lock_guard<mutex> lock(impl().mutexMoveStop);
 	if (usbComm.MotorMoveVelocity(getMotorId(), (uint8_t)direction)) {
+		impl().isStopped = false;
 		return true;
 	}
-	LogD() << "StepMotor::moveVelocity() failed, name: " << getName();
+	LogD() << "StepMotor::moveInVelocityMode() failed, name: " << getName();
 	return false;
 }
 
-bool wso_device::StepMotor::stopVelocity(void)
+bool wso_device::StepMotor::stopInVelocityMode(void)
 {
 	if (!isInitiated()) {
 		return false;
 	}
 
 	UsbComm& usbComm = getMainBoard()->getUsbComm();
+	lock_guard<mutex> lock(impl().mutexMoveStop);
 	if (usbComm.MotorStopVelocity(getMotorId())) {
-		if (!updateStatus()) {
-			return false;
-		}
-		int pos = getPosition();
-		float value = getCurrentValueByPosition();
-		CallbackRegistry::getInstance()->runStepMotorPositionChanged(getMotorType(), pos, value);
+		impl().isStopped = true;
 		return true;
 	}
-	LogD() << "StepMotor::controlStopVelocity() failed, name: " << getName();
+	LogD() << "StepMotor::stopInVelocityMode() failed, name: " << getName();
 	return false;
 }
 
@@ -369,9 +388,6 @@ bool wso_device::StepMotor::setVelocityProfile(int nAccelStop, int nMinSpeed, in
 
 	UsbComm& usbComm = getMainBoard()->getUsbComm();
 	if (usbComm.WriteMotorSpeedVelocity(getMotorId(), (uint32_t)nAccelStop, (uint32_t)nMinSpeed, (uint32_t)nMaxSpeed)) {
-		if (!updateStatus()) {
-			return false;
-		}
 		return true;
 	}
 	LogD() << "StepMotor::setVelocityProfile() failed, name: " << getName() << ", acc_stop: " << nAccelStop << ", min_speed: " << nMinSpeed << ", max_speed: " << nMaxSpeed;
@@ -386,97 +402,9 @@ bool wso_device::StepMotor::setDefaultVelocity(void)
 
 	UsbComm& usbComm = getMainBoard()->getUsbComm();
 	if (usbComm.MotorSpeedDefaultVelocity(getMotorId())) {
-		if (!updateStatus()) {
-			return false;
-		}
 		return true;
 	}
 	LogD() << "StepMotor::setDefaultVelocity() failed, name: " << getName();
-	return false;
-}
-
-bool wso_device::StepMotor::updateStopVelocity()
-{
-	if (!isInitiated()) {
-		return false;
-	}
-
-	if (controlStopVelocity()) {
-		int pos = getPosition();
-		float value = getCurrentValueByPosition();
-		CallbackRegistry::getInstance()->runStepMotorPositionChanged(getMotorType(), pos, value);
-		return true;
-	}
-	LogD() << "StepMotor::updateStopVelocity() failed, name: " << getName();
-	return false;
-}
-
-bool wso_device::StepMotor::controlMoveVelocity(int direction)
-{
-	if (!isInitiated()) {
-		return false;
-	}
-
-	UsbComm& usbComm = getMainBoard()->getUsbComm();
-	if (usbComm.MotorMoveVelocity(getMotorId(), (uint8_t)direction))
-	{
-		return true;
-	}
-	LogD() << "StepMotor::controlMoveVelocity() failed, name: " << getName();
-	return false;
-}
-
-bool wso_device::StepMotor::controlStopVelocity()
-{
-	if (!isInitiated()) {
-		return false;
-	}
-
-	UsbComm& usbComm = getMainBoard()->getUsbComm();
-	if (usbComm.MotorStopVelocity(getMotorId()))
-	{
-		if (!updateStatus()) {
-			return false;
-		}
-		return true;
-	}
-	LogD() << "StepMotor::controlStopVelocity() failed, name: " << getName();
-	return false;
-}
-
-bool wso_device::StepMotor::controlSetVelocity(int nAccelStop, int nMinSpeed, int nMaxSpeed)
-{
-	if (!isInitiated()) {
-		return false;
-	}
-
-	UsbComm& usbComm = getMainBoard()->getUsbComm();
-	if (usbComm.WriteMotorSpeedVelocity(getMotorId(), (uint32_t)nAccelStop, (uint32_t)nMinSpeed, (uint32_t)nMaxSpeed))
-	{
-		if (!updateStatus()) {
-			return false;
-		}
-		return true;
-	}
-	LogD() << "StepMotor::controlSetVelocity() failed, name: " << getName() << ", acc_stop: " << nAccelStop << ", min_speed: " << nMinSpeed << ", max_speed: " << nMaxSpeed;
-	return false;
-}
-
-bool wso_device::StepMotor::controlSetDefaultVelocity()
-{
-	if (!isInitiated()) {
-		return false;
-	}
-
-	UsbComm& usbComm = getMainBoard()->getUsbComm();
-	if (usbComm.MotorSpeedDefaultVelocity(getMotorId()))
-	{
-		if (!updateStatus()) {
-			return false;
-		}
-		return true;
-	}
-	LogD() << "StepMotor::controlSetDefaultVelocity() failed, name: " << getName();
 	return false;
 }
 
@@ -600,34 +528,36 @@ bool wso_device::StepMotor::waitForUpdate(int posOffset, int timeDelay, int coun
 		if (!updateStatus()) {
 			break;
 		}
-		if (++count >= countMax) {
+		if (impl().isStopped) {
+			check = true;
 			break;
 		}
+
 		auto currPos = getPosition();
 		auto targPos = impl().targetPos;
 
-		if (isStageMotor()) {
-			if (abs(currPos - impl().targetPos) <= posOffset) {
-				check = true;
-				break;
-			}
-			if (isAtMinPosition() || isAtMaxPosition()) {
-				check = true;
-				break;
-			}
+		if (abs(currPos - impl().targetPos) <= posOffset) {
+			check = true;
+			break;
 		}
 		else {
-			if ((abs(initPos - currPos) <= posOffset) && count >= countMax) {
-				break;
+			if (isStageMotor()) {
+				if (isAtMinPosition() || isAtMaxPosition()) {
+					check = true;
+					break;
+				}
 			}
-			if (abs(currPos - impl().targetPos) <= posOffset) {
-				check = true;
-				break;
-			}
+		}
+
+		if (++count >= countMax) {
+			break;
 		}
 	}
 
 	if (check) {
+		int pos = getPosition();
+		float value = getCurrentValueByPosition();
+		CallbackRegistry::getInstance()->runStepMotorPositionChanged(getMotorType(), pos, value);
 		return true;
 	}
 	LogD() << "StepMotor::waitForUpdate() timeout, name: " << getName() << ", curPos: " << getPosition() << ", target: " << impl().targetPos << ", count: " << count;

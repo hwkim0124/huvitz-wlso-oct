@@ -26,6 +26,7 @@ struct HbsDataProfile::HbsDataProfileImpl
 	GP_Status_st 		HBS_GP_Status{};
 	SLD_st 				HBS_SLD_status{};
 	Zynq_XADC_st		HBS_ZynqXADC{};
+	OctPhaseCtrl_st		HBS_OctPhaseControl{};
 
 	HbsCalibsDescriptor hbsCalibsDescriptor{};
 
@@ -143,6 +144,12 @@ bool wso_board::HbsDataProfile::loadHbsTableEntries(void)
 		return false;
 	}
 	if (!loadSldStatus()) {
+		return false;
+	}
+	if (!loadZynqXADC()) {
+		return false;
+	}
+	if (!loadOctPhaseControl()) {
 		return false;
 	}
 	return true;
@@ -439,6 +446,18 @@ bool wso_board::HbsDataProfile::loadLsoScannerParam(void)
 	if (auto desc = getHbsTableDescriptor(); channel) {
 		auto data = getHbsLsoScanner();
 		if (channel->readLsoScannerParam(data, desc)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool wso_board::HbsDataProfile::loadOctPhaseControl(void)
+{
+	auto* channel = getDataChannel();
+	if (auto desc = getHbsTableDescriptor(); channel) {
+		auto data = getHbsOctPhaseControl();
+		if (channel->readOctPhaseControl(data, desc)) {
 			return true;
 		}
 	}
@@ -745,6 +764,18 @@ bool wso_board::HbsDataProfile::saveGalvanoDynamicParam(void)
 	return false;
 }
 
+bool wso_board::HbsDataProfile::saveOctPhaseControl(void)
+{
+	auto* channel = getDataChannel();
+	if (auto desc = getHbsTableDescriptor(); channel) {
+		auto data = getHbsOctPhaseControl();
+		if (channel->writeOctPhaseControl(data, desc)) {
+			return true;
+		}
+	}
+	return false;
+}
+
 const hbs_table_descriptor_st* wso_board::HbsDataProfile::getHbsTableDescriptor(void) const
 {
 	return &impl().HBS_descriptor;
@@ -935,6 +966,11 @@ const HbsZyncXADC* wso_board::HbsDataProfile::getHbsZyncXADC(void) const
 	return &impl().HBS_ZynqXADC;
 }
 
+const HbsOctPhaseControl* wso_board::HbsDataProfile::getHbsOctPhaseControl(void) const
+{
+	return &impl().HBS_OctPhaseControl;
+}
+
 const HbsStepMotorStatus* wso_board::HbsDataProfile::getHbsStepMotorStatus(StepMotorType type) const
 {
 	switch (type) {
@@ -1005,7 +1041,7 @@ int wso_board::HbsDataProfile::getHbsTableMotorIndex(StepMotorType type)
 		case OCT_ANT_LENS:
 			return TBL_ANTLENS_MOTOR_ID;
 		case LSO_FILTER:
-			return TBL_AP1_MOTOR_ID;
+			return TBL_LSO_FILTER_MOTOR_ID;
 		case SWING:
 			return TBL_SWING_MOTOR_ID;
 		case STAGE_X:

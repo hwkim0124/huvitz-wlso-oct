@@ -40,6 +40,7 @@ namespace wso_board
 		virtual bool readStageMotorStatus(const HbsStageMotorStatus* data, StageMotorType type, const HbsTableDescriptor* desc) = 0;
 		virtual bool readGalvanoDynamicParam(const HbsGalvanoDynamicParam* data, const HbsTableDescriptor* desc) = 0;
 		virtual bool readLsoScannerParam(const HbsLsoScanner* data, const HbsTableDescriptor* desc) = 0;
+		virtual bool readOctPhaseControl(const HbsOctPhaseControl* data, const HbsTableDescriptor* desc) = 0;
 
 		virtual bool writeCalibMotorSets(const HbsCalibMotorSets* data, const HbsCalibsDescriptor* desc) = 0;
 		virtual bool writeCalibOctParams(const HbsCalibOctParams* data, const HbsCalibsDescriptor* desc) = 0;
@@ -55,6 +56,7 @@ namespace wso_board
 		virtual bool writeSystemConfigure(const HbsSystemConfig* data, const HbsTableDescriptor* desc) = 0;
 		virtual bool writeGalvanoDynamicParam(const HbsGalvanoDynamicParam* data, const HbsTableDescriptor* desc) = 0;
 		virtual bool writeLsoScannerParam(const HbsLsoScanner* data, const HbsTableDescriptor* desc) = 0;
+		virtual bool writeOctPhaseControl(const HbsOctPhaseControl* data, const HbsTableDescriptor* desc) = 0;
 
 		virtual bool writeTrajectoryParam(std::uint8_t tid, const TrajectoryProfileParam* param, const HbsTableDescriptor* desc) = 0;
 		virtual bool writeTrajectoryPositionsX(std::uint8_t tid, const std::int16_t* positions, std::uint16_t count, const HbsTableDescriptor* desc) = 0;

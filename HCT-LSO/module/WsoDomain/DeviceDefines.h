@@ -42,7 +42,7 @@ namespace wso_domain
 		STAGE_X = 0x0A,
 		STAGE_Y = 0x0B,
 		STAGE_Z = 0x0C,
-		CHIN_REST = 0x0F,
+		CHIN_REST = 0x0D,
 		UNKNOWN = 0xFF,
 		NUM_MOTORS = (CHIN_REST + 1)
 	};

@@ -40,6 +40,7 @@ namespace wso_board
 		bool loadSystemInitStatus(void);
 		bool loadSystemConfigure(void);
 		bool loadLsoScannerParam(void);
+		bool loadOctPhaseControl(void);
 
 		bool loadGpioStatus(void);
 		bool loadSldStatus(void);
@@ -64,6 +65,7 @@ namespace wso_board
 		bool saveSystemConfigure(void);
 		bool saveLsoScannerParam(void);
 		bool saveGalvanoDynamicParam(void);
+		bool saveOctPhaseControl(void);
 
 		const HbsTableDescriptor* getHbsTableDescriptor(void) const;
 		const HbsBufferDescriptor* getHbsBufferDescriptor(void) const;
@@ -108,6 +110,7 @@ namespace wso_board
 		const HbsOctGalvano* getHbsGalvanometer(void) const;
 		const HbsGalvanoDynamicParam* getHbsGalvanoDynamicParam(void);
 		const HbsZyncXADC* getHbsZyncXADC(void) const;
+		const HbsOctPhaseControl* getHbsOctPhaseControl(void) const;
 
 		const HbsStepMotorStatus* getHbsStepMotorStatus(StepMotorType type) const;
 		const HbsStageMotorStatus* getHbsStageMotorStatus(StageMotorType type) const;

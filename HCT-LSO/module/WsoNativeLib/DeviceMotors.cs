@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media.Animation;
 
@@ -16,7 +17,11 @@ namespace WsoNativeLib
     public static class DeviceMotors
     {
         const string LibraryName = WsoSystemDllPath;
-        private static Task? _taskToMove = null;
+
+        // At most one move may be in flight per motor. Moves on different motors
+        // may overlap: UsbComm serializes each control transaction internally.
+        private static readonly Dictionary<MotorType, Task> _moveTasks = new();
+        private static readonly object _moveLock = new();
 
         // P/Invoke declarations
         /////////////////////////////////////////////////////////////////////////////////////////////
@@ -79,7 +84,8 @@ namespace WsoNativeLib
         private static extern void stopStepMotor(int type);
 
         [DllImport(LibraryName)]
-        private static extern int setStepMotorCurrentPositionAsOrigin(int type, int mode = 0);
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool setStepMotorCurrentPositionAsOrigin(int type, int mode = 0);
 
         [DllImport(LibraryName)]
         private static extern int getStepMotorPosition(int type);
@@ -149,21 +155,37 @@ namespace WsoNativeLib
         {
             return moveStepMotorPosition((int)type, pos);
         }
-
-        private static bool IsTaskToMoveCompleted()
+        
+        private static bool TryStartMove(MotorType type, Action move)
         {
-            return _taskToMove == null || _taskToMove.IsCompleted;
+            lock (_moveLock)
+            {
+                if (_moveTasks.TryGetValue(type, out var running) && !running.IsCompleted)
+                {
+                    return false;
+                }
+
+                // LongRunning: the native call blocks in waitForUpdate() for up to
+                // MOTOR_MOVE_WAIT_DELAY * MOTOR_MOVE_WAIT_COUNT ms, and every motor
+                // may be moving at once, so these must not run on pooled threads.
+                _moveTasks[type] = Task.Factory.StartNew(
+                    move, CancellationToken.None,
+                    TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                return true;
+            }
+        }
+
+        public static bool IsStepMotorMoving(MotorType type)
+        {
+            lock (_moveLock)
+            {
+                return _moveTasks.TryGetValue(type, out var running) && !running.IsCompleted;
+            }
         }
 
         public static void MoveStepMotorPositionAsync(MotorType type, int pos)
         {
-            if (IsTaskToMoveCompleted())
-            {
-                _taskToMove = Task.Factory.StartNew(() =>
-                {
-                    moveStepMotorPosition((int)type, pos);
-                });
-            }
+            TryStartMove(type, () => moveStepMotorPosition((int)type, pos));
         }
 
         public static bool MoveStepMotorByPositionOffset(MotorType type, int offset)
@@ -173,13 +195,7 @@ namespace WsoNativeLib
 
         public static void MoveStepMotorByPositionOffsetAsync(MotorType type, int offset)
         {
-            if (IsTaskToMoveCompleted())
-            {
-                _taskToMove = Task.Factory.StartNew(() =>
-                {
-                    moveStepMotorByPositionOffset((int)type, offset);
-                });
-            }
+            TryStartMove(type, () => moveStepMotorByPositionOffset((int)type, offset));
         }
 
         public static bool MoveStepMotorByValue(MotorType type, float value)
@@ -189,13 +205,7 @@ namespace WsoNativeLib
 
         public static void MoveStepMotorByValueAsync(MotorType type, float value)
         {
-            if (IsTaskToMoveCompleted())
-            {
-                _taskToMove = Task.Factory.StartNew(() =>
-                {
-                    moveStepMotorByValue((int)type, value);
-                });
-            }
+            TryStartMove(type, () => moveStepMotorByValue((int)type, value));
         }
 
         public static bool MoveStepMotorByValueOffset(MotorType type, float offset)
@@ -205,13 +215,7 @@ namespace WsoNativeLib
 
         public static void MoveStepMotorByValueOffsetAsync(MotorType type, float offset)
         {
-            if (IsTaskToMoveCompleted())
-            {
-                _taskToMove = Task.Factory.StartNew(() =>
-                {
-                    moveStepMotorByValueOffset((int)type, offset);
-                });
-            }
+            TryStartMove(type, () => moveStepMotorByValueOffset((int)type, offset));
         }
 
         public static bool MoveStepMotorToOrigin(MotorType type, int mode = 0)
@@ -221,13 +225,7 @@ namespace WsoNativeLib
 
         public static void MoveStepMotorToOriginAsync(MotorType type, int mode = 0)
         {
-            if (IsTaskToMoveCompleted())
-            {
-                _taskToMove = Task.Factory.StartNew(() =>
-                {
-                    moveStepMotorToOrigin((int)type, mode);
-                });
-            }
+            TryStartMove(type, () => moveStepMotorToOrigin((int)type, mode));
         }
 
         public static bool MoveStepMotorToUpperEnd(MotorType type)
@@ -237,13 +235,7 @@ namespace WsoNativeLib
 
         public static void MoveStepMotorToUpperEndAsync(MotorType type)
         {
-            if (IsTaskToMoveCompleted())
-            {
-                _taskToMove = Task.Factory.StartNew(() =>
-                {
-                    moveStepMotorToUpperEnd((int)type);
-                });
-            }
+            TryStartMove(type, () => moveStepMotorToUpperEnd((int)type));
         }
 
         public static bool MoveStepMotorToLowerEnd(MotorType type)
@@ -253,13 +245,7 @@ namespace WsoNativeLib
 
         public static void MoveStepMotorToLowerEndAsync(MotorType type)
         {
-            if (IsTaskToMoveCompleted())
-            {
-                _taskToMove = Task.Factory.StartNew(() =>
-                {
-                    moveStepMotorToLowerEnd((int)type);
-                });
-            }
+            TryStartMove(type, () => moveStepMotorToLowerEnd((int)type));
         }
 
         public static bool MoveStepMotorToCenter(MotorType type)
@@ -269,13 +255,7 @@ namespace WsoNativeLib
 
         public static void MoveStepMotorToCenterAsync(MotorType type)
         {
-            if (IsTaskToMoveCompleted())
-            {
-                _taskToMove = Task.Factory.StartNew(() =>
-                {
-                    moveStepMotorToCenter((int)type);
-                });
-            }
+            TryStartMove(type, () => moveStepMotorToCenter((int)type));
         }
 
         public static bool IsStepMotorAtUpperEnd(MotorType type)
@@ -297,7 +277,7 @@ namespace WsoNativeLib
             stopStepMotor((int)type);
         }
 
-        public static int SetStepMotorCurrentPositionAsOrigin(MotorType type, int mode = 0)
+        public static bool SetStepMotorCurrentPositionAsOrigin(MotorType type, int mode = 0)
         {
             return setStepMotorCurrentPositionAsOrigin((int)type, mode);
         }

@@ -763,6 +763,27 @@ bool wso_device::UsbComm::readSldStatus(const HbsSldStatus* data, const HbsTable
 	return true;
 }
 
+bool wso_device::UsbComm::readOctPhaseControl(const HbsOctPhaseControl* data, const HbsTableDescriptor* desc)
+{
+	assert(data != nullptr);
+	assert(desc != nullptr);
+	lock_guard<mutex> lock(impl().mutexControl);
+	const auto addr = desc->entries[TBL_OCT_PHASE_CONTROL_ID].buf_addr;
+	const auto size = desc->entries[TBL_OCT_PHASE_CONTROL_ID].buf_size;
+
+	const auto size2 = sizeof(HbsOctPhaseControl);
+	if (size2 != size) {
+		LogD() << "Oct phase control data size not matched, data_size: " << size2 << ", buff_size: " << size;
+		// return false;
+	}
+
+	if (size <= 0 || addr <= 0 || !readAddress(addr, (unsigned char*)data, size2)) {
+		LogDebug() << "Oct phase control data failed to read, addr: " << addr << ", size: " << size2;
+		return false;
+	}
+	return true;
+}
+
 bool wso_device::UsbComm::readZynqXADC(const HbsZyncXADC* data, const HbsTableDescriptor* desc)
 {
 	assert(data != nullptr);
@@ -1157,6 +1178,26 @@ bool wso_device::UsbComm::writeLsoScannerParam(const HbsLsoScanner* data, const 
 	return true;
 }
 
+bool wso_device::UsbComm::writeOctPhaseControl(const HbsOctPhaseControl* data, const HbsTableDescriptor* desc)
+{
+	assert(data != nullptr);
+	assert(desc != nullptr);
+	lock_guard<mutex> lock(impl().mutexControl);
+	const auto addr = desc->entries[TBL_OCT_PHASE_CONTROL_ID].buf_addr;
+	const auto size = desc->entries[TBL_OCT_PHASE_CONTROL_ID].buf_size;
+
+	const auto size2 = sizeof(HbsOctPhaseControl);
+	if (size2 != size) {
+		LogD() << "Oct phase control data size not matched, data_size: " << size2 << ", buff_size: " << size;
+	}
+
+	if (size <= 0 || addr <= 0 || !writeAddress(addr, (unsigned char*)data, size2)) {
+		LogDebug() << "Oct phase control data write failed!, addr: " << addr << ", size: " << size2;
+		return false;
+	}
+	return true;
+}
+
 bool wso_device::UsbComm::writeTrajectoryParam(std::uint8_t tid, const TrajectoryProfileParam* param, const HbsTableDescriptor* desc)
 {
 	assert(desc != nullptr);
@@ -1282,21 +1323,19 @@ bool wso_device::UsbComm::MotorHome(std::uint8_t mid)
 bool wso_device::UsbComm::StepMotorStop(std::uint8_t mid)
 {
 	lock_guard<mutex> lock(impl().mutexControl);
-	MsgCommand* msg = getMsgCommand(CommandType::SMOTSTOP, 2);
-	msg->packet.ctrl2.c1 = 1; // Unit Id.
-	msg->packet.ctrl2.c1 = mid;
-	attachCRC(msg->packet.ctrl2.crc);
+	MsgCommand* msg = getMsgCommand(CommandType::SMOTSTOP, 1);
+	msg->packet.ctrl1.c1 = mid;
+	attachCRC(msg->packet.ctrl1.crc);
 	return sendMsgCmd(msg);
 }
 
 bool wso_device::UsbComm::StepMotorVertMove(std::uint8_t mid, std::uint8_t dir)
 {
 	lock_guard<mutex> lock(impl().mutexControl);
-	MsgCommand* msg = getMsgCommand(CommandType::MOT_VMOVE, 3);
-	msg->packet.ctrl9.c1 = 1;	 // Unit Id.
-	msg->packet.ctrl9.c2 = mid;
-	msg->packet.ctrl9.c3 = dir;  // 1 : Up, 0 : Down.
-	attachCRC(msg->packet.ctrl9.crc);
+	MsgCommand* msg = getMsgCommand(CommandType::MOT_VMOVE, 2);
+	msg->packet.ctrl2.c1 = mid;
+	msg->packet.ctrl2.c2 = dir;
+	attachCRC(msg->packet.ctrl2.crc);
 	return sendMsgCmd(msg);
 }
 

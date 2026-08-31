@@ -46,13 +46,13 @@ namespace wso_board
 	using HbsCalibFactorySet1 = CalBlk6_st;
 	using HbsCalibFactorySet2 = CalBlk7_st;
 
-
 	using HbsStepMotorStatus = StepMotorInfo_st;
 	using HbsStageMotorStatus = StepMotorInfo_st;
 	using HbsCalibration = SysCal_st;
 	using HbsConfiguration = UserSetup_st;
 	using HbsInfraredCameraStatus = IRCamInfo_st;
 	using HbsGalvanoDynamicParam = Galvano_Dynamic_st;
+	using HbsOctPhaseControl = OctPhaseCtrl_st;
 
 
 	enum class HbsBufferIndex : int
@@ -73,7 +73,7 @@ namespace wso_board
 		LSO_FOCUS_MOTOR = TBL_LSO_FOCUS_MOTOR_ID,		// 13
 		RETURN_MIRROR_MOTOR = TBL_RM_MOTOR_ID,						// 14
 		ANTERIOR_LENS_MOTOR = TBL_ANTLENS_MOTOR_ID,			// 15
-		AP1_MOTOR = TBL_AP1_MOTOR_ID,					// 16
+		LSO_FILTER_MOTER = TBL_LSO_FILTER_MOTOR_ID,					// 16
 		AP2_MOTOR = TBL_AP2_MOTOR_ID,					// 17
 		SWING_MOTOR = TBL_SWING_MOTOR_ID,				// 18
 		X_STAGE_MOTOR = TBL_X_MOTOR_ID,					// 19
@@ -87,6 +87,7 @@ namespace wso_board
 		ANTERIOR_IR_CAMERA1 = TBL_ANT_IR_CAM_0_STATUS_ID, // 27
 		ANTERIOR_IR_CAMERA2 = TBL_ANT_IR_CAM_0_STATUS_ID, // 28
 		ANTERIOR_IR_CAMERA3 = TBL_ANT_IR_CAM_0_STATUS_ID, // 29
+		OCT_PHASE_CONTROL = TBL_OCT_PHASE_CONTROL_ID,
 	};
 
 }

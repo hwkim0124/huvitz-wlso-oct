@@ -79,6 +79,7 @@ namespace wso_device
 		bool readGpioStatus(const HbsGpioStatus* data, const HbsTableDescriptor* desc) override;
 		bool readLsoScannerParam(const HbsLsoScanner* data, const HbsTableDescriptor* desc) override;
 		bool readSldStatus(const HbsSldStatus* data, const HbsTableDescriptor* desc) override;
+		bool readOctPhaseControl(const HbsOctPhaseControl* data, const HbsTableDescriptor* desc) override;
 
 		bool readZynqXADC(const HbsZyncXADC* data, const HbsTableDescriptor* desc) override;
 		bool readGalvanoDynamicParam(const HbsGalvanoDynamicParam* data, const HbsTableDescriptor* desc) override;
@@ -100,6 +101,7 @@ namespace wso_device
 		bool writeSystemConfigure(const HbsSystemConfig* data, const HbsTableDescriptor* desc) override;
 		bool writeGalvanoDynamicParam(const HbsGalvanoDynamicParam* data, const HbsTableDescriptor* desc) override;
 		bool writeLsoScannerParam(const HbsLsoScanner* data, const HbsTableDescriptor* desc) override;
+		bool writeOctPhaseControl(const HbsOctPhaseControl* data, const HbsTableDescriptor* desc) override;
 
 		bool writeTrajectoryParam(std::uint8_t tid, const TrajectoryProfileParam* param, const HbsTableDescriptor* desc) override;
 		bool writeTrajectoryPositionsX(std::uint8_t tid, const std::int16_t* positions, std::uint16_t count, const HbsTableDescriptor* desc) override;

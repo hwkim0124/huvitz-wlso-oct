@@ -43,7 +43,7 @@ namespace wso_board
 #define TBL_LSO_FOCUS_MOTOR_ID 13
 #define TBL_RM_MOTOR_ID 14
 #define TBL_ANTLENS_MOTOR_ID 15
-#define TBL_AP1_MOTOR_ID 16
+#define TBL_LSO_FILTER_MOTOR_ID 16
 #define TBL_AP2_MOTOR_ID 17
 #define TBL_SWING_MOTOR_ID 18
 #define TBL_X_MOTOR_ID 19
@@ -57,6 +57,7 @@ namespace wso_board
 #define TBL_ANT_IR_CAM_0_STATUS_ID 27   // Low Side
 #define TBL_ANT_IR_CAM_1_STATUS_ID 28   // Left
 #define TBL_ANT_IR_CAM_2_STATUS_ID 29   // Right
+#define TBL_OCT_PHASE_CONTROL_ID 30
 
 #define CALIB_IDX_MOTOR_SETS            0
 #define CALIB_IDX_OCT_PARAMS            1
