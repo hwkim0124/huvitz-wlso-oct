@@ -59,7 +59,7 @@ bool wso_device::LsoGreenLed::initializeLsoGreenLed(void)
 bool wso_device::LsoGreenLed::loadCalibParamFromProfile(void)
 {
 	if (auto p = getMainBoard()->getHbsDataProfile()->getHbsCalibLedSource(); p) {
-		auto value = p->LED_Info.Gled_inentity;
+		auto value = p->LED_Info.Gled_intensity;
 		setIntensity(value);
 		LogD() << "LsoGreenLed intensity loaded from profile: " << value;
 		return true;
@@ -71,7 +71,7 @@ bool wso_device::LsoGreenLed::saveCalibParamToProfile(void)
 {
 	if (auto p = const_cast<HbsCalibLedSource*>(getMainBoard()->getHbsDataProfile()->getHbsCalibLedSource()); p) {
 		auto value = getIntensity();
-		p->LED_Info.Gled_inentity = value;
+		p->LED_Info.Gled_intensity = value;
 		return true;
 	}
 	return false;

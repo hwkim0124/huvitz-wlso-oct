@@ -103,15 +103,14 @@ namespace WsoToolkit
 
         private void Window_Closed(object sender, EventArgs e)
         {
-            Mouse.OverrideCursor = Cursors.Wait;
-            ReleaseMotorCallbacks();
+            _timer.Stop();
+
             StageMotors.StopChinrestMove();
             StageMotors.StopStageAll();
 
-            _timer.Stop();
-
-            Thread.Sleep(500);
-            Mouse.OverrideCursor = null;
+            // Stop before release, so the motors are actually told to halt while the
+            // callbacks are still connected and the UI can reflect the final position.
+            ReleaseMotorCallbacks();
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)

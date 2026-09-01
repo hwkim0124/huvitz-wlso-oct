@@ -34,6 +34,10 @@
             <Setter Property="FontWeight" Value="Medium"/>
             <Setter Property="Height" Value="28"/>
         </Style>
+        <Style x:Key="HeaderStyleS1" TargetType="{x:Type Label}" BasedOn="{StaticResource LabelStyle}">
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Height" Value="26"/>
+        </Style>
         <Style x:Key="HeaderStyle2" TargetType="{x:Type Label}" BasedOn="{StaticResource LabelStyle2}">
             <Setter Property="FontWeight" Value="Medium"/>
             <Setter Property="Height" Value="28"/>
@@ -51,6 +55,9 @@
         </Style>
         <Style x:Key="TextBoxStyleS1" TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxStyle}">
             <Setter Property="Width" Value="64"/>
+        </Style>
+        <Style x:Key="TextBoxStyleL1" TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxStyle}">
+            <Setter Property="Width" Value="100"/>
         </Style>
         <Style x:Key="TextBoxM1Style" TargetType="{x:Type TextBox}">
             <Setter Property="VerticalAlignment" Value="Center"/>
@@ -112,6 +119,14 @@
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Height" Value="28"/>
             <Setter Property="Width" Value="120"/>
+        </Style>
+        <Style x:Key="ButtonStyleS1" TargetType="{x:Type Button}" BasedOn="{StaticResource ButtonStyle}">
+            <Setter Property="Height" Value="26"/>
+            <Setter Property="Width" Value="56"/>
+        </Style>
+        <Style x:Key="ButtonStyleM1" TargetType="{x:Type Button}" BasedOn="{StaticResource ButtonStyle}">
+            <Setter Property="Height" Value="26"/>
+            <Setter Property="Width" Value="92"/>
         </Style>
         <Style x:Key="ButtonS1Style" TargetType="{x:Type Button}">
             <Setter Property="VerticalAlignment" Value="Center"/>

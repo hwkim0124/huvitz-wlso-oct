@@ -155,5 +155,25 @@ namespace wso_domain
 		}
 	};
 
-	
+	// Mainboard initialization report, widened from the firmware SysInitStatus_st
+	// (WsoBoard/wso_hbs.h). Every member is 4 bytes so the C# mirror needs no
+	// packing attribute, matching the other structs in this file.
+	struct SysInitStatus
+	{
+	public:
+		int status;			// SystemInitState
+		int devStatus;		// bit set == subsystem initialized, see SubsystemBit
+		int modelConfig;
+
+		int devErrCode[32] = { 0 };		// SUBSYS_DEV_ERR_CODE_SIZE, indexed by SubsystemBit
+
+	public:
+		SysInitStatus() {
+			status = 0;
+			devStatus = 0;
+			modelConfig = 0;
+		}
+	};
+
+
 }

@@ -57,6 +57,10 @@ bool wso_system::Hardware::initializeBoardDevices(void)
 		WsoLogInfo("Mainboard initialized");
 	}
 
+	// Report what firmware found during its own initialization. Log only: an
+	// engineering tool must stay usable when a single subsystem is dead.
+	p->reportSystemInitStatus();
+
 	if (!p->initiateBoardComponents(&n_warns)) {
 		WsoLogError("Board devices initialization failed");
 		return false;

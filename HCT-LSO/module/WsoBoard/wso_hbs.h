@@ -268,7 +268,7 @@ namespace wso_board
         U16 AntIR1_intensity;
         U16 AntIR2_intensity;
         U16 Bled_intensity;
-        U16 Gled_inentity;
+        U16 Gled_intensity;
     } LED_Info_st;
 
     typedef struct {

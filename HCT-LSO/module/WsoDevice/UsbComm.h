@@ -47,6 +47,7 @@ namespace wso_device
 		bool sendMsgCmd(MsgCommand* msgCmd, bool reply = true);
 		bool recvMsgCmdRes(void);
 		bool readAddress(std::uint32_t addr, std::uint8_t* buff, std::uint32_t size);
+		bool readAddress2(std::uint32_t addr, std::uint8_t* buff, std::uint32_t size);
 		bool writeAddress(std::uint32_t addr, std::uint8_t* buff, std::uint32_t size, bool reply = true);
 
 		bool readIrCameraFrame(IrCameraType type, std::uint8_t* buff, std::uint32_t size);
@@ -179,6 +180,8 @@ namespace wso_device
 		MsgCommand* getMsgCommand(CommandType ctrl, std::uint8_t msg_len);
 		ReadRequest* getReadRequest(std::uint32_t addr, std::uint16_t rd_size);
 		ReadResponse* getReadResponse(std::uint16_t rd_size);
+		ReadRequest2* getReadRequest2(std::uint32_t addr, std::uint32_t rd_size);
+		ReadResponse2* getReadResponse2(std::uint32_t rd_size);
 		WriteRequest* getWriteRequest(std::uint32_t addr, std::uint8_t* data, std::uint16_t size, bool reply = true);
 		WriteResponse* getWriteResponse(void);
 

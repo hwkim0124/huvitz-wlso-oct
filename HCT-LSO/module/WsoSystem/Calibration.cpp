@@ -419,8 +419,8 @@ bool wso_system::Calibration::obtainSystemCalibration(SystemCalibration* sys_cal
 				sys_calib->ledParam.anteriorIrIntensity2 = param->LED_Info.AntIR2_intensity;
 				sys_calib->ledParam.retinaIrIntensity = param->LED_Info.RetIR_intensity;
 				sys_calib->ledParam.whiteIntensity = param->LED_Info.WLED_intensity;
-				sys_calib->ledParam.blueIntensity = 0; // param->LED_Info.Bled_intensity;
-				sys_calib->ledParam.greenIntensity = 0; // param->LED_Info.Gled_inentity;
+				sys_calib->ledParam.blueIntensity = param->LED_Info.Bled_intensity;
+				sys_calib->ledParam.greenIntensity =param->LED_Info.Gled_intensity;
 			}
 			return true;
 		}
@@ -489,8 +489,8 @@ bool wso_system::Calibration::submitSystemCalibration(const SystemCalibration* s
 				param->LED_Info.AntIR2_intensity = sys_calib->ledParam.anteriorIrIntensity2;
 				param->LED_Info.RetIR_intensity = sys_calib->ledParam.retinaIrIntensity;
 				param->LED_Info.WLED_intensity = sys_calib->ledParam.whiteIntensity;
-				param->LED_Info.Bled_intensity = 0; // sys_calib->ledParam.blueIntensity;
-				param->LED_Info.Gled_inentity = 0; // sys_calib->ledParam.greenIntensity;
+				param->LED_Info.Bled_intensity = sys_calib->ledParam.blueIntensity;
+				param->LED_Info.Gled_intensity = sys_calib->ledParam.greenIntensity;
 			}
 		}
 	}

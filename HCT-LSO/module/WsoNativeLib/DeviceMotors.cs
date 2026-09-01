@@ -146,6 +146,9 @@ namespace WsoNativeLib
             connectStepMotorPositionChanged((int)type, clb);
         }
 
+        // Safe to call with a move still in flight: CallbackRegistry guards the set
+        // and the invoke with the same mutex, so once this returns the entry is null
+        // and no further callback can fire.
         public static void ReleaseStepMotorPositionChanged(MotorType type)
         {
             releaseStepMotorPositionChanged((int)type);
@@ -183,9 +186,11 @@ namespace WsoNativeLib
             }
         }
 
-        public static void MoveStepMotorPositionAsync(MotorType type, int pos)
+        // The Async variants return false without starting anything when a move
+        // on the same motor is still in flight.
+        public static bool MoveStepMotorPositionAsync(MotorType type, int pos)
         {
-            TryStartMove(type, () => moveStepMotorPosition((int)type, pos));
+            return TryStartMove(type, () => moveStepMotorPosition((int)type, pos));
         }
 
         public static bool MoveStepMotorByPositionOffset(MotorType type, int offset)
@@ -193,9 +198,9 @@ namespace WsoNativeLib
             return moveStepMotorByPositionOffset((int)type, offset);
         }
 
-        public static void MoveStepMotorByPositionOffsetAsync(MotorType type, int offset)
+        public static bool MoveStepMotorByPositionOffsetAsync(MotorType type, int offset)
         {
-            TryStartMove(type, () => moveStepMotorByPositionOffset((int)type, offset));
+            return TryStartMove(type, () => moveStepMotorByPositionOffset((int)type, offset));
         }
 
         public static bool MoveStepMotorByValue(MotorType type, float value)
@@ -203,9 +208,9 @@ namespace WsoNativeLib
             return moveStepMotorByValue((int)type, value);
         }
 
-        public static void MoveStepMotorByValueAsync(MotorType type, float value)
+        public static bool MoveStepMotorByValueAsync(MotorType type, float value)
         {
-            TryStartMove(type, () => moveStepMotorByValue((int)type, value));
+            return TryStartMove(type, () => moveStepMotorByValue((int)type, value));
         }
 
         public static bool MoveStepMotorByValueOffset(MotorType type, float offset)
@@ -213,9 +218,9 @@ namespace WsoNativeLib
             return moveStepMotorByValueOffset((int)type, offset);
         }
 
-        public static void MoveStepMotorByValueOffsetAsync(MotorType type, float offset)
+        public static bool MoveStepMotorByValueOffsetAsync(MotorType type, float offset)
         {
-            TryStartMove(type, () => moveStepMotorByValueOffset((int)type, offset));
+            return TryStartMove(type, () => moveStepMotorByValueOffset((int)type, offset));
         }
 
         public static bool MoveStepMotorToOrigin(MotorType type, int mode = 0)
@@ -223,9 +228,9 @@ namespace WsoNativeLib
             return moveStepMotorToOrigin((int)type, mode);
         }
 
-        public static void MoveStepMotorToOriginAsync(MotorType type, int mode = 0)
+        public static bool MoveStepMotorToOriginAsync(MotorType type, int mode = 0)
         {
-            TryStartMove(type, () => moveStepMotorToOrigin((int)type, mode));
+            return TryStartMove(type, () => moveStepMotorToOrigin((int)type, mode));
         }
 
         public static bool MoveStepMotorToUpperEnd(MotorType type)
@@ -233,9 +238,9 @@ namespace WsoNativeLib
             return moveStepMotorToUpperEnd((int)type);
         }
 
-        public static void MoveStepMotorToUpperEndAsync(MotorType type)
+        public static bool MoveStepMotorToUpperEndAsync(MotorType type)
         {
-            TryStartMove(type, () => moveStepMotorToUpperEnd((int)type));
+            return TryStartMove(type, () => moveStepMotorToUpperEnd((int)type));
         }
 
         public static bool MoveStepMotorToLowerEnd(MotorType type)
@@ -243,9 +248,9 @@ namespace WsoNativeLib
             return moveStepMotorToLowerEnd((int)type);
         }
 
-        public static void MoveStepMotorToLowerEndAsync(MotorType type)
+        public static bool MoveStepMotorToLowerEndAsync(MotorType type)
         {
-            TryStartMove(type, () => moveStepMotorToLowerEnd((int)type));
+            return TryStartMove(type, () => moveStepMotorToLowerEnd((int)type));
         }
 
         public static bool MoveStepMotorToCenter(MotorType type)
@@ -253,9 +258,9 @@ namespace WsoNativeLib
             return moveStepMotorToCenter((int)type);
         }
 
-        public static void MoveStepMotorToCenterAsync(MotorType type)
+        public static bool MoveStepMotorToCenterAsync(MotorType type)
         {
-            TryStartMove(type, () => moveStepMotorToCenter((int)type));
+            return TryStartMove(type, () => moveStepMotorToCenter((int)type));
         }
 
         public static bool IsStepMotorAtUpperEnd(MotorType type)

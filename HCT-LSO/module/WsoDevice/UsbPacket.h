@@ -10,6 +10,7 @@ namespace wso_device
 	////////////////////////////////////////////////////////////////////////////////////////
 	constexpr unsigned int PACKET_DATA_SIZE_MIN = 1;
 	constexpr unsigned int PACKET_DATA_SIZE_MAX = 256;
+	constexpr unsigned int PACKET_DATA_SIZE_MAX2 = (4*1024*1024);
 	constexpr unsigned char PACKET_CRC_CODE = '1';
 	constexpr unsigned int PACKET_CRC_SIZE = 4;
 	constexpr unsigned char PACKET_ID_START = 1;
@@ -41,6 +42,31 @@ namespace wso_device
 	struct ReadResponse {
 		NREAD_RES packet;
 		std::uint16_t size;
+	};
+
+	struct NREAD_REQ2 {
+		std::uint8_t nread;
+		std::uint8_t pkt_id;
+		std::uint8_t addr[4];
+		std::uint32_t rd_size;
+		std::uint8_t crc[PACKET_CRC_SIZE];
+	};
+
+	struct ReadRequest2 {
+		NREAD_REQ2 packet;
+		std::uint16_t size;
+	};
+
+	struct NREAD_RES2 {
+		std::uint8_t type;
+		std::uint8_t pkt_id;
+		std::uint8_t reserved[2];
+		std::uint8_t data[PACKET_DATA_SIZE_MAX2 + PACKET_CRC_SIZE];
+	};
+
+	struct ReadResponse2 {
+		NREAD_RES2 packet;
+		std::uint32_t size;
 	};
 
 	struct NWRITE_REQ {

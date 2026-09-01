@@ -87,6 +87,22 @@ namespace WsoToolkit
             DeviceMotors.ReleaseStepMotorPositionChanged(MotorType.StageZ);
         }
 
+        private void StopAllMotors()
+        {
+            DeviceMotors.StopStepMotor(MotorType.OctFocus);
+            DeviceMotors.StopStepMotor(MotorType.OctRefer);
+            DeviceMotors.StopStepMotor(MotorType.OctPolar);
+            DeviceMotors.StopStepMotor(MotorType.OctRefNd);
+            DeviceMotors.StopStepMotor(MotorType.LsoFocus);
+            DeviceMotors.StopStepMotor(MotorType.RetMirror);
+            DeviceMotors.StopStepMotor(MotorType.OctAntLens);
+            DeviceMotors.StopStepMotor(MotorType.LsoFilter);
+            DeviceMotors.StopStepMotor(MotorType.Swing);
+            DeviceMotors.StopStepMotor(MotorType.StageX);
+            DeviceMotors.StopStepMotor(MotorType.StageY);
+            DeviceMotors.StopStepMotor(MotorType.StageZ);
+        }
+
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// Callbacks
         /// 

@@ -182,11 +182,11 @@ bool wso_device::MainBoard::initializeMainBoard(int* warnings)
 
 	// Usb channel is not opened when no device mode. 
 	if (!openFTDIdevices()) {
-		WsoLogError("Failed to open USB port channels: main, sub board");
+		WsoLogError("Failed to open USB port channels: main board");
 		return false;
 	}
 	else {
-		WsoLogInfo("USB port channels opened: main, sub board");
+		WsoLogInfo("USB port channels opened: main board");
 	}
 
 	if (!waitForSystemReady()) {
@@ -271,6 +271,10 @@ bool wso_device::MainBoard::initiateBoardComponents(int* numWarns)
 	}
 	if (!getLsoFocusMotor()->initializeLsoFocusMotor()) {
 		WsoLogWarn("Failed to initialize LSO Focus motor");
+		warns += 1;
+	}
+	if (!getLsoFilterMotor()->initializeLsoFilterMotor()) {
+		WsoLogWarn("Failed to initialize LSO Filter motor");
 		warns += 1;
 	}
 	if (!getRetMirrorMotor()->initializeRetMirrorMotor()) {
@@ -645,6 +649,116 @@ bool wso_device::MainBoard::loadHostBufferTable(void)
 		return false;
 	}
 	return true;
+}
+
+bool wso_device::MainBoard::reloadSystemInitStatus(void)
+{
+	// Stateless: re-reads the table over USB, so it is safe to call repeatedly.
+	if (auto* hbs = getHbsDataProfile(); hbs->loadSystemInitStatus()) {
+		return true;
+	}
+	LogD() << "Failed to reload system init status from main-board";
+	return false;
+}
+
+bool wso_device::MainBoard::fetchSystemInitStatus(SysInitStatus* status)
+{
+	if (!status) {
+		return false;
+	}
+
+	auto* hbs = getHbsDataProfile();
+	const auto* data = hbs->getHbsSystemInitStatus();
+	if (!data) {
+		return false;
+	}
+
+	status->status = (int)data->status;
+	status->devStatus = (int)data->dev_status;
+	status->modelConfig = (int)data->model_cfg;
+
+	for (int i = 0; i < SUBSYS_DEV_ERR_CODE_SIZE; i++) {
+		status->devErrCode[i] = (int)data->DevErrCode[i];
+	}
+	return true;
+}
+
+bool wso_device::MainBoard::isSubsystemNotInUse(int bit) const
+{
+	if (bit >= SUBSYS_MOTOR_BIT_BASE && bit <= (int)SubsystemBit::CHIN_REST_MOTOR) {
+		return isMotorsNotInUse();
+	}
+
+	switch ((SubsystemBit)bit) {
+		using enum SubsystemBit;
+		case ANT_CAM_LOWER:
+		case ANT_CAM_LEFT:
+		case ANT_CAM_RIGHT:
+		case RETINA_CAM:
+			return isIrCameraNotInUse();
+		case SLD_BOARD:
+		case LED_CTRL_BOARD:
+			return isSourceLedsNotInUse();
+		case LSO_Y_GALVANO:
+			return isLsoScannerNotInUse();
+		default:
+			break;
+	}
+	return false;
+}
+
+void wso_device::MainBoard::reportSystemInitStatus(void)
+{
+	SysInitStatus status;
+	if (!fetchSystemInitStatus(&status)) {
+		WsoLogWarn("System init status is not available from main-board");
+		return;
+	}
+
+	switch ((SystemInitState)status.status) {
+		using enum SystemInitState;
+		case OK:
+			WsoLogInfo("Main-board reports initialization completed");
+			break;
+		case FAIL:
+			WsoLogError("Main-board reports initialization failed");
+			break;
+		case PROGRESS:
+			WsoLogWarn("Main-board reports initialization still in progress");
+			break;
+		default:
+			break;
+	}
+
+	// Only the low NUM_SUBSYSTEMS bits describe a device. Firmware sets every
+	// unused field to 1, so the upper bits must never be evaluated here.
+	for (int bit = 0; bit < (int)SubsystemBit::NUM_SUBSYSTEMS; bit++) {
+		const bool initiated = ((status.devStatus & (1u << bit)) != 0);
+		const int code = status.devErrCode[bit];
+
+		if (initiated && code <= 0) {
+			continue;
+		}
+		if (isSubsystemNotInUse(bit)) {
+			continue;
+		}
+
+		ostringstream ss;
+		ss << (initiated ? "Device init warning, " : "Device init failed, ");
+		ss << SubsystemBitToName(bit);
+		ss << " (bit: " << bit << ")";
+		if (code > 0) {
+			ss << ", err: " << code << " - " << SubsystemErrorToText(bit, code);
+		}
+
+		if (initiated) {
+			WsoLogWarn(ss.str());
+		}
+		else {
+			WsoLogError(ss.str());
+		}
+	}
+	return;
 }
 
 bool wso_device::MainBoard::pullSystemCalibFromMemory(void)

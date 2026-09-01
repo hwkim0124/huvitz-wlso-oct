@@ -19,6 +19,8 @@ struct UsbComm::UsbCommImpl
 	UsbPort usbPort;
 	ReadRequest readReq;
 	ReadResponse readResp;
+	ReadRequest2 readReq2;
+	ReadResponse2 readResp2;
 	WriteRequest writeReq;
 	WriteResponse writeResp;
 	MsgCommand msgCmd;
@@ -185,7 +187,7 @@ bool wso_device::UsbComm::readAddress(std::uint32_t addr, std::uint8_t* buff, st
 
 	while (n_data > 0)
 	{
-		n_read = (n_data > 256 ? 256 : n_data);
+		n_read = (n_data > PACKET_DATA_SIZE_MAX ? PACKET_DATA_SIZE_MAX : n_data);
 
 		ReadRequest* pReq = getReadRequest(n_addr, n_read);
 		ReadResponse* pRes = getReadResponse(n_read);
@@ -196,6 +198,54 @@ bool wso_device::UsbComm::readAddress(std::uint32_t addr, std::uint8_t* buff, st
 		if (usbPort->send((uint8_t*)&pReq->packet, pReq->size, true)) {
 			if (usbPort->receive((uint8_t*)&pRes->packet, pRes->size, true)) {
 				if (pRes->packet.type == static_cast<uint8_t>(PacketType::NREAD_RESP_OK)) {
+					//if (n_read > 0) {
+					memcpy(p_buff, pRes->packet.data, n_read);
+					n_data -= n_read;
+					if (n_data <= 0) {
+						return true;
+					}
+					else {
+						p_buff += n_read;
+						n_addr += n_read;
+						continue;
+					}
+					//}
+				}
+				else {
+					LogDebug() << "Read response invalid type=" << int(pRes->packet.type);
+				}
+			}
+		}
+		break;
+	}
+	LogDebug() << "readAddress() failed!";
+	return false;
+}
+
+bool wso_device::UsbComm::readAddress2(std::uint32_t addr, std::uint8_t* buff, std::uint32_t size)
+{
+	std::uint8_t* p_buff = buff;
+	std::uint32_t n_read = 0;
+	std::uint32_t n_data = size;
+	std::uint32_t n_addr = addr;
+
+	if (!buff || size <= 0) {
+		return false;
+	}
+
+	while (n_data > 0)
+	{
+		n_read = (n_data > PACKET_DATA_SIZE_MAX2 ? PACKET_DATA_SIZE_MAX2 : n_data);
+
+		auto* pReq = getReadRequest2(n_addr, n_read);
+		auto* pRes = getReadResponse2(n_read);
+		UsbPort* usbPort = getUsbPort();
+
+		// The request size to read should be in the range of unsigned char. 
+		// It doesn't cosider incomplete send or receive for the requested size. 
+		if (usbPort->send((uint8_t*)&pReq->packet, pReq->size, true)) {
+			if (usbPort->receive((uint8_t*)&pRes->packet, pRes->size, true)) {
+				if (pRes->packet.type == static_cast<uint8_t>(PacketType::NREAD2_RESP_OK)) {
 					//if (n_read > 0) {
 					memcpy(p_buff, pRes->packet.data, n_read);
 					n_data -= n_read;
@@ -232,7 +282,7 @@ bool wso_device::UsbComm::writeAddress(std::uint32_t addr, std::uint8_t* buff, s
 
 	while (n_data > 0)
 	{
-		n_sent = (n_data > 256 ? 256 : n_data);
+		n_sent = (n_data > PACKET_DATA_SIZE_MAX ? PACKET_DATA_SIZE_MAX : n_data);
 
 		WriteRequest* pReq = getWriteRequest(n_addr, p_buff, n_sent);
 		WriteResponse* pRes = getWriteResponse();
@@ -1853,6 +1903,27 @@ ReadResponse* wso_device::UsbComm::getReadResponse(std::uint16_t rd_size)
 	return res;
 }
 
+ReadRequest2* wso_device::UsbComm::getReadRequest2(std::uint32_t addr, std::uint32_t rd_size)
+{
+	ReadRequest2* req = &impl().readReq2;
+	req->packet.nread = static_cast<std::uint8_t>(PacketType::NREAD2);
+	req->packet.pkt_id = getNextPacketID();
+	req->packet.rd_size = rd_size;
+	memcpy(req->packet.addr, &addr, sizeof(uint32_t));
+
+	attachCRC(req->packet.crc);
+	req->size = sizeof(NREAD_REQ2);
+	return req;
+}
+
+ReadResponse2* wso_device::UsbComm::getReadResponse2(std::uint32_t rd_size)
+{
+	ReadResponse2* res = &impl().readResp2;
+	res->packet.type = 0;
+	res->packet.pkt_id = 0;
+	res->size = sizeof(NREAD_RES2) - (PACKET_DATA_SIZE_MAX2 - rd_size);
+	return res;
+}
 
 WriteRequest* wso_device::UsbComm::getWriteRequest(std::uint32_t addr, std::uint8_t* data, std::uint16_t size, bool reply)
 {

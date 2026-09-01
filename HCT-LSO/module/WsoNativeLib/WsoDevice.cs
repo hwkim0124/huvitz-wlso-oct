@@ -50,6 +50,18 @@ namespace WsoNativeLib
             LsoGreen = 0x06
         }
 
+        public enum MirrorMotorMode : int
+        {
+            MirrorIn = 0, 
+            MirrorOut = 1,
+        }
+
+        public enum  OctReferMotorOrigin : int 
+        {
+            Retina = 0,
+            Cornea = 1,
+        }
+
         public enum LightMode : int
         {
             Trigger = 0x00, 

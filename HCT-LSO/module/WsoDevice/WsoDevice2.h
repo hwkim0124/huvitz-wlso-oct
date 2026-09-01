@@ -214,6 +214,9 @@ namespace wso_device
 
 	enum class PacketType : unsigned char
 	{
+		NREAD2 = 0x50,
+		NREAD2_RESP_OK = 0x70,
+		NREAD2_RESP_ERR = 0x71,
 		NREAD = 0x5A,
 		NREAD_RESP_OK = 0x75,
 		NREAD_RESP_ERR = 0x7A,

@@ -88,6 +88,9 @@ namespace wso_device
 		bool isOctGrabberNotInUse(void) const;
 		bool isLsoScannerNotInUse(void) const;
 		bool isOpenClNotInUse(void) const;
+		// Maps a SubsystemBit onto the DEV_FLAG_NOT_* boot-mode exclusions, so a
+		// device left out on the command line is not reported as failed.
+		bool isSubsystemNotInUse(int bit) const;
 
 		bool openFTDIdevices(void);
 		bool resetFTDIdevice(void);
@@ -105,6 +108,12 @@ namespace wso_device
 		*/
 
 		bool loadHostBufferTable(void);
+
+		// System initialization status reported by firmware (HBS table id 4).
+		bool reloadSystemInitStatus(void);
+		bool fetchSystemInitStatus(SysInitStatus* status);
+		void reportSystemInitStatus(void);
+
 		bool pullSystemCalibFromMemory(void);
 		bool pushSystemCalibToMemory(void);
 

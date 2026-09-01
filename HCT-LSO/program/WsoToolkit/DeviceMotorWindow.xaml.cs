@@ -82,13 +82,13 @@ namespace WsoToolkit
             sliderLsoFilter.Maximum = _msLsoFilter.rangeMax;
             sliderLsoFilter.TickFrequency = 10;
 
-            cmbRetMirror.ItemsSource = new string[] { "Mirror In", "Mirror Out" };
+            cmbRetMirror.ItemsSource = new string[] { "IN", "OUT" };
             cmbRetMirror.SelectedIndex = 0;
             cmbLsoFilter.ItemsSource = new string[] { "Color", "Blue", "Green", "ICGA" };
             cmbLsoFilter.SelectedIndex = 0;
-            cmbOctRefNd.ItemsSource = new string[] { "Filter In", "Filter Out" };
+            cmbOctRefNd.ItemsSource = new string[] { "IN", "OUT" };
             cmbOctRefNd.SelectedIndex = 0;
-            cmbOctAntLens.ItemsSource = new string[] { "Filter In", "Filter Out" };
+            cmbOctAntLens.ItemsSource = new string[] { "IN", "OUT" };
             cmbOctAntLens.SelectedIndex = 0;
 
             sliderSwing.Minimum = _msSwing.rangeMin;
@@ -109,33 +109,34 @@ namespace WsoToolkit
 
             ConnectMotorCallbacks();
 
-            DeviceMotors.MoveStepMotorPosition(MotorType.OctFocus, _msOctFocus.currPos);
-            DeviceMotors.MoveStepMotorPosition(MotorType.LsoFocus, _msLsoFocus.currPos);
-            DeviceMotors.MoveStepMotorPosition(MotorType.OctRefer, _msOctRefer.currPos);
-            DeviceMotors.MoveStepMotorPosition(MotorType.OctPolar, _msOctPolar.currPos);
-            DeviceMotors.MoveStepMotorPosition(MotorType.RetMirror, _msRetMirror.currPos);
-            // DeviceMotors.MoveStepMotorPosition(MotorType.OctRefNd, _msOctRefNd.currPos);
-            DeviceMotors.MoveStepMotorPosition(MotorType.OctAntLens, _msOctAntLens.currPos);
-            DeviceMotors.MoveStepMotorPosition(MotorType.LsoFilter, _msLsoFilter.currPos);
-            DeviceMotors.MoveStepMotorPosition(MotorType.Swing, _msSwing.currPos);
-            DeviceMotors.MoveStepMotorPosition(MotorType.StageX, _msXstage.currPos);
-            DeviceMotors.MoveStepMotorPosition(MotorType.StageY, _msYstage.currPos);
-            DeviceMotors.MoveStepMotorPosition(MotorType.StageZ, _msZstage.currPos);
+            DeviceMotors.MoveStepMotorPositionAsync(MotorType.OctFocus, _msOctFocus.currPos);
+            DeviceMotors.MoveStepMotorPositionAsync(MotorType.LsoFocus, _msLsoFocus.currPos);
+            DeviceMotors.MoveStepMotorPositionAsync(MotorType.OctRefer, _msOctRefer.currPos);
+            DeviceMotors.MoveStepMotorPositionAsync(MotorType.OctPolar, _msOctPolar.currPos);
+            DeviceMotors.MoveStepMotorPositionAsync(MotorType.RetMirror, _msRetMirror.currPos);
+            DeviceMotors.MoveStepMotorPositionAsync(MotorType.OctRefNd, _msOctRefNd.currPos);
+            DeviceMotors.MoveStepMotorPositionAsync(MotorType.OctAntLens, _msOctAntLens.currPos);
+            DeviceMotors.MoveStepMotorPositionAsync(MotorType.LsoFilter, _msLsoFilter.currPos);
+            DeviceMotors.MoveStepMotorPositionAsync(MotorType.Swing, _msSwing.currPos);
+            DeviceMotors.MoveStepMotorPositionAsync(MotorType.StageX, _msXstage.currPos);
+            DeviceMotors.MoveStepMotorPositionAsync(MotorType.StageY, _msYstage.currPos);
+            DeviceMotors.MoveStepMotorPositionAsync(MotorType.StageZ, _msZstage.currPos);
 
             StartRefreshTimer();
         }
 
         private void Window_Closed(object sender, EventArgs e)
         {
-            Mouse.OverrideCursor = Cursors.Wait;
-            ReleaseMotorCallbacks();
-            StageMotors.StopChinrestMove();
-            StageMotors.StopStageAll();
-
+            // Stop the refresh tick first: it polls the motors every 100 ms.
             _timer.Stop();
+            _timer.Tick -= TimerRefreshTick;
 
-            Thread.Sleep(500);
-            Mouse.OverrideCursor = null;
+            StopAllMotors();
+
+            // Safe with moves still in flight. CallbackRegistry guards the set and the
+            // invoke with one mutex, so once this returns no further position callback
+            // can fire and the remaining native calls just unwind on their own.
+            ReleaseMotorCallbacks();
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -168,6 +169,7 @@ namespace WsoToolkit
 
         private void SliderOctFocus_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
         {
+            _isDraggingStarted = false;
             DeviceMotors.MoveStepMotorPositionAsync(MotorType.OctFocus, (int)sliderOctFocus.Value);
         }
 
@@ -209,15 +211,15 @@ namespace WsoToolkit
             DeviceMotors.MoveStepMotorToOriginAsync(MotorType.OctFocus);
         }
 
+        private void SliderLsoFocus_DragStarted(object sender, System.Windows.Controls.Primitives.DragStartedEventArgs e)
+        {
+            _isDraggingStarted = true;
+        }
+
         private void SliderLsoFocus_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
         {
             _isDraggingStarted = false;
             DeviceMotors.MoveStepMotorPositionAsync(MotorType.LsoFocus, (int)sliderLsoFocus.Value);
-        }
-
-        private void SliderLsoFocus_DragStarted(object sender, System.Windows.Controls.Primitives.DragStartedEventArgs e)
-        {
-            _isDraggingStarted = true;
         }
 
         private void SliderLsoFocus_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -323,15 +325,14 @@ namespace WsoToolkit
 
         private void BtnOctReferOrigin_Click(object sender, RoutedEventArgs e)
         {
-            int mode = checkOctReferCornea.IsChecked == true ? 1 : 0;
-            DeviceMotors.MoveStepMotorToOriginAsync(MotorType.OctRefer, mode);
+            var mode = checkOctReferCornea.IsChecked == true ? OctReferMotorOrigin.Cornea : OctReferMotorOrigin.Retina;
+            DeviceMotors.MoveStepMotorToOriginAsync(MotorType.OctRefer, (int)mode);
         }
 
         private void CheckOctReferAnterior_Click(object sender, RoutedEventArgs e)
         {
 
         }
-
 
         private void SliderOctPolar_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
         {
@@ -393,7 +394,6 @@ namespace WsoToolkit
             }
         }
 
-
         private void SliderRetMirror_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
         {
             _isDraggingStarted = false;
@@ -425,22 +425,13 @@ namespace WsoToolkit
 
         private void CmbRetMirror_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            /*
-            if (cmbRetMirror.SelectedIndex == 0)
-            {
-                btnRetMirrorIn.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-            } 
-            else
-            {
-                btnRetMirrorOut.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-            }
-            */
         }
 
         private void BtnRetMirrorSetAs_Click(object sender, RoutedEventArgs e)
         {
-            int mode = cmbRetMirror.SelectedIndex;
-            DeviceMotors.SetStepMotorCurrentPositionAsOrigin(MotorType.RetMirror, mode);
+            int index = cmbRetMirror.SelectedIndex;
+            var mode = index == 0 ? MirrorMotorMode.MirrorIn : MirrorMotorMode.MirrorOut;
+            DeviceMotors.SetStepMotorCurrentPositionAsOrigin(MotorType.RetMirror, (int)mode);
         }
 
         private void BtnRetMirrorOut_Click(object sender, RoutedEventArgs e)
@@ -529,8 +520,9 @@ namespace WsoToolkit
 
         private void BtnOctAntLensSetAs_Click(object sender, RoutedEventArgs e)
         {
-            int mode = cmbOctAntLens.SelectedIndex;
-            DeviceMotors.SetStepMotorCurrentPositionAsOrigin(MotorType.OctAntLens, mode);
+            int index = cmbOctAntLens.SelectedIndex;
+            var mode = index == 0 ? MirrorMotorMode.MirrorIn : MirrorMotorMode.MirrorOut;
+            DeviceMotors.SetStepMotorCurrentPositionAsOrigin(MotorType.OctAntLens, (int)mode);
         }
 
         private void BtnOctAntLensOut_Click(object sender, RoutedEventArgs e)
@@ -579,28 +571,29 @@ namespace WsoToolkit
 
         private void BtnLsoFilterSetAs_Click(object sender, RoutedEventArgs e)
         {
-            int mode = cmbLsoFilter.SelectedIndex;
-            DeviceMotors.SetStepMotorCurrentPositionAsOrigin(MotorType.LsoFilter, mode);
+            int index = cmbLsoFilter.SelectedIndex;
+            var mode = index == 0 ? LsoFilterMode.Color : index == 1 ? LsoFilterMode.BlueFaf : index == 2 ? LsoFilterMode.GreenFaf : LsoFilterMode.Icga;
+            DeviceMotors.SetStepMotorCurrentPositionAsOrigin(MotorType.LsoFilter, (int)mode);
         }
 
         private void BtnLsoFilterIcga_Click(object sender, RoutedEventArgs e)
         {
-            DeviceMotors.MoveStepMotorToOriginAsync(MotorType.LsoFilter, 3);
+            DeviceMotors.MoveStepMotorToOriginAsync(MotorType.LsoFilter, (int)LsoFilterMode.Icga);
         }
 
         private void BtnLsoFilterGreen_Click(object sender, RoutedEventArgs e)
         {
-            DeviceMotors.MoveStepMotorToOriginAsync(MotorType.LsoFilter, 2);
+            DeviceMotors.MoveStepMotorToOriginAsync(MotorType.LsoFilter, (int)LsoFilterMode.GreenFaf);
         }
 
         private void BtnLsoFilterBlue_Click(object sender, RoutedEventArgs e)
         {
-            DeviceMotors.MoveStepMotorToOriginAsync(MotorType.LsoFilter, 1);
+            DeviceMotors.MoveStepMotorToOriginAsync(MotorType.LsoFilter, (int)LsoFilterMode.BlueFaf);
         }
 
         private void BtnLsoFilterColor_Click(object sender, RoutedEventArgs e)
         {
-            DeviceMotors.MoveStepMotorToOriginAsync(MotorType.LsoFilter, 0);
+            DeviceMotors.MoveStepMotorToOriginAsync(MotorType.LsoFilter, (int)LsoFilterMode.Color);
         }
 
         private void SliderSwing_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -629,7 +622,7 @@ namespace WsoToolkit
 
         private void BtnSwingSetAs_Click(object sender, RoutedEventArgs e)
         {
-
+            DeviceMotors.SetStepMotorCurrentPositionAsOrigin(MotorType.Swing);
         }
 
         private void BtnSwingBwd_Click(object sender, RoutedEventArgs e)
@@ -672,7 +665,7 @@ namespace WsoToolkit
 
         private void BtnXstageSetAs_Click(object sender, RoutedEventArgs e)
         {
-
+            DeviceMotors.SetStepMotorCurrentPositionAsOrigin(MotorType.StageX);
         }
 
         private void BtnXstageBwd_Click(object sender, RoutedEventArgs e)
@@ -715,7 +708,7 @@ namespace WsoToolkit
 
         private void BtnYstageSetAs_Click(object sender, RoutedEventArgs e)
         {
-
+            DeviceMotors.SetStepMotorCurrentPositionAsOrigin(MotorType.StageY);
         }
 
         private void BtnYstageBwd_Click(object sender, RoutedEventArgs e)
@@ -758,7 +751,7 @@ namespace WsoToolkit
 
         private void BtnZstageSetAs_Click(object sender, RoutedEventArgs e)
         {
-
+            DeviceMotors.SetStepMotorCurrentPositionAsOrigin(MotorType.StageZ);
         }
 
         private void BtnZstageBwd_Click(object sender, RoutedEventArgs e)
@@ -784,12 +777,10 @@ namespace WsoToolkit
         {
             StageMotors.MoveChinrestDown();
         }
-
+        
         private void BtnChinrestUp_Click(object sender, RoutedEventArgs e)
         {
             StageMotors.MoveChinrestUp();
         }
-
-
     }
 }

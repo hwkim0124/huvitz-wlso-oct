@@ -7,16 +7,16 @@
         xmlns:local="clr-namespace:WsoToolkit"
         mc:Ignorable="d"
         Title="System Calibration" ResizeMode="NoResize" Width="Auto" Height="Auto" Loaded="Window_Loaded" SizeToContent="WidthAndHeight">
-    <Grid Margin="12,12,12,12">
+    <Grid Margin="8,8,8,8">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="12"/>
-            <RowDefinition Height="64"/>
+            <RowDefinition Height="4"/>
+            <RowDefinition Height="48"/>
         </Grid.RowDefinitions>
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="12"/>
+                <ColumnDefinition Width="4"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <StackPanel>
@@ -30,7 +30,7 @@
                         <ColumnDefinition Width="16"/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="0"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
@@ -41,17 +41,17 @@
                     <Label x:Name="label_Copy1" Content="Cornea" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="1" Margin="0,0,0,0"/>
                     <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="3">
                         <TextBox x:Name="editRetinaDispComp1" Style="{StaticResource TextBoxStyle}" PreviewTextInput="FloatTextBox_PreviewTextInput"/>
-                        <TextBox x:Name="editRetinaDispComp2" Style="{StaticResource TextBoxStyle}" PreviewTextInput="FloatTextBox_PreviewTextInput" Margin="8,0,0,0"/>
-                        <TextBox x:Name="editRetinaDispComp3" Style="{StaticResource TextBoxStyle}" PreviewTextInput="FloatTextBox_PreviewTextInput" Margin="8,0,0,0"/>
+                        <TextBox x:Name="editRetinaDispComp2" Style="{StaticResource TextBoxStyle}" PreviewTextInput="FloatTextBox_PreviewTextInput" Margin="4,0,0,0"/>
+                        <TextBox x:Name="editRetinaDispComp3" Style="{StaticResource TextBoxStyle}" PreviewTextInput="FloatTextBox_PreviewTextInput" Margin="4,0,0,0"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="3">
                         <TextBox x:Name="editCorneaDispComp1" Style="{StaticResource TextBoxStyle}" PreviewTextInput="FloatTextBox_PreviewTextInput"/>
-                        <TextBox x:Name="editCorneaDispComp2" Style="{StaticResource TextBoxStyle}" PreviewTextInput="FloatTextBox_PreviewTextInput" Margin="8,0,0,0"/>
-                        <TextBox x:Name="editCorneaDispComp3" Style="{StaticResource TextBoxStyle}" PreviewTextInput="FloatTextBox_PreviewTextInput" Margin="8,0,0,0"/>
+                        <TextBox x:Name="editCorneaDispComp2" Style="{StaticResource TextBoxStyle}" PreviewTextInput="FloatTextBox_PreviewTextInput" Margin="4,0,0,0"/>
+                        <TextBox x:Name="editCorneaDispComp3" Style="{StaticResource TextBoxStyle}" PreviewTextInput="FloatTextBox_PreviewTextInput" Margin="4,0,0,0"/>
                     </StackPanel>
                     <Border Style="{StaticResource BorderStyle}" BorderThickness="1" Grid.ColumnSpan="6" Grid.RowSpan="5"/>
                 </Grid>
-                <Grid Margin="0,8,0,0">
+                <Grid Margin="0,4,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="20"/>
                         <ColumnDefinition/>
@@ -61,21 +61,21 @@
                         <ColumnDefinition Width="8"/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="0"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="12"/>
                     </Grid.RowDefinitions>
                     <Label x:Name="label3" Content="Spectrometer Calibration" Style="{StaticResource HeaderStyle}" Grid.Row="1" Grid.ColumnSpan="3" Margin="16,0,0,0" HorizontalAlignment="Left"/>
                     <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="5">
-                        <TextBox x:Name="editSpectroCalib1" Style="{StaticResource TextBoxStyle}" PreviewTextInput="DoubleTextBox_PreviewTextInput" Margin="12,0,0,0" Width="100"/>
-                        <TextBox x:Name="editSpectroCalib2" Style="{StaticResource TextBoxStyle}" PreviewTextInput="DoubleTextBox_PreviewTextInput" Margin="4,0,0,0" Width="100"/>
-                        <TextBox x:Name="editSpectroCalib3" Style="{StaticResource TextBoxStyle}" PreviewTextInput="DoubleTextBox_PreviewTextInput" Margin="4,0,0,0" Width="100"/>
-                        <TextBox x:Name="editSpectroCalib4" Style="{StaticResource TextBoxStyle}" PreviewTextInput="DoubleTextBox_PreviewTextInput" Margin="4,0,0,0" Width="100"/>
+                        <TextBox x:Name="editSpectroCalib1" Style="{StaticResource TextBoxStyleL1}" PreviewTextInput="DoubleTextBox_PreviewTextInput" Margin="8,0,0,0"/>
+                        <TextBox x:Name="editSpectroCalib2" Style="{StaticResource TextBoxStyleL1}" PreviewTextInput="DoubleTextBox_PreviewTextInput" Margin="4,0,0,0"/>
+                        <TextBox x:Name="editSpectroCalib3" Style="{StaticResource TextBoxStyleL1}" PreviewTextInput="DoubleTextBox_PreviewTextInput" Margin="4,0,0,0"/>
+                        <TextBox x:Name="editSpectroCalib4" Style="{StaticResource TextBoxStyleL1}" PreviewTextInput="DoubleTextBox_PreviewTextInput" Margin="4,0,0,0"/>
                     </StackPanel>
                     <Border Style="{StaticResource BorderStyle}" BorderThickness="1" Grid.ColumnSpan="6" Grid.RowSpan="4"/>
                 </Grid>
-                <Grid Margin="0,8,0,0">
+                <Grid Margin="0,4,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="20"/>
                         <ColumnDefinition Width="80"/>
@@ -86,7 +86,7 @@
                         <ColumnDefinition Width="16"/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="0"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
@@ -103,7 +103,7 @@
                     <TextBox x:Name="editGalvanoRangeY" Style="{StaticResource TextBoxStyle}" Grid.Row="3" Grid.Column="4"  PreviewTextInput="FloatTextBox_PreviewTextInput"/>
                     <Border Style="{StaticResource BorderStyle}" BorderThickness="1" Grid.ColumnSpan="7" Grid.RowSpan="5"/>
                 </Grid>
-                <Grid Margin="0,8,0,0">
+                <Grid Margin="0,4,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="40"/>
                         <ColumnDefinition/>
@@ -113,7 +113,7 @@
                         <ColumnDefinition Width="16"/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="0"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
@@ -158,15 +158,15 @@
             <StackPanel Grid.Column="2">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="40"/>
-                        <ColumnDefinition/>
-                        <ColumnDefinition/>
-                        <ColumnDefinition/>
-                        <ColumnDefinition/>
-                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="20"/>
+                        <ColumnDefinition Width="100"/>
+                        <ColumnDefinition Width="80"/>
+                        <ColumnDefinition Width="100"/>
+                        <ColumnDefinition Width="80"/>
+                        <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="0"/>
                         <RowDefinition/>
                         <RowDefinition/>
                         <RowDefinition/>
@@ -179,17 +179,17 @@
                     <TextBox x:Name="editLsoFocus" Style="{StaticResource TextBoxStyle}" Grid.Row="2" Grid.Column="4"  PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
                     <Border Style="{StaticResource BorderStyle}" BorderThickness="1" Grid.ColumnSpan="6" Grid.RowSpan="5"/>
                 </Grid>
-                <Grid Margin="0,8,0,0">
+                <Grid Margin="0,4,0,0">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="40"/>
-                        <ColumnDefinition/>
-                        <ColumnDefinition/>
-                        <ColumnDefinition/>
+                        <ColumnDefinition Width="20"/>
+                        <ColumnDefinition Width="90"/>
+                        <ColumnDefinition Width="130"/>
+                        <ColumnDefinition Width="130"/>
                         <ColumnDefinition/>
                         <ColumnDefinition Width="16"/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="0"/>
                         <RowDefinition/>
                         <RowDefinition/>
                         <RowDefinition/>
@@ -205,40 +205,50 @@
                     <Label x:Name="label31" Content="Return Mirror" Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="1" Margin="0,0,0,0"/>
                     <Label x:Name="label32" Content="OCT Ant. Lens" Style="{StaticResource LabelStyle}" Grid.Row="5" Grid.Column="1" Margin="0,0,0,0"/>
                     <Label x:Name="label39" Content="LSO Filter" Style="{StaticResource LabelStyle}" Grid.Row="6" Grid.Column="1" Margin="0,0,0,0"/>
-                    <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="3">
+                    <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="2">
                         <TextBox x:Name="editReferPosRetina" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
                         <Label x:Name="label33" Content="(Retina)" Style="{StaticResource LabelStyle}" Margin="0,0,16,0"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="3">
                         <TextBox x:Name="editReferPosCornea" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
                         <Label x:Name="label34" Content="(Cornea)" Style="{StaticResource LabelStyle}" Margin="0,0,16,0"/>
                     </StackPanel>
                     <TextBox x:Name="editPolarPos" Style="{StaticResource TextBoxStyle}" Grid.Row="3" Grid.Column="2" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
-                    <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="2" Grid.ColumnSpan="3">
+                    <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="2">
                         <TextBox x:Name="editRetMirrorInPos" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
                         <Label x:Name="label35" Content="(In)" Style="{StaticResource LabelStyle}" Margin="0,0,16,0"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="3">
                         <TextBox x:Name="editRetMirrorOutPos" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
                         <Label x:Name="label36" Content="(Out)" Style="{StaticResource LabelStyle}" Margin="0,0,16,0"/>
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal" Grid.Row="5" Grid.Column="2" Grid.ColumnSpan="3">
+                    <StackPanel Orientation="Horizontal" Grid.Row="5" Grid.Column="2">
                         <TextBox x:Name="editAntLensInPos" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
                         <Label x:Name="label37" Content="(In)" Style="{StaticResource LabelStyle}" Margin="0,0,16,0"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Grid.Row="5" Grid.Column="3">
                         <TextBox x:Name="editAntLensOutPos" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
                         <Label x:Name="label38" Content="(Out)" Style="{StaticResource LabelStyle}" Margin="0,0,16,0"/>
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal" Grid.Row="6" Grid.Column="2" Grid.ColumnSpan="3">
+                    <StackPanel Orientation="Horizontal" Grid.Row="6" Grid.Column="2">
                         <TextBox x:Name="editLsoColorPos" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
                         <Label x:Name="label40" Content="(Color)" Style="{StaticResource LabelStyle}" Margin="0,0,16,0"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Grid.Row="6" Grid.Column="3">
                         <TextBox x:Name="editLsoBluePos" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
                         <Label x:Name="label41" Content="(Blue)" Style="{StaticResource LabelStyle}" Margin="0,0,16,0"/>
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal" Grid.Row="7" Grid.Column="2" Grid.ColumnSpan="3">
+                    <StackPanel Orientation="Horizontal" Grid.Row="7" Grid.Column="2">
                         <TextBox x:Name="editLsoGreenPos" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
                         <Label x:Name="label42" Content="(Green)" Style="{StaticResource LabelStyle}" Margin="0,0,16,0"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Grid.Row="7" Grid.Column="3">
                         <TextBox x:Name="editLsoIcgaPos" Style="{StaticResource TextBoxStyle}" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
                         <Label x:Name="label43" Content="(ICGA)" Style="{StaticResource LabelStyle}" Margin="0,0,16,0"/>
                     </StackPanel>
                     <Border Style="{StaticResource BorderStyle}" BorderThickness="1" Grid.ColumnSpan="6" Grid.RowSpan="9"/>
                 </Grid>
-                <Grid Margin="0,8,0,0">
+                <Grid Margin="0,4,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="40"/>
                         <ColumnDefinition/>
@@ -248,7 +258,7 @@
                         <ColumnDefinition Width="16"/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="0"/>
                         <RowDefinition/>
                         <RowDefinition/>
                         <RowDefinition/>

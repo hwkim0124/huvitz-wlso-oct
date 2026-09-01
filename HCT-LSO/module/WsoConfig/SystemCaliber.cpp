@@ -61,14 +61,20 @@ double wso_config::SystemCaliber::dispersionParameterToRetina(int index, bool is
 			return value;
 		}
 		else {
+			double param = 0.0;
 			switch (index) {
 			case 0:
-				return cal->RetinaDispersion.a2;
+				param = cal->RetinaDispersion.a2;
+				break;
 			case 1:
-				return cal->RetinaDispersion.a3;
+				param = cal->RetinaDispersion.a3;
+				break;
 			case 2:
-				return cal->RetinaDispersion.a4;
+				param = cal->RetinaDispersion.a4;
+				break;
 			}
+			param = std::isnan(param) ? 0.0 : param;
+			return param;
 		}
 	}
 	return 0.0;

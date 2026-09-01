@@ -23,6 +23,13 @@ namespace wso_system
 		bool WSOSYSTEM_DLL_API __stdcall getDeviceSideOnPatient(EyeSide* side);
 		int WSOSYSTEM_DLL_API __stdcall getCurrentEyeSide(void);
 
+		// System Initialization Status
+		///////////////////////////////////////////////////////////////////////////////////////////
+		bool WSOSYSTEM_DLL_API __stdcall obtainSystemInitStatus(SysInitStatus* status, bool reload);
+		int WSOSYSTEM_DLL_API __stdcall getSysInitStatusStructSize(void);
+		int WSOSYSTEM_DLL_API __stdcall getSubsystemName(int bit, char* buf, int len);
+		int WSOSYSTEM_DLL_API __stdcall getSubsystemErrorText(int bit, int code, char* buf, int len);
+
 		// PI Sensor Vaule
 		///////////////////////////////////////////////////////////////////////////////////////////
 		bool WSOSYSTEM_DLL_API __stdcall isOdOsStatusFlagSet(void);
