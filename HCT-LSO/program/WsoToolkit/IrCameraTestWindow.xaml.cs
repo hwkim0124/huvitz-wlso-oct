@@ -252,7 +252,7 @@ namespace WsoToolkit
             if (e.Key == Key.Enter)
             {
                 var type = GetCameraTypeSelected();
-                var value = ToUInt(editCorneaDgain.Text);
+                var value = ToFloat(editCorneaExposure.Text);
                 CorneaCamera.SetExposureTime(type, value);
             }
         }

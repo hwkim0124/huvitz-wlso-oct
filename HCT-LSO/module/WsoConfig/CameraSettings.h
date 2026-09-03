@@ -30,13 +30,17 @@ namespace wso_config
 
 		float getRetinaAgain(void) const;
 		float getRetinaDgain(void) const;
+		float getRetinaExposureTime(void) const;
 		float getCorneaAgain(CameraType type) const;
 		float getCorneaDgain(CameraType type) const;
+		float getCorneaExposureTime(CameraType type) const;
 
 		void setRetinaAgain(float value);
 		void setRetinaDgain(float value);
+		void setRetinaExposureTime(float value);
 		void setCorneaAgain(CameraType type, float value);
 		void setCorneaDgain(CameraType type, float value);
+		void setCorneaExposureTime(CameraType type, float value);
 
 	protected:
 		struct CameraSettingsImpl;

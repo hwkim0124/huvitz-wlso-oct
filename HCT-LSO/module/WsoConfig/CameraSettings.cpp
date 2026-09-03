@@ -22,8 +22,13 @@ struct CameraSettings::CameraSettingsImpl
 		cornea.dgain_right = IR_CORNEA_DGAIN_INIT;
 		cornea.dgain_lower = IR_CORNEA_DGAIN_INIT;
 
-		retina.again = 1.0f;
-		retina.dgain = 1.0f;
+		cornea.exposTime_left = IR_CORNEA_EXPOSURE_INIT;
+		cornea.exposTime_right = IR_CORNEA_EXPOSURE_INIT;
+		cornea.exposTime_lower = IR_CORNEA_EXPOSURE_INIT;
+
+		retina.again = IR_RETINA_AGAIN_INIT;
+		retina.dgain = IR_RETINA_DGAIN_INIT;
+		retina.exposTime = IR_RETINA_EXPOSURE_INIT;
 	}
 };
 
@@ -123,6 +128,11 @@ float wso_config::CameraSettings::getRetinaDgain(void) const
 	return impl().retina.dgain;
 }
 
+float wso_config::CameraSettings::getRetinaExposureTime(void) const
+{
+	return impl().retina.exposTime;
+}
+
 float wso_config::CameraSettings::getCorneaAgain(CameraType type) const
 {
 	auto value = 0.0f;
@@ -153,6 +163,21 @@ float wso_config::CameraSettings::getCorneaDgain(CameraType type) const
 	return value;
 }
 
+float wso_config::CameraSettings::getCorneaExposureTime(CameraType type) const
+{
+	auto value = 0.0f;
+	if (type == CameraType::IR_CORNEA_LEFT) {
+		value = impl().cornea.exposTime_left;
+	}
+	else if (type == CameraType::IR_CORNEA_RIGHT) {
+		value = impl().cornea.exposTime_right;
+	}
+	else if (type == CameraType::IR_CORNEA_LOWER) {
+		value = impl().cornea.exposTime_lower;
+	}
+	return value;
+}
+
 void wso_config::CameraSettings::setRetinaAgain(float value)
 {
 	impl().retina.again = value;
@@ -163,6 +188,10 @@ void wso_config::CameraSettings::setRetinaDgain(float value)
 	impl().retina.dgain = value;
 }
 
+void wso_config::CameraSettings::setRetinaExposureTime(float value)
+{
+	impl().retina.exposTime = value;
+}
 
 void wso_config::CameraSettings::setCorneaAgain(CameraType type, float value)
 {
@@ -192,6 +221,19 @@ void wso_config::CameraSettings::setCorneaDgain(CameraType type, float value)
 	return;
 }
 
+void wso_config::CameraSettings::setCorneaExposureTime(CameraType type, float value)
+{
+	if (type == CameraType::IR_CORNEA_LEFT) {
+		impl().cornea.exposTime_left = value;
+	}
+	else if (type == CameraType::IR_CORNEA_RIGHT) {
+		impl().cornea.exposTime_right = value;
+	}
+	else if (type == CameraType::IR_CORNEA_LOWER) {
+		impl().cornea.exposTime_lower = value;
+	}
+	return;
+}
 
 CameraSettings::CameraSettingsImpl& wso_config::CameraSettings::impl(void) const
 {

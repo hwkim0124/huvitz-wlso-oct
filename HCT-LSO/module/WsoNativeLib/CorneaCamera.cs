@@ -41,7 +41,7 @@ namespace WsoNativeLib
         private static extern float getCorneaCameraDgain(int type);
 
         [DllImport(LibraryName)]
-        private static extern uint getCorneaCameraExposureTime(int type);
+        private static extern float getCorneaCameraExposureTime(int type);
 
 
         [DllImport(LibraryName)]
@@ -54,7 +54,7 @@ namespace WsoNativeLib
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool setCorneaCameraExposureTime(int type, uint value);
+        private static extern bool setCorneaCameraExposureTime(int type, float value);
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
@@ -105,7 +105,7 @@ namespace WsoNativeLib
             return getCorneaCameraDgain((int)type);
         }
 
-        public static uint GetExposureTime(CameraType type)
+        public static float GetExposureTime(CameraType type)
         {
             return getCorneaCameraExposureTime((int)type);
         }
@@ -120,7 +120,7 @@ namespace WsoNativeLib
             return setCorneaCameraDgain((int)type, value);
         }
 
-        public static bool SetExposureTime(CameraType type, uint value)
+        public static bool SetExposureTime(CameraType type, float value)
         {
             return setCorneaCameraExposureTime((int)type, value);
         }

@@ -357,6 +357,9 @@ bool wso_config::SysConfigFile::loadSectionOfCamera(CameraSettings* cset, tinyxm
 			if (checkXMLResult(elem->QueryFloatAttribute("dgain", &fValue))) {
 				cset->setCorneaDgain(CameraType::IR_CORNEA_LEFT, fValue);
 			}
+			if (checkXMLResult(elem->QueryFloatAttribute("exposureTime", &fValue))) {
+				cset->setCorneaExposureTime(CameraType::IR_CORNEA_LEFT, fValue);
+			}
 		}
 		else {
 			return false;
@@ -370,6 +373,9 @@ bool wso_config::SysConfigFile::loadSectionOfCamera(CameraSettings* cset, tinyxm
 			if (checkXMLResult(elem->QueryFloatAttribute("dgain", &fValue))) {
 				cset->setCorneaDgain(CameraType::IR_CORNEA_RIGHT, fValue);
 			}
+			if (checkXMLResult(elem->QueryFloatAttribute("exposureTime", &fValue))) {
+				cset->setCorneaExposureTime(CameraType::IR_CORNEA_RIGHT, fValue);
+			}
 		}
 		else {
 			return false;
@@ -382,6 +388,9 @@ bool wso_config::SysConfigFile::loadSectionOfCamera(CameraSettings* cset, tinyxm
 			}
 			if (checkXMLResult(elem->QueryFloatAttribute("dgain", &fValue))) {
 				cset->setCorneaDgain(CameraType::IR_CORNEA_LOWER, fValue);
+			}
+			if (checkXMLResult(elem->QueryFloatAttribute("exposureTime", &fValue))) {
+				cset->setCorneaExposureTime(CameraType::IR_CORNEA_LOWER, fValue);
 			}
 		}
 		else {
@@ -399,6 +408,9 @@ bool wso_config::SysConfigFile::loadSectionOfCamera(CameraSettings* cset, tinyxm
 			}
 			if (checkXMLResult(elem->QueryFloatAttribute("dgain", &fValue))) {
 				cset->setRetinaDgain(fValue);
+			}
+			if (checkXMLResult(elem->QueryFloatAttribute("exposureTime", &fValue))) {
+				cset->setRetinaExposureTime(fValue);
 			}
 		}
 		else {
@@ -720,16 +732,19 @@ bool wso_config::SysConfigFile::saveSectionOfCamera(const CameraSettings* cset, 
 	list->LinkEndChild(item);
 	item->SetAttribute("again", cset->getCorneaAgain(CameraType::IR_CORNEA_LEFT));
 	item->SetAttribute("dgain", cset->getCorneaDgain(CameraType::IR_CORNEA_LEFT));
+	item->SetAttribute("exposureTime", cset->getCorneaExposureTime(CameraType::IR_CORNEA_LEFT));
 
 	item = pdoc->NewElement("Right");
 	list->LinkEndChild(item);
 	item->SetAttribute("again", cset->getCorneaAgain(CameraType::IR_CORNEA_RIGHT));
 	item->SetAttribute("dgain", cset->getCorneaDgain(CameraType::IR_CORNEA_RIGHT));
+	item->SetAttribute("exposureTime", cset->getCorneaExposureTime(CameraType::IR_CORNEA_RIGHT));
 
 	item = pdoc->NewElement("Lower");
 	list->LinkEndChild(item);
 	item->SetAttribute("again", cset->getCorneaAgain(CameraType::IR_CORNEA_LOWER));
 	item->SetAttribute("dgain", cset->getCorneaDgain(CameraType::IR_CORNEA_LOWER));
+	item->SetAttribute("exposureTime", cset->getCorneaExposureTime(CameraType::IR_CORNEA_LOWER));
 
 	list = pdoc->NewElement("RetinaIr");
 	group->LinkEndChild(list);
@@ -738,6 +753,7 @@ bool wso_config::SysConfigFile::saveSectionOfCamera(const CameraSettings* cset, 
 	list->LinkEndChild(item);
 	item->SetAttribute("again", cset->getRetinaAgain());
 	item->SetAttribute("dgain", cset->getRetinaDgain());
+	item->SetAttribute("exposureTime", cset->getRetinaExposureTime());
 	return true;
 }
 

@@ -39,23 +39,23 @@ namespace wso_system
 
 		// Stage Motors 
 		///////////////////////////////////////////////////////////////////////////////////////////
-		bool WSOSYSTEM_DLL_API __stdcall moveStageLeft(void);
-		bool WSOSYSTEM_DLL_API __stdcall moveStageRight(void);
-		bool WSOSYSTEM_DLL_API __stdcall moveStageUp(void);
-		bool WSOSYSTEM_DLL_API __stdcall moveStageDown(void);
-		bool WSOSYSTEM_DLL_API __stdcall moveStageForward(void);
-		bool WSOSYSTEM_DLL_API __stdcall moveStageBackward(void);
-		bool WSOSYSTEM_DLL_API __stdcall stopStageX(void);
-		bool WSOSYSTEM_DLL_API __stdcall stopStageY(void);
-		bool WSOSYSTEM_DLL_API __stdcall stopStageZ(void);
-		bool WSOSYSTEM_DLL_API __stdcall stopStageAll(void);
+		bool WSOSYSTEM_DLL_API __stdcall moveHeadLeft(void);
+		bool WSOSYSTEM_DLL_API __stdcall moveHeadRight(void);
+		bool WSOSYSTEM_DLL_API __stdcall moveHeadUp(void);
+		bool WSOSYSTEM_DLL_API __stdcall moveHeadDown(void);
+		bool WSOSYSTEM_DLL_API __stdcall moveHeadForward(void);
+		bool WSOSYSTEM_DLL_API __stdcall moveHeadBackward(void);
+		bool WSOSYSTEM_DLL_API __stdcall stopHeadX(void);
+		bool WSOSYSTEM_DLL_API __stdcall stopHeadY(void);
+		bool WSOSYSTEM_DLL_API __stdcall stopHeadZ(void);
+		bool WSOSYSTEM_DLL_API __stdcall stopHeadXYZ(void);
 
-		bool WSOSYSTEM_DLL_API __stdcall isStageAtLeftEnd(void);
-		bool WSOSYSTEM_DLL_API __stdcall isStageAtRightEnd(void);
-		bool WSOSYSTEM_DLL_API __stdcall isStageAtLowerEnd(void);
-		bool WSOSYSTEM_DLL_API __stdcall isStageAtUpperEnd(void);
-		bool WSOSYSTEM_DLL_API __stdcall isStageAtForwardEnd(void);
-		bool WSOSYSTEM_DLL_API __stdcall isStageAtBackwardEnd(void);
+		bool WSOSYSTEM_DLL_API __stdcall isHeadAtLeftEnd(void);
+		bool WSOSYSTEM_DLL_API __stdcall isHeadAtRightEnd(void);
+		bool WSOSYSTEM_DLL_API __stdcall isHeadAtLowerEnd(void);
+		bool WSOSYSTEM_DLL_API __stdcall isHeadAtUpperEnd(void);
+		bool WSOSYSTEM_DLL_API __stdcall isHeadAtForwardEnd(void);
+		bool WSOSYSTEM_DLL_API __stdcall isHeadAtBackwardEnd(void);
 
 		bool WSOSYSTEM_DLL_API __stdcall moveSwingLeft(void);
 		bool WSOSYSTEM_DLL_API __stdcall moveSwingRight(void);
@@ -68,7 +68,7 @@ namespace wso_system
 		///////////////////////////////////////////////////////////////////////////////////////////
 		bool WSOSYSTEM_DLL_API __stdcall moveChinrestUp(void);
 		bool WSOSYSTEM_DLL_API __stdcall moveChinrestDown(void);
-		bool WSOSYSTEM_DLL_API __stdcall stopChinrestMove(void);
+		bool WSOSYSTEM_DLL_API __stdcall stopChinrest(void);
 		bool WSOSYSTEM_DLL_API __stdcall isChinrestAtUpperEnd(void);
 		bool WSOSYSTEM_DLL_API __stdcall isChinrestAtLowerEnd(void);
 

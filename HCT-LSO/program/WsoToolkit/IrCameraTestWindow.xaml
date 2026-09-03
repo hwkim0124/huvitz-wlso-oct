@@ -9,7 +9,7 @@
         mc:Ignorable="d"
         SizeToContent="WidthAndHeight"
        Title="Ir Camera Test" Height="Auto" Width="Auto" ResizeMode="NoResize" Initialized="Window_Initialized" Loaded="Window_Loaded" Closed="Window_Closed" Closing="Window_Closing">
-    <Grid Margin="4,4,4,4">
+    <Grid Margin="8,8,8,8">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
@@ -86,7 +86,7 @@
                 <CheckBox x:Name="checkTransparent" Content="Transparent" Style="{StaticResource CheckBoxStyle}" Grid.Row="5" Grid.Column="6" Grid.ColumnSpan="2" Click="CheckTransparent_Click"/>
                 <Label x:Name="label112" Content="Exposure" Style="{StaticResource LabelStyle}" Grid.Row="5" Grid.Column="1"/>
                 <TextBox x:Name="editCorneaExposure" Style="{StaticResource TextBoxStyle}" Width="60" Grid.Row="5" Grid.Column="2" KeyDown="EditCorneaExposure_KeyDown"/>
-                <Label x:Name="label113" Content="[us]" Style="{StaticResource LabelStyle}" Grid.Row="5" Grid.Column="3"/>
+                <Label x:Name="label113" Content="[1~300]" Style="{StaticResource LabelStyle}" Grid.Row="5" Grid.Column="3"/>
                 <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="9" Grid.RowSpan="9"/>
             </Grid>
         </StackPanel>

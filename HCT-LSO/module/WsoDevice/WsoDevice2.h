@@ -164,6 +164,10 @@ namespace wso_device
 	constexpr std::float_t IR_CAMERA_DGAIN_MAX = 8.0f;
 	constexpr std::float_t IR_CAMERA_DGAIN_INIT = 1.0f;
 
+	constexpr std::float_t IR_CAMERA_EXPOSURE_MIN = 1.0f;
+	constexpr std::float_t IR_CAMERA_EXPOSURE_MAX = 300.0f;
+	constexpr std::float_t IR_CAMERA_EXPOSURE_INIT = 30.0f;
+
 	// Control Value
 	////////////////////////////////////////////////////////////////////////////////////////////
 	constexpr unsigned char CTRL_OFF = 0x00;
@@ -298,7 +302,7 @@ namespace wso_device
 		WDOT_LED2 = 0x400A,
 		IRCAM_AGAIN = 0x4010,
 		IRCAM_DGAIN = 0x4011,
-		XZ_STOP = 0x4012,
+		IRCAM_EXPOSURE = 0x4012,
 		AF_XZMOVE = 0x4020,
 		AF_XZPOS = 0x4021,
 		CR_MOVE = 0x4022,

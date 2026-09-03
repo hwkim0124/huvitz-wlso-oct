@@ -48,6 +48,16 @@ namespace WsoToolkit
             DeviceMotors.ReleaseStepMotorPositionChanged(MotorType.StageZ);
         }
 
+        private void StopAllMotors()
+        {
+            DeviceMotors.StopStepMotor(MotorType.Swing);
+            DeviceMotors.StopStepMotor(MotorType.StageX);
+            DeviceMotors.StopStepMotor(MotorType.StageY);
+            DeviceMotors.StopStepMotor(MotorType.StageZ);
+
+            AlignStage.StopChinrest();
+        }
+
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// Callbacks

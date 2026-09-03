@@ -10,9 +10,6 @@ using namespace std;
 
 struct CorneaCamera::CorneaCameraImpl
 {
-	float again[4];
-	float dgain[4];
-
 	CorneaCameraImpl()
 	{
 		initializeCorneaCameraImpl();
@@ -20,10 +17,6 @@ struct CorneaCamera::CorneaCameraImpl
 
 	void initializeCorneaCameraImpl(void)
 	{
-		for (int i = 0; i < 3; i++) {
-			again[i] = IR_CAMERA_AGAIN_INIT;
-			dgain[i] = IR_CAMERA_DGAIN_INIT;
-		}
 	}
 };
 
@@ -70,10 +63,14 @@ void wso_device::CorneaCamera::applyConfigParameters(CorneaCameraConfigParam par
 	setDigitalGain(IrCameraId::CORNEA_LEFT, param.dgain_left, true);
 	setDigitalGain(IrCameraId::CORNEA_RIGHT, param.dgain_right, true);
 	setDigitalGain(IrCameraId::CORNEA_LOWER, param.dgain_lower, true);
+
+	setExposureTime(IrCameraId::CORNEA_LEFT, (unsigned int)param.exposTime_left, true);	
+	setExposureTime(IrCameraId::CORNEA_RIGHT, (unsigned int)param.exposTime_right, true);
+	setExposureTime(IrCameraId::CORNEA_LOWER, (unsigned int)param.exposTime_lower, true);	
 	return;
 }
 
-bool wso_device::CorneaCamera::applyGainSettings(void)
+bool wso_device::CorneaCamera::setupParameters(void)
 {
 	constexpr IrCameraId camIds[] = { IrCameraId::CORNEA_LOWER, IrCameraId::CORNEA_LEFT, IrCameraId::CORNEA_RIGHT };
 
@@ -81,8 +78,10 @@ bool wso_device::CorneaCamera::applyGainSettings(void)
 	for (auto camId : camIds) {
 		auto again = getAnalogGain(camId);
 		auto dgain = getDigitalGain(camId);
+		auto expos = getExposureTime(camId);
 		result = InfraredCamera::setAnalogGain(camId, again, true) && result;
 		result = InfraredCamera::setDigitalGain(camId, dgain, true) && result;
+		result = InfraredCamera::setExposureTime(camId, expos, true) && result;
 	}
 	return result;
 }

@@ -354,41 +354,41 @@ namespace WsoToolkit.controls
                         {
                             if (normalizedX < centerX)
                             {
-                                StageMotors.MoveStageLeft();
+                                AlignStage.MoveHeadLeft();
                             }
                             else
                             {
-                                StageMotors.MoveStageRight();
+                                AlignStage.MoveHeadRight();
                             }
 
                             if (normalizedY < targetY1)
                             {
-                                StageMotors.MoveStageUp();
+                                AlignStage.MoveHeadUp();
                             }
                             else if (normalizedY > targetY2)
                             {
-                                StageMotors.MoveStageDown();
+                                AlignStage.MoveHeadDown();
                             }
                         }
                         else
                         {
                             if (normalizedY < centerY)
                             {
-                                StageMotors.MoveStageUp();
+                                AlignStage.MoveHeadUp();
                             }
                             else
                             {
-                                StageMotors.MoveStageDown();
+                                AlignStage.MoveHeadDown();
                             }
                             if (normalizedY >= targetY1 && normalizedY <= targetY2)
                             {
                                 if (normalizedX < centerX)
                                 {
-                                    StageMotors.MoveStageLeft();
+                                    AlignStage.MoveHeadLeft();
                                 }
                                 else
                                 {
-                                    StageMotors.MoveStageRight();
+                                    AlignStage.MoveHeadRight();
                                 }
                             }
                         }
@@ -397,11 +397,11 @@ namespace WsoToolkit.controls
                     {
                         if (normalizedY < targetY1)
                         {
-                            StageMotors.MoveStageForward();
+                            AlignStage.MoveHeadForward();
                         }
                         else if (normalizedY > targetY2)
                         {
-                            StageMotors.MoveStageBackward();
+                            AlignStage.MoveHeadBackward();
                         }
                     }
                 }
@@ -411,7 +411,7 @@ namespace WsoToolkit.controls
             {
                 if (IsStageControlEnabled && e.LeftButton == MouseButtonState.Released)
                 {
-                    StageMotors.StopStageAll();
+                    AlignStage.StopHeadXYZ();
                 }
             };
         }

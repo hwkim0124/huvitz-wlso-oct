@@ -79,6 +79,10 @@ bool wso_system::Hardware::initializeOctScanner(void)
 			return true;
 		}
 		else {
+			if (auto* galv = board->getGalvanometer(); galv) {
+				galv->initializeGalvanometer();
+			}
+
 			if (auto* grab = getUsb3Grabber(); grab) {
 				if (!grab->initializeUsb3Grabber()) {
 					WsoLogError("Failed to initialize Oct Usb3 grabber");
@@ -89,10 +93,6 @@ bool wso_system::Hardware::initializeOctScanner(void)
 					return true;
 				}
 			}
-		}
-
-		if (auto* galv = board->getGalvanometer(); galv) {
-			galv->initializeGalvanometer();
 		}
 	}
 	return false;

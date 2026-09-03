@@ -38,6 +38,9 @@ namespace WsoToolkit
                 editCorneaDgain2.Text = param.dgain_right.ToString("F0");
                 editCorneaAgain3.Text = param.again_lower.ToString("F0");
                 editCorneaDgain3.Text = param.dgain_lower.ToString("F0");
+                editCorneaExpos1.Text = param.exposTime_left.ToString("F0");
+                editCorneaExpos2.Text = param.exposTime_right.ToString("F0");
+                editCorneaExpos3.Text = param.exposTime_lower.ToString("F0");
             }
         }
 
@@ -47,6 +50,7 @@ namespace WsoToolkit
             {
                 editRetinaAgain.Text = param.again.ToString("F0");
                 editRetinaDgain.Text = param.dgain.ToString("F0");
+                editRetinaExpos.Text = param.exposTime.ToString("F0");
             }
         }
 
@@ -90,6 +94,9 @@ namespace WsoToolkit
             param.dgain_right = ToFloat(editCorneaDgain2.Text);
             param.again_lower = ToFloat(editCorneaAgain3.Text);
             param.dgain_lower = ToFloat(editCorneaDgain3.Text);
+            param.exposTime_left = ToFloat(editCorneaExpos1.Text);
+            param.exposTime_right = ToFloat(editCorneaExpos2.Text);
+            param.exposTime_lower = ToFloat(editCorneaExpos3.Text);
 
             Configuration.SubmitCorneaCameraConfig(param);
         }
@@ -99,6 +106,7 @@ namespace WsoToolkit
             var param = new WsoConfig.RetinaCameraConfigParam();
             param.again = ToFloat(editRetinaAgain.Text);
             param.dgain = ToFloat(editRetinaDgain.Text);
+            param.exposTime = ToFloat(editRetinaExpos.Text);
             Configuration.SubmitRetinaCameraConfig(param);
         }
 

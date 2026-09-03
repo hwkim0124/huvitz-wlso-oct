@@ -333,11 +333,9 @@ bool wso_device::MainBoard::initiateBoardComponents(int* numWarns)
 	if (!initiateCorneaCamera()) {
 		warns += 1;
 	}
-	/*
 	if (!initiateColorCamera()) {
 		warns += 1;
 	}
-	*/
 	return true;
 }
 

@@ -6,6 +6,11 @@ namespace wso_domain
 	/////////////////////////////////////////////////////////////////////////////////////////////
 	constexpr float IR_CORNEA_AGAIN_INIT = 1.0f;
 	constexpr float IR_CORNEA_DGAIN_INIT = 1.0f;
+	constexpr float IR_CORNEA_EXPOSURE_INIT = 30.0f;
+
+	constexpr float IR_RETINA_AGAIN_INIT = 1.0f;
+	constexpr float IR_RETINA_DGAIN_INIT = 1.0f;
+	constexpr float IR_RETINA_EXPOSURE_INIT = 30.0f;
 
 	constexpr int N_WORKING_DOTS = 2;
 	constexpr int IR_WDOT_INTENSITY_INIT = 20;

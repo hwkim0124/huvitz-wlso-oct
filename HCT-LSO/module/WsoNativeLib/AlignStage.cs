@@ -14,7 +14,7 @@ namespace WsoNativeLib
     using static WsoNativeLib.LibraryConfig;
     using static WsoNativeLib.WsoDevice;
 
-    public static class StageMotors
+    public static class AlignStage
     {
         const string LibraryName = WsoSystemDllPath;
 
@@ -22,67 +22,67 @@ namespace WsoNativeLib
         /////////////////////////////////////////////////////////////////////////////////////////////
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool moveStageLeft();
+        private static extern bool moveHeadLeft();
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool moveStageRight();
+        private static extern bool moveHeadRight();
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool moveStageUp();
+        private static extern bool moveHeadUp();
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool moveStageDown();
+        private static extern bool moveHeadDown();
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool moveStageForward();
+        private static extern bool moveHeadForward();
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool moveStageBackward();
+        private static extern bool moveHeadBackward();
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool stopStageX();
+        private static extern bool stopHeadX();
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool stopStageY();
+        private static extern bool stopHeadY();
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool stopStageZ();
+        private static extern bool stopHeadZ();
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool stopStageAll();
+        private static extern bool stopHeadXYZ();
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool isStageAtLeftEnd();
+        private static extern bool isHeadAtLeftEnd();
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool isStageAtRightEnd();
+        private static extern bool isHeadAtRightEnd();
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool isStageAtLowerEnd();
+        private static extern bool isHeadAtLowerEnd();
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool isStageAtUpperEnd();
+        private static extern bool isHeadAtUpperEnd();
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool isStageAtForwardEnd();
+        private static extern bool isHeadAtForwardEnd();
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool isStageAtBackwardEnd();
+        private static extern bool isHeadAtBackwardEnd();
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
@@ -114,7 +114,7 @@ namespace WsoNativeLib
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool stopChinrestMove();
+        private static extern bool stopChinrest();
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
@@ -124,107 +124,89 @@ namespace WsoNativeLib
         [return: MarshalAs(UnmanagedType.I1)]
         private static extern bool isChinrestAtLowerEnd();
 
-        [DllImport(LibraryName)]
-        [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool isSwingMotorAtPiPosition();
 
-        [DllImport(LibraryName)]
-        [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool isXstageMotorAtPiPosition();
-
-        [DllImport(LibraryName)]
-        [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool isZstageMotorAtPiPosition();
-
-        [DllImport(LibraryName)]
-        [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool isYstageMotorAtUpperLimit();
-
-        [DllImport(LibraryName)]
-        [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool isYstageMotorAtLowerLimit();
 
 
         // Public methods
         /////////////////////////////////////////////////////////////////////////////////////////////
-        public static bool MoveStageLeft()
+        public static bool MoveHeadLeft()
         {
-            return moveStageLeft();
+            return moveHeadLeft();
         }
 
-        public static bool MoveStageRight()
+        public static bool MoveHeadRight()
         {
-            return moveStageRight();
+            return moveHeadRight();
         }
 
-        public static bool MoveStageUp()
+        public static bool MoveHeadUp()
         {
-            return moveStageUp();
+            return moveHeadUp();
         }
 
-        public static bool MoveStageDown()
+        public static bool MoveHeadDown()
         {
-            return moveStageDown();
+            return moveHeadDown();
         }
 
-        public static bool MoveStageForward()
+        public static bool MoveHeadForward()
         {
-            return moveStageForward();
+            return moveHeadForward();
         }
 
-        public static bool MoveStageBackward()
+        public static bool MoveHeadBackward()
         {
-            return moveStageBackward();
+            return moveHeadBackward();
         }
 
-        public static bool StopStageX()
+        public static bool StopHeadX()
         {
-            return stopStageX();
+            return stopHeadX();
         }
 
-        public static bool StopStageY()
+        public static bool StopHeadY()
         {
-            return stopStageY();
+            return stopHeadY();
         }
 
-        public static bool StopStageZ()
+        public static bool StopHeadZ()
         {
-            return stopStageZ();
+            return stopHeadZ();
         }
 
-        public static bool StopStageAll()
+        public static bool StopHeadXYZ()
         {
-            return stopStageAll();
+            return stopHeadXYZ();
         }
 
-        public static bool IsStageAtLeftEnd()
+        public static bool IsHeadAtLeftEnd()
         {
-            return isStageAtLeftEnd();
+            return isHeadAtLeftEnd();
         }
 
-        public static bool IsStageAtRightEnd()
+        public static bool IsHeadAtRightEnd()
         {
-            return isStageAtRightEnd();
+            return isHeadAtRightEnd();
         }
 
-        public static bool IsStageAtLowerEnd()
+        public static bool IsHeadAtLowerEnd()
         {
-            return isStageAtLowerEnd();
+            return isHeadAtLowerEnd();
         }
 
-        public static bool IsStageAtUpperEnd()
+        public static bool IsHeadAtUpperEnd()
         {
-            return isStageAtUpperEnd();
+            return isHeadAtUpperEnd();
         }
 
-        public static bool IsStageAtForwardEnd()
+        public static bool IsHeadAtForwardEnd()
         {
-            return isStageAtForwardEnd();
+            return isHeadAtForwardEnd();
         }
 
-        public static bool IsStageAtBackwardEnd()
+        public static bool IsHeadAtBackwardEnd()
         {
-            return isStageAtBackwardEnd();
+            return isHeadAtBackwardEnd();
         }
 
         public static bool MoveSwingLeft()
@@ -262,9 +244,9 @@ namespace WsoNativeLib
             return moveChinrestDown();
         }
 
-        public static bool StopChinrestMove()
+        public static bool StopChinrest()
         {
-            return stopChinrestMove();
+            return stopChinrest();
         }
 
         public static bool IsChinrestAtUpperEnd()
@@ -277,29 +259,6 @@ namespace WsoNativeLib
             return isChinrestAtLowerEnd();
         }
 
-        public static bool IsSwingMotorAtPiPosition()
-        {
-            return isSwingMotorAtPiPosition();
-        }
-
-        public static bool IsXstageMotorAtPiPosition()
-        {
-            return isXstageMotorAtPiPosition();
-        }
-
-        public static bool IsZstageMotorAtPiPosition()
-        {
-            return isZstageMotorAtPiPosition();
-        }
-
-        public static bool IsYstageMotorAtUpperLimit()
-        {
-            return isYstageMotorAtUpperLimit();
-        }
-
-        public static bool IsYstageMotorAtLowerLimit()
-        {
-            return isYstageMotorAtLowerLimit();
-        }
+        
     }
 }

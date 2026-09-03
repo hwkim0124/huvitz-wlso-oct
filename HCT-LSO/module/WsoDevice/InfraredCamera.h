@@ -48,11 +48,11 @@ namespace wso_device
 
 		bool setAnalogGain(IrCameraId camId, float gain, bool control = true);
 		bool setDigitalGain(IrCameraId camId, float gain, bool control = true);
-		bool setExposureTime(IrCameraId camId, unsigned int time, bool control = true);
+		bool setExposureTime(IrCameraId camId, float time, bool control = true);
 
 		float getAnalogGain(IrCameraId camId) const;
 		float getDigitalGain(IrCameraId camId) const;
-		unsigned int getExposureTime(IrCameraId camId) const;
+		float getExposureTime(IrCameraId camId) const;
 		
 		std::uint8_t getAnalogGainData(float gain) const;
 		std::uint8_t getDigitalGainData(float gain) const;
@@ -81,7 +81,7 @@ namespace wso_device
 		void acquireCameraStream(void);
 		// Pushes the cached gains to the sensor(s) this camera owns. Called from
 		// play() before the stream is enabled; each subclass knows its camera ids.
-		virtual bool applyGainSettings(void);
+		virtual bool setupParameters(void);
 		virtual bool handleFrameData(int index, unsigned char* frameData);
 		bool recoverFromUsbError(void);
 		bool isValidFrameHeader(unsigned char* buff);

@@ -18,6 +18,10 @@ namespace WsoNativeLib
             public float dgain_left;
             public float dgain_right;
             public float dgain_lower;
+            public float exposTime_left;
+            public float exposTime_right;
+            public float exposTime_lower;
+
 
             public CorneaCameraConfigParam()
             {
@@ -27,6 +31,9 @@ namespace WsoNativeLib
                 dgain_left = 1.0f;
                 dgain_right = 1.0f;
                 dgain_lower = 1.0f;
+                exposTime_left = 1.0f;
+                exposTime_right = 1.0f;
+                exposTime_lower = 1.0f;
             }
         }
 
@@ -35,10 +42,12 @@ namespace WsoNativeLib
         {
             public float again;
             public float dgain;
+            public float exposTime;
             public RetinaCameraConfigParam()
             {
                 again = 1.0f;
                 dgain = 1.0f;
+                exposTime = 1.0f;
             }
         }
 

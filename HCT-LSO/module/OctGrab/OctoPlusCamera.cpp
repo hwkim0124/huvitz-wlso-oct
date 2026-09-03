@@ -53,9 +53,9 @@ bool oct_grab::OctoPlusCamera::openLineCamera(Usb3Grabber* grabber)
 		OctoPlus::setTriggerMode(ETriggerMode::Mode_ExternalLineTrigger_ProgrammableExposure);
 
 		ostringstream msg;
-		double exposure;
-		OctoPlus::getExposureTime(&exposure);
-		msg << "Octo plus exposure time: " << exposure;
+		double exposTime;
+		OctoPlus::getExposureTime(&exposTime);
+		msg << "Octo plus exposure time: " << exposTime;
 
 		double period;
 		OctoPlus::getLinePeriod(&period);

@@ -55,7 +55,7 @@ float WSOSYSTEM_DLL_API __stdcall wso_system::getCorneaCameraDgain(IrCameraId ca
 	return 0.0f;
 }
 
-unsigned int WSOSYSTEM_DLL_API __stdcall wso_system::getCorneaCameraExposureTime(IrCameraId camId)
+float WSOSYSTEM_DLL_API __stdcall wso_system::getCorneaCameraExposureTime(IrCameraId camId)
 {
 	if (auto* p = Hardware::getInstance()->getMainBoard()->getCorneaCamera(); p) {
 		return p->getExposureTime(camId);
@@ -79,7 +79,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::setCorneaCameraDgain(IrCameraId cam
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::setCorneaCameraExposureTime(IrCameraId camId, unsigned int value)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::setCorneaCameraExposureTime(IrCameraId camId, float value)
 {
 	if (auto* p = Hardware::getInstance()->getMainBoard()->getCorneaCamera(); p) {
 		return p->setExposureTime(camId, value, true);
@@ -179,7 +179,7 @@ float WSOSYSTEM_DLL_API __stdcall wso_system::getRetinaCameraDgain(void)
 	return 0.0f;
 }
 
-unsigned int WSOSYSTEM_DLL_API __stdcall wso_system::getRetinaCameraExposureTime(void)
+float WSOSYSTEM_DLL_API __stdcall wso_system::getRetinaCameraExposureTime(void)
 {
 	if (auto* p = Hardware::getInstance()->getMainBoard()->getRetinaCamera(); p) {
 		return p->getExposureTime();
@@ -203,7 +203,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::setRetinaCameraDgain(float value)
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::setRetinaCameraExposureTime(unsigned int value)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::setRetinaCameraExposureTime(float value)
 {
 	if (auto* p = Hardware::getInstance()->getMainBoard()->getRetinaCamera(); p) {
 		return p->setExposureTime(value, true);

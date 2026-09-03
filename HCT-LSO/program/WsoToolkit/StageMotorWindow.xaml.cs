@@ -58,18 +58,17 @@ namespace WsoToolkit
 
             ConnectMotorCallbacks();
 
-            DeviceMotors.MoveStepMotorPosition(MotorType.Swing, _msSwing.currPos);
-            DeviceMotors.MoveStepMotorPosition(MotorType.StageX, _msXstage.currPos);
-            DeviceMotors.MoveStepMotorPosition(MotorType.StageY, _msYstage.currPos);
-            DeviceMotors.MoveStepMotorPosition(MotorType.StageZ, _msZstage.currPos);
+            DeviceMotors.MoveStepMotorPositionAsync(MotorType.Swing, _msSwing.currPos);
+            DeviceMotors.MoveStepMotorPositionAsync(MotorType.StageX, _msXstage.currPos);
+            DeviceMotors.MoveStepMotorPositionAsync(MotorType.StageY, _msYstage.currPos);
+            DeviceMotors.MoveStepMotorPositionAsync(MotorType.StageZ, _msZstage.currPos);
         }
 
         private void Window_Closed(object sender, EventArgs e)
         {
             _timer.Stop();
 
-            StageMotors.StopChinrestMove();
-            StageMotors.StopStageAll();
+            StopAllMotors();
 
             // Stop before release, so the motors are actually told to halt while the
             // callbacks are still connected and the UI can reflect the final position.
@@ -137,15 +136,13 @@ namespace WsoToolkit
 
         private void EditSwingPos_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key != Key.Enter)
+            if (e.Key == Key.Enter)
             {
-                return;
-            }
-
-            int value = ToInt(editSwingPos.Text);
-            if (value >= sliderSwing.Minimum && value <= sliderSwing.Maximum)
-            {
-                sliderSwing.Value = value;
+                int value = ToInt(editSwingPos.Text);
+                if (value >= sliderSwing.Minimum && value <= sliderSwing.Maximum)
+                {
+                    sliderSwing.Value = value;
+                }
             }
         }
 
@@ -194,15 +191,13 @@ namespace WsoToolkit
 
         private void EditXstagePos_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key != Key.Enter)
+            if (e.Key == Key.Enter)
             {
-                return;
-            }
-
-            int value = ToInt(editXstagePos.Text);
-            if (value >= sliderXstage.Minimum && value <= sliderXstage.Maximum)
-            {
-                sliderXstage.Value = value;
+                int value = ToInt(editXstagePos.Text);
+                if (value >= sliderXstage.Minimum && value <= sliderXstage.Maximum)
+                {
+                    sliderXstage.Value = value;
+                }
             }
         }
 
@@ -251,15 +246,13 @@ namespace WsoToolkit
 
         private void EditYstagePos_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key != Key.Enter)
+            if (e.Key == Key.Enter)
             {
-                return;
-            }
-
-            int value = ToInt(editYstagePos.Text);
-            if (value >= sliderYstage.Minimum && value <= sliderYstage.Maximum)
-            {
-                sliderYstage.Value = value;
+                int value = ToInt(editYstagePos.Text);
+                if (value >= sliderYstage.Minimum && value <= sliderYstage.Maximum)
+                {
+                    sliderYstage.Value = value;
+                }
             }
         }
 
@@ -308,31 +301,29 @@ namespace WsoToolkit
 
         private void EditZstagePos_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key != Key.Enter)
+            if (e.Key == Key.Enter)
             {
-                return;
-            }
-
-            int value = ToInt(editZstagePos.Text);
-            if (value >= sliderZstage.Minimum && value <= sliderZstage.Maximum)
-            {
-                sliderZstage.Value = value;
+                int value = ToInt(editZstagePos.Text);
+                if (value >= sliderZstage.Minimum && value <= sliderZstage.Maximum)
+                {
+                    sliderZstage.Value = value;
+                }
             }
         }
 
         private void BtnChinrestStop_Click(object sender, RoutedEventArgs e)
         {
-            StageMotors.StopChinrestMove();
+            AlignStage.StopChinrest();
         }
 
         private void BtnChinrestDown_Click(object sender, RoutedEventArgs e)
         {
-            StageMotors.MoveChinrestDown();
+            AlignStage.MoveChinrestDown();
         }
 
         private void BtnChinrestUp_Click(object sender, RoutedEventArgs e)
         {
-            StageMotors.MoveChinrestUp();
+            AlignStage.MoveChinrestUp();
         }
     }
 }

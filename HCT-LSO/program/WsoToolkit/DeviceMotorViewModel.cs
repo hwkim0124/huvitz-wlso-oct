@@ -101,6 +101,8 @@ namespace WsoToolkit
             DeviceMotors.StopStepMotor(MotorType.StageX);
             DeviceMotors.StopStepMotor(MotorType.StageY);
             DeviceMotors.StopStepMotor(MotorType.StageZ);
+
+            AlignStage.StopChinrest();
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -277,11 +279,11 @@ namespace WsoToolkit
             Func<bool, string> boolToIntStr = value => value ? "1" : "0";
 
             // editOdOs.Text = boolToIntStr(DeviceMotors.IsOdOsStatusFlagSet());
-            editCrestPi.Text = boolToIntStr(StageMotors.IsChinrestAtUpperEnd()) + " | " + boolToIntStr(StageMotors.IsChinrestAtLowerEnd());
-            editXstagePi.Text = boolToIntStr(StageMotors.IsXstageMotorAtPiPosition());
-            editYstagePi.Text = boolToIntStr(StageMotors.IsYstageMotorAtUpperLimit()) + " | " + boolToIntStr(StageMotors.IsYstageMotorAtLowerLimit());
-            editZstagePi.Text = boolToIntStr(StageMotors.IsZstageMotorAtPiPosition());
-            editSwingPi.Text = boolToIntStr(StageMotors.IsSwingMotorAtPiPosition());
+            editCrestPi.Text = boolToIntStr(AlignStage.IsChinrestAtUpperEnd()) + " | " + boolToIntStr(AlignStage.IsChinrestAtLowerEnd());
+            editXstagePi.Text = boolToIntStr(DeviceMotors.IsXstageMotorAtPiPosition());
+            editYstagePi.Text = boolToIntStr(DeviceMotors.IsYstageMotorAtUpperLimit()) + " | " + boolToIntStr(DeviceMotors.IsYstageMotorAtLowerLimit());
+            editZstagePi.Text = boolToIntStr(DeviceMotors.IsZstageMotorAtPiPosition());
+            editSwingPi.Text = boolToIntStr(DeviceMotors.IsSwingMotorAtPiPosition());
 
             editLsoFocusPi.Text = boolToIntStr(DeviceMotors.IsLsoFocusMotorAtPiPosition());
             editLsoFilterPi.Text = boolToIntStr(DeviceMotors.IsLsoFilterMotorAtPiPosition());

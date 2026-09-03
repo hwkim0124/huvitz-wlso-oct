@@ -23,15 +23,15 @@ namespace wso_device
 
 		bool setAnalogGain(float gain, bool control = true);
 		bool setDigitalGain(float gain, bool control = true);
-		bool setExposureTime(unsigned int time, bool control = true);
+		bool setExposureTime(float time, bool control = true);
 
 		float getAnalogGain(void) const;
 		float getDigitalGain(void) const;
-		unsigned int getExposureTime(void) const;
+		float getExposureTime(void) const;
 
 		void applyConfigParameters(RetinaCameraConfigParam param);
-		bool applyGainSettings(void) override;
 
+		bool setupParameters(void) override;
 		bool handleFrameData(int index, unsigned char* frameData) override;
 		bool loadCalibParamFromProfile(void) override;
 		bool saveCalibParamToProfile(void) override;

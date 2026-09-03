@@ -10,9 +10,6 @@ using namespace std;
 
 struct RetinaCamera::RetinaCameraImpl
 {
-	float again;
-	float dgain;
-
 	RetinaCameraImpl()
 	{
 		initializeRetinaCameraImpl();
@@ -20,8 +17,6 @@ struct RetinaCamera::RetinaCameraImpl
 
 	void initializeRetinaCameraImpl(void)
 	{
-		again = IR_CAMERA_AGAIN_INIT;
-		dgain = IR_CAMERA_DGAIN_INIT;
 	}
 };
 
@@ -58,10 +53,11 @@ void wso_device::RetinaCamera::applyConfigParameters(RetinaCameraConfigParam par
 {
 	setAnalogGain(param.again);
 	setDigitalGain(param.dgain);
+	setExposureTime(param.exposTime);
 	return;
 }
 
-bool wso_device::RetinaCamera::applyGainSettings(void)
+bool wso_device::RetinaCamera::setupParameters(void)
 {
 	auto again = getAnalogGain();
 	auto dgain = getDigitalGain();
@@ -80,7 +76,7 @@ bool wso_device::RetinaCamera::setDigitalGain(float gain, bool control)
 	return InfraredCamera::setDigitalGain(IrCameraId::RETINA, gain, control);
 }
 
-bool wso_device::RetinaCamera::setExposureTime(unsigned int time, bool control)
+bool wso_device::RetinaCamera::setExposureTime(float time, bool control)
 {
 	return InfraredCamera::setExposureTime(IrCameraId::RETINA, time, control);
 }
@@ -95,7 +91,7 @@ float wso_device::RetinaCamera::getDigitalGain(void) const
 	return InfraredCamera::getDigitalGain(IrCameraId::RETINA);
 }
 
-unsigned int wso_device::RetinaCamera::getExposureTime(void) const
+float wso_device::RetinaCamera::getExposureTime(void) const
 {
 	return InfraredCamera::getExposureTime(IrCameraId::RETINA);
 }

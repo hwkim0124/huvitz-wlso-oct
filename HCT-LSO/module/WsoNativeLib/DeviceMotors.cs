@@ -133,6 +133,26 @@ namespace WsoNativeLib
         [return: MarshalAs(UnmanagedType.I1)]
         private static extern bool isOctFocusMotorAtPiPosition();
 
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool isSwingMotorAtPiPosition();
+
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool isXstageMotorAtPiPosition();
+
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool isZstageMotorAtPiPosition();
+
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool isYstageMotorAtUpperLimit();
+
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool isYstageMotorAtLowerLimit();
+
 
         // Public methods
         /////////////////////////////////////////////////////////////////////////////////////////////
@@ -347,5 +367,29 @@ namespace WsoNativeLib
             return isOctFocusMotorAtPiPosition();
         }
 
+        public static bool IsSwingMotorAtPiPosition()
+        {
+            return isSwingMotorAtPiPosition();
+        }
+
+        public static bool IsXstageMotorAtPiPosition()
+        {
+            return isXstageMotorAtPiPosition();
+        }
+
+        public static bool IsZstageMotorAtPiPosition()
+        {
+            return isZstageMotorAtPiPosition();
+        }
+
+        public static bool IsYstageMotorAtUpperLimit()
+        {
+            return isYstageMotorAtUpperLimit();
+        }
+
+        public static bool IsYstageMotorAtLowerLimit()
+        {
+            return isYstageMotorAtLowerLimit();
+        }
     }
 }

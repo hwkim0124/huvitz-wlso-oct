@@ -19,7 +19,7 @@ namespace wso_device
 		virtual bool initializeCorneaCamera(void);
 
 		void applyConfigParameters(CorneaCameraConfigParam param);
-		bool applyGainSettings(void) override;
+		bool setupParameters(void) override;
 
 		bool handleFrameData(int index, unsigned char* frameData) override;
 		bool loadCalibParamFromProfile(void) override;

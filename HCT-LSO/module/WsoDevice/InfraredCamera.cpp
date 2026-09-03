@@ -29,7 +29,7 @@ struct InfraredCamera::InfraredCameraImpl
 
 	float again[4];
 	float dgain[4];
-	unsigned int exposureTime[4];
+	float exposTime[4];
 
 	atomic<bool> playing;
 	atomic<bool> workerRunning;
@@ -61,7 +61,7 @@ struct InfraredCamera::InfraredCameraImpl
 			outputMode[i] = IrCameraOutputMode::NORMAL;
 			testPattern[i] = IrCameraTestPattern::STANDARD;
 			patternOption[i] = 0;
-			exposureTime[i] = 0;
+			exposTime[i] = IR_CAMERA_EXPOSURE_INIT;
 		}
 	}
 };
@@ -136,7 +136,7 @@ bool wso_device::InfraredCamera::play(void)
 	}
 
 	// Program the sensor gains before enabling the stream, not after.
-	applyGainSettings();
+	setupParameters();
 
 	UsbComm& usbComm = *impl().usbComm;
 	auto type = getCameraType();
@@ -356,18 +356,22 @@ bool wso_device::InfraredCamera::setDigitalGain(IrCameraId camId, float gain, bo
 	}
 }
 
-bool wso_device::InfraredCamera::setExposureTime(IrCameraId camId, unsigned int time, bool control)
+bool wso_device::InfraredCamera::setExposureTime(IrCameraId camId, float time, bool control)
 {
 	if (!isInitiated()) {
 		return false;
 	}
 
+	time = (time < IR_CAMERA_EXPOSURE_MIN ? IR_CAMERA_EXPOSURE_MIN : time);
+	time = (time > IR_CAMERA_EXPOSURE_MAX ? IR_CAMERA_EXPOSURE_MAX : time);
+
 	auto index = getCameraIndex(camId);
-	impl().exposureTime[index] = time;
+	impl().exposTime[index] = time;
 
 	if (control) {
 		UsbComm& usbComm = *impl().usbComm;
-		bool ret = usbComm.IrCameraExposureTime(static_cast<unsigned char>(camId), time);
+		uint32_t microns = static_cast<uint32_t>(time * 1000.0f);
+		bool ret = usbComm.IrCameraExposureTime(static_cast<unsigned char>(camId), microns);
 		if (ret) {
 			LogDebug() << "Ir camera id: " << static_cast<int>(camId) << ", set exposure time = " << time;
 		}
@@ -392,10 +396,10 @@ float wso_device::InfraredCamera::getDigitalGain(IrCameraId camId) const
 	return gain;
 }
 
-unsigned int wso_device::InfraredCamera::getExposureTime(IrCameraId camId) const
+float wso_device::InfraredCamera::getExposureTime(IrCameraId camId) const
 {
 	auto index = getCameraIndex(camId);
-	auto time = impl().exposureTime[index];
+	auto time = impl().exposTime[index];
 	return time;
 }
 
@@ -617,7 +621,7 @@ void wso_device::InfraredCamera::acquireCameraStream(void)
 	return;
 }
 
-bool wso_device::InfraredCamera::applyGainSettings(void)
+bool wso_device::InfraredCamera::setupParameters(void)
 {
 	return true;
 }

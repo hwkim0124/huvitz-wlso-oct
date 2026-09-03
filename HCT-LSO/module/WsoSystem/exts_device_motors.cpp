@@ -203,7 +203,7 @@ float WSOSYSTEM_DLL_API __stdcall wso_system::getStepMotorValueAtPosition(MotorT
 	return 0.0f;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStageLeft(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::moveHeadLeft(void)
 {
 	if (auto* motor = Hardware::getInstance()->getMainBoard()->getXstageMotor(); motor) {
 		return motor->moveInVelocityMode(0);
@@ -211,7 +211,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStageLeft(void)
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStageRight(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::moveHeadRight(void)
 {
 	if (auto* motor = Hardware::getInstance()->getMainBoard()->getXstageMotor(); motor) {
 		return motor->moveInVelocityMode(1);
@@ -219,7 +219,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStageRight(void)
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStageUp(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::moveHeadUp(void)
 {
 	if (auto* motor = Hardware::getInstance()->getMainBoard()->getYstageMotor(); motor) {
 		return motor->moveInVelocityMode(1);
@@ -227,7 +227,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStageUp(void)
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStageDown(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::moveHeadDown(void)
 {
 	if (auto* motor = Hardware::getInstance()->getMainBoard()->getYstageMotor(); motor) {
 		return motor->moveInVelocityMode(0);
@@ -235,7 +235,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStageDown(void)
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStageForward(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::moveHeadForward(void)
 {
 	if (auto* motor = Hardware::getInstance()->getMainBoard()->getZstageMotor(); motor) {
 		return motor->moveInVelocityMode(0);
@@ -243,7 +243,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStageForward(void)
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStageBackward(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::moveHeadBackward(void)
 {
 	if (auto* motor = Hardware::getInstance()->getMainBoard()->getZstageMotor(); motor) {
 		return motor->moveInVelocityMode(1);
@@ -251,7 +251,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStageBackward(void)
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::stopStageX(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::stopHeadX(void)
 {
 	if (auto* motor = Hardware::getInstance()->getMainBoard()->getXstageMotor(); motor) {
 		return motor->stopInVelocityMode();
@@ -259,7 +259,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::stopStageX(void)
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::stopStageY(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::stopHeadY(void)
 {
 	if (auto* motor = Hardware::getInstance()->getMainBoard()->getYstageMotor(); motor) {
 		return motor->stopInVelocityMode();
@@ -267,7 +267,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::stopStageY(void)
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::stopStageZ(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::stopHeadZ(void)
 {
 	if (auto* motor = Hardware::getInstance()->getMainBoard()->getZstageMotor(); motor) {
 		return motor->stopInVelocityMode();
@@ -275,16 +275,16 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::stopStageZ(void)
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::stopStageAll(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::stopHeadXYZ(void)
 {
 	bool result = true;
-	result &= stopStageX();
-	result &= stopStageY();
-	result &= stopStageZ();
+	result &= stopHeadX();
+	result &= stopHeadY();
+	result &= stopHeadZ();
 	return result;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isStageAtLeftEnd(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isHeadAtLeftEnd(void)
 {
 	if (auto* p = Hardware::getInstance()->getMainBoard()->getXstageMotor(); p) {
 		return p->isAtMinPosition();
@@ -292,7 +292,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::isStageAtLeftEnd(void)
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isStageAtRightEnd(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isHeadAtRightEnd(void)
 {
 	if (auto* p = Hardware::getInstance()->getMainBoard()->getXstageMotor(); p) {
 		return p->isAtMaxPosition();
@@ -300,7 +300,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::isStageAtRightEnd(void)
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isStageAtLowerEnd(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isHeadAtLowerEnd(void)
 {
 	if (auto* p = Hardware::getInstance()->getMainBoard()->getYstageMotor(); p) {
 		return p->isAtMinPosition();
@@ -308,7 +308,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::isStageAtLowerEnd(void)
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isStageAtUpperEnd(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isHeadAtUpperEnd(void)
 {
 	if (auto* p = Hardware::getInstance()->getMainBoard()->getYstageMotor(); p) {
 		return p->isAtMaxPosition();
@@ -316,7 +316,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::isStageAtUpperEnd(void)
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isStageAtForwardEnd(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isHeadAtForwardEnd(void)
 {
 	if (auto* p = Hardware::getInstance()->getMainBoard()->getZstageMotor(); p) {
 		return p->isAtMaxPosition();
@@ -324,7 +324,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::isStageAtForwardEnd(void)
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::isStageAtBackwardEnd(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::isHeadAtBackwardEnd(void)
 {
 	if (auto* p = Hardware::getInstance()->getMainBoard()->getZstageMotor(); p) {
 		return p->isAtMinPosition();
@@ -388,7 +388,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::moveChinrestDown(void)
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::stopChinrestMove(void)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::stopChinrest(void)
 {
 	if (auto* motor = Hardware::getInstance()->getMainBoard()->getChinRestMotor(); motor) {
 		return motor->stopMoving();

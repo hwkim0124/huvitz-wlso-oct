@@ -17,11 +17,15 @@ namespace wso_domain
 		float dgain_left = 0.0f;
 		float dgain_right = 0.0f;
 		float dgain_lower = 0.0f;
+		float exposTime_left = 0.0f;
+		float exposTime_right = 0.0f;
+		float exposTime_lower = 0.0f;
 	};
 
 	struct RetinaCameraConfigParam {
 		float again = 0.0f;
 		float dgain = 0.0f;
+		float exposTime = 0.0f;
 	};
 
 	struct LcdFixationParam {
