@@ -490,6 +490,11 @@ namespace WsoToolkit
         private bool _isLsoFocusSliderDragging; // 콜백에서 슬라이더 값을 갱신할 때 발생하는 ValueChanged가 모터를 다시 이동시키는 것을 막는 플래그.
         private bool _isLsoFocusPositionChanged;
 
+        private volatile bool _corneaLeftPending = false;
+        private volatile bool _corneaRightPending = false;
+        private volatile bool _corneaLowerPending = false;
+
+
         private void initSetting_()
         {
             // Load INI
@@ -583,11 +588,13 @@ namespace WsoToolkit
             LsoCamera.SetCameraParameters(ref captureParam);
 
             //myColorPreview.SetLiveMode();
+            LsoScanner.StartLsoScannerGrabbing((int)LsoScannerPatternId.COLOR);
             LsoCamera.StartColorCameraHwTriggerLive(_onColorCaptureImageCaptured);
         }
 
         public void StopColorCameraHWTriggerLive()
         {
+            LsoScanner.PauseLsoScannerGrabbing((int)LsoScannerPatternId.COLOR);
             LsoCamera.StopColorCameraHwTriggerLive();
         }
 
@@ -641,6 +648,14 @@ namespace WsoToolkit
             corneaPreview2.Callback = _onCorneaRightFrameCaptured;
             corneaPreview3.Callback = _onCorneaLowerFrameCaptured;
 
+            corneaPreview1.IsOverlayFocusGuide = true;
+            corneaPreview2.IsOverlayFocusGuide = true;
+            corneaPreview3.IsOverlayFocusGuide = true;
+
+            corneaPreview1.IsStageControlEnabled = true;
+            corneaPreview2.IsStageControlEnabled = true;
+            corneaPreview3.IsStageControlEnabled = true;
+
             CorneaCamera.StartPreview(_onCorneaLeftFrameCaptured, _onCorneaRightFrameCaptured, _onCorneaLowerFrameCaptured);
         }
 
@@ -663,6 +678,7 @@ namespace WsoToolkit
         // owns the IR LED + IR scan pattern + camera setup; mode follows the UI option.
         private void StartRetinaPreview_()
         {
+            LsoScanner.StartLsoScannerGrabbing((int)LsoScannerPatternId.IR);
             myColorPreview.LiveCallback = _onColorLiveFrameCaptured;
             myColorPreview.PlayPreview(previewMonoMode_());
         }
@@ -671,6 +687,7 @@ namespace WsoToolkit
         // turns off the IR LED, and restores camera params.
         private void StopRetinaPreview_()
         {
+            LsoScanner.PauseLsoScannerGrabbing((int)LsoScannerPatternId.IR);
             myColorPreview.StopPreview();
         }
 
@@ -1095,8 +1112,14 @@ namespace WsoToolkit
             if (data == 0) return;
 
             // Update GUI preview control asynchronously.
+            corneaPreview1.MarkFrameCaptured();
+            if (_corneaLeftPending) return;
+
+            _corneaLeftPending = true;
+            // Update GUI preview control asynchronously.
             Dispatcher.BeginInvoke(() => {
                 corneaPreview1.CallbackCorneaCameraFrame(data, width, height);
+                _corneaLeftPending = false;
             }, DispatcherPriority.Background);
         }
 
@@ -1104,9 +1127,14 @@ namespace WsoToolkit
         {
             if (data == 0) return;
 
+            corneaPreview2.MarkFrameCaptured();
+            if (_corneaRightPending) return;
+
+            _corneaRightPending = true;
             // Update GUI preview control asynchronously.
             Dispatcher.BeginInvoke(() => {
                 corneaPreview2.CallbackCorneaCameraFrame(data, width, height);
+                _corneaRightPending = false;
             }, DispatcherPriority.Background);
         }
 
@@ -1114,9 +1142,14 @@ namespace WsoToolkit
         {
             if (data == 0) return;
 
+            corneaPreview3.MarkFrameCaptured();
+            if (_corneaLowerPending) return;
+
+            _corneaLowerPending = true;
             // Update GUI preview control asynchronously.
             Dispatcher.BeginInvoke(() => {
                 corneaPreview3.CallbackCorneaCameraFrame(data, width, height);
+                _corneaLowerPending = false;
             }, DispatcherPriority.Background);
         }
 

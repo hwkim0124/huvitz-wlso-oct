@@ -268,7 +268,7 @@ void wso_device::ColorCamera::setInitParameters()
 			impl().getCamera()->PixelFormat.SetValue(PixelFormat_BayerRG8);
 
 			// Set AcquisitionMode to Multiframe as Temporarily
-			impl().getCamera()->AcquisitionMode.SetValue(AcquisitionMode_MultiFrame); // Exposure Auto, Gain Auto, BalanceWhite Auto Off ?????? ???? ??¡À? 
+			impl().getCamera()->AcquisitionMode.SetValue(AcquisitionMode_MultiFrame); // Exposure Auto, Gain Auto, BalanceWhite Auto Off ?????? ???? ??ï¿½ï¿½? 
 
 			// Set Exposure time
 			impl().getCamera()->ExposureAuto.SetValue(ExposureAuto_Off);
@@ -365,6 +365,15 @@ bool wso_device::ColorCamera::setDefaultParameters(bool update)
 			if (impl().getCamera()->IsStreaming()) {
 				impl().getCamera()->EndAcquisition();
 			}
+
+			// A prior SW/HW-trigger session can leave TriggerMode On on the device (it is
+			// persistent state). Reset it so the camera comes up free-running -- otherwise
+			// the grab test below blocks in GetNextImage() waiting for a trigger that never
+			// arrives. Must be done while not streaming.
+			int nTriggerMode = impl().getCamera()->TriggerMode.GetValue();
+			if (nTriggerMode == TriggerMode_On)
+				impl().getCamera()->TriggerMode.SetValue(TriggerMode_Off);
+			WsoLogDebug("Color Camera Set TriggerMode Off...ok!");
 
 			// Set Indicator LED
 			impl().getCamera()->DeviceIndicatorMode.SetValue(DeviceIndicatorMode_Inactive);
@@ -1058,18 +1067,18 @@ void wso_device::ColorCamera::setCameraSettings(ColorCameraSettingParam params)
 {
 	try
 	{
-		/////?????? Width, Height ???? ??¢¥? offset ???? ?????? ?????? ??????, o???? 0,0???? ?????? ???? ???????.
-		// ¼ø¼­ Áß¿ä(½ÇÃø Á¦¾à ¹Ý¿µ): ÀÌ Ä«¸Þ¶ó´Â Mono8 ¿¡¼­ binning ÃÖ¼Ò°¡ 2 ÀÌ°í,
-		// binning ¿¡ µû¶ó ROI(Width/Height) ÃÖ´ë°¡ ´Þ¶óÁø´Ù(bin2 ¿¡¼­ Width max=2736, bin1 ¿¡¼­ 5472).
-		// µû¶ó¼­ (1) pixelFormat ¸ÕÀú ? Mono8 ÀÇ 'binning>=2' Á¦¾àÀ» ¸ÕÀú ÇØÁ¦(¿¹: Bayer ·Î ÀüÈ¯)
-		//        (2) binning     ? Bayer ¿¡¼­´Â 1 Çã¿ë
-		//        (3) binning È®Á¤ ÈÄ ROI ? Width/Height max °¡ ¸ñÇ¥ binning ¿¡ ¸ÂÀ½
-		// ÀÌ ¼ø¼­¶ó¾ß Mono8/bin2 ¡æ Bayer/bin1 ÀüÈ¯¿¡¼­ OutOfRange(Width 3648>2736, Binning 1<2) ¾øÀÌ ¼º°øÇÑ´Ù.
+		/////?????? Width, Height ???? ??ï¿½ï¿½? offset ???? ?????? ?????? ??????, o???? 0,0???? ?????? ???? ???????.
+		// ï¿½ï¿½ï¿½ï¿½ ï¿½ß¿ï¿½(ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ý¿ï¿½): ï¿½ï¿½ Ä«ï¿½Þ¶ï¿½ï¿½ Mono8 ï¿½ï¿½ï¿½ï¿½ binning ï¿½Ö¼Ò°ï¿½ 2 ï¿½Ì°ï¿½,
+		// binning ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ROI(Width/Height) ï¿½Ö´ë°¡ ï¿½Þ¶ï¿½ï¿½ï¿½ï¿½ï¿½(bin2 ï¿½ï¿½ï¿½ï¿½ Width max=2736, bin1 ï¿½ï¿½ï¿½ï¿½ 5472).
+		// ï¿½ï¿½ï¿½ï¿½ (1) pixelFormat ï¿½ï¿½ï¿½ï¿½ ? Mono8 ï¿½ï¿½ 'binning>=2' ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½(ï¿½ï¿½: Bayer ï¿½ï¿½ ï¿½ï¿½È¯)
+		//        (2) binning     ? Bayer ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 1 ï¿½ï¿½ï¿½
+		//        (3) binning È®ï¿½ï¿½ ï¿½ï¿½ ROI ? Width/Height max ï¿½ï¿½ ï¿½ï¿½Ç¥ binning ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+		// ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Mono8/bin2 ï¿½ï¿½ Bayer/bin1 ï¿½ï¿½È¯ï¿½ï¿½ï¿½ï¿½ OutOfRange(Width 3648>2736, Binning 1<2) ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ñ´ï¿½.
 		setPixelFormat(params.pixelFormat);
 		setBinningHorizontal(params.binningHorizontal);
 		setBinningVertical(params.binningVertical);
 
-		// Width/Height º¯°æ ½Ã ±âÁ¸ offset ÀÌ ¹üÀ§¸¦ ¹þ¾î³¯ ¼ö ÀÖÀ¸´Ï offset À» ¸ÕÀú 0 À¸·Î ÃÊ±âÈ­.
+		// Width/Height ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ offset ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½î³¯ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ offset ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ 0 ï¿½ï¿½ï¿½ï¿½ ï¿½Ê±ï¿½È­.
 		setROI_X_Offset(0);
 		setROI_Y_Offset(0);
 		setROI_X_Width(params.roi_x_width);
@@ -1083,7 +1092,7 @@ void wso_device::ColorCamera::setCameraSettings(ColorCameraSettingParam params)
 		setGain(params.gain);
 		setAdcBitDepth(params.adcDepthIndex);
 
-		// [ÀÓ½Ã °èÃø] ¿äÃ»°ª vs ½ÇÁ¦ Àû¿ë°ª. Áø´Ü ÈÄ Á¦°Å.
+		// [ï¿½Ó½ï¿½ ï¿½ï¿½ï¿½ï¿½] ï¿½ï¿½Ã»ï¿½ï¿½ vs ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ë°ª. ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½.
 		WsoLogInfo("[SET] req pf=" + std::to_string(params.pixelFormat) + " binH=" + std::to_string(params.binningHorizontal)
 			+ " -> now pf=" + std::to_string(getPixelFormat()) + " binH=" + std::to_string(getBinningHorizontal())
 			+ " binV=" + std::to_string(getBinningVertical()));
@@ -2517,7 +2526,7 @@ bool wso_device::ColorCamera::onSequencer(void)
 			impl().getCamera()->SequencerSetSelector.SetValue(i);
 
 			// Set i?? ???? ?????? ????
-			//impl().getCamera()->ExposureTime.SetValue(2000);  // 20ms ???? ?©£?
+			//impl().getCamera()->ExposureTime.SetValue(2000);  // 20ms ???? ?ï¿½ï¿½?
 			//impl().getCamera()->Gain.SetValue(2.0);            // ???? ????
 			impl().getCamera()->OffsetX.SetValue(0);         
 			impl().getCamera()->OffsetY.SetValue(0);
@@ -2615,7 +2624,7 @@ bool wso_device::ColorCamera::setSequencer(std::vector<LsoCaptureFrameROI> param
 			impl().getCamera()->SequencerSetSelector.SetValue(i);
 
 			// Set i?? ???? ?????? ????
-			//impl().getCamera()->ExposureTime.SetValue(2000);  // 20ms ???? ?©£?
+			//impl().getCamera()->ExposureTime.SetValue(2000);  // 20ms ???? ?ï¿½ï¿½?
 			//impl().getCamera()->Gain.SetValue(2.0);            // ???? ????
 			impl().getCamera()->OffsetX.SetValue(0);
 			impl().getCamera()->OffsetY.SetValue(0);
@@ -2778,7 +2787,7 @@ void wso_device::ColorCamera::acquireCameraCaptureData(void)
 	int nPixelFormat = impl().getCamera()->PixelFormat.GetValue();
 	int nBytesPerPixel = getBytesPerPixel();
 
-	// [ÀÓ½Ã °èÃø] Ä¸Ã³ ½ÃÁ¡ÀÇ ½ÇÁ¦ Ä«¸Þ¶ó »óÅÂ(Æ÷¸Ë/binning/ÇØ»óµµ) È®ÀÎ¿ë. Áø´Ü ÈÄ Á¦°Å.
+	// [ï¿½Ó½ï¿½ ï¿½ï¿½ï¿½ï¿½] Ä¸Ã³ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ä«ï¿½Þ¶ï¿½ ï¿½ï¿½ï¿½ï¿½(ï¿½ï¿½ï¿½ï¿½/binning/ï¿½Ø»ï¿½) È®ï¿½Î¿ï¿½. ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½.
 	WsoLogInfo("[CAP] pf=" + std::to_string(nPixelFormat) + " (0=Mono8,4=BayerRG8) binH="
 		+ std::to_string(getBinningHorizontal()) + " binV=" + std::to_string(getBinningVertical())
 		+ " w=" + std::to_string(width) + " h=" + std::to_string(height)

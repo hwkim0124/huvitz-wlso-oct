@@ -26,7 +26,7 @@ namespace WsoToolkit
         public MainWindow()
         {
             InitializeComponent();
-            this.Title = "Huvitz Wide LSO-OCT Toolkit (ver 0.03.0 - 2026/09/03)";
+            this.Title = "Huvitz Wide LSO-OCT Toolkit (ver 0.03.0 - 2026/09/04)";
 
             _logMsgCallback = new WsoLogMsgCallback(this.CallbackWsoLogMessage);
             _logMsgItems = new ObservableCollection<LogMsgItem>();

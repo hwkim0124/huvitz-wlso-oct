@@ -177,6 +177,10 @@ bool wso_system::Bootstrapper::initializeHardware(void)
 	if (!hardware->initializeOctScanner()) {
 		// return false;
 	}
+
+	if (!hardware->initializeLsoScanner()) {
+		// return false;
+	}
 	return true;
 }
 
