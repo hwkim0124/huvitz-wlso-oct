@@ -89,6 +89,41 @@
                 <Label x:Name="label113" Content="[1~300]" Style="{StaticResource LabelStyle}" Grid.Row="5" Grid.Column="3"/>
                 <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="9" Grid.RowSpan="9"/>
             </Grid>
+
+            <!-- Eye alignment (EyeAlign module). Ctrl+click on a preview injects a pupil
+                 position while the detector is still a stub; Ctrl+right click clears it. -->
+            <Grid Margin="0,8,8,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="60"/>
+                    <ColumnDefinition Width="110"/>
+                    <ColumnDefinition Width="110"/>
+                    <ColumnDefinition Width="110"/>
+                    <ColumnDefinition Width="110"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="16"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="8"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="12"/>
+                </Grid.RowDefinitions>
+                <Label Content="Eye Alignment" Style="{StaticResource HeaderStyle2}" Margin="12,0,0,0" Grid.Row="1" Grid.ColumnSpan="3"/>
+                <Label x:Name="lblAlignStatus" Content="Idle" Style="{StaticResource LabelStyle}" Grid.Row="1" Grid.Column="3" Grid.ColumnSpan="4" HorizontalAlignment="Left"/>
+                <Label Content="Mode" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="1"/>
+                <ComboBox x:Name="cmbAlignMode" Style="{StaticResource ComboBoxStyle}" Grid.Row="2" Grid.Column="2" Width="100"/>
+                <ComboBox x:Name="cmbAlignEyeSide" Style="{StaticResource ComboBoxStyle}" Grid.Row="2" Grid.Column="3" Width="100"/>
+                <Button x:Name="btnAlignStart" Content="Start Align" Style="{StaticResource ButtonStyle}" Grid.Row="2" Grid.Column="4" Click="BtnAlignStart_Click"/>
+                <Button x:Name="btnAlignHold" Content="Hold" Style="{StaticResource ButtonStyle}" Grid.Row="2" Grid.Column="5" Click="BtnAlignHold_Click"/>
+                <CheckBox x:Name="checkPupilOverlay" Content="Pupil Mark" Style="{StaticResource CheckBoxStyle}" Grid.Row="3" Grid.Column="2" Click="CheckPupilOverlay_Click"/>
+                <Button x:Name="btnClearOverride" Content="Clear Override" Style="{StaticResource ButtonStyle}" Grid.Row="3" Grid.Column="4" Click="BtnClearOverride_Click"/>
+                <Button x:Name="btnClearEvents" Content="Clear Events" Style="{StaticResource ButtonStyle}" Grid.Row="3" Grid.Column="5" Click="BtnClearEvents_Click"/>
+                <ListBox x:Name="listAlignEvents" Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="6" Height="140" Margin="0,4,0,0" FontFamily="Consolas" FontSize="11"/>
+                <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="8" Grid.RowSpan="6"/>
+            </Grid>
         </StackPanel>
     </Grid>
 </Window>

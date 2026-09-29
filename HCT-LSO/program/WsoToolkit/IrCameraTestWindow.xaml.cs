@@ -26,6 +26,9 @@ namespace WsoToolkit
             _onCorneaLeftFrameCaptured = new WsoCallback.CorneaCameraFrameCaptured(this.OnCorneaCameraLeftFrameCaptured);
             _onCorneaRightFrameCaptured = new WsoCallback.CorneaCameraFrameCaptured(this.OnCorneaCameraRightFrameCaptured);
             _onCorneaLowerFrameCaptured = new WsoCallback.CorneaCameraFrameCaptured(this.OnCorneaCameraLowerFrameCaptured);
+
+            _onEyeAlignEvent = new WsoCallback.EyeAlignEventOccurred(this.OnEyeAlignEventOccurred);
+            _onOptimizeButtonPressed = new WsoCallback.OptimizeButtonPressed(this.OnOptimizeButtonPressed);
         }
 
         // Windows Event handlers
@@ -69,6 +72,9 @@ namespace WsoToolkit
             corneaPreview1.IsStageControlEnabled = true;
             corneaPreview2.IsStageControlEnabled = true;
             corneaPreview3.IsStageControlEnabled = true;
+
+            InitializeAlignControls();
+            BoardDevice.ConnectOptimizeButtonPressed(_onOptimizeButtonPressed);
         }
 
         private void Window_Closed(object sender, EventArgs e)
@@ -77,6 +83,11 @@ namespace WsoToolkit
             _lightControlWindow?.Close();
             _focusMotorWindow?.Close();
             _stageMotorWindow?.Close();
+
+            // Stop the aligner and drop the button hook before the camera preview goes away.
+            EyeAlign.CancelAlignment();
+            EyeAlign.ClearAllPupilDetectOverrides();
+            BoardDevice.ReleaseOptimizeButtonPressed();
 
             CloseCorneaCameraPreview();
 

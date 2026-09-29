@@ -51,6 +51,14 @@ namespace WsoToolkit.controls
         public bool IsOverlayFocusGuide { get; set; } = false;
         public bool IsStageControlEnabled { get; set; } = false;
 
+        // Draws the pupil the eye aligner currently detects in this camera. The position
+        // is polled from the native side on every redraw (EyeAlign.GetPupilPosition), so
+        // nothing is pushed into this control from a native thread.
+        public bool IsOverlayPupilMark { get; set; } = false;
+
+        // Radius reported with a Ctrl+click pupil override (test hook, image pixels).
+        const float PupilOverrideRadius = 30.0f;
+
         public WsoDevice.CameraType CameraType { get; set; } = WsoDevice.CameraType.IrCorneaLeft;
         public WsoCallback.CorneaCameraFrameCaptured? Callback { get; set; } = null;
 
@@ -216,6 +224,7 @@ namespace WsoToolkit.controls
 
             DrawOverlayAlignGuide(ref _frameMat);
             DrawOverlayFocusGuide(ref _frameMat);
+            DrawOverlayPupilMark(ref _frameMat);
 
             // imageViewport.Source = _frameMat.ToWriteableBitmap();
             // Convert to a WPF-consumable BitmapSource
@@ -255,6 +264,33 @@ namespace WsoToolkit.controls
                 Cv2.Line(image, img_cx, 0, img_cx, img_h-1, color, 1, LineTypes.AntiAlias);
             }
             return;
+        }
+
+        private void DrawOverlayPupilMark(ref Mat image)
+        {
+            if (IsOverlayPupilMark != true)
+            {
+                return;
+            }
+            if (!EyeAlign.GetPupilPosition(CameraType, out float cx, out float cy, out float radius, out float score))
+            {
+                return;
+            }
+
+            // Pupil coordinates are image pixels; the overlay canvas is the frame itself
+            // when stretched to fit, otherwise the same pixel grid cropped/padded, so the
+            // coordinates map 1:1 in both cases.
+            var color = new Scalar(0, 255, 0);
+            int x = (int)Math.Round(cx);
+            int y = (int)Math.Round(cy);
+            int r = Math.Max(3, (int)Math.Round(radius));
+            int arm = r + 8;
+
+            Cv2.Circle(image, x, y, r, color, 2, LineTypes.AntiAlias);
+            Cv2.Line(image, x - arm, y, x + arm, y, color, 1, LineTypes.AntiAlias);
+            Cv2.Line(image, x, y - arm, x, y + arm, color, 1, LineTypes.AntiAlias);
+            Cv2.PutText(image, string.Format("{0:F2}", score), new OpenCvSharp.Point(x + arm + 2, y - 2),
+                HersheyFonts.HersheySimplex, 0.4, color, 1, LineTypes.AntiAlias);
         }
 
         private void DrawOverlayAlignGuide(ref Mat image)
@@ -336,6 +372,27 @@ namespace WsoToolkit.controls
         {
             imageViewport.MouseDown += (sender, e) =>
             {
+                // Test hook for the eye aligner while the pupil detector is a stub:
+                // Ctrl+left click = "the pupil is here", Ctrl+right click = clear.
+                if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+                {
+                    var click = e.GetPosition(imageViewport);
+                    if (imageViewport.ActualWidth > 0 && imageViewport.ActualHeight > 0)
+                    {
+                        float ix = (float)(click.X / imageViewport.ActualWidth * _imageWidth);
+                        float iy = (float)(click.Y / imageViewport.ActualHeight * _imageHeight);
+                        if (e.ChangedButton == MouseButton.Left)
+                        {
+                            EyeAlign.SetPupilDetectOverride(CameraType, true, ix, iy, PupilOverrideRadius);
+                        }
+                        else if (e.ChangedButton == MouseButton.Right)
+                        {
+                            EyeAlign.ClearPupilDetectOverride(CameraType);
+                        }
+                    }
+                    return;
+                }
+
                 if (IsStageControlEnabled && e.LeftButton == MouseButtonState.Pressed)
                 {
                     var position = e.GetPosition(imageViewport);
