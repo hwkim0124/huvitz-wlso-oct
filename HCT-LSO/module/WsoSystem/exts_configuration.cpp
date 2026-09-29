@@ -64,6 +64,32 @@ void WSOSYSTEM_DLL_API __stdcall wso_system::submitRetinaCameraConfigParam(Retin
 	return;
 }
 
+bool WSOSYSTEM_DLL_API __stdcall wso_system::obtainEyeAlignConfigParam(EyeAlignConfigParam* param)
+{
+	if (param == nullptr) {
+		return false;
+	}
+	if (auto* config = SystemConfig::getInstance(); config) {
+		if (auto* data = config->getAlignmentSettings()->getParam(); data) {
+			*param = *data;
+			return true;
+		}
+	}
+	return false;
+}
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::submitEyeAlignConfigParam(const EyeAlignConfigParam* param)
+{
+	if (param == nullptr) {
+		return false;
+	}
+	if (auto* config = SystemConfig::getInstance(); config) {
+		config->getAlignmentSettings()->setParam(*param);
+		return true;
+	}
+	return false;
+}
+
 bool WSOSYSTEM_DLL_API __stdcall wso_system::importSystemConfigFile(void)
 {
 	auto result = SystemConfig::getInstance()->loadSysConfigFile();

@@ -5,6 +5,7 @@
 #include "FixationSettings.h"
 #include "LsoCaptureSettings.h"
 #include "LsoDisplaySettings.h"
+#include "AlignmentSettings.h"
 
 using namespace wso_config;
 using namespace std;
@@ -19,6 +20,7 @@ struct SystemConfig::SystemConfigImpl
     CameraSettings cameraSet;
 	LsoCaptureSettings lsoCaptureSet;
 	LsoDisplaySettings lsoDisplaySet;
+	AlignmentSettings alignmentSet;
 
     SysConfigFile configFile;
 
@@ -59,6 +61,7 @@ void wso_config::SystemConfig::resetToDefaultValues(void)
 	impl().fixationSet.resetToDefaultValues();
 	impl().lsoCaptureSet.resetToDefaultValues();
 	impl().lsoDisplaySet.resetToDefaultValues();
+	impl().alignmentSet.resetToDefaultValues();
     return;
 }
 
@@ -154,6 +157,11 @@ LsoCaptureSettings* wso_config::SystemConfig::getLsoCaptureSettings(void) const
 LsoDisplaySettings* wso_config::SystemConfig::getLsoDisplaySettings(void) const
 {
     return &impl().lsoDisplaySet;
+}
+
+AlignmentSettings* wso_config::SystemConfig::getAlignmentSettings(void) const
+{
+    return &impl().alignmentSet;
 }
 
 HbsDataProfile* wso_config::SystemConfig::getBoardProfile(void) const

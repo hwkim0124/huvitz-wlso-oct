@@ -4,6 +4,7 @@
 #include "CameraSettings.h"
 #include "LsoCaptureSettings.h"
 #include "LsoDisplaySettings.h"
+#include "AlignmentSettings.h"
 
 #include "SysConfigFile.h"
 #include "SystemConfig.h"

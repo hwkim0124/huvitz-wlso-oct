@@ -35,6 +35,7 @@ namespace wso_config
 	constexpr const char* GALVANO_SETTING_GROUP = "GalvanoSetting";
 	constexpr const char* LSO_CAPTURE_SETTING_GROUP = "LsoCaptureSetting";
 	constexpr const char* LSO_DISPLAY_SETTING_GROUP = "LsoDisplaySetting";
+	constexpr const char* ALIGNMENT_SETTING_GROUP = "AlignmentSetting";
 
 
 

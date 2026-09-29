@@ -19,6 +19,7 @@ namespace wso_config
 	class FixationSettings;
 	class LsoDisplaySettings;
 	class LsoCaptureSettings;
+	class AlignmentSettings;
 
 	class WSOCONFIG_DLL_API SysConfigFile
 	{
@@ -40,21 +41,26 @@ namespace wso_config
 		bool loadFixationSettings(FixationSettings* pset);
 		bool loadLsoCaptureSettings(LsoCaptureSettings* lcset);
 		bool loadLsoDisplaySettings(LsoDisplaySettings* ldset);
+		// Tolerates a missing group (keeps defaults) so older config files still load.
+		bool loadAlignmentSettings(AlignmentSettings* aset);
 
 		bool saveCameraSettings(const CameraSettings* cset);
 		bool saveFixationSettings(const FixationSettings* pset);
 		bool saveLsoCaptureSettings(const LsoCaptureSettings* lcset);
 		bool saveLsoDisplaySettings(const LsoDisplaySettings* ldset);
+		bool saveAlignmentSettings(const AlignmentSettings* aset);
 
 		bool loadSectionOfFixation(FixationSettings* pset, tinyxml2::XMLElement* group);
 		bool loadSectionOfCamera(CameraSettings* cset, tinyxml2::XMLElement* group);
 		bool loadSectionOfLsoCapture(LsoCaptureSettings* lcset, tinyxml2::XMLElement* group);
 		bool loadSectionOfLsoDisplay(LsoDisplaySettings* ldset, tinyxml2::XMLElement* group);
+		bool loadSectionOfAlignment(AlignmentSettings* aset, tinyxml2::XMLElement* group);
 
 		bool saveSectionOfFixation(const FixationSettings* pset, tinyxml2::XMLElement* group);
 		bool saveSectionOfCamera(const CameraSettings* cset, tinyxml2::XMLElement* group);
 		bool saveSectionOfLsoCapture(const LsoCaptureSettings* lcset, tinyxml2::XMLElement* group);
 		bool saveSectionOfLsoDisplay(const LsoDisplaySettings* ldset, tinyxml2::XMLElement* group);
+		bool saveSectionOfAlignment(const AlignmentSettings* aset, tinyxml2::XMLElement* group);
 
 	private:
 		struct SysConfigFileImpl;

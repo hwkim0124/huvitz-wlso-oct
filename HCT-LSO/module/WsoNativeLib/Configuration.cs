@@ -10,6 +10,7 @@ namespace WsoNativeLib
     using static WsoNativeLib.LibraryConfig;
     using static WsoNativeLib.WsoBoard;
     using static WsoNativeLib.WsoConfig;
+    using static WsoNativeLib.WsoEyeAlign;
 
     public static class Configuration
     {
@@ -37,6 +38,14 @@ namespace WsoNativeLib
 
         [DllImport(LibraryName)]
         private static extern void submitRetinaCameraConfigParam(RetinaCameraConfigParam param);
+
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool obtainEyeAlignConfigParam(ref EyeAlignConfigParam param);
+
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool submitEyeAlignConfigParam(in EyeAlignConfigParam param);
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
@@ -91,6 +100,17 @@ namespace WsoNativeLib
         public static void SubmitRetinaCameraConfig(RetinaCameraConfigParam param)
         {
             submitRetinaCameraConfigParam(param);
+        }
+
+        public static bool ObtainEyeAlignConfig(out EyeAlignConfigParam param)
+        {
+            param = new EyeAlignConfigParam();
+            return obtainEyeAlignConfigParam(ref param);
+        }
+
+        public static bool SubmitEyeAlignConfig(in EyeAlignConfigParam param)
+        {
+            return submitEyeAlignConfigParam(in param);
         }
 
         public static bool ImportSystemConfigFile()

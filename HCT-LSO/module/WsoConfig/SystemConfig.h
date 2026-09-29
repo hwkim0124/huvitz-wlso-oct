@@ -9,6 +9,7 @@ namespace wso_config
 	class FixationSettings;
 	class LsoDisplaySettings;
 	class LsoCaptureSettings;
+	class AlignmentSettings;
 
 	class WSOCONFIG_DLL_API SystemConfig
 	{
@@ -38,6 +39,7 @@ namespace wso_config
 		FixationSettings* getFixationSettings(void) const;
 		LsoCaptureSettings* getLsoCaptureSettings(void) const;
 		LsoDisplaySettings* getLsoDisplaySettings(void) const;
+		AlignmentSettings* getAlignmentSettings(void) const;
 
 	protected:
 		HbsDataProfile* getBoardProfile(void) const;

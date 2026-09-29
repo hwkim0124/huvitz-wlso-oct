@@ -36,6 +36,9 @@
     <ClInclude Include="CameraSettings.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="AlignmentSettings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="FixationSettings.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -60,6 +63,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CameraSettings.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AlignmentSettings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="FixationSettings.cpp">

@@ -154,6 +154,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="AlignmentSettings.h" />
     <ClInclude Include="CameraSettings.h" />
     <ClInclude Include="FixationSettings.h" />
     <ClInclude Include="framework.h" />
@@ -166,6 +167,7 @@
     <ClInclude Include="WsoConfig2.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AlignmentSettings.cpp" />
     <ClCompile Include="CameraSettings.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="FixationSettings.cpp" />

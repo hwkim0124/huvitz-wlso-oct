@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "SysConfigFile.h"
+#include "AlignmentSettings.h"
 #include "SystemConfig.h"
 #include "CameraSettings.h"
 #include "FixationSettings.h"
@@ -79,6 +80,9 @@ bool wso_config::SysConfigFile::loadSystemConfig(const char* filename, SystemCon
 		if (!loadLsoDisplaySettings(config->getLsoDisplaySettings())) {
 			return false;
 		}
+		if (!loadAlignmentSettings(config->getAlignmentSettings())) {
+			return false;
+		}
 	}
 	catch (...) {
 		return false;
@@ -109,6 +113,7 @@ bool wso_config::SysConfigFile::saveSystemConfig(const char* filename, SystemCon
 		saveCameraSettings(config->getCameraSettings());
 		saveLsoCaptureSettings(config->getLsoCaptureSettings());
 		saveLsoDisplaySettings(config->getLsoDisplaySettings());
+		saveAlignmentSettings(config->getAlignmentSettings());
 
 		bool result = checkXMLResult(doc.SaveFile(filename));
 		return result;
@@ -170,6 +175,34 @@ bool wso_config::SysConfigFile::loadLsoDisplaySettings(LsoDisplaySettings* ldset
 	return true;
 }
 
+
+bool wso_config::SysConfigFile::loadAlignmentSettings(AlignmentSettings* aset)
+{
+	tinyxml2::XMLNode* root = getImpl().pRoot;
+
+	// A file written before the alignment group existed is still valid: keep defaults.
+	XMLElement* group = root->FirstChildElement(ALIGNMENT_SETTING_GROUP);
+	if (group == nullptr) return true;
+
+	if (!loadSectionOfAlignment(aset, group)) {
+		return false;
+	}
+	return true;
+}
+
+bool wso_config::SysConfigFile::saveAlignmentSettings(const AlignmentSettings* aset)
+{
+	tinyxml2::XMLDocument* pdoc = getImpl().pDoc;
+	tinyxml2::XMLNode* root = getImpl().pRoot;
+
+	XMLElement* group = pdoc->NewElement(ALIGNMENT_SETTING_GROUP);
+	root->LinkEndChild(group);
+
+	if (!saveSectionOfAlignment(aset, group)) {
+		return false;
+	}
+	return true;
+}
 
 bool wso_config::SysConfigFile::saveCameraSettings(const CameraSettings* cset)
 {
@@ -754,6 +787,129 @@ bool wso_config::SysConfigFile::saveSectionOfCamera(const CameraSettings* cset, 
 	item->SetAttribute("again", cset->getRetinaAgain());
 	item->SetAttribute("dgain", cset->getRetinaDgain());
 	item->SetAttribute("exposureTime", cset->getRetinaExposureTime());
+	return true;
+}
+
+bool wso_config::SysConfigFile::loadSectionOfAlignment(AlignmentSettings* aset, tinyxml2::XMLElement* group)
+{
+	// Every element and attribute is optional: whatever is missing keeps its default.
+	EyeAlignConfigParam param = *aset->getParam();
+	XMLElement* elem;
+	int nValue;
+	float fValue;
+
+	auto readInt = [&](XMLElement* e, const char* name, int32_t& out) {
+		if (checkXMLResult(e->QueryIntAttribute(name, &nValue))) out = nValue;
+	};
+	auto readFloat = [&](XMLElement* e, const char* name, float& out) {
+		if (checkXMLResult(e->QueryFloatAttribute(name, &fValue))) out = fValue;
+	};
+	auto readDetect = [&](XMLElement* e, PupilDetectParam& det) {
+		readInt(e, "targetX", det.targetX);
+		readInt(e, "targetY", det.targetY);
+		readInt(e, "signH", det.signH);
+		readInt(e, "signV", det.signV);
+	};
+
+	if ((elem = group->FirstChildElement("Position")) != nullptr) {
+		readInt(elem, "readyPosZ", param.readyPosZ);
+		readInt(elem, "swingTiltPosOD", param.swingTiltPos_OD);
+		readInt(elem, "swingTiltPosOS", param.swingTiltPos_OS);
+		readInt(elem, "eyePosXOD", param.eyePosX_OD);
+		readInt(elem, "eyePosXOS", param.eyePosX_OS);
+		readInt(elem, "searchLimitPosZ", param.searchLimitPosZ);
+		readInt(elem, "minSafePosZ", param.minSafePosZ);
+		readInt(elem, "posToleranceSteps", param.posToleranceSteps);
+	}
+
+	if ((elem = group->FirstChildElement("Control")) != nullptr) {
+		readFloat(elem, "tolerancePx", param.tolerancePx);
+		readFloat(elem, "toleranceZPx", param.toleranceZPx);
+		readFloat(elem, "startDeadbandPx", param.startDeadbandPx);
+		readFloat(elem, "stopDeadbandPx", param.stopDeadbandPx);
+	}
+
+	if ((elem = group->FirstChildElement("Frames")) != nullptr) {
+		readInt(elem, "detectConsecutive", param.detectConsecutive);
+		readInt(elem, "lostFramesToStop", param.lostFramesToStop);
+		readInt(elem, "lostFramesToCancel", param.lostFramesToCancel);
+		readInt(elem, "settleFrames", param.settleFrames);
+		readFloat(elem, "maxJumpPx", param.maxJumpPx);
+		readFloat(elem, "smoothingAlpha", param.smoothingAlpha);
+	}
+
+	if ((elem = group->FirstChildElement("Timeout")) != nullptr) {
+		readInt(elem, "readyMs", param.readyTimeoutMs);
+		readInt(elem, "swingMs", param.swingTimeoutMs);
+		readInt(elem, "eyeXMs", param.eyeXTimeoutMs);
+		readInt(elem, "searchMs", param.searchTimeoutMs);
+		readInt(elem, "backOffOnEnd", param.backOffOnEnd);
+	}
+
+	if (XMLElement* cams = group->FirstChildElement("Camera"); cams != nullptr) {
+		if ((elem = cams->FirstChildElement("Left")) != nullptr)  readDetect(elem, param.detLeft);
+		if ((elem = cams->FirstChildElement("Right")) != nullptr) readDetect(elem, param.detRight);
+		if ((elem = cams->FirstChildElement("Lower")) != nullptr) readDetect(elem, param.detLower);
+	}
+
+	aset->setParam(param);
+	return true;
+}
+
+bool wso_config::SysConfigFile::saveSectionOfAlignment(const AlignmentSettings* aset, tinyxml2::XMLElement* group)
+{
+	tinyxml2::XMLDocument* pdoc = getImpl().pDoc;
+	const EyeAlignConfigParam& param = *aset->getParam();
+
+	XMLElement* item = pdoc->NewElement("Position");
+	group->LinkEndChild(item);
+	item->SetAttribute("readyPosZ", param.readyPosZ);
+	item->SetAttribute("swingTiltPosOD", param.swingTiltPos_OD);
+	item->SetAttribute("swingTiltPosOS", param.swingTiltPos_OS);
+	item->SetAttribute("eyePosXOD", param.eyePosX_OD);
+	item->SetAttribute("eyePosXOS", param.eyePosX_OS);
+	item->SetAttribute("searchLimitPosZ", param.searchLimitPosZ);
+	item->SetAttribute("minSafePosZ", param.minSafePosZ);
+	item->SetAttribute("posToleranceSteps", param.posToleranceSteps);
+
+	item = pdoc->NewElement("Control");
+	group->LinkEndChild(item);
+	item->SetAttribute("tolerancePx", param.tolerancePx);
+	item->SetAttribute("toleranceZPx", param.toleranceZPx);
+	item->SetAttribute("startDeadbandPx", param.startDeadbandPx);
+	item->SetAttribute("stopDeadbandPx", param.stopDeadbandPx);
+
+	item = pdoc->NewElement("Frames");
+	group->LinkEndChild(item);
+	item->SetAttribute("detectConsecutive", param.detectConsecutive);
+	item->SetAttribute("lostFramesToStop", param.lostFramesToStop);
+	item->SetAttribute("lostFramesToCancel", param.lostFramesToCancel);
+	item->SetAttribute("settleFrames", param.settleFrames);
+	item->SetAttribute("maxJumpPx", param.maxJumpPx);
+	item->SetAttribute("smoothingAlpha", param.smoothingAlpha);
+
+	item = pdoc->NewElement("Timeout");
+	group->LinkEndChild(item);
+	item->SetAttribute("readyMs", param.readyTimeoutMs);
+	item->SetAttribute("swingMs", param.swingTimeoutMs);
+	item->SetAttribute("eyeXMs", param.eyeXTimeoutMs);
+	item->SetAttribute("searchMs", param.searchTimeoutMs);
+	item->SetAttribute("backOffOnEnd", param.backOffOnEnd);
+
+	XMLElement* cams = pdoc->NewElement("Camera");
+	group->LinkEndChild(cams);
+
+	auto writeDetect = [&](const char* name, const PupilDetectParam& det) {
+		XMLElement* e = pdoc->NewElement(name);
+		cams->LinkEndChild(e);
+		e->SetAttribute("targetX", det.targetX);
+		e->SetAttribute("targetY", det.targetY);
+		e->SetAttribute("signH", det.signH);
+		e->SetAttribute("signV", det.signV);
+	};
+	writeDetect("Left", param.detLeft);
+	writeDetect("Right", param.detRight);
+	writeDetect("Lower", param.detLower);
 	return true;
 }
 

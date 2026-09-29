@@ -19,6 +19,7 @@ namespace WsoToolkit
             ReflectCorneaCameraSettings();
             ReflectRetinaCameraSettings();
             ReflectInternalFixationSettings();
+            ReflectEyeAlignSettings();
         }
 
         private void UploadConfigSettings()
@@ -26,6 +27,105 @@ namespace WsoToolkit
             UploadCorneaCameraSettings();
             UploadRetinaCameraSettings();
             UploadInternalFixationSettings();
+            UploadEyeAlignSettings();
+        }
+
+        private void ReflectEyeAlignSettings()
+        {
+            if (!Configuration.ObtainEyeAlignConfig(out var p))
+            {
+                return;
+            }
+
+            editAlignReadyZ.Text = p.readyPosZ.ToString();
+            editAlignSearchZ.Text = p.searchLimitPosZ.ToString();
+            editAlignMinSafeZ.Text = p.minSafePosZ.ToString();
+            editAlignEyeXOD.Text = p.eyePosX_OD.ToString();
+            editAlignEyeXOS.Text = p.eyePosX_OS.ToString();
+            editAlignPosTol.Text = p.posToleranceSteps.ToString();
+            editAlignSwingOD.Text = p.swingTiltPos_OD.ToString();
+            editAlignSwingOS.Text = p.swingTiltPos_OS.ToString();
+            checkAlignBackOff.IsChecked = p.backOffOnEnd != 0;
+
+            editAlignTolPx.Text = p.tolerancePx.ToString("F1");
+            editAlignTolZPx.Text = p.toleranceZPx.ToString("F1");
+            editAlignStartDb.Text = p.startDeadbandPx.ToString("F1");
+            editAlignStopDb.Text = p.stopDeadbandPx.ToString("F1");
+
+            editAlignDetectN.Text = p.detectConsecutive.ToString();
+            editAlignSettleN.Text = p.settleFrames.ToString();
+            editAlignLostStop.Text = p.lostFramesToStop.ToString();
+            editAlignLostCancel.Text = p.lostFramesToCancel.ToString();
+            editAlignMaxJump.Text = p.maxJumpPx.ToString("F1");
+            editAlignSmooth.Text = p.smoothingAlpha.ToString("F2");
+
+            editAlignToReady.Text = p.readyTimeoutMs.ToString();
+            editAlignToSwing.Text = p.swingTimeoutMs.ToString();
+            editAlignToEyeX.Text = p.eyeXTimeoutMs.ToString();
+            editAlignToSearch.Text = p.searchTimeoutMs.ToString();
+
+            ReflectPupilTarget(p.detLeft, editAlignLeftTX, editAlignLeftTY, editAlignLeftSH, editAlignLeftSV);
+            ReflectPupilTarget(p.detRight, editAlignRightTX, editAlignRightTY, editAlignRightSH, editAlignRightSV);
+            ReflectPupilTarget(p.detLower, editAlignLowerTX, editAlignLowerTY, editAlignLowerSH, editAlignLowerSV);
+        }
+
+        private static void ReflectPupilTarget(WsoEyeAlign.PupilDetectParam det,
+            System.Windows.Controls.TextBox tx, System.Windows.Controls.TextBox ty,
+            System.Windows.Controls.TextBox sh, System.Windows.Controls.TextBox sv)
+        {
+            tx.Text = det.targetX.ToString();
+            ty.Text = det.targetY.ToString();
+            sh.Text = det.signH.ToString();
+            sv.Text = det.signV.ToString();
+        }
+
+        private static WsoEyeAlign.PupilDetectParam UploadPupilTarget(
+            System.Windows.Controls.TextBox tx, System.Windows.Controls.TextBox ty,
+            System.Windows.Controls.TextBox sh, System.Windows.Controls.TextBox sv)
+        {
+            var det = new WsoEyeAlign.PupilDetectParam();
+            det.targetX = ToInt(tx.Text);
+            det.targetY = ToInt(ty.Text);
+            det.signH = ToInt(sh.Text) < 0 ? -1 : +1;
+            det.signV = ToInt(sv.Text) < 0 ? -1 : +1;
+            return det;
+        }
+
+        private void UploadEyeAlignSettings()
+        {
+            var p = new WsoEyeAlign.EyeAlignConfigParam();
+            p.readyPosZ = ToInt(editAlignReadyZ.Text);
+            p.searchLimitPosZ = ToInt(editAlignSearchZ.Text);
+            p.minSafePosZ = ToInt(editAlignMinSafeZ.Text);
+            p.eyePosX_OD = ToInt(editAlignEyeXOD.Text);
+            p.eyePosX_OS = ToInt(editAlignEyeXOS.Text);
+            p.posToleranceSteps = ToInt(editAlignPosTol.Text);
+            p.swingTiltPos_OD = ToInt(editAlignSwingOD.Text);
+            p.swingTiltPos_OS = ToInt(editAlignSwingOS.Text);
+            p.backOffOnEnd = (checkAlignBackOff.IsChecked ?? false) ? 1 : 0;
+
+            p.tolerancePx = ToFloat(editAlignTolPx.Text);
+            p.toleranceZPx = ToFloat(editAlignTolZPx.Text);
+            p.startDeadbandPx = ToFloat(editAlignStartDb.Text);
+            p.stopDeadbandPx = ToFloat(editAlignStopDb.Text);
+
+            p.detectConsecutive = ToInt(editAlignDetectN.Text);
+            p.settleFrames = ToInt(editAlignSettleN.Text);
+            p.lostFramesToStop = ToInt(editAlignLostStop.Text);
+            p.lostFramesToCancel = ToInt(editAlignLostCancel.Text);
+            p.maxJumpPx = ToFloat(editAlignMaxJump.Text);
+            p.smoothingAlpha = ToFloat(editAlignSmooth.Text);
+
+            p.readyTimeoutMs = ToInt(editAlignToReady.Text);
+            p.swingTimeoutMs = ToInt(editAlignToSwing.Text);
+            p.eyeXTimeoutMs = ToInt(editAlignToEyeX.Text);
+            p.searchTimeoutMs = ToInt(editAlignToSearch.Text);
+
+            p.detLeft = UploadPupilTarget(editAlignLeftTX, editAlignLeftTY, editAlignLeftSH, editAlignLeftSV);
+            p.detRight = UploadPupilTarget(editAlignRightTX, editAlignRightTY, editAlignRightSH, editAlignRightSV);
+            p.detLower = UploadPupilTarget(editAlignLowerTX, editAlignLowerTY, editAlignLowerSH, editAlignLowerSV);
+
+            Configuration.SubmitEyeAlignConfig(in p);
         }
 
         private void ReflectCorneaCameraSettings()
