@@ -45,6 +45,9 @@
     <ClInclude Include="DeviceStructs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="EyeAlignDefines.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="DeviceDefines.h">
       <Filter>Header Files</Filter>
     </ClInclude>

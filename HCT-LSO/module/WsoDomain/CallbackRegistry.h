@@ -57,6 +57,8 @@ namespace wso_domain
 		void setOctAutoPolarOptimized(OctAutoPolarOptimized clb = nullptr);
 		void setOctAutoScanOptimized(OctAutoScanOptimized clb = nullptr);
 
+		void setEyeAlignEventOccurred(EyeAlignEventOccurred clb = nullptr);
+
 
 		void runWsoLogMsgCallback(std::string msg, int type);
 		void runFirmwareMsgCallback(std::string strMessage, int nCurrentState, int nPercent, bool bReset, bool bError);
@@ -92,6 +94,11 @@ namespace wso_domain
 		void runOctAutoReferOptimized(bool result, float quality, int ref_point, int position);
 		void runOctAutoPolarOptimized(bool result, float quality, float degree);
 		void runOctAutoScanOptimized(bool result);
+
+		// Invokes the callback OUTSIDE singleMutex_ (pointer copied under the lock), so a
+		// slow managed handler cannot stall the camera / motor callbacks sharing the lock.
+		void runEyeAlignEventOccurred(int32_t event, int32_t mode, int32_t phase, int32_t arg,
+			int32_t posX, int32_t posY, int32_t posZ, int32_t posSwing);
 
 
 		void resetWsoLogMsgCallback(void);

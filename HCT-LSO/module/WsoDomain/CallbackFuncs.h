@@ -206,6 +206,22 @@ namespace wso_domain
 		)>::type;
 
 
+	// Eye Alignment (EyeAlign module)
+	///////////////////////////////////////////////////////////////////////////////////////////
+	// The single event callback of the auto alignment. Fired from the aligner's event
+	// dispatcher thread (never from the control loop), outside the registry lock.
+	using EyeAlignEventOccurred = std::add_pointer<void(__stdcall)(
+		int32_t,			// EyeAlignEvent
+		int32_t,			// EyeAlignMode in effect
+		int32_t,			// EyeAlignPhase at the time of the event
+		int32_t,			// event-specific argument: EyeAlignResult, IrCameraId, MotorType or EyeSide
+		int32_t,			// X stage position (steps)
+		int32_t,			// Y stage position (steps)
+		int32_t,			// Z stage position (steps)
+		int32_t				// swing position (steps)
+		)>::type;
+
+
 	
 	// Log Callback types 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////

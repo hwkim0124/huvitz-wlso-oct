@@ -28,6 +28,7 @@
 #include "DeviceStructs.h"
 #include "DeviceLights.h"
 #include "DeviceCameras.h"
+#include "EyeAlignDefines.h"
 
 #include "SysConfigDefines.h"
 

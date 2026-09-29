@@ -47,6 +47,8 @@ struct CallbackRegistry::CallbackRegistryImpl
 	optional<OctAutoPolarOptimized> octAutoPolarOptimized;
 	optional<OctAutoScanOptimized> octAutoScanOptimized;
 
+	optional<EyeAlignEventOccurred> eyeAlignEventOccurred;
+
 
 	CallbackRegistryImpl() {
 		initializeCallbackRegistryImpl();
@@ -90,6 +92,7 @@ struct CallbackRegistry::CallbackRegistryImpl
 		octAutoReferOptimized = nullopt;
 		octAutoPolarOptimized = nullopt;
 		octAutoScanOptimized = nullopt;
+		eyeAlignEventOccurred = nullopt;
 	}
 };
 
@@ -278,6 +281,12 @@ void wso_domain::CallbackRegistry::setOctAutoScanOptimized(OctAutoScanOptimized 
 {
 	lock_guard<mutex> lock(singleMutex_);
 	impl().octAutoScanOptimized = clb;
+}
+
+void wso_domain::CallbackRegistry::setEyeAlignEventOccurred(EyeAlignEventOccurred clb)
+{
+	lock_guard<mutex> lock(singleMutex_);
+	impl().eyeAlignEventOccurred = clb;
 }
 
 
@@ -554,6 +563,23 @@ void wso_domain::CallbackRegistry::runOctAutoScanOptimized(bool result)
 		if (auto func = *impl().octAutoScanOptimized; func) {
 			func(result);
 		}
+	}
+}
+
+void wso_domain::CallbackRegistry::runEyeAlignEventOccurred(int32_t event, int32_t mode, int32_t phase, int32_t arg,
+	int32_t posX, int32_t posY, int32_t posZ, int32_t posSwing)
+{
+	EyeAlignEventOccurred func = nullptr;
+	{
+		lock_guard<mutex> lock(singleMutex_);
+		if (impl().eyeAlignEventOccurred) {
+			func = *impl().eyeAlignEventOccurred;
+		}
+	}
+	// Deliberately outside the lock: the managed handler may start a measurement and
+	// take a while; the camera-frame and motor callbacks must keep flowing meanwhile.
+	if (func) {
+		func(event, mode, phase, arg, posX, posY, posZ, posSwing);
 	}
 }
 

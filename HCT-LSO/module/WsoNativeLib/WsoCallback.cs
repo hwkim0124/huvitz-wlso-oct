@@ -96,5 +96,15 @@ namespace WsoNativeLib
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         public delegate void OctScanProtocolCompleted([MarshalAs(UnmanagedType.I1)] bool result);
+
+
+        // Eye Alignment
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // The single event callback of the auto alignment. Fired on a native dispatcher
+        // thread (not the control loop): marshal to the Dispatcher and return promptly.
+        // evt = (int)EyeAlignEvent, mode = (int)EyeAlignMode, phase = (int)EyeAlignPhase,
+        // arg = event-specific (EyeAlignResult / CameraType / MotorType / EyeSide).
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate void EyeAlignEventOccurred(int evt, int mode, int phase, int arg, int posX, int posY, int posZ, int posSwing);
     }
 }
