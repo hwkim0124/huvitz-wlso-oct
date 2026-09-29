@@ -44,6 +44,9 @@ struct InfraredCamera::InfraredCameraImpl
 	int patternOption[4];
 	mutex mutexLock;
 
+	FrameSink frameSink;
+	mutable mutex sinkMutex;
+
 	InfraredCameraImpl() : board(nullptr), playing(false), workerRunning(false), initiated(false), errorCount(0), frameCount(0),
 		frameWidth(IR_CAMERA_FRAME_WIDTH), frameHeight(IR_CAMERA_FRAME_HEIGHT), epid(USB_IR1_PID), usbComm(nullptr),
 		type(IrCameraType::RETINA), preset(IrCameraViewPreset::DEFAULT)
@@ -568,6 +571,26 @@ InfraredCamera::InfraredCameraImpl& wso_device::InfraredCamera::impl(void) const
 MainBoard* wso_device::InfraredCamera::getMainBoard(void) const
 {
 	return impl().board;
+}
+
+void wso_device::InfraredCamera::setFrameSink(FrameSink sink)
+{
+	lock_guard<mutex> lock(impl().sinkMutex);
+	impl().frameSink = std::move(sink);
+}
+
+void wso_device::InfraredCamera::notifyFrameSink(IrCameraId camId, const std::uint8_t* bits, int width, int height) const
+{
+	// Copy the sink under the lock, call it outside, so setFrameSink(nullptr) from
+	// another thread cannot destroy the callable while it is executing.
+	FrameSink sink;
+	{
+		lock_guard<mutex> lock(impl().sinkMutex);
+		sink = impl().frameSink;
+	}
+	if (sink) {
+		sink(camId, bits, width, height);
+	}
 }
 
 void wso_device::InfraredCamera::acquireCameraStream(void)

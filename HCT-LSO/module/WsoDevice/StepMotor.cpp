@@ -444,6 +444,14 @@ bool wso_device::StepMotor::updateStatus(void)
 
 				impl().motorWait = info->MotorWait;
 				impl().piStatus = info->PI_status;
+				// Stage motors (X/Y/Z/swing) report their end switches through PI_status
+				// (bit0: low PI hit, bit1: high PI hit, see wso_hbs.h StepMotorInfo_st).
+				// Mirror them into limitStatus so isAtMin/MaxPosition() and the early
+				// exit in waitForUpdate() reflect the hardware.
+				if (isStageMotor()) {
+					impl().limitStatus[0] = ((info->PI_status & 0x01) != 0) ? 1 : 0;
+					impl().limitStatus[1] = ((info->PI_status & 0x02) != 0) ? 1 : 0;
+				}
 				impl().piHitRefPos = info->sm_pi_hit_ref_pos;
 				impl().piHitMargin = info->sm_pi_hit_margin;
 				impl().piHitLastPos = info->sm_last_pi_hit_pos;

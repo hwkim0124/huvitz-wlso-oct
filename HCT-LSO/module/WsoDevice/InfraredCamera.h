@@ -5,6 +5,7 @@
 
 #include <memory>
 #include <string>
+#include <functional>
 
 
 namespace cpp_util {
@@ -19,6 +20,11 @@ namespace wso_device
 	class WSODEVICE_DLL_API InfraredCamera : public BoardComponent
 	{
 	public:
+		// Native frame sink: receives every de-padded 8-bit sub-frame on the camera
+		// worker thread, before the managed CallbackRegistry callback. The sink must
+		// copy the buffer and return promptly; the buffer is reused for the next frame.
+		using FrameSink = std::function<void(IrCameraId, const std::uint8_t*, int, int)>;
+
 		InfraredCamera();
 		InfraredCamera(MainBoard* board, IrCameraType type);
 		virtual ~InfraredCamera();
@@ -75,8 +81,12 @@ namespace wso_device
 		std::uint32_t getStreamDataSize(void) const;
 		std::uint32_t getNumFramesInStream(void) const;
 
+		// nullptr clears the sink. Thread-safe against a frame in flight.
+		void setFrameSink(FrameSink sink);
+
 	protected:
 		MainBoard* getMainBoard(void) const;
+		void notifyFrameSink(IrCameraId camId, const std::uint8_t* bits, int width, int height) const;
 
 		void acquireCameraStream(void);
 		// Pushes the cached gains to the sensor(s) this camera owns. Called from
