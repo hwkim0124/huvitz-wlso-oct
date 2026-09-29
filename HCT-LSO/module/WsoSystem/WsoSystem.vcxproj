@@ -121,14 +121,14 @@
       <PreprocessorDefinitions>_DEBUG;WSOSYSTEM_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)module\CppUtil;$(SolutionDir)module\WsoDomain;$(SolutionDir)module\WsoBoard;$(SolutionDir)module\WsoDevice;$(SolutionDir)module\WsoConfig;$(SolutionDir)module\OctGrab;$(SolutionDir)module\OctScan;$(SolutionDir)module\OctResult;$(SolutionDir)module\OctPattern;$(SolutionDir)module\SigProc;$(SolutionDir)module\SigChain;$(SolutionDir)module\OctReport;$(SolutionDir)module\OctAngio;$(SolutionDir)module\SegmProc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)module\CppUtil;$(SolutionDir)module\WsoDomain;$(SolutionDir)module\WsoBoard;$(SolutionDir)module\WsoDevice;$(SolutionDir)module\WsoConfig;$(SolutionDir)module\OctGrab;$(SolutionDir)module\OctScan;$(SolutionDir)module\OctResult;$(SolutionDir)module\OctPattern;$(SolutionDir)module\SigProc;$(SolutionDir)module\SigChain;$(SolutionDir)module\OctReport;$(SolutionDir)module\OctAngio;$(SolutionDir)module\SegmProc;$(SolutionDir)module\EyeAlign</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <AdditionalLibraryDirectories>$(OutDir);</AdditionalLibraryDirectories>
-      <AdditionalDependencies>octpattern.lib;sigproc.lib;sigchain.lib;octscan.lib;octresult.lib;octreport.lib;octgrab.lib;octangio.lib;cpputil.lib;wsodomain.lib;wsoboard.lib;wsodevice.lib;wsoconfig.lib;segmproc.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>octpattern.lib;sigproc.lib;sigchain.lib;octscan.lib;octresult.lib;octreport.lib;octgrab.lib;octangio.lib;cpputil.lib;wsodomain.lib;wsoboard.lib;wsodevice.lib;wsoconfig.lib;segmproc.lib;eyealign.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -140,7 +140,7 @@
       <PreprocessorDefinitions>NDEBUG;WSOSYSTEM_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)module\CppUtil;$(SolutionDir)module\WsoDomain;$(SolutionDir)module\WsoBoard;$(SolutionDir)module\WsoDevice;$(SolutionDir)module\WsoConfig;$(SolutionDir)module\OctGrab;$(SolutionDir)module\OctScan;$(SolutionDir)module\OctResult;$(SolutionDir)module\OctPattern;$(SolutionDir)module\SigProc;$(SolutionDir)module\SigChain;$(SolutionDir)module\OctReport;$(SolutionDir)module\OctAngio;$(SolutionDir)module\SegmProc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)module\CppUtil;$(SolutionDir)module\WsoDomain;$(SolutionDir)module\WsoBoard;$(SolutionDir)module\WsoDevice;$(SolutionDir)module\WsoConfig;$(SolutionDir)module\OctGrab;$(SolutionDir)module\OctScan;$(SolutionDir)module\OctResult;$(SolutionDir)module\OctPattern;$(SolutionDir)module\SigProc;$(SolutionDir)module\SigChain;$(SolutionDir)module\OctReport;$(SolutionDir)module\OctAngio;$(SolutionDir)module\SegmProc;$(SolutionDir)module\EyeAlign</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -149,7 +149,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <AdditionalLibraryDirectories>$(OutDir);</AdditionalLibraryDirectories>
-      <AdditionalDependencies>octpattern.lib;sigproc.lib;sigchain.lib;octscan.lib;octresult.lib;octreport.lib;octgrab.lib;octangio.lib;cpputil.lib;wsodomain.lib;wsoboard.lib;wsodevice.lib;wsoconfig.lib;segmproc.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>octpattern.lib;sigproc.lib;sigchain.lib;octscan.lib;octresult.lib;octreport.lib;octgrab.lib;octangio.lib;cpputil.lib;wsodomain.lib;wsoboard.lib;wsodevice.lib;wsoconfig.lib;segmproc.lib;eyealign.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -162,6 +162,8 @@
     <ClInclude Include="exts_device_camera.h" />
     <ClInclude Include="exts_device_lights.h" />
     <ClInclude Include="exts_device_motors.h" />
+    <ClInclude Include="exts_eye_align.h" />
+    <ClInclude Include="EyeAlignment.h" />
     <ClInclude Include="exts_fixation.h" />
     <ClInclude Include="exts_lso_camera.h" />
     <ClInclude Include="exts_lso_scanner.h" />
@@ -193,6 +195,8 @@
     <ClCompile Include="exts_device_camera.cpp" />
     <ClCompile Include="exts_device_lights.cpp" />
     <ClCompile Include="exts_device_motors.cpp" />
+    <ClCompile Include="exts_eye_align.cpp" />
+    <ClCompile Include="EyeAlignment.cpp" />
     <ClCompile Include="exts_fixation.cpp" />
     <ClCompile Include="exts_lso_camera.cpp" />
     <ClCompile Include="exts_lso_scanner.cpp" />

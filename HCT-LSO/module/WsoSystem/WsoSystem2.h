@@ -30,6 +30,7 @@
 #include "cpp_util.h"
 #include "oct_report.h"
 #include "segm_proc.h"
+#include "eye_align.h"
 
 
 namespace wso_system
@@ -47,6 +48,7 @@ namespace wso_system
 	using namespace sig_proc;
 	using namespace sig_chain;
 	using namespace segm_proc;
+	using namespace eye_align;
 	using namespace cpp_util;
 	using namespace std;
 }

@@ -2,6 +2,7 @@
 #include "Bootstrapper.h"
 #include "Hardware.h"
 #include "OctScanning.h"
+#include "EyeAlignment.h"
 #include "Calibration.h"
 #include "Configuration.h"
 
@@ -100,6 +101,12 @@ bool wso_system::Bootstrapper::initializeWsoSystem(WsoLogMsgCallback clb, bool t
 		// return false;
 	}
 
+	if (auto* align = EyeAlignment::getInstance(); align) {
+		if (!align->initializeEyeAlignment()) {
+			WsoLogWarn("Eye alignment initialization failed");
+		}
+	}
+
 	if (!implementSystemConfiguration()) {
 		WsoLogError("System configuration not implemented.");
 		// return false;
@@ -117,6 +124,10 @@ bool wso_system::Bootstrapper::isWsoSystemInitialized(void) const
 void wso_system::Bootstrapper::releaseWsoSystem(void)
 {
 	if (isWsoSystemInitialized()) {
+		// Stop the aligner (and its frame sink) before the board and camera go away.
+		if (auto* align = EyeAlignment::getInstance(); align) {
+			align->releaseEyeAlignment();
+		}
 		if (auto board = Hardware::getInstance()->getMainBoard(); board) {
 			board->releaseMainBoard();
 		}

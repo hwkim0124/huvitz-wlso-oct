@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Configuration.h"
 #include "Hardware.h"
+#include "EyeAlignment.h"
 #include "HbsDataProfile.h"
 
 using namespace wso_system;
@@ -121,6 +122,11 @@ bool wso_system::Configuration::applySystemConfiguration(void)
 					retina->applyConfigParameters(*param);
 				}
 			}
+		}
+
+		// Eye alignment parameters take effect on the next alignment start.
+		if (auto* align = EyeAlignment::getInstance(); align && align->isInitialized()) {
+			align->applyConfiguration();
 		}
 		/*
 		if (auto* camera = config->getCameraSetting(); camera) {

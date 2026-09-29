@@ -48,6 +48,9 @@
     <ClInclude Include="OctScanning.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="EyeAlignment.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="exts_fixation.h">
       <Filter>Header Files\externs</Filter>
     </ClInclude>
@@ -58,6 +61,9 @@
       <Filter>Header Files\externs</Filter>
     </ClInclude>
     <ClInclude Include="exts_oct_scanning.h">
+      <Filter>Header Files\externs</Filter>
+    </ClInclude>
+    <ClInclude Include="exts_eye_align.h">
       <Filter>Header Files\externs</Filter>
     </ClInclude>
     <ClInclude Include="OctArchive.h">
@@ -128,6 +134,9 @@
     <ClCompile Include="OctScanning.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="EyeAlignment.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="exts_fixation.cpp">
       <Filter>Source Files\externs</Filter>
     </ClCompile>
@@ -138,6 +147,9 @@
       <Filter>Source Files\externs</Filter>
     </ClCompile>
     <ClCompile Include="exts_oct_scanning.cpp">
+      <Filter>Source Files\externs</Filter>
+    </ClCompile>
+    <ClCompile Include="exts_eye_align.cpp">
       <Filter>Source Files\externs</Filter>
     </ClCompile>
     <ClCompile Include="OctArchive.cpp">
