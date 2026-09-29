@@ -6,6 +6,8 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PlatformTarget>x64</PlatformTarget>
+    <!-- PNG decoding for the offline pupil-detector harness (the "pupil" command-line mode). -->
+    <UseWPF>true</UseWPF>
     <BaseOutputPath>$(SolutionDir)build\$(PlatformTarget)\</BaseOutputPath>
     <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
