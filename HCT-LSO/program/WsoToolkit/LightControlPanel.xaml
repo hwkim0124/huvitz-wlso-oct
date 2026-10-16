@@ -1,0 +1,149 @@
+<UserControl x:Class="WsoToolkit.LightControlPanel"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Loaded="UserControl_Loaded">
+    <!-- One channel per row. A channel row needs 82 (name) + 156 (slider) + 44 (value) + 36 + 36
+         = 354px, plus 4px margins and the GroupBox chrome: ~374px. Two channels side by side
+         therefore need ~740px, which no longer exists now that the scan-test screen gives this
+         panel half of its right column (~391px). Stacking keeps every channel identical and
+         costs height, which both hosts have: the standalone LightControlWindow is
+         SizeToContent, and the scan-test screen reserves a 330px band for it. -->
+    <GroupBox Header="Light Control">
+        <Grid Margin="4">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="22"/>
+                <RowDefinition Height="44"/>
+                <RowDefinition Height="44"/>
+                <RowDefinition Height="44"/>
+                <RowDefinition Height="44"/>
+                <RowDefinition Height="44"/>
+                <RowDefinition Height="44"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Button x:Name="btnRefresh" Grid.Row="0" Grid.Column="0" Content="Refresh" Style="{StaticResource ButtonS1Style}" Width="56" Height="20" HorizontalAlignment="Right" Click="BtnRefresh_Click"/>
+
+            <Grid Grid.Row="1" Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="26"/>
+                    <RowDefinition Height="18"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="82"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="44"/>
+                    <ColumnDefinition Width="36"/>
+                    <ColumnDefinition Width="36"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="LSO White" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <Slider x:Name="sliderWhite" Grid.Row="0" Grid.Column="1" Tag="LsoWhite" Style="{StaticResource SliderStyle}" Width="150" Margin="3,0" ValueChanged="Slider_ValueChanged" Thumb.DragStarted="Slider_DragStarted" Thumb.DragCompleted="Slider_DragCompleted"/>
+                <TextBox x:Name="editWhite" Grid.Row="0" Grid.Column="2" Tag="LsoWhite" Style="{StaticResource TextBoxS1Style}" Width="40" KeyDown="Edit_KeyDown"/>
+                <Button x:Name="btnWhiteOn" Grid.Row="0" Grid.Column="3" Tag="LsoWhite" Content="On" Style="{StaticResource ButtonS1Style}" Width="32" Height="22" Click="BtnOn_Click"/>
+                <Button x:Name="btnWhiteOff" Grid.Row="0" Grid.Column="4" Tag="LsoWhite" Content="Off" Style="{StaticResource ButtonS1Style}" Width="32" Height="22" Click="BtnOff_Click"/>
+                <CheckBox x:Name="checkWhiteMode" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="5" Tag="LsoWhite" Content="Continuous" Style="{StaticResource CheckBoxStyle}" Height="18" Click="CheckMode_Click"/>
+            </Grid>
+
+            <Grid Grid.Row="2" Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="26"/>
+                    <RowDefinition Height="18"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="82"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="44"/>
+                    <ColumnDefinition Width="36"/>
+                    <ColumnDefinition Width="36"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Retina IR" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <Slider x:Name="sliderRetina" Grid.Row="0" Grid.Column="1" Tag="RetinaIr" Style="{StaticResource SliderStyle}" Width="150" Margin="3,0" ValueChanged="Slider_ValueChanged" Thumb.DragStarted="Slider_DragStarted" Thumb.DragCompleted="Slider_DragCompleted"/>
+                <TextBox x:Name="editRetina" Grid.Row="0" Grid.Column="2" Tag="RetinaIr" Style="{StaticResource TextBoxS1Style}" Width="40" KeyDown="Edit_KeyDown"/>
+                <Button x:Name="btnRetinaOn" Grid.Row="0" Grid.Column="3" Tag="RetinaIr" Content="On" Style="{StaticResource ButtonS1Style}" Width="32" Height="22" Click="BtnOn_Click"/>
+                <Button x:Name="btnRetinaOff" Grid.Row="0" Grid.Column="4" Tag="RetinaIr" Content="Off" Style="{StaticResource ButtonS1Style}" Width="32" Height="22" Click="BtnOff_Click"/>
+                <CheckBox x:Name="checkRetinaMode" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="5" Tag="RetinaIr" Content="Continuous" Style="{StaticResource CheckBoxStyle}" Height="18" Click="CheckMode_Click"/>
+            </Grid>
+
+            <Grid Grid.Row="3" Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="26"/>
+                    <RowDefinition Height="18"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="82"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="44"/>
+                    <ColumnDefinition Width="36"/>
+                    <ColumnDefinition Width="36"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="LSO Blue" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <Slider x:Name="sliderBlue" Grid.Row="0" Grid.Column="1" Tag="LsoBlue" Style="{StaticResource SliderStyle}" Width="150" Margin="3,0" ValueChanged="Slider_ValueChanged" Thumb.DragStarted="Slider_DragStarted" Thumb.DragCompleted="Slider_DragCompleted"/>
+                <TextBox x:Name="editBlue" Grid.Row="0" Grid.Column="2" Tag="LsoBlue" Style="{StaticResource TextBoxS1Style}" Width="40" KeyDown="Edit_KeyDown"/>
+                <Button x:Name="btnBlueOn" Grid.Row="0" Grid.Column="3" Tag="LsoBlue" Content="On" Style="{StaticResource ButtonS1Style}" Width="32" Height="22" Click="BtnOn_Click"/>
+                <Button x:Name="btnBlueOff" Grid.Row="0" Grid.Column="4" Tag="LsoBlue" Content="Off" Style="{StaticResource ButtonS1Style}" Width="32" Height="22" Click="BtnOff_Click"/>
+                <CheckBox x:Name="checkBlueMode" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="5" Tag="LsoBlue" Content="Continuous" Style="{StaticResource CheckBoxStyle}" Height="18" Click="CheckMode_Click"/>
+            </Grid>
+
+            <Grid Grid.Row="4" Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="26"/>
+                    <RowDefinition Height="18"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="82"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="44"/>
+                    <ColumnDefinition Width="36"/>
+                    <ColumnDefinition Width="36"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="LSO Green" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <Slider x:Name="sliderGreen" Grid.Row="0" Grid.Column="1" Tag="LsoGreen" Style="{StaticResource SliderStyle}" Width="150" Margin="3,0" ValueChanged="Slider_ValueChanged" Thumb.DragStarted="Slider_DragStarted" Thumb.DragCompleted="Slider_DragCompleted"/>
+                <TextBox x:Name="editGreen" Grid.Row="0" Grid.Column="2" Tag="LsoGreen" Style="{StaticResource TextBoxS1Style}" Width="40" KeyDown="Edit_KeyDown"/>
+                <Button x:Name="btnGreenOn" Grid.Row="0" Grid.Column="3" Tag="LsoGreen" Content="On" Style="{StaticResource ButtonS1Style}" Width="32" Height="22" Click="BtnOn_Click"/>
+                <Button x:Name="btnGreenOff" Grid.Row="0" Grid.Column="4" Tag="LsoGreen" Content="Off" Style="{StaticResource ButtonS1Style}" Width="32" Height="22" Click="BtnOff_Click"/>
+                <CheckBox x:Name="checkGreenMode" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="5" Tag="LsoGreen" Content="Continuous" Style="{StaticResource CheckBoxStyle}" Height="18" Click="CheckMode_Click"/>
+            </Grid>
+
+            <Grid Grid.Row="5" Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="26"/>
+                    <RowDefinition Height="18"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="82"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="44"/>
+                    <ColumnDefinition Width="36"/>
+                    <ColumnDefinition Width="36"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Cornea IR L" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <Slider x:Name="sliderCornea1" Grid.Row="0" Grid.Column="1" Tag="CorneaIrLeft" Style="{StaticResource SliderStyle}" Width="150" Margin="3,0" ValueChanged="Slider_ValueChanged" Thumb.DragStarted="Slider_DragStarted" Thumb.DragCompleted="Slider_DragCompleted"/>
+                <TextBox x:Name="editCornea1" Grid.Row="0" Grid.Column="2" Tag="CorneaIrLeft" Style="{StaticResource TextBoxS1Style}" Width="40" KeyDown="Edit_KeyDown"/>
+                <Button x:Name="btnCorneaOn1" Grid.Row="0" Grid.Column="3" Tag="CorneaIrLeft" Content="On" Style="{StaticResource ButtonS1Style}" Width="32" Height="22" Click="BtnOn_Click"/>
+                <Button x:Name="btnCorneaOff1" Grid.Row="0" Grid.Column="4" Tag="CorneaIrLeft" Content="Off" Style="{StaticResource ButtonS1Style}" Width="32" Height="22" Click="BtnOff_Click"/>
+                <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="5" Text="Trigger only" Foreground="DimGray" VerticalAlignment="Center"/>
+            </Grid>
+
+            <Grid Grid.Row="6" Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="26"/>
+                    <RowDefinition Height="18"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="82"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="44"/>
+                    <ColumnDefinition Width="36"/>
+                    <ColumnDefinition Width="36"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Cornea IR R" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <Slider x:Name="sliderCornea2" Grid.Row="0" Grid.Column="1" Tag="CorneaIrRight" Style="{StaticResource SliderStyle}" Width="150" Margin="3,0" ValueChanged="Slider_ValueChanged" Thumb.DragStarted="Slider_DragStarted" Thumb.DragCompleted="Slider_DragCompleted"/>
+                <TextBox x:Name="editCornea2" Grid.Row="0" Grid.Column="2" Tag="CorneaIrRight" Style="{StaticResource TextBoxS1Style}" Width="40" KeyDown="Edit_KeyDown"/>
+                <Button x:Name="btnCorneaOn2" Grid.Row="0" Grid.Column="3" Tag="CorneaIrRight" Content="On" Style="{StaticResource ButtonS1Style}" Width="32" Height="22" Click="BtnOn_Click"/>
+                <Button x:Name="btnCorneaOff2" Grid.Row="0" Grid.Column="4" Tag="CorneaIrRight" Content="Off" Style="{StaticResource ButtonS1Style}" Width="32" Height="22" Click="BtnOff_Click"/>
+                <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="5" Text="Trigger only" Foreground="DimGray" VerticalAlignment="Center"/>
+            </Grid>
+        </Grid>
+    </GroupBox>
+</UserControl>

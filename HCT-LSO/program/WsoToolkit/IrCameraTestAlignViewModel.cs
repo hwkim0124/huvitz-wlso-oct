@@ -31,7 +31,7 @@ namespace WsoToolkit
         ///
         private void InitializeAlignControls()
         {
-            cmbAlignMode.ItemsSource = new string[] { "Manual", "Single", "Full" };
+            cmbAlignMode.ItemsSource = new string[] { "Manual", "Auto", "Full" };
             cmbAlignMode.SelectedIndex = 0;
 
             cmbAlignEyeSide.ItemsSource = new string[] { "OD (right eye)", "OS (left eye)" };
@@ -48,7 +48,7 @@ namespace WsoToolkit
         {
             return cmbAlignMode.SelectedIndex switch
             {
-                1 => EyeAlignMode.Single,
+                1 => EyeAlignMode.Auto,
                 2 => EyeAlignMode.Full,
                 _ => EyeAlignMode.Manual,
             };
@@ -178,6 +178,7 @@ namespace WsoToolkit
                 case EyeAlignEvent.EyeFound:
                 case EyeAlignEvent.EyeNotFound:
                 case EyeAlignEvent.LowerEyeFound:
+                case EyeAlignEvent.LowerEyeNotFound:
                 case EyeAlignEvent.EyeLost:
                     return ((CameraType)arg).ToString();
                 case EyeAlignEvent.EndOfLeft:
@@ -191,13 +192,14 @@ namespace WsoToolkit
                 case EyeAlignEvent.MotorMoveFailed:
                     return ((MotorType)arg).ToString();
                 case EyeAlignEvent.FullAlignStarted:
-                case EyeAlignEvent.SingleAlignStarted:
+                case EyeAlignEvent.AutoAlignStarted:
                 case EyeAlignEvent.ManualAlignStarted:
                 case EyeAlignEvent.ReadyPositionReached:
                 case EyeAlignEvent.EyeSidePositionReached:
                 case EyeAlignEvent.SwingAtTilt:
                     return ((EyeSide)arg).ToString();
                 case EyeAlignEvent.PhaseTimeout:
+                case EyeAlignEvent.AlignTimeout:
                     return ((EyeAlignPhase)arg).ToString();
                 default:
                     return arg.ToString();

@@ -64,6 +64,9 @@ namespace wso_board
 		bool saveConfiguration(void);
 		bool saveSystemConfigure(void);
 		bool saveLsoScannerParam(void);
+		// Writes only traj_profile[patternId]; leaves the capture-status header and the other
+		// slots on the board as they are.
+		bool saveLsoScannerProfile(int patternId);
 		bool saveGalvanoDynamicParam(void);
 		bool saveOctPhaseControl(void);
 

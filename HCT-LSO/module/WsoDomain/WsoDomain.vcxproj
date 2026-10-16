@@ -170,6 +170,7 @@
     <ClInclude Include="DeviceStructs.h" />
     <ClInclude Include="EventFuncs.h" />
     <ClInclude Include="EyeAlignDefines.h" />
+    <ClInclude Include="EyeAlignModelConfig.h" />
     <ClInclude Include="EventRegistry.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="LsoCameraStruct.h" />

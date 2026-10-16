@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ColorCameraPreset version="2" name="Capture">
+  <RoiMaxWidth>5472</RoiMaxWidth>
+  <RoiMaxHeight>3648</RoiMaxHeight>
+  <RoiXWidth>3648</RoiXWidth>
+  <RoiYHeight>3648</RoiYHeight>
+  <RoiXOffset>912</RoiXOffset>
+  <RoiYOffset>0</RoiYOffset>
+  <ExposureTime>5629</ExposureTime>
+  <AcquisitionMode>0</AcquisitionMode>
+  <AcquisitionFrameCount>2</AcquisitionFrameCount>
+  <PixelFormat>4</PixelFormat>
+  <BinningHorizontal>1</BinningHorizontal>
+  <BinningVertical>1</BinningVertical>
+  <Gain>10.048786939752075</Gain>
+  <AdcDepthIndex>2</AdcDepthIndex>
+  <TriggerDelayUs>288</TriggerDelayUs>
+  <ExposureAuto>Off</ExposureAuto>
+  <BinningSelector>All</BinningSelector>
+  <BinningHorizontalMode>Average</BinningHorizontalMode>
+  <BinningVerticalMode>Sum</BinningVerticalMode>
+  <TestPattern>Off</TestPattern>
+  <SensorShutterMode>Rolling</SensorShutterMode>
+  <TriggerMode>On</TriggerMode>
+  <TriggerSource>Line3</TriggerSource>
+  <TriggerActivation>RisingEdge</TriggerActivation>
+  <TriggerSelector>FrameStart</TriggerSelector>
+  <TriggerOverlap>ReadOut</TriggerOverlap>
+  <AcquisitionBurstFrameCount>1</AcquisitionBurstFrameCount>
+  <DeviceLinkThroughput>500000000</DeviceLinkThroughput>
+  <IspEnable>0</IspEnable>
+  <LineSelector>Line2</LineSelector>
+  <Lines>
+    <Line index="0"><Mode>Input</Mode><Source>Off</Source><Inverter>0</Inverter></Line>
+    <Line index="1"><Mode>Output</Mode><Source>ExposureActive</Source><Inverter>0</Inverter></Line>
+    <Line index="2"><Mode>Output</Mode><Source>ExposureActive</Source><Inverter>0</Inverter></Line>
+    <Line index="3"><Mode>Input</Mode><Source>Off</Source><Inverter>0</Inverter></Line>
+  </Lines>
+</ColorCameraPreset>

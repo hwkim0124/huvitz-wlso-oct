@@ -61,6 +61,11 @@ bool wso_device::YstageMotor::initializeYstageMotor(void)
 	return StepMotor::initializeStepMotor();
 }
 
+bool wso_device::YstageMotor::updatePositionToOrigin(int mode)
+{
+	return updatePosition(MOTOR_STAGE_Y_INIT_POS);
+}
+
 bool wso_device::YstageMotor::isAtUpperLimit(void)
 {
 	if (auto* board = getMainBoard(); board) {

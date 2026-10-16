@@ -624,8 +624,8 @@ void wso_device::InfraredCamera::acquireCameraStream(void)
 		}
 
 		if (result) {
-			for (int n = 0; n < nframes; n++) {
-				for (int i = 0; i < frame_h; i++) {
+			for (auto n = 0; n < nframes; n++) {
+				for (auto i = 0; i < frame_h; i++) {
 					auto* p1 = pbuff + width * i + frame_w * n;
 					copy(p1, p1 + frame_w, fdata.begin() + i * frame_w);
 				}

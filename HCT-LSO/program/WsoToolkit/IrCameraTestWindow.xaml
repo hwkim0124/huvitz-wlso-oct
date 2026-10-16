@@ -98,9 +98,9 @@
                     <ColumnDefinition Width="60"/>
                     <ColumnDefinition Width="110"/>
                     <ColumnDefinition Width="110"/>
-                    <ColumnDefinition Width="110"/>
-                    <ColumnDefinition Width="110"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="120"/>
                     <ColumnDefinition Width="16"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
@@ -116,11 +116,11 @@
                 <Label Content="Mode" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="1"/>
                 <ComboBox x:Name="cmbAlignMode" Style="{StaticResource ComboBoxStyle}" Grid.Row="2" Grid.Column="2" Width="100"/>
                 <ComboBox x:Name="cmbAlignEyeSide" Style="{StaticResource ComboBoxStyle}" Grid.Row="2" Grid.Column="3" Width="100"/>
-                <Button x:Name="btnAlignStart" Content="Start Align" Style="{StaticResource ButtonStyle}" Grid.Row="2" Grid.Column="4" Click="BtnAlignStart_Click"/>
-                <Button x:Name="btnAlignHold" Content="Hold" Style="{StaticResource ButtonStyle}" Grid.Row="2" Grid.Column="5" Click="BtnAlignHold_Click"/>
+                <Button x:Name="btnAlignStart" Content="Start Align" Style="{StaticResource ButtonStyleM1}" Grid.Row="2" Grid.Column="4" Click="BtnAlignStart_Click"/>
+                <Button x:Name="btnAlignHold" Content="Hold" Style="{StaticResource ButtonStyleM1}" Grid.Row="2" Grid.Column="5" Click="BtnAlignHold_Click"/>
                 <CheckBox x:Name="checkPupilOverlay" Content="Pupil Mark" Style="{StaticResource CheckBoxStyle}" Grid.Row="3" Grid.Column="2" Click="CheckPupilOverlay_Click"/>
-                <Button x:Name="btnClearOverride" Content="Clear Override" Style="{StaticResource ButtonStyle}" Grid.Row="3" Grid.Column="4" Click="BtnClearOverride_Click"/>
-                <Button x:Name="btnClearEvents" Content="Clear Events" Style="{StaticResource ButtonStyle}" Grid.Row="3" Grid.Column="5" Click="BtnClearEvents_Click"/>
+                <Button x:Name="btnClearOverride" Content="Clear Override" Style="{StaticResource ButtonStyleM1}" Grid.Row="3" Grid.Column="4" Click="BtnClearOverride_Click"/>
+                <Button x:Name="btnClearEvents" Content="Clear Events" Style="{StaticResource ButtonStyleM1}" Grid.Row="3" Grid.Column="5" Click="BtnClearEvents_Click"/>
                 <ListBox x:Name="listAlignEvents" Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="6" Height="140" Margin="0,4,0,0" FontFamily="Consolas" FontSize="11"/>
                 <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="8" Grid.RowSpan="6"/>
             </Grid>

@@ -129,7 +129,7 @@ namespace WsoNativeLib
         /// <summary>
         /// Starts an alignment run. Returns <see cref="EyeAlignResult.None"/> on success,
         /// otherwise the refusal reason (busy, preview not running, motors not ready, ...).
-        /// SINGLE and MANUAL use <paramref name="eyeSide"/>; FULL always starts with OD.
+        /// AUTO and MANUAL use <paramref name="eyeSide"/>; FULL always starts with OD.
         /// </summary>
         public static EyeAlignResult StartAlignment(EyeAlignMode mode, EyeSide eyeSide, EyeAlignEventOccurred callback)
         {

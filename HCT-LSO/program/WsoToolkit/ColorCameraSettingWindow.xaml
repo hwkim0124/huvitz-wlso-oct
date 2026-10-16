@@ -1,130 +1,295 @@
-﻿<Window x:Class="WsoToolkit.ColorCameraSettingWindow"
+﻿<UserControl x:Class="WsoToolkit.ColorCameraSettingWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WsoToolkit"
         mc:Ignorable="d"
-        Title="ColorCameraSettingWindow" Height="450" Width="635" WindowStartupLocation="CenterOwner" Loaded="Window_Loaded">
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="9*"/>
-            <RowDefinition Height="50"/>
-        </Grid.RowDefinitions>
-        <GroupBox Header="Camera Setting" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="5">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                    <RowDefinition/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                </Grid.ColumnDefinitions>
-                <Grid Grid.Row="0" Grid.Column="0">
-                    <Label Content="ROI X Width : " Style="{StaticResource LabelStyle}"/>
-                </Grid>
-                <Grid Grid.Row="0" Grid.Column="1">
-                    <TextBox x:Name="myTbROIXWidth" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTb_KeyDown" Margin="0,0,0,5" VerticalAlignment="Bottom"/>
-                </Grid>
-                <Grid Grid.Row="0" Grid.Column="2">
-                    <Label Content="Exposure Time (us) : " Style="{StaticResource LabelStyle}"/>
-                </Grid>
-                <Grid Grid.Row="0" Grid.Column="3">
-                    <TextBox x:Name="myTbExposureTime" Style="{StaticResource TextBoxM1Style}" HorizontalAlignment="Center" KeyDown="myTb_KeyDown"/>
-                </Grid>
-                <Grid Grid.Row="1" Grid.Column="0">
-                    <Label Content="ROI Y Height : " Style="{StaticResource LabelStyle}"/>
-                </Grid>
-                <Grid Grid.Row="1" Grid.Column="1">
-                    <TextBox x:Name="myTbROIYHeight" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTb_KeyDown"/>
-                </Grid>
-                <Grid Grid.Row="1" Grid.Column="2">
-                    <Label Content="Acquisition Mode : " Style="{StaticResource LabelStyle}"/>
-                </Grid>
-                <Grid Grid.Row="1" Grid.Column="3">
-                    <ComboBox x:Name="myComboAcquisitionMode" Style="{StaticResource ComboBoxM1Style}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
-                </Grid>
+        Loaded="Window_Loaded">
+    <UserControl.Resources>
+        <Style x:Key="CameraComboBoxStyle" TargetType="{x:Type ComboBox}" BasedOn="{StaticResource ComboBoxM1Style}">
+            <Setter Property="Width" Value="116"/>
+        </Style>
+    </UserControl.Resources>
+    <!-- One page still, but the camera section now carries the whole A-1 contract, so its
+         four groups (image format, sensor/acquisition, trigger, GPIO) live in a scroll
+         viewer. Row heights are fixed rather than proportional: inside a scroll viewer a
+         star height collapses to nothing. -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel>
+            <GroupBox Header="Camera Setting" Margin="5">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="34"/>
+                        <RowDefinition Height="34"/>
+                        <RowDefinition Height="34"/>
+                        <RowDefinition Height="34"/>
+                        <RowDefinition Height="34"/>
+                        <RowDefinition Height="34"/>
+                        <RowDefinition Height="34"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="152"/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="152"/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Grid Grid.Row="0" Grid.Column="0">
+                        <Label Content="ROI X Width : " Style="{StaticResource LabelStyle}"/>
+                    </Grid>
+                    <Grid Grid.Row="0" Grid.Column="1">
+                        <TextBox x:Name="myTbROIXWidth" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTb_KeyDown" Margin="0,0,0,5" VerticalAlignment="Bottom"/>
+                    </Grid>
+                    <Grid Grid.Row="0" Grid.Column="2">
+                        <Label Content="Exposure Time (us) : " Style="{StaticResource LabelStyle}"/>
+                    </Grid>
+                    <Grid Grid.Row="0" Grid.Column="3">
+                        <TextBox x:Name="myTbExposureTime" Style="{StaticResource TextBoxM1Style}" HorizontalAlignment="Center" KeyDown="myTb_KeyDown"/>
+                    </Grid>
+                    <Grid Grid.Row="1" Grid.Column="0">
+                        <Label Content="ROI Y Height : " Style="{StaticResource LabelStyle}"/>
+                    </Grid>
+                    <Grid Grid.Row="1" Grid.Column="1">
+                        <TextBox x:Name="myTbROIYHeight" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTb_KeyDown"/>
+                    </Grid>
+                    <Grid Grid.Row="1" Grid.Column="2">
+                        <Label Content="Acquisition Mode : " Style="{StaticResource LabelStyle}"/>
+                    </Grid>
+                    <Grid Grid.Row="1" Grid.Column="3">
+                        <ComboBox x:Name="myComboAcquisitionMode" Style="{StaticResource CameraComboBoxStyle}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
+                    </Grid>
 
-                <Grid Grid.Row="2" Grid.Column="0">
-                    <Label Content="ROI X Offset : " Style="{StaticResource LabelStyle}"/>
-                </Grid>
-                <Grid Grid.Row="2" Grid.Column="1">
-                    <TextBox x:Name="myTbROIXOffset" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTb_KeyDown"/>
-                </Grid>
-                <Grid Grid.Row="2" Grid.Column="2">
-                    <Label Content="Acquisition Frame Count :" Style="{StaticResource LabelStyle}"/>
-                </Grid>
-                <Grid Grid.Row="2" Grid.Column="3">
-                    <TextBox x:Name="myTbAcquisitionFrmaeCount" Style="{StaticResource TextBoxM1Style}" HorizontalAlignment="Center" KeyDown="myTb_KeyDown"/>
-                </Grid>
-                <Grid Grid.Row="3" Grid.Column="2">
-                    <Label Content="Pixel Format :" Style="{StaticResource LabelStyle}"/>
-                </Grid>
-                <Grid Grid.Row="3" Grid.Column="3">
-                    <ComboBox x:Name="myComboPixelFormat" Style="{StaticResource ComboBoxM1Style}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
-                </Grid>
-                <Grid Grid.Row="3" Grid.Column="0">
-                    <Label Content="ROI Y Offset : " Style="{StaticResource LabelStyle}"/>
-                </Grid>
-                <Grid Grid.Row="3" Grid.Column="1">
-                    <TextBox x:Name="myTbROIYOffset" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTb_KeyDown"/>
-                </Grid>
+                    <Grid Grid.Row="2" Grid.Column="0">
+                        <Label Content="ROI X Offset : " Style="{StaticResource LabelStyle}"/>
+                    </Grid>
+                    <Grid Grid.Row="2" Grid.Column="1">
+                        <TextBox x:Name="myTbROIXOffset" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTb_KeyDown"/>
+                    </Grid>
+                    <Grid Grid.Row="2" Grid.Column="2">
+                        <Label Content="Acquisition Frame Count :" Style="{StaticResource LabelStyle}"/>
+                    </Grid>
+                    <Grid Grid.Row="2" Grid.Column="3">
+                        <TextBox x:Name="myTbAcquisitionFrmaeCount" Style="{StaticResource TextBoxM1Style}" HorizontalAlignment="Center" KeyDown="myTb_KeyDown"/>
+                    </Grid>
+                    <Grid Grid.Row="3" Grid.Column="0">
+                        <Label Content="ROI Y Offset : " Style="{StaticResource LabelStyle}"/>
+                    </Grid>
+                    <Grid Grid.Row="3" Grid.Column="1">
+                        <TextBox x:Name="myTbROIYOffset" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" KeyDown="myTb_KeyDown"/>
+                    </Grid>
+                    <Grid Grid.Row="3" Grid.Column="2">
+                        <Label Content="Pixel Format :" Style="{StaticResource LabelStyle}"/>
+                    </Grid>
+                    <Grid Grid.Row="3" Grid.Column="3">
+                        <ComboBox x:Name="myComboPixelFormat" Style="{StaticResource CameraComboBoxStyle}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
+                    </Grid>
 
-                <Grid Grid.Row="4" Grid.Column="0">
-                    <Button x:Name="myBtCenterROI" Content="Center ROI" Style="{StaticResource ButtonS1Style}" HorizontalAlignment="Center" Click="myBtCenterROI_Click"/>
+                    <Grid Grid.Row="4" Grid.Column="0">
+                        <Button x:Name="myBtCenterROI" Content="Center ROI" Style="{StaticResource ButtonS1Style}" HorizontalAlignment="Center" Click="myBtCenterROI_Click"/>
+                    </Grid>
+                    <Grid Grid.Row="4" Grid.Column="1">
+                        <Button x:Name="myBtMaxSize" Content="Max Size" Style="{StaticResource ButtonS1Style}" HorizontalAlignment="Center" Click="myBtMaxSize_Click"/>
+                    </Grid>
+                    <Grid Grid.Row="4" Grid.Column="2">
+                        <Label Content="Binning Horizontal : " Style="{StaticResource LabelStyle}"/>
+                    </Grid>
+                    <Grid Grid.Row="4" Grid.Column="3">
+                        <ComboBox x:Name="myComboBinningHorizontal" Style="{StaticResource CameraComboBoxStyle}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
+                    </Grid>
+                    <Grid Grid.Row="5" Grid.Column="2">
+                        <Label Content="Binning Vertical : " Style="{StaticResource LabelStyle}"/>
+                    </Grid>
+                    <Grid Grid.Row="5" Grid.Column="3">
+                        <ComboBox x:Name="myComboBinningVertical" Style="{StaticResource CameraComboBoxStyle}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
+                    </Grid>
+                    <Grid Grid.Row="6" Grid.Column="0" >
+                        <Button x:Name="myBtColorMode" Content="Color Mode" Style="{StaticResource ButtonS1Style}" Width="84" Click="myBtColorMode_Click"/>
+                    </Grid>
+                    <Grid Grid.Row="6" Grid.Column="1" >
+                        <Button x:Name="myBtMonoMode" Content="Mono Mode" Style="{StaticResource ButtonS1Style}" Width="84" Click="myBtMonoMode_Click"/>
+                    </Grid>
+                    <Grid Grid.Row="6" Grid.Column="2">
+                        <Label Content="Gain (dB) : " Style="{StaticResource LabelStyle}"/>
+                    </Grid>
+                    <Grid Grid.Row="6" Grid.Column="3">
+                        <TextBox x:Name="myTbGain" Style="{StaticResource TextBoxM1Style}" HorizontalAlignment="Center" KeyDown="myTb_KeyDown"/>
+                    </Grid>
+                    <Grid Grid.Row="7" Grid.Column="0">
+                        <Label Content="Trigger Delay (us) : " Style="{StaticResource LabelStyle}"/>
+                    </Grid>
+                    <Grid Grid.Row="7" Grid.Column="1">
+                        <StackPanel Orientation="Vertical" VerticalAlignment="Center">
+                            <TextBox x:Name="myTbTriggerDelay" Style="{StaticResource TextBoxStyle}" HorizontalAlignment="Center" ToolTip="FrameStart trigger delay in microseconds, applied by Apply, Preview and Capture alike. Empty = leave the device value." KeyDown="myTb_KeyDown"/>
+                            <Label x:Name="myLbTriggerDelayRange" HorizontalAlignment="Center" Padding="0" FontSize="10" Foreground="#FF888888"/>
+                        </StackPanel>
+                    </Grid>
+                    <Grid Grid.Row="7" Grid.Column="2">
+                        <Label Content="ADC Bit Depth : " Style="{StaticResource LabelStyle}"/>
+                    </Grid>
+                    <Grid Grid.Row="7" Grid.Column="3">
+                        <ComboBox x:Name="myComboADCBitDepth" Style="{StaticResource CameraComboBoxStyle}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
+                    </Grid>
                 </Grid>
-                <Grid Grid.Row="4" Grid.Column="1">
-                    <Button x:Name="myBtMaxSize" Content="Max Size" Style="{StaticResource ButtonS1Style}" HorizontalAlignment="Center" Click="myBtMaxSize_Click"/>
+            </GroupBox>
+
+            <!-- Sensor and acquisition nodes the 14-field struct cannot carry. Every combo
+                 offers "(device default)" first: that entry stores nothing, so the node keeps
+                 whatever the device (or the start path) already had. -->
+            <GroupBox Header="Sensor / Acquisition" Margin="5">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="34"/>
+                        <RowDefinition Height="34"/>
+                        <RowDefinition Height="34"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="152"/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="152"/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+
+                    <Label Grid.Row="0" Grid.Column="0" Content="Exposure Auto : " Style="{StaticResource LabelStyle}"/>
+                    <ComboBox Grid.Row="0" Grid.Column="1" x:Name="myComboExposureAuto" Style="{StaticResource CameraComboBoxStyle}" HorizontalAlignment="Center"
+                              ToolTip="Anything but Off makes the exposure move under the board, so Preview and Capture refuse to start with it - Apply still writes it for tuning."
+                              SelectionChanged="myCombo_SelectionChanged"/>
+                    <Label Grid.Row="0" Grid.Column="2" Content="Sensor Shutter Mode : " Style="{StaticResource LabelStyle}"/>
+                    <ComboBox Grid.Row="0" Grid.Column="3" x:Name="myComboSensorShutterMode" Style="{StaticResource CameraComboBoxStyle}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
+
+                    <Label Grid.Row="1" Grid.Column="0" Content="Binning Selector : " Style="{StaticResource LabelStyle}"/>
+                    <ComboBox Grid.Row="1" Grid.Column="1" x:Name="myComboBinningSelector" Style="{StaticResource CameraComboBoxStyle}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
+                    <Label Grid.Row="1" Grid.Column="2" Content="ISP Enable : " Style="{StaticResource LabelStyle}"/>
+                    <ComboBox Grid.Row="1" Grid.Column="3" x:Name="myComboIspEnable" Style="{StaticResource CameraComboBoxStyle}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
+
+                    <Label Grid.Row="2" Grid.Column="0" Content="Binning H Mode : " Style="{StaticResource LabelStyle}"/>
+                    <ComboBox Grid.Row="2" Grid.Column="1" x:Name="myComboBinningHorizontalMode" Style="{StaticResource CameraComboBoxStyle}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
+                    <Label Grid.Row="2" Grid.Column="2" Content="Test Pattern : " Style="{StaticResource LabelStyle}"/>
+                    <ComboBox Grid.Row="2" Grid.Column="3" x:Name="myComboTestPattern" Style="{StaticResource CameraComboBoxStyle}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
+
+                    <Label Grid.Row="3" Grid.Column="0" Content="Binning V Mode : " Style="{StaticResource LabelStyle}"/>
+                    <ComboBox Grid.Row="3" Grid.Column="1" x:Name="myComboBinningVerticalMode" Style="{StaticResource CameraComboBoxStyle}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
+                    <Label Grid.Row="3" Grid.Column="2" Content="Acq. Burst Frame Count : " Style="{StaticResource LabelStyle}"/>
+                    <StackPanel Grid.Row="3" Grid.Column="3" Orientation="Vertical" VerticalAlignment="Center">
+                        <TextBox x:Name="myTbBurstFrameCount" Style="{StaticResource TextBoxM1Style}" HorizontalAlignment="Center"
+                                 ToolTip="Frames per FrameBurstStart trigger. Above 1 does not match one frame per FrameStart trigger, so a start reports it. Empty = leave the device value."
+                                 KeyDown="myTb_KeyDown"/>
+                        <Label x:Name="myLbBurstFrameCountRange" HorizontalAlignment="Center" Padding="0" FontSize="10" Foreground="#FF888888"/>
+                    </StackPanel>
+
+                    <Label Grid.Row="4" Grid.Column="0" Content="Device Link Throughput : " Style="{StaticResource LabelStyle}"/>
+                    <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center">
+                        <TextBox x:Name="myTbDeviceLinkThroughput" Style="{StaticResource TextBoxM1Style}" HorizontalAlignment="Center"
+                                 ToolTip="DeviceLinkThroughputLimit in bytes per second (the writable limit node, not the read-only reading). Empty = leave the device value."
+                                 KeyDown="myTb_KeyDown"/>
+                        <Label x:Name="myLbDeviceLinkThroughputRange" HorizontalAlignment="Center" Padding="0" FontSize="10" Foreground="#FF888888"/>
+                    </StackPanel>
+                    <TextBlock Grid.Row="4" Grid.Column="2" Grid.ColumnSpan="2" x:Name="myTbCapabilityNote" TextWrapping="Wrap"
+                               VerticalAlignment="Center" Margin="6,0,6,0" FontSize="11" Foreground="#FF888888"/>
                 </Grid>
-                <Grid Grid.Row="4" Grid.Column="2">
-                    <Label Content="Binning Horizontal : " Style="{StaticResource LabelStyle}"/>
+            </GroupBox>
+
+            <!-- Trigger nodes. These were code constants in setupHwTriggerSetting(); stating
+                 one here makes the preset its owner and the start path stops writing it. -->
+            <GroupBox Header="Trigger" Margin="5">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="34"/>
+                        <RowDefinition Height="34"/>
+                        <RowDefinition Height="34"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="152"/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="152"/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+
+                    <Label Grid.Row="0" Grid.Column="0" Content="Trigger Mode : " Style="{StaticResource LabelStyle}"/>
+                    <ComboBox Grid.Row="0" Grid.Column="1" x:Name="myComboTriggerMode" Style="{StaticResource CameraComboBoxStyle}" HorizontalAlignment="Center"
+                              ToolTip="Left at (device default) the start decides: On for Preview and a HW-trigger Capture, Off for a Normal capture. Stating it makes this preset the owner, and a start whose drive mode disagrees is refused instead of overwriting it."
+                              SelectionChanged="myCombo_SelectionChanged"/>
+                    <Label Grid.Row="0" Grid.Column="2" Content="Trigger Selector : " Style="{StaticResource LabelStyle}"/>
+                    <ComboBox Grid.Row="0" Grid.Column="3" x:Name="myComboTriggerSelector" Style="{StaticResource CameraComboBoxStyle}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
+
+                    <Label Grid.Row="1" Grid.Column="0" Content="Trigger Source : " Style="{StaticResource LabelStyle}"/>
+                    <ComboBox Grid.Row="1" Grid.Column="1" x:Name="myComboTriggerSource" Style="{StaticResource CameraComboBoxStyle}" HorizontalAlignment="Center"
+                              ToolTip="The board drives the camera on Line3. Anything else is reported before a Preview or HW-trigger Capture starts."
+                              SelectionChanged="myCombo_SelectionChanged"/>
+                    <Label Grid.Row="1" Grid.Column="2" Content="Trigger Overlap : " Style="{StaticResource LabelStyle}"/>
+                    <ComboBox Grid.Row="1" Grid.Column="3" x:Name="myComboTriggerOverlap" Style="{StaticResource CameraComboBoxStyle}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
+
+                    <Label Grid.Row="2" Grid.Column="0" Content="Trigger Activation : " Style="{StaticResource LabelStyle}"/>
+                    <ComboBox Grid.Row="2" Grid.Column="1" x:Name="myComboTriggerActivation" Style="{StaticResource CameraComboBoxStyle}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
                 </Grid>
-                <Grid Grid.Row="4" Grid.Column="3">
-                    <ComboBox x:Name="myComboBinningHorizontal" Style="{StaticResource ComboBoxM1Style}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
+            </GroupBox>
+
+            <!-- The four GPIO rows. LineSelector is only which row the editor shows; each row
+                 stores its own Mode/Source/Inverter, so switching the selector cannot carry one
+                 row's values onto another. -->
+            <GroupBox Header="GPIO Lines" Margin="5">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="34"/>
+                        <RowDefinition Height="34"/>
+                        <RowDefinition Height="34"/>
+                        <RowDefinition Height="34"/>
+                        <RowDefinition Height="34"/>
+                        <RowDefinition Height="34"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="80"/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+
+                    <Label Grid.Row="0" Grid.Column="1" Content="Line Mode" Style="{StaticResource LabelStyle}" HorizontalAlignment="Center"/>
+                    <Label Grid.Row="0" Grid.Column="2" Content="Line Source" Style="{StaticResource LabelStyle}" HorizontalAlignment="Center"/>
+                    <Label Grid.Row="0" Grid.Column="3" Content="Line Inverter" Style="{StaticResource LabelStyle}" HorizontalAlignment="Center"/>
+
+                    <Label Grid.Row="1" Grid.Column="0" Content="Line0" Style="{StaticResource LabelStyle}"/>
+                    <ComboBox Grid.Row="1" Grid.Column="1" x:Name="myComboLine0Mode" Style="{StaticResource CameraComboBoxStyle}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
+                    <ComboBox Grid.Row="1" Grid.Column="2" x:Name="myComboLine0Source" Style="{StaticResource CameraComboBoxStyle}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
+                    <ComboBox Grid.Row="1" Grid.Column="3" x:Name="myComboLine0Inverter" Style="{StaticResource CameraComboBoxStyle}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
+
+                    <Label Grid.Row="2" Grid.Column="0" Content="Line1" Style="{StaticResource LabelStyle}"/>
+                    <ComboBox Grid.Row="2" Grid.Column="1" x:Name="myComboLine1Mode" Style="{StaticResource CameraComboBoxStyle}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
+                    <ComboBox Grid.Row="2" Grid.Column="2" x:Name="myComboLine1Source" Style="{StaticResource CameraComboBoxStyle}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
+                    <ComboBox Grid.Row="2" Grid.Column="3" x:Name="myComboLine1Inverter" Style="{StaticResource CameraComboBoxStyle}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
+
+                    <Label Grid.Row="3" Grid.Column="0" Content="Line2" Style="{StaticResource LabelStyle}"/>
+                    <ComboBox Grid.Row="3" Grid.Column="1" x:Name="myComboLine2Mode" Style="{StaticResource CameraComboBoxStyle}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
+                    <ComboBox Grid.Row="3" Grid.Column="2" x:Name="myComboLine2Source" Style="{StaticResource CameraComboBoxStyle}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
+                    <ComboBox Grid.Row="3" Grid.Column="3" x:Name="myComboLine2Inverter" Style="{StaticResource CameraComboBoxStyle}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
+
+                    <Label Grid.Row="4" Grid.Column="0" Content="Line3" Style="{StaticResource LabelStyle}"/>
+                    <ComboBox Grid.Row="4" Grid.Column="1" x:Name="myComboLine3Mode" Style="{StaticResource CameraComboBoxStyle}" HorizontalAlignment="Center"
+                              ToolTip="Line3 carries the board trigger. Driving it as an output means no trigger reaches the camera, so a start reports it."
+                              SelectionChanged="myCombo_SelectionChanged"/>
+                    <ComboBox Grid.Row="4" Grid.Column="2" x:Name="myComboLine3Source" Style="{StaticResource CameraComboBoxStyle}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
+                    <ComboBox Grid.Row="4" Grid.Column="3" x:Name="myComboLine3Inverter" Style="{StaticResource CameraComboBoxStyle}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
+
+                    <Label Grid.Row="5" Grid.Column="0" Content="Selected : " Style="{StaticResource LabelStyle}"/>
+                    <ComboBox Grid.Row="5" Grid.Column="1" x:Name="myComboLineSelector" Style="{StaticResource CameraComboBoxStyle}" HorizontalAlignment="Center"
+                              ToolTip="Which row the camera's LineSelector is left on after the apply. It selects a row - it does not carry that row's values."
+                              SelectionChanged="myCombo_SelectionChanged"/>
+                    <Button Grid.Row="5" Grid.Column="3" x:Name="myBtReadFromCamera" Content="Read Camera" Style="{StaticResource ButtonS1Style}" Width="84"
+                            ToolTip="Read the extended nodes back from the camera into this preset. Nodes the camera cannot report are left as they are."
+                            Click="myBtReadFromCamera_Click"/>
                 </Grid>
-                <Grid Grid.Row="5" Grid.Column="2">
-                    <Label Content="Binning Vertical : " Style="{StaticResource LabelStyle}"/>
-                </Grid>
-                <Grid Grid.Row="5" Grid.Column="3">
-                    <ComboBox x:Name="myComboBinningVertical" Style="{StaticResource ComboBoxM1Style}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
-                </Grid>
-                <Grid Grid.Row="6" Grid.Column="0" >
-                    <Button x:Name="myBtColorMode" Content="Color Mode" Style="{StaticResource ButtonS1Style}" Click="myBtColorMode_Click"/>
-                </Grid>
-                <Grid Grid.Row="6" Grid.Column="1" >
-                    <Button x:Name="myBtMonoMode" Content="Mono Mode" Style="{StaticResource ButtonS1Style}" Click="myBtMonoMode_Click"/>
-                </Grid>
-                <Grid Grid.Row="6" Grid.Column="2">
-                    <Label Content="Gain (dB) : " Style="{StaticResource LabelStyle}"/>
-                </Grid>
-                <Grid Grid.Row="6" Grid.Column="3">
-                    <TextBox x:Name="myTbGain" Style="{StaticResource TextBoxM1Style}" HorizontalAlignment="Center" KeyDown="myTb_KeyDown"/>
-                </Grid>
-                <Grid Grid.Row="7" Grid.Column="2">
-                    <Label Content="ADC Bit Depth : " Style="{StaticResource LabelStyle}"/>
-                </Grid>
-                <Grid Grid.Row="7" Grid.Column="3">
-                    <ComboBox x:Name="myComboADCBitDepth" Style="{StaticResource ComboBoxM1Style}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
-                </Grid>
+            </GroupBox>
+
+            <!-- The hosting window owns Apply/Default/Close for the whole preset. -->
+            <Grid Visibility="Collapsed">
+                <StackPanel Orientation="Horizontal" FlowDirection="RightToLeft">
+                    <Button x:Name="myBtClose" Content="Close" Style="{StaticResource ButtonM1Style}" Margin="8" Click="myBtClose_Click" Visibility="Collapsed"/>
+                    <Button x:Name="myBtApply" Content="Apply" Style="{StaticResource ButtonM1Style}" Margin="8" Click="myBtApply_Click"/>
+                    <Button x:Name="myBtDefault" Content="Default" Style="{StaticResource ButtonM1Style}" Margin="8" Click="myBtDefault_Click"/>
+                </StackPanel>
             </Grid>
-        </GroupBox>
-        <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">
-            <StackPanel Orientation="Horizontal" FlowDirection="RightToLeft">
-                <Button x:Name="myBtClose" Content="Close" Style="{StaticResource ButtonM1Style}" Margin="8" Click="myBtClose_Click"/>
-                <Button x:Name="myBtApply" Content="Apply" Style="{StaticResource ButtonM1Style}" Margin="8" Click="myBtApply_Click"/>
-                <Button x:Name="myBtDefault" Content="Default" Style="{StaticResource ButtonM1Style}" Margin="8" Click="myBtDefault_Click"/>
-            </StackPanel>
-        </Grid>
-    </Grid>
-</Window>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

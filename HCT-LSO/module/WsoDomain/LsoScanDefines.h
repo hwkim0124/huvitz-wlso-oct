@@ -26,6 +26,14 @@ namespace wso_domain
 	    short yGalvoStartPos = 0;
 		short yGalvoEndPos = 0;
 
+		// Acceleration / deceleration ramps in samples, PC-side only (the board struct has
+		// no such field): the generator prepends leadIn samples running INTO yGalvoStartPos
+		// and appends leadOut samples running PAST yGalvoEndPos, so the linear sweep the
+		// camera exposes is sampleSize - leadIn - leadOut long. 0/0 = plain linear sweep.
+		// Same shape as DevKit LsoPatternForm.MakeLinearProfile.
+		unsigned short leadInSamples = 0;
+		unsigned short leadOutSamples = 0;
+
 	public:
 		LsoScannerControlParam() {
 

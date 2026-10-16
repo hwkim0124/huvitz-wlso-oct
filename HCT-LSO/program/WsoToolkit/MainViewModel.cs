@@ -53,9 +53,12 @@ namespace WsoToolkit
             _timer.Stop();
         }
 
+        // Native worker threads call this while CallbackRegistry holds its global mutex. A
+        // synchronous Invoke here deadlocks against a UI-thread native call that also logs
+        // (UI waits on the mutex, worker waits on the UI). Post and return immediately.
         private void CallbackWsoLogMessage(string msg, int type)
         {
-            Dispatcher.Invoke(() =>
+            Dispatcher.BeginInvoke(() =>
             {
                 _logMsgItems.Add(new LogMsgItem() { Message = msg, Type = type });
                 LogMsgListBox.ScrollIntoView(_logMsgItems[_logMsgItems.Count - 1]);

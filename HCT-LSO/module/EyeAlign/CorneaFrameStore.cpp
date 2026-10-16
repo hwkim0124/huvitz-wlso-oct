@@ -6,7 +6,7 @@ using namespace eye_align;
 
 
 CorneaFrameStore::CorneaFrameStore() :
-	slots_(), accepting_(false), wakeup_(false)
+	slots_(), accepting_(false), enabledMask_((1u << IR_CAMERA_COUNT) - 1u), wakeupRequested_(false)
 {}
 
 
@@ -24,44 +24,65 @@ bool eye_align::CorneaFrameStore::isAccepting(void) const
 	return accepting_;
 }
 
+void eye_align::CorneaFrameStore::setEnabledCameras(std::initializer_list<IrCameraId> cameras)
+{
+	unsigned int mask = 0;
+	for (const auto cameraId : cameras) {
+		const int index = static_cast<int>(cameraId);
+		if (index >= 0 && index < IR_CAMERA_COUNT) {
+			mask |= (1u << index);
+		}
+	}
+	enabledMask_ = mask;
+}
+
+bool eye_align::CorneaFrameStore::isCameraEnabled(IrCameraId cameraId) const
+{
+	const int index = static_cast<int>(cameraId);
+	if (index < 0 || index >= IR_CAMERA_COUNT) {
+		return false;
+	}
+	return (enabledMask_.load() & (1u << index)) != 0;
+}
+
 void eye_align::CorneaFrameStore::clear(void)
 {
-	lock_guard<mutex> lock(mutex_);
+	std::lock_guard<std::mutex> lock(mutex_);
 	for (auto& slot : slots_) {
 		slot.width = 0;
 		slot.height = 0;
-		slot.seq = 0;
-		slot.taken = 0;
+		slot.sequence = 0;
+		slot.takenSequence = 0;
 	}
 }
 
-void eye_align::CorneaFrameStore::push(IrCameraId camId, const std::uint8_t* bits, int width, int height)
+void eye_align::CorneaFrameStore::push(IrCameraId cameraId, const std::uint8_t* pixels, int width, int height)
 {
 	// Cheap early-out on the camera thread when nobody is aligning.
-	if (!accepting_ || bits == nullptr || width <= 0 || height <= 0) {
+	if (!accepting_ || pixels == nullptr || width <= 0 || height <= 0) {
 		return;
 	}
-	const int index = static_cast<int>(camId);
-	if (index < 0 || index >= NUM_IR_CAMERAS) {
+	const int index = static_cast<int>(cameraId);
+	if (index < 0 || index >= IR_CAMERA_COUNT || (enabledMask_.load() & (1u << index)) == 0) {
 		return;
 	}
 
 	{
-		lock_guard<mutex> lock(mutex_);
+		std::lock_guard<std::mutex> lock(mutex_);
 		Slot& slot = slots_[index];
 		const size_t size = static_cast<size_t>(width) * static_cast<size_t>(height);
-		slot.data.assign(bits, bits + size);
+		slot.data.assign(pixels, pixels + size);
 		slot.width = width;
 		slot.height = height;
-		slot.seq++;
+		slot.sequence++;
 	}
-	condVar_.notify_one();
+	frameCondition_.notify_one();
 }
 
-bool eye_align::CorneaFrameStore::anyNewFrameLocked(void) const
+bool eye_align::CorneaFrameStore::hasNewFrameLocked(void) const
 {
 	for (const auto& slot : slots_) {
-		if (slot.seq > slot.taken) {
+		if (slot.sequence > slot.takenSequence) {
 			return true;
 		}
 	}
@@ -70,38 +91,38 @@ bool eye_align::CorneaFrameStore::anyNewFrameLocked(void) const
 
 bool eye_align::CorneaFrameStore::waitForNewFrame(const std::atomic<bool>& stopFlag, int maxWaitMs)
 {
-	unique_lock<mutex> lock(mutex_);
-	condVar_.wait_for(lock, chrono::milliseconds(maxWaitMs), [&] {
-		return stopFlag.load() || wakeup_.load() || anyNewFrameLocked();
+	std::unique_lock<std::mutex> lock(mutex_);
+	frameCondition_.wait_for(lock, std::chrono::milliseconds(maxWaitMs), [&] {
+		return stopFlag.load() || wakeupRequested_.load() || hasNewFrameLocked();
 	});
-	wakeup_ = false;
-	return anyNewFrameLocked();
+	wakeupRequested_ = false;
+	return hasNewFrameLocked();
 }
 
-bool eye_align::CorneaFrameStore::takeLatest(IrCameraId camId, std::vector<std::uint8_t>& out, int& width, int& height, std::uint64_t& seq)
+bool eye_align::CorneaFrameStore::takeLatest(IrCameraId cameraId, std::vector<std::uint8_t>& outFrame, int& width, int& height, std::uint64_t& sequence)
 {
-	const int index = static_cast<int>(camId);
-	if (index < 0 || index >= NUM_IR_CAMERAS) {
+	const int index = static_cast<int>(cameraId);
+	if (index < 0 || index >= IR_CAMERA_COUNT) {
 		return false;
 	}
 
-	lock_guard<mutex> lock(mutex_);
+	std::lock_guard<std::mutex> lock(mutex_);
 	Slot& slot = slots_[index];
-	if (slot.seq == slot.taken || slot.width <= 0) {
+	if (slot.sequence == slot.takenSequence || slot.width <= 0) {
 		return false;
 	}
 	// Swap buffers: the consumer's previous buffer becomes the slot's next target and
 	// gets overwritten by assign() on the next push. No second copy.
-	out.swap(slot.data);
+	outFrame.swap(slot.data);
 	width = slot.width;
 	height = slot.height;
-	seq = slot.seq;
-	slot.taken = slot.seq;
+	sequence = slot.sequence;
+	slot.takenSequence = slot.sequence;
 	return true;
 }
 
 void eye_align::CorneaFrameStore::wake(void)
 {
-	wakeup_ = true;
-	condVar_.notify_all();
+	wakeupRequested_ = true;
+	frameCondition_.notify_all();
 }

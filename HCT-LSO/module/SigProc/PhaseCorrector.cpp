@@ -22,6 +22,7 @@ struct PhaseCorrector::PhaseCorrectorImpl
 
 	double phaseShiftOffset1 = 0.0;
 	double phaseShiftOffset2 = 0.0;
+	double phaseShiftValues[LINE_CAMERA_CCD_PIXELS];
 
 	int countOfPhaseShiftOptimized = 0;
 	int countOfTargetToPhaseShift = 0;
@@ -40,7 +41,8 @@ struct PhaseCorrector::PhaseCorrectorImpl
 	PhaseCorrectorImpl() 
 		: shiftParamsToRetina{ 0.0 }, shiftParamsToCornea{ 0.0 }, 
 			shiftValuesToRetina{ 0.0f }, shiftValuesToCornea{ 0.0f }, 
-		paramsOffsetToRetina{0.0f}, paramsOffsetToCornea{0.0f}
+		paramsOffsetToRetina{ 0.0f }, paramsOffsetToCornea{ 0.0f }, 
+		phaseShiftValues{ 0.0f }, waveNumbers{ 0.0f }, centerOfWavenumbers(0.0)
 	{
 	}
 };
@@ -215,7 +217,7 @@ void sig_proc::PhaseCorrector::updatePhaseShiftValuesToRetina(void)
 	double center = getImpl().centerOfWavenumbers;
 
 	double waveDiff;
-	double shiftVal[LINE_CAMERA_CCD_PIXELS];
+	double *shiftVal = getImpl().phaseShiftValues;
 
 	for (int i = 0; i < LINE_CAMERA_CCD_PIXELS; i++) {
 		waveDiff = getImpl().waveNumbers[i] - center;
@@ -236,7 +238,7 @@ void sig_proc::PhaseCorrector::updatePhaseShiftValuesToCornea(void)
 	double center = getImpl().centerOfWavenumbers;
 
 	double waveDiff;
-	double shiftVal[LINE_CAMERA_CCD_PIXELS];
+	double *shiftVal = getImpl().phaseShiftValues;
 
 	for (int i = 0; i < LINE_CAMERA_CCD_PIXELS; i++) {
 		waveDiff = getImpl().waveNumbers[i] - center;

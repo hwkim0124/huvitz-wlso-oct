@@ -326,16 +326,17 @@ bool wso_device::MainBoard::initiateBoardComponents(int* numWarns)
 	}
 
 	// return true;
-	if (!initiateRetinaCamera()) {
-		warns += 1;
-	}
-
+	// The retina IR camera is gone from the instrument: CAM3 runs on the color
+	// camera now, so there is nothing to bring up or probe here.
 	if (!initiateCorneaCamera()) {
 		warns += 1;
 	}
+
+	/*
 	if (!initiateColorCamera()) {
 		warns += 1;
 	}
+	*/
 	return true;
 }
 

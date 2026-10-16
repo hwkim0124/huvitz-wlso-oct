@@ -56,10 +56,11 @@ bool wso_system::Calibration::loadSystemCalibration(bool fetch, int region)
 	if (!loadDeviceConfigCalibration(fetch, region)) {
 		return false;
 	}
+
+	/*
 	if (!loadStepMotorsCalibration(fetch, region)) {
 		return false;
 	}
-	/*
 	if (!loadFactorySetup1Calibration(fetch, region)) {
 		return false;
 	}
@@ -87,10 +88,11 @@ bool wso_system::Calibration::saveSystemCalibration(bool write, int region)
 	if (!saveDeviceConfigCalibration(write, region)) {
 		return false;
 	}
+
+	/*
 	if (!saveStepMotorsCalibration(write, region)) {
 		return false;
 	}
-	/*
 	if (!saveFactorySetup1Calibration(write, region)) {
 		return false;
 	}
@@ -99,6 +101,26 @@ bool wso_system::Calibration::saveSystemCalibration(bool write, int region)
 	}
 	*/
 	return true;
+}
+
+namespace {
+	// Re-applying calibration must not switch a lamp on. In this device model the intensity IS
+	// the on/off state (turnLightOff() writes 0, isLightOn() == intensity > 0), so writing the
+	// calibrated value into a dark lamp both lights it and makes the Light Control panel report
+	// it as on at that value. Load the value, then put a lamp that was off back to off -
+	// turnLightOff() keeps the loaded value as the remembered one, so the next turn-on still
+	// uses the calibrated intensity.
+	void loadLightCalibKeepingState(wso_device::LightLed* led)
+	{
+		if (led == nullptr) {
+			return;
+		}
+		const bool wasOn = led->isLightOn();
+		led->loadCalibParamFromProfile();
+		if (!wasOn) {
+			led->turnLightOff();
+		}
+	}
 }
 
 bool wso_system::Calibration::applySystemCalibration(void)
@@ -136,10 +158,10 @@ bool wso_system::Calibration::applySystemCalibration(void)
 			board->getOctAntLensMotor()->loadCalibParamFromProfile();
 			board->getLsoFilterMotor()->loadCalibParamFromProfile();
 
-			board->getCorneaIrLeftLed()->loadCalibParamFromProfile();
-			board->getCorneaIrRightLed()->loadCalibParamFromProfile();
-			board->getRetinaIrLed()->loadCalibParamFromProfile();
-			board->getLsoWhiteLed()->loadCalibParamFromProfile();
+			loadLightCalibKeepingState(board->getCorneaIrLeftLed());
+			loadLightCalibKeepingState(board->getCorneaIrRightLed());
+			loadLightCalibKeepingState(board->getRetinaIrLed());
+			loadLightCalibKeepingState(board->getLsoWhiteLed());
 		}
 		return true;
 	}

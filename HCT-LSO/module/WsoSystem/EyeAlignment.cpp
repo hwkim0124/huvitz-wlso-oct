@@ -85,7 +85,9 @@ bool wso_system::EyeAlignment::applyConfiguration(void)
 {
 	if (auto* config = SystemConfig::getInstance(); config) {
 		if (auto* settings = config->getAlignmentSettings(); settings) {
-			EyeAligner::getInstance()->setConfig(*settings->getParam());
+			auto* aligner = EyeAligner::getInstance();
+			aligner->setConfig(*settings->getParam());
+			aligner->setModelConfig(settings->getModelConfig());
 			return true;
 		}
 	}

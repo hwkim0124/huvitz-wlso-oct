@@ -292,12 +292,19 @@ void wso_domain::CallbackRegistry::setEyeAlignEventOccurred(EyeAlignEventOccurre
 
 void wso_domain::CallbackRegistry::runWsoLogMsgCallback(string msg, int type)
 {
-	lock_guard<mutex> lock(singleMutex_);
-	if (impl().logMsgCallback) {
-		if (auto func = *impl().logMsgCallback; func) {
-			auto wmsg = atow(msg);
-			func(wmsg.c_str(), type);
+	// Copy the callback under the lock, invoke it outside: this sink runs on any thread
+	// (camera workers included) and re-enters managed code that may wait on the UI
+	// thread, which may itself be inside a native call that logs -> mutex/UI deadlock.
+	WsoLogMsgCallback func = nullptr;
+	{
+		lock_guard<mutex> lock(singleMutex_);
+		if (impl().logMsgCallback) {
+			func = *impl().logMsgCallback;
 		}
+	}
+	if (func) {
+		auto wmsg = atow(msg);
+		func(wmsg.c_str(), type);
 	}
 }
 

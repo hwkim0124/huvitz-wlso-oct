@@ -24,6 +24,7 @@ namespace wso_device
 
 	public:
 		bool initializeXstageMotor(void);
+		bool updatePositionToOrigin(int mode) override;
 
 		bool isAtPiPostion(void);
 

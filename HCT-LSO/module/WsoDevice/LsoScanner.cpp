@@ -3,6 +3,9 @@
 #include "MainBoard.h"
 #include "UsbComm.h"
 
+#include <algorithm>
+#include <vector>
+
 using namespace wso_device;
 using namespace wso_board;
 
@@ -15,6 +18,8 @@ struct LsoScanner::LsoScannerImpl
 	unsigned int ctrlStatus = 0;
 	unsigned int acqCnt = 0;
 	lso_scan_profile_st scanProfile[8] = {};
+	// Empty = generate the linear sweep. Set through setCustomTrajectory().
+	std::vector<short> customTrajectory[LSO_SCANNER_PATTERN_NUM_MAX];
 
 	LsoScannerImpl() : board(nullptr), initiated(false) {
 	}
@@ -152,17 +157,52 @@ bool wso_device::LsoScanner::submitControlParameters(int patternId, const LsoSca
 			traj.led_off_pos_index = param->ledOffPosIndex;
 			traj.led_on_pos_index = param->ledOnPosIndex;
 
-			auto startPos = param->yGalvoStartPos;;
+			auto startPos = param->yGalvoStartPos;
 			auto endPos = param->yGalvoEndPos;
 			auto sampleSize = param->sampleSize;
-			generateGalvanoPositions(startPos, endPos, sampleSize, traj.pos);
+			const auto& custom = impl().customTrajectory[patternId];
+			if (!custom.empty()) {
+				if (custom.size() != static_cast<std::size_t>(sampleSize)) {
+					LogDebug() << "Lso scanner custom trajectory of slot " << patternId << " has "
+						<< custom.size() << " samples but the profile sampleSize is " << sampleSize
+						<< " - profile not written.";
+					return false;
+				}
+				std::fill_n(traj.pos, (int)MAX_LSO_DAC_SAMPLE_SIZE, 0);
+				std::copy(custom.begin(), custom.end(), traj.pos);
+			}
+			else {
+				generateGalvanoPositions(startPos, endPos, sampleSize,
+					param->leadInSamples, param->leadOutSamples, traj.pos);
+			}
 
-			if (data->saveLsoScannerParam()) {
+			// Slot-scoped write: only traj_profile[patternId] goes out, so submitting a scan
+			// profile no longer rewrites the board's capture-status header or the sibling
+			// slots from this process's copy. Matches the DevKit upload path
+			// (LsoScanFormUnified.WriteLsoPatternToDevice).
+			if (data->saveLsoScannerProfile(patternId)) {
 				return true;
 			}
 		}
 	}
 	return false;
+}
+
+bool wso_device::LsoScanner::setCustomTrajectory(int patternId, const short* pos, int count)
+{
+	if (patternId < 0 || patternId >= LSO_SCANNER_PATTERN_NUM_MAX) {
+		return false;
+	}
+	auto& custom = impl().customTrajectory[patternId];
+	if (pos == nullptr || count <= 0) {
+		custom.clear();
+		return true;
+	}
+	if (count > LSO_SCANNER_SAMPLE_SIZE_MAX) {
+		return false;
+	}
+	custom.assign(pos, pos + count);
+	return true;
 }
 
 bool wso_device::LsoScanner::obtainCaptureParameters(int patternId, LsoScannerCaptureParam* param)
@@ -233,6 +273,34 @@ bool wso_device::LsoScanner::controlYGalvoMove(int ypos)
 		return false;
 	}
 	LogD() << "Lso scanner, control y galvo moved to pos: " << ypos;
+	return true;
+}
+
+
+bool wso_device::LsoScanner::controlScanSequence(int seqMode, int preMoveOffset, int preMoveDelayUs)
+{
+	if (!impl().initiated) {
+		return false;
+	}
+
+	// Anything other than GALVANO_FIRST is TRIG_FIRST, and TRIG_FIRST has no pre-move:
+	// the board starts the sweep from the trigger, so sending a stale offset would park
+	// the mirror away from the sweep start for no reason.
+	const std::uint8_t mode = (seqMode == 1) ? 1 : 0;
+	const std::int16_t offset = (mode == 1)
+		? static_cast<std::int16_t>(std::clamp(preMoveOffset, -32768, 32767))
+		: static_cast<std::int16_t>(0);
+	const std::uint16_t delayUs = (mode == 1)
+		? static_cast<std::uint16_t>(std::clamp(preMoveDelayUs, 0, 65535))
+		: static_cast<std::uint16_t>(0);
+
+	UsbComm& usbComm = getMainBoard()->getUsbComm();
+	if (!usbComm.LsoScanSequence(mode, offset, delayUs)) {
+		LogD() << "Lso scanner, scan sequence failed!, mode=" << (int)mode;
+		return false;
+	}
+	LogD() << "Lso scanner, scan sequence set: mode=" << (int)mode
+		<< ", preMoveOffset=" << offset << ", preMoveDelayUs=" << delayUs;
 	return true;
 }
 
@@ -407,6 +475,43 @@ bool wso_device::LsoScanner::generateGalvanoPositions(short startPos, short endP
 		double value = startPos + step * double(i);
 		coords[i] = static_cast<short int>(std::round(value));
 	}
+	return true;
+}
+
+// Three-segment trajectory: [leadIn ramp into start][linear start->end][leadOut ramp past end].
+// Ramp slope equals the sweep slope, so the mirror is already at constant velocity when it
+// reaches startPos and the camera exposure (LED on/off indices) can sit inside the linear
+// part only. Falls back to the plain linear sweep when the ramps do not fit - identical
+// rule to DevKit MakeLinearProfile, so a profile tuned there reproduces here byte-for-byte.
+bool wso_device::LsoScanner::generateGalvanoPositions(short startPos, short endPos, int sampleSize,
+	int leadInSamples, int leadOutSamples, short* coords)
+{
+	if (sampleSize <= 0 || sampleSize >= LSO_SCANNER_SAMPLE_SIZE_MAX || coords == nullptr) {
+		return false;
+	}
+
+	const int active = sampleSize - leadInSamples - leadOutSamples;
+	if (leadInSamples <= 0 || leadOutSamples < 0 || active <= 0) {
+		return generateGalvanoPositions(startPos, endPos, sampleSize, coords);
+	}
+
+	const double step = double(endPos - startPos) / double(active);
+	auto clampShort = [](double v) {
+		return static_cast<short>(std::max(-32768.0, std::min(32767.0, std::round(v))));
+	};
+
+	std::fill_n(coords, (int)LSO_SCANNER_SAMPLE_SIZE_MAX, 0);
+
+	for (int i = 0; i < leadInSamples; ++i) {
+		coords[i] = clampShort(startPos - step * double(leadInSamples - i));
+	}
+	for (int i = 0; i < active; ++i) {
+		coords[leadInSamples + i] = clampShort(startPos + step * double(i));
+	}
+	for (int i = 0; i < leadOutSamples; ++i) {
+		coords[leadInSamples + active + i] = clampShort(endPos + step * double(i));
+	}
+	coords[leadInSamples + active - 1] = endPos;
 	return true;
 }
 

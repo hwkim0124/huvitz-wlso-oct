@@ -12,7 +12,7 @@ bool WSOANALYTICS_DLL_API __stdcall wso_analytics::initializeWsoAnalytics(void)
 	WsoLogDebug("WsoAnalytics initialized.");
 	CvImage image;
 	TrajectoryProfile profile;
-	CameraSetting camset;
+	//CameraSetting camset;
 	FT_HANDLE ftHandle;
 	Spinnaker::SystemPtr systemPtr;
 	return true;

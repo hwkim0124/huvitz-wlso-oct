@@ -11,7 +11,7 @@ namespace wso_system
 	{
 		// Eye Alignment (EyeAlign module)
 		///////////////////////////////////////////////////////////////////////////////////////////
-		// mode: EyeAlignMode, eyeSide: EyeSide (used by SINGLE / MANUAL; FULL forces OD).
+		// mode: EyeAlignMode, eyeSide: EyeSide (used by AUTO / MANUAL; FULL forces OD).
 		// Returns an EyeAlignResult code: 0 (NONE) on success, otherwise the refusal reason.
 		int WSOSYSTEM_DLL_API __stdcall startEyeAlignment(int mode, int eyeSide, EyeAlignEventOccurred clbEvent);
 		// Stops every axis and ends the run with ALIGN_CANCELLED(USER_CANCEL). Blocks until

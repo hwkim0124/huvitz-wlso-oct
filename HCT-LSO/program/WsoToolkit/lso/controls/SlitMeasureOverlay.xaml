@@ -1,0 +1,9 @@
+<UserControl x:Class="WsoToolkit.controls.SlitMeasureOverlay"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="Transparent"
+             SizeChanged="UserControl_SizeChanged">
+    <!-- Transparent background so the whole area is hit-testable while measuring; the
+         parent viewport grid gates hit-testing, this control never blocks on its own. -->
+    <Canvas x:Name="myCanvas" ClipToBounds="True"/>
+</UserControl>

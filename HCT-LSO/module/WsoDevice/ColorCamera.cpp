@@ -1,16 +1,94 @@
 #include "pch.h"
 #include "ColorCamera.h"
+#include "ColorCameraApplySequence.h"
 #include "MainBoard.h"
 #include "Spinnaker.h"
 
 #include <format>
 #include <chrono> // steady clock
+#include <stdexcept>
 
 
 using namespace wso_device;
 
 using namespace Spinnaker;
 using namespace std::chrono; // steady clock
+
+
+namespace
+{
+	const char* geometryNodeName_(wso_device::detail::CameraGeometryNode node)
+	{
+		using wso_device::detail::CameraGeometryNode;
+		switch (node) {
+		case CameraGeometryNode::Width: return "Width";
+		case CameraGeometryNode::Height: return "Height";
+		case CameraGeometryNode::OffsetX: return "OffsetX";
+		case CameraGeometryNode::OffsetY: return "OffsetY";
+		case CameraGeometryNode::BinningHorizontal: return "BinningHorizontal";
+		case CameraGeometryNode::BinningVertical: return "BinningVertical";
+		}
+		return "UnknownGeometryNode";
+	}
+
+	bool applyCameraGeometry_(const Spinnaker::CameraPtr& camera,
+		const wso_device::detail::ColorCameraGeometryTarget& requested,
+		wso_device::detail::ColorCameraGeometryTarget* applied = nullptr)
+	{
+		using namespace Spinnaker::GenApi;
+		using wso_device::detail::CameraGeometryNode;
+		using wso_device::detail::CameraIntegerRange;
+
+		INodeMap& map = camera->GetNodeMap();
+		auto readRange = [&](CameraGeometryNode id, CameraIntegerRange& range) {
+			const char* name = geometryNodeName_(id);
+			try {
+				CIntegerPtr node = map.GetNode(name);
+				if (!IsAvailable(node) || !IsReadable(node)) {
+					WsoLogError(std::string("[CAM-GEO] ") + name + " range is not readable");
+					return false;
+				}
+				range.minimum = node->GetMin();
+				range.maximum = node->GetMax();
+				range.increment = node->GetInc() > 0 ? node->GetInc() : 1;
+				return true;
+			}
+			catch (const std::exception& e) {
+				WsoLogError(std::string("[CAM-GEO] ") + name + " range read failed: " + e.what());
+				return false;
+			}
+		};
+		auto write = [&](CameraGeometryNode id, long long value) {
+			const char* name = geometryNodeName_(id);
+			try {
+				CIntegerPtr node = map.GetNode(name);
+				if (!IsAvailable(node) || !IsReadable(node)) {
+					WsoLogError(std::string("[CAM-GEO] ") + name + " is not readable");
+					return false;
+				}
+				if (node->GetValue() != value) {
+					if (!IsWritable(node)) {
+						WsoLogError(std::string("[CAM-GEO] ") + name + " is not writable");
+						return false;
+					}
+					node->SetValue(value);
+				}
+				if (node->GetValue() != value) {
+					WsoLogError(std::string("[CAM-GEO] ") + name + " read-back mismatch");
+					return false;
+				}
+				return true;
+			}
+			catch (const std::exception& e) {
+				WsoLogError(std::string("[CAM-GEO] ") + name + " write failed: " + e.what());
+				return false;
+			}
+		};
+
+		return wso_device::detail::runColorCameraGeometryApply(
+			requested, write, readRange, applied);
+	}
+}
 
 
 class ColorCameraDeviceEventHandler : public Spinnaker::DeviceEventHandler
@@ -60,6 +138,15 @@ struct ColorCamera::ColorCameraImpl
 	atomic<bool> originalMode;
 	atomic<bool> captureMode{ false };
 	atomic<bool> captureCancel{ false };
+	// True from the first node write in setupHwTriggerSetting() until the HW-specific
+	// device state is put back. Teardown restores only what HW mode installed, so a
+	// Normal capture keeps issuing exactly the node writes it issued before.
+	atomic<bool> hwTriggerInstalled{ false };
+	// FrameStart trigger delay as it was before startTriggeredLiveMode() wrote the preview's
+	// value. Only that path writes TriggerDelay, so the flag keeps every other teardown
+	// (Normal capture, HW capture) from inventing a value for a node it never touched.
+	atomic<bool> hasSavedTriggerDelay{ false };
+	atomic<double> savedTriggerDelayUs{ 0.0 };
 	thread worker;
 
 	int nOffsetFrameCount = 0;
@@ -268,7 +355,7 @@ void wso_device::ColorCamera::setInitParameters()
 			impl().getCamera()->PixelFormat.SetValue(PixelFormat_BayerRG8);
 
 			// Set AcquisitionMode to Multiframe as Temporarily
-			impl().getCamera()->AcquisitionMode.SetValue(AcquisitionMode_MultiFrame); // Exposure Auto, Gain Auto, BalanceWhite Auto Off ?????? ???? ??��? 
+			impl().getCamera()->AcquisitionMode.SetValue(AcquisitionMode_MultiFrame); // Exposure Auto, Gain Auto, BalanceWhite Auto Off ?????? ???? ????? 
 
 			// Set Exposure time
 			impl().getCamera()->ExposureAuto.SetValue(ExposureAuto_Off);
@@ -379,20 +466,27 @@ bool wso_device::ColorCamera::setDefaultParameters(bool update)
 			impl().getCamera()->DeviceIndicatorMode.SetValue(DeviceIndicatorMode_Inactive);
 			WsoLogDebug("Color Camera Set Indicator LED...ok!");
 
-			// Set Image Size
-			impl().getCamera()->OffsetX.SetValue(0);
-			impl().getCamera()->OffsetY.SetValue(0);
-			impl().getCamera()->Width.SetValue(4000);
-			impl().getCamera()->Height.SetValue(3000);
-			impl().getCamera()->OffsetX.SetValue(736);
-			impl().getCamera()->OffsetY.SetValue(324);
-			WsoLogDebug("Color Camera Set ImageSize...ok!");
+			// Pixel format is part of the dependency-sensitive geometry transition. A
+			// previous session may have persisted Mono8 + 2x2, where WidthMax is only
+			// 2736, so make the live ROI harmless before resetting binning and only then
+			// apply the startup window against the new live node ranges.
+			impl().getCamera()->PixelFormat.SetValue(PixelFormat_BayerRG8);
+			const detail::ColorCameraGeometryTarget startupGeometry{
+				1, 1, 4000, 3000, 736, 324
+			};
+			detail::ColorCameraGeometryTarget appliedGeometry;
+			if (!applyCameraGeometry_(impl().getCamera(), startupGeometry, &appliedGeometry)) {
+				throw std::runtime_error("startup camera geometry apply failed");
+			}
+			WsoLogDebug("Color Camera Set ImageSize bin=1x1 roi="
+				+ std::to_string(appliedGeometry.width) + "x" + std::to_string(appliedGeometry.height)
+				+ "+" + std::to_string(appliedGeometry.offsetX)
+				+ "+" + std::to_string(appliedGeometry.offsetY) + "...ok!");
 
 			// Set Acquisition mode SingleFrame
 			//impl().getCamera()->ReverseX.SetValue(false);
 			//impl().getCamera()->ReverseY.SetValue(true);	// Horizontal Flip
 			//impl().getCamera()->PixelFormat.SetValue(PixelFormat_BayerRG16);
-			impl().getCamera()->PixelFormat.SetValue(PixelFormat_BayerRG8);
 			impl().getCamera()->AcquisitionMode.SetValue(AcquisitionMode_Continuous);
 			WsoLogDebug("Color Camera Set AcquisitionMode...ok!");
 
@@ -467,6 +561,81 @@ void wso_device::ColorCamera::startLiveMode(void)
 	setupCameraTriggerOnOffOnly(false);
 
 	impl().worker = thread{ &ColorCamera::acquireCameraData, this };
+}
+
+bool wso_device::ColorCamera::startTriggeredLiveMode(unsigned int triggerDelayUs, unsigned int armTimeoutMs,
+	bool triggerAlreadyInstalled)
+{
+	if (!isInitiated()) {
+		WsoLogError("[COLOR-PRV] triggered live start refused: camera not initiated");
+		return false;
+	}
+	if (impl().liveMode || impl().captureMode) {
+		WsoLogError("[COLOR-PRV] triggered live start refused: a live/capture session is active");
+		return false;
+	}
+
+	// Claimed before the first node write so a concurrent start is refused above, and so
+	// the failure paths below can hand it straight back.
+	impl().liveMode = true;
+
+	try {
+		// triggerAlreadyInstalled: the caller applied the preset's own trigger, GPIO and
+		// TriggerDelay values through applyFullSettings and verified every one of them.
+		// Re-running the hardcoded setup here would replace exactly those stated values,
+		// which is the overwrite A-1 exists to remove - so this path only arms.
+		if (!triggerAlreadyInstalled) {
+			if (!setupHwTriggerSetting()) {
+				impl().liveMode = false;
+				abortCaptureFrames();	// puts back whatever the half-done setup installed
+				return false;
+			}
+
+			// The DevKit camera configs carry TriggerDelay (288us for both preview and capture)
+			// and setupHwTriggerSetting() does not write it, so it is applied - and remembered -
+			// here rather than by widening the shared trigger setup.
+			if (Spinnaker::GenApi::IsWritable(impl().getCamera()->TriggerDelay)) {
+				if (Spinnaker::GenApi::IsReadable(impl().getCamera()->TriggerDelay)) {
+					impl().savedTriggerDelayUs = impl().getCamera()->TriggerDelay.GetValue();
+					impl().hasSavedTriggerDelay = true;
+				}
+				impl().getCamera()->TriggerDelay.SetValue((double)triggerDelayUs);
+			}
+			else {
+				WsoLogInfo("[COLOR-PRV] TriggerDelay is not writable on this camera - requested "
+					+ std::to_string(triggerDelayUs) + "us not applied");
+			}
+		}
+		else {
+			WsoLogInfo("[COLOR-PRV] trigger configuration was installed by the preset apply - arming only");
+		}
+
+		impl().getCamera()->BeginAcquisition();
+
+		// Bounded arm verification BEFORE the caller starts the board: a trigger that
+		// arrives while the camera is not waiting for it is simply lost.
+		if (!waitUntilTriggerArmed(armTimeoutMs)) {
+			impl().liveMode = false;
+			abortCaptureFrames();
+			return false;
+		}
+
+		WsoLogInfo("[COLOR-PRV] triggered live armed (delayUs=" + std::to_string(triggerDelayUs)
+			+ " armBudgetMs=" + std::to_string(armTimeoutMs) + ")");
+
+		impl().worker = thread{ &ColorCamera::acquireCameraTriggeredLiveData, this };
+		return true;
+	}
+	catch (const std::exception& e) {
+		WsoLogError("[COLOR-PRV] triggered live start failed: " + std::string(e.what()));
+		impl().liveMode = false;
+		try {
+			abortCaptureFrames();
+		}
+		catch (...) {
+		}
+		return false;
+	}
 }
 
 void wso_device::ColorCamera::pauseLiveMode(void)
@@ -757,7 +926,7 @@ void wso_device::ColorCamera::startHwTriggerLiveMode(void)
 
 	impl().liveMode = true;
 
-	setupHwTriggerSetting(false);
+	setupHwTriggerSetting();
 
 	impl().worker = thread{ &ColorCamera::acquireCameraRollHwTriggerCaptureData, this };
 	return;
@@ -794,13 +963,16 @@ bool wso_device::ColorCamera::isCameraStreaming(void)
 	return impl().pCam->IsStreaming();
 }
 
-void wso_device::ColorCamera::setupHwTriggerSetting(bool bContinuous)
+bool wso_device::ColorCamera::setupHwTriggerSetting(void)
 {
 	try {
 		// 1. Acquisition ???
 		if (impl().getCamera()->IsStreaming()) {
 			impl().getCamera()->EndAcquisition();
 		}
+		// Mark before the first write: a setup that fails halfway still needs teardown.
+		impl().hwTriggerInstalled = true;
+		impl().getCamera()->TriggerMode.SetValue(TriggerMode_Off);
 
 		// 6. Trigger Selector ???? (Frame Start)
 		impl().getCamera()->TriggerSelector.SetValue(TriggerSelector_FrameStart);
@@ -816,36 +988,50 @@ void wso_device::ColorCamera::setupHwTriggerSetting(bool bContinuous)
 
 		// 4. LineSelector?? Line2?? ????
 		impl().getCamera()->LineSelector.SetValue(LineSelector_Line2);
+		impl().getCamera()->LineSource.SetValue(LineSource_Off);
 
 		// 4. LineMode?? Output?? ????
 		impl().getCamera()->LineMode.SetValue(LineMode_Output);
 
 		// 4. LineSource?? Output?? ????
 		impl().getCamera()->LineSource.SetValue(LineSource_ExposureActive);
+		impl().getCamera()->LineInverter.SetValue(false);
 
 		// 4. LineSelector?? Line2?? ????
 		impl().getCamera()->LineSelector.SetValue(LineSelector_Line3);
 
 		// 4. LineMode?? Output?? ????
 		impl().getCamera()->LineMode.SetValue(LineMode_Input);
+		impl().getCamera()->LineInverter.SetValue(false);
 
 		// 5. Acquisition Mode ???? (Continuous ??? MultiFrame)
-		//if (bContinuous)
-		//	impl().getCamera()->AcquisitionMode.SetValue(AcquisitionMode_Continuous);
-		//else
-		//	impl().getCamera()->AcquisitionMode.SetValue(AcquisitionMode_MultiFrame);
+		impl().getCamera()->AcquisitionMode.SetValue(AcquisitionMode_Continuous);
+		impl().getCamera()->ExposureAuto.SetValue(ExposureAuto_Off);
 
 		// 2. Trigger Mode ????
 		impl().getCamera()->TriggerMode.SetValue(TriggerMode_On);
 
+		// Select the acquisition state that waitUntilTriggerArmed() polls while the node is
+		// still writable - BeginAcquisition() locks configuration nodes.
+		if (Spinnaker::GenApi::IsWritable(impl().getCamera()->AcquisitionStatusSelector)) {
+			impl().getCamera()->AcquisitionStatusSelector.SetValue(AcquisitionStatusSelector_FrameTriggerWait);
+		}
+		else {
+			// Measured on this instrument: the camera does not implement this SFNC feature at
+			// all. Informational, not an error - waitUntilTriggerArmed() skips the check.
+			WsoLogInfo("[COLOR-CAP] AcquisitionStatusSelector unavailable on this camera");
+		}
+
 		WsoLogInfo("Hardware trigger setup completed");
+		return true;
 	}
 	catch (const std::exception& e) {
 		WsoLogError("Exception occurred during hardware trigger setup: " + std::string(e.what()));
+		return false;
 	}
 }
 
-void wso_device::ColorCamera::setupCameraTriggerOnOffOnly(bool bOn)
+bool wso_device::ColorCamera::setupCameraTriggerOnOffOnly(bool bOn)
 {
 	try
 	{
@@ -861,11 +1047,20 @@ void wso_device::ColorCamera::setupCameraTriggerOnOffOnly(bool bOn)
 		else
 		{
 			impl().getCamera()->TriggerMode.SetValue(TriggerMode_Off);
+			// Normal/free-run must not inherit the HW capture's ExposureActive output, even
+			// if the HW session that installed it never reached its own teardown. The same
+			// applies to the triggered preview's FrameStart trigger delay.
+			impl().getCamera()->LineSelector.SetValue(LineSelector_Line2);
+			impl().getCamera()->LineSource.SetValue(LineSource_Off);
+			impl().hwTriggerInstalled = false;
+			restoreTriggerDelay_();
 			//WsoLogInfo("Camera trigger mode : Off");
 		}
+		return true;
 	}
 	catch (const std::exception& e) {
 		WsoLogError("Exception occurred during to change camera trigger mode : " + std::string(e.what()));
+		return false;
 	}
 }
 
@@ -892,31 +1087,201 @@ void wso_device::ColorCamera::pauseOriginalMode(void)
 	impl().originalMode = false;
 }
 
+bool wso_device::ColorCamera::beginCaptureFrames(bool hwTrigger, bool triggerAlreadyInstalled)
+{
+	if (!isInitiated() || impl().liveMode || impl().captureMode) {
+		return false;
+	}
+
+	// Cancellation is NOT cleared here. This runs on the capture worker, so clearing it
+	// erased a stop that arrived between the accepted start and the worker actually
+	// starting - the capture then ran to completion and the stop call blocked on it.
+	// armCaptureSession() owns the clear, on the starting thread, under the caller's lock.
+	impl().captureMode = true;
+
+	try {
+		// With the trigger already installed and verified by the preset apply, writing the
+		// hardcoded setup again would discard the operator's stated values - and for a
+		// Normal capture it would also drop a Line2 strobe the preset deliberately set.
+		const bool configured = triggerAlreadyInstalled
+			? true
+			: (hwTrigger ? setupHwTriggerSetting() : setupCameraTriggerOnOffOnly(false));
+		if (!configured) {
+			abortCaptureFrames();
+			return false;
+		}
+
+		impl().getCamera()->BeginAcquisition();
+		return true;
+	}
+	catch (const std::exception& e) {
+		WsoLogError("[COLOR-CAP] begin acquisition failed: " + std::string(e.what()));
+		abortCaptureFrames();
+		return false;
+	}
+}
+
+bool wso_device::ColorCamera::waitUntilTriggerArmed(unsigned int timeoutMs)
+{
+	try {
+		auto camera = impl().getCamera();
+		const bool streaming = camera->IsStreaming();
+		const bool selectorWritable = Spinnaker::GenApi::IsWritable(camera->AcquisitionStatusSelector);
+		const bool statusReadable = Spinnaker::GenApi::IsReadable(camera->AcquisitionStatus);
+
+		if (!streaming) {
+			WsoLogError("[COLOR-CAP] camera is not streaming, cannot verify trigger arming");
+			return false;
+		}
+
+		// Measured on this instrument: AcquisitionStatus / AcquisitionStatusSelector are not
+		// implemented by this camera (selectorWritable=0, statusReadable=0 both before and after
+		// BeginAcquisition). The HW spec's closed-loop arming pre-condition therefore cannot be
+		// evaluated here. Failing the capture for that would block a capture the hardware can
+		// actually perform, which is exactly what the pre-T2 path did anyway (it polled
+		// IsStreaming and started the scanner regardless). So: report it and proceed unverified.
+		if (!statusReadable) {
+			WsoLogInfo("[COLOR-CAP] AcquisitionStatus unsupported on this camera"
+				" (selectorWritable=" + std::to_string(selectorWritable ? 1 : 0)
+				+ ") - trigger arming NOT verified, proceeding");
+			return true;
+		}
+		if (selectorWritable) {
+			camera->AcquisitionStatusSelector.SetValue(AcquisitionStatusSelector_FrameTriggerWait);
+		}
+		const auto started = steady_clock::now();
+		const auto deadline = started + milliseconds(timeoutMs);
+		do {
+			if (camera->AcquisitionStatus.GetValue()) {
+				const auto ms = duration_cast<milliseconds>(steady_clock::now() - started).count();
+				WsoLogInfo("[COLOR-CAP] FrameTriggerWait armed in " + std::to_string(ms) + "ms");
+				return true;
+			}
+			std::this_thread::sleep_for(milliseconds(1));
+		} while (steady_clock::now() < deadline && !impl().captureCancel);
+
+		// Source order is already spec-correct here, so a timeout means the device did not
+		// report the state. Log what the camera actually says so the next run tells us whether
+		// this is a budget problem or a node that never becomes true on this model.
+		std::string diag = "[COLOR-CAP] FrameTriggerWait readiness timed out after "
+			+ std::to_string(timeoutMs) + "ms";
+		diag += impl().captureCancel ? " (cancelled)" : "";
+		try {
+			diag += " streaming=" + std::to_string(camera->IsStreaming() ? 1 : 0);
+			if (Spinnaker::GenApi::IsReadable(camera->TriggerMode)) {
+				diag += " triggerMode=" + std::string(camera->TriggerMode.ToString().c_str());
+			}
+			if (Spinnaker::GenApi::IsReadable(camera->TriggerSource)) {
+				diag += " triggerSource=" + std::string(camera->TriggerSource.ToString().c_str());
+			}
+			if (Spinnaker::GenApi::IsReadable(camera->AcquisitionMode)) {
+				diag += " acqMode=" + std::string(camera->AcquisitionMode.ToString().c_str());
+			}
+			if (selectorWritable) {
+				camera->AcquisitionStatusSelector.SetValue(AcquisitionStatusSelector_AcquisitionActive);
+				diag += " acquisitionActive=" + std::to_string(camera->AcquisitionStatus.GetValue() ? 1 : 0);
+			}
+		}
+		catch (const std::exception& e) {
+			diag += " (diag read failed: " + std::string(e.what()) + ")";
+		}
+		WsoLogError(diag);
+		return false;
+	}
+	catch (const std::exception& e) {
+		WsoLogError("[COLOR-CAP] FrameTriggerWait readiness failed: " + std::string(e.what()));
+		return false;
+	}
+}
+
+// Ends the acquisition and puts back the per-mode device state this class installed, so
+// the next capture starts from the same camera state regardless of which mode ran before.
+// What HW mode installs and what happens to it here:
+//  - TriggerMode=On            -> set back to Off (below); everything TriggerSelector /
+//                                 TriggerSource / TriggerActivation / TriggerOverlap
+//                                 configures only acts while TriggerMode is On.
+//  - Line2 LineSource=ExposureActive -> set back to Off (below). This is the only installed
+//                                 node that drives a pin with TriggerMode Off, and Off is
+//                                 the only value this module ever writes to LineSource.
+//  - TriggerDelay              -> put back to the value read before the triggered preview
+//                                 overwrote it (restoreTriggerDelay_). Only that path
+//                                 writes the node, so for a capture this is a no-op.
+//  - Line2 LineMode=Output, ExposureAuto=Off -> left as-is: setDefaultParameters() installs
+//                                 exactly these values at init, so they are not drift.
+//  - AcquisitionMode=Continuous -> left as-is: every capture start re-applies AND re-verifies
+//                                 it through setCameraSettingsChecked(), so it self-heals.
+//  - Line3 LineMode=Input, Line2/Line3 LineInverter=false -> left as-is: no other write site
+//                                 for these exists in this module, so there is no in-code
+//                                 baseline to restore, and Input drives nothing. Picking a
+//                                 value here would be firmware speculation.
+void wso_device::ColorCamera::abortCaptureFrames(void)
+{
+	if (!isInitiated()) {
+		impl().captureMode = false;
+		return;
+	}
+
+	try {
+		if (impl().getCamera()->IsStreaming()) {
+			impl().getCamera()->EndAcquisition();
+		}
+		if (impl().getCamera()->TriggerMode.GetValue() == TriggerMode_On) {
+			impl().getCamera()->TriggerMode.SetValue(TriggerMode_Off);
+		}
+		if (impl().hwTriggerInstalled) {
+			impl().getCamera()->LineSelector.SetValue(LineSelector_Line2);
+			impl().getCamera()->LineSource.SetValue(LineSource_Off);
+			impl().hwTriggerInstalled = false;
+		}
+		restoreTriggerDelay_();
+	}
+	catch (const std::exception& e) {
+		WsoLogError("[COLOR-CAP] acquisition cleanup failed: " + std::string(e.what()));
+	}
+	impl().captureMode = false;
+}
+
+// Only startTriggeredLiveMode() writes TriggerDelay, and it records the previous value
+// first. Without that record there is no in-code baseline to restore, so this does
+// nothing rather than pick one.
+void wso_device::ColorCamera::restoreTriggerDelay_(void)
+{
+	if (!impl().hasSavedTriggerDelay) {
+		return;
+	}
+	impl().hasSavedTriggerDelay = false;
+	try {
+		if (Spinnaker::GenApi::IsWritable(impl().getCamera()->TriggerDelay)) {
+			impl().getCamera()->TriggerDelay.SetValue(impl().savedTriggerDelayUs);
+		}
+	}
+	catch (const std::exception& e) {
+		WsoLogError("[COLOR-PRV] trigger delay restore failed: " + std::string(e.what()));
+	}
+}
+
 // Capture one-call worker body: bounded, cancellable acquisition. Modeled on
 // acquireCameraCaptureData(), but reports how it ended instead of running silently.
-// Runs on the caller's thread (the capture one-call calls it from its worker).
-int wso_device::ColorCamera::acquireCaptureFrames(int* framesAcquired)
+// Runs on the caller's thread (the capture one-call calls it from its worker), and
+// requires a successful beginCaptureFrames() first - the acquisition is already running
+// when this is entered. totalFrameCount is the caller's bound (device readback for
+// Normal, the requested count for the Continuous HW-trigger stream); hwTrigger only
+// selects the per-image wait budget. Always ends in abortCaptureFrames().
+int wso_device::ColorCamera::acquireCaptureFrames(int* framesAcquired, unsigned int totalFrameCount, bool hwTrigger)
 {
 	if (framesAcquired) {
 		*framesAcquired = 0;
 	}
 
-	if (!isInitiated()) {
+	if (!isInitiated() || !impl().captureMode) {
+		abortCaptureFrames();
 		return wso_domain::CAP_STAGE_CAMERA;
 	}
-	if (impl().liveMode || impl().captureMode) {
-		return wso_domain::CAP_STAGE_BUSY;
-	}
-
-	impl().captureCancel = false;
-	impl().captureMode = true;
 
 	int result = wso_domain::CAP_STAGE_OK;
 	int frames = 0;
 
 	try {
-		setupCameraTriggerOnOffOnly(false);
-
 		uint32_t width = getFrameWidth();
 		uint32_t height = getFrameHeight();
 		int nPixelFormat = impl().getCamera()->PixelFormat.GetValue();
@@ -924,29 +1289,22 @@ int wso_device::ColorCamera::acquireCaptureFrames(int* framesAcquired)
 		uint32_t frameSize = getFrameSizeForBpp(nBytesPerPixel);
 		unsigned char* buffer = impl().sonyFrameBuffer;
 
-		uint32_t nTotalFrameCount;
-		if (getAcquisitionMode() == AcquisitionMode_SingleFrame) {
-			nTotalFrameCount = 1;
-		}
-		else {
-			nTotalFrameCount = (uint32_t)impl().getCamera()->AcquisitionFrameCount.GetValue();
-		}
-
 		WsoLogInfo("[COLOR-CAP] begin pf=" + std::to_string(nPixelFormat)
 			+ " w=" + std::to_string(width) + " h=" + std::to_string(height)
-			+ " total=" + std::to_string(nTotalFrameCount));
-
-		impl().getCamera()->BeginAcquisition();
+			+ " total=" + std::to_string(totalFrameCount));
 
 		int consecutiveTimeouts = 0;
-		for (uint32_t frameCount = 0; frameCount < nTotalFrameCount;) {
+		const unsigned int imageTimeoutMs = hwTrigger
+			? getExposureTime() / 1000U + 200U
+			: 1000U;
+		for (uint32_t frameCount = 0; frameCount < totalFrameCount;) {
 			if (impl().captureCancel) {
 				result = wso_domain::CAP_STAGE_CANCELLED;
 				break;
 			}
 
 			try {
-				impl().rawImage = impl().getCamera()->GetNextImage(1000);
+				impl().rawImage = impl().getCamera()->GetNextImage(imageTimeoutMs);
 			}
 			catch (const Spinnaker::Exception&) {
 				// Timeout or transient read fault: re-check cancel, retry a few times.
@@ -963,24 +1321,23 @@ int wso_device::ColorCamera::acquireCaptureFrames(int* framesAcquired)
 			}
 			consecutiveTimeouts = 0;
 
-			std::memcpy(buffer, impl().rawImage->GetData(), frameSize);
-			{
+			try {
+				std::memcpy(buffer, impl().rawImage->GetData(), frameSize);
 				unique_lock<mutex> lock(impl().mutexLock);
-				CallbackRegistry::getInstance()->runColorCameraImageCaptured(buffer, width, height, frameCount, nTotalFrameCount, getFlipMode(), nPixelFormat, nBytesPerPixel);
+				CallbackRegistry::getInstance()->runColorCameraImageCaptured(buffer, width, height, frameCount, totalFrameCount, getFlipMode(), nPixelFormat, nBytesPerPixel);
 			}
+			catch (...) {
+				impl().rawImage->Release();
+				throw;
+			}
+			impl().rawImage->Release();
 			++frameCount;
 			++frames;
 		}
 
-		impl().getCamera()->EndAcquisition();
 	}
 	catch (const std::exception& e) {
 		WsoLogError("[COLOR-CAP] exception: " + std::string(e.what()));
-		try {
-			impl().getCamera()->EndAcquisition();
-		}
-		catch (...) {
-		}
 		result = wso_domain::CAP_STAGE_CAMERA;
 	}
 	catch (...) {
@@ -988,12 +1345,21 @@ int wso_device::ColorCamera::acquireCaptureFrames(int* framesAcquired)
 		result = wso_domain::CAP_STAGE_CAMERA;
 	}
 
-	impl().captureMode = false;
+	abortCaptureFrames();
 	if (framesAcquired) {
 		*framesAcquired = frames;
 	}
 	WsoLogInfo("[COLOR-CAP] end result=" + std::to_string(result) + " frames=" + std::to_string(frames));
 	return result;
+}
+
+// Begins a capture session: the ONE place that clears cancellation. The capture exports
+// call it on the starting thread while they hold their capture-state lock, so a stop can
+// only land before it (and is then cleared by the new session) or after it (and is then
+// observed). Clearing it anywhere on the worker loses that ordering.
+void wso_device::ColorCamera::armCaptureSession(void)
+{
+	impl().captureCancel = false;
 }
 
 void wso_device::ColorCamera::cancelCaptureFrames(void)
@@ -1065,34 +1431,66 @@ ColorCameraSettingParam& wso_device::ColorCamera::getCameraSettings(void)
 
 void wso_device::ColorCamera::setCameraSettings(ColorCameraSettingParam params)
 {
+	setCameraSettings_(params, true);
+}
+
+void wso_device::ColorCamera::setCameraSettings_(ColorCameraSettingParam params, bool applyGain)
+{
 	try
 	{
-		/////?????? Width, Height ???? ??��? offset ???? ?????? ?????? ??????, o???? 0,0???? ?????? ???? ???????.
-		// ���� �߿�(���� ���� �ݿ�): �� ī�޶�� Mono8 ���� binning �ּҰ� 2 �̰�,
-		// binning �� ���� ROI(Width/Height) �ִ밡 �޶�����(bin2 ���� Width max=2736, bin1 ���� 5472).
-		// ���� (1) pixelFormat ���� ? Mono8 �� 'binning>=2' ������ ���� ����(��: Bayer �� ��ȯ)
-		//        (2) binning     ? Bayer ������ 1 ���
-		//        (3) binning Ȯ�� �� ROI ? Width/Height max �� ��ǥ binning �� ����
-		// �� ������� Mono8/bin2 �� Bayer/bin1 ��ȯ���� OutOfRange(Width 3648>2736, Binning 1<2) ���� �����Ѵ�.
-		setPixelFormat(params.pixelFormat);
-		setBinningHorizontal(params.binningHorizontal);
-		setBinningVertical(params.binningVertical);
+		/////?????? Width, Height ???? ????? offset ???? ?????? ?????? ??????, o???? 0,0???? ?????? ???? ???????.
+		// ???? ???(???? ???? ???): ?? ????? Mono8 ???? binning ???? 2 ???,
+		// binning ?? ???? ROI(Width/Height) ??�N ???????(bin2 ???? Width max=2736, bin1 ???? 5472).
+		// ???? (1) pixelFormat ???? ? Mono8 ?? 'binning>=2' ?????? ???? ????(??: Bayer ?? ???)
+		//        (2) binning     ? Bayer ?????? 1 ???
+		//        (3) binning ??? ?? ROI ? Width/Height max ?? ??? binning ?? ????
+		// ?? ??????? Mono8/bin2 ?? Bayer/bin1 ??????? OutOfRange(Width 3648>2736, Binning 1<2) ???? ???????.
+		// Each write is guarded on its own. One refused node used to abort the whole
+		// sequence through the single catch below, so a locked ExposureTime (which is what
+		// ExposureAuto On makes it) silently skipped the acquisition mode, frame count, gain
+		// and ADC depth that follow it - and the caller was then told the ROI had mismatched.
+		// A step that cannot be written is logged and the rest still runs; the read-back
+		// verification in setCameraSettingsChecked is what decides success.
+		auto step = [](const char* what, auto&& write) {
+			try {
+				write();
+			}
+			catch (const std::exception& e) {
+				WsoLogError(std::string("[SET] ") + what + " not applied: " + e.what());
+			}
+		};
 
-		// Width/Height ���� �� ���� offset �� ������ ��� �� ������ offset �� ���� 0 ���� �ʱ�ȭ.
-		setROI_X_Offset(0);
-		setROI_Y_Offset(0);
-		setROI_X_Width(params.roi_x_width);
-		setROI_Y_Height(params.roi_y_height);
-		setROI_X_Offset(params.roi_x_offset);
-		setROI_Y_Offset(params.roi_y_offset);
+		step("PixelFormat", [&] { setPixelFormat(params.pixelFormat); });
+		const detail::ColorCameraGeometryTarget geometry{
+			params.binningHorizontal, params.binningVertical,
+			params.roi_x_width, params.roi_y_height,
+			params.roi_x_offset, params.roi_y_offset
+		};
+		if (!applyCameraGeometry_(impl().getCamera(), geometry)) {
+			WsoLogError("[SET] dependency-safe binning/ROI geometry was not applied");
+		}
 
-		setExposureTime(params.exposure_time);
-		setAcquisitionMode(params.acqusitionMode);
-		setAcquisitionFrameCount(params.acqusitionFrameCount);
-		setGain(params.gain);
-		setAdcBitDepth(params.adcDepthIndex);
+		// The manual exposure is NOT forced while the camera is metering for itself:
+		// ExposureAuto Once/Continuous makes the node read-only, and writing it anyway is
+		// both an exception and the "Auto 중 수동 노출값 강제 덮어쓰기" the A-1 spec forbids.
+		// Whoever wants manual control sets ExposureAuto Off - that is a separate, explicit
+		// field in the preset, not something this write decides on their behalf.
+		if (IsWritable(impl().getCamera()->ExposureTime)) {
+			step("ExposureTime", [&] { setExposureTime(params.exposure_time); });
+		}
+		else {
+			WsoLogInfo("[SET] ExposureTime is not writable (ExposureAuto is on?) - the requested "
+				+ std::to_string(params.exposure_time) + "us was not forced");
+		}
 
-		// [�ӽ� ����] ��û�� vs ���� ���밪. ���� �� ����.
+		step("AcquisitionMode", [&] { setAcquisitionMode(params.acqusitionMode); });
+		step("AcquisitionFrameCount", [&] { setAcquisitionFrameCount(params.acqusitionFrameCount); });
+		if (applyGain) {
+			step("Gain", [&] { setGain(params.gain); });
+		}
+		step("AdcBitDepth", [&] { setAdcBitDepth(params.adcDepthIndex); });
+
+		// [??? ????] ??u?? vs ???? ???�S. ???? ?? ????.
 		WsoLogInfo("[SET] req pf=" + std::to_string(params.pixelFormat) + " binH=" + std::to_string(params.binningHorizontal)
 			+ " -> now pf=" + std::to_string(getPixelFormat()) + " binH=" + std::to_string(getBinningHorizontal())
 			+ " binV=" + std::to_string(getBinningVertical()));
@@ -1121,7 +1519,12 @@ void wso_device::ColorCamera::setCameraSettings(ColorCameraSettingParam params)
 
 bool wso_device::ColorCamera::setCameraSettingsChecked(const ColorCameraSettingParam& params)
 {
-	setCameraSettings(params);
+	return setCameraSettingsChecked_(params, true);
+}
+
+bool wso_device::ColorCamera::setCameraSettingsChecked_(const ColorCameraSettingParam& params, bool applyGain)
+{
+	setCameraSettings_(params, applyGain);
 
 	try {
 		bool ok = getPixelFormat() == params.pixelFormat
@@ -1155,6 +1558,791 @@ bool wso_device::ColorCamera::setCameraSettingsChecked(const ColorCameraSettingP
 	}
 	catch (const std::exception& e) {
 		WsoLogError("[COLOR-CAP] settings verify exception: " + std::string(e.what()));
+		return false;
+	}
+	catch (...) {
+		return false;
+	}
+}
+
+// --- A-1 extended configuration: capability, apply, read-back -------------------------
+// Values travel as GenApi SYMBOLIC names, so nothing here depends on the SDK's integer
+// enum values (which differ per model and per release) and nothing hardcodes a list of
+// "supported" entries: the camera's own node map answers what exists.
+namespace
+{
+	using namespace Spinnaker::GenApi;
+	using namespace wso_domain;
+
+	void copyName_(char* dst, const char* src)
+	{
+		if (dst == nullptr) { return; }
+		if (src == nullptr) { dst[0] = '\0'; return; }
+		strncpy_s(dst, LSO_CAMERA_NAME_MAX, src, _TRUNCATE);
+	}
+
+	void copyNumber_(char* dst, double value)
+	{
+		char buf[LSO_CAMERA_NAME_MAX] = {};
+		snprintf(buf, sizeof(buf), "%.6g", value);
+		copyName_(dst, buf);
+	}
+
+	// A field is only a claim when it is non-empty. An ABI field may use all 32 bytes
+	// without a terminator, so every read of one is bounded by the field width.
+	bool stated_(const char* name)
+	{
+		return name != nullptr && name[0] != '\0';
+	}
+
+	std::string fieldText_(const char* field)
+	{
+		size_t n = 0;
+		while (n < (size_t)LSO_CAMERA_NAME_MAX && field[n] != '\0') { ++n; }
+		return std::string(field, n);
+	}
+
+	ColorCameraFieldResult* beginRow_(ColorCameraApplyResult* r, const char* node, const char* requested)
+	{
+		if (r == nullptr || r->fieldCount >= LSO_CAMERA_FIELD_MAX) { return nullptr; }
+		ColorCameraFieldResult& row = r->fields[r->fieldCount++];
+		copyName_(row.node, node);
+		copyName_(row.requested, requested);
+		row.actual[0] = '\0';
+		row.status = CAM_FIELD_NOT_REQUESTED;
+		return &row;
+	}
+
+	int finishRow_(ColorCameraApplyResult* r, ColorCameraFieldResult* row, int status, const char* actual)
+	{
+		if (row != nullptr) {
+			row->status = status;
+			copyName_(row->actual, actual);
+		}
+		if (r != nullptr && status != CAM_FIELD_APPLIED && status != CAM_FIELD_NOT_REQUESTED) {
+			++r->failedCount;
+		}
+		return status;
+	}
+
+	// Writes one enum node by symbolic name and verifies the read-back.
+	// "node absent", "entry not implemented", "not writable now", "write refused" and
+	// "read-back differs" are five different answers, and the caller needs all five: only
+	// the first two mean "this camera cannot do it".
+	int applyEnumNode_(INodeMap& map, const char* nodeName, const char* value, ColorCameraApplyResult* r)
+	{
+		if (!stated_(value)) { return CAM_FIELD_NOT_REQUESTED; }
+
+		const std::string requested = fieldText_(value);
+		ColorCameraFieldResult* row = beginRow_(r, nodeName, requested.c_str());
+		try {
+			CEnumerationPtr node = map.GetNode(nodeName);
+			if (!IsAvailable(node) || !IsReadable(node)) {
+				return finishRow_(r, row, CAM_FIELD_UNSUPPORTED, "node not implemented");
+			}
+
+			CEnumEntryPtr entry = node->GetEntryByName(requested.c_str());
+			if (!IsAvailable(entry) || !IsReadable(entry)) {
+				return finishRow_(r, row, CAM_FIELD_UNSUPPORTED, "entry not implemented");
+			}
+
+			CEnumEntryPtr current = node->GetCurrentEntry();
+			const bool already = IsReadable(current)
+				&& requested == std::string(current->GetSymbolic().c_str());
+			if (!already) {
+				if (!IsWritable(node)) {
+					return finishRow_(r, row, CAM_FIELD_LOCKED, "not writable in this state");
+				}
+				node->SetIntValue(entry->GetValue());
+			}
+
+			current = node->GetCurrentEntry();
+			if (!IsReadable(current)) {
+				return finishRow_(r, row, CAM_FIELD_MISMATCH, "value not readable back");
+			}
+			const std::string actual(current->GetSymbolic().c_str());
+			return finishRow_(r, row, actual == requested ? CAM_FIELD_APPLIED : CAM_FIELD_MISMATCH,
+				actual.c_str());
+		}
+		catch (const std::exception& e) {
+			WsoLogError(std::string("[CAM-EXT] ") + nodeName + " write failed: " + e.what());
+			return finishRow_(r, row, CAM_FIELD_WRITE_FAILED, "SDK refused the write");
+		}
+	}
+
+	// Integer node. The value is clamped into the device's range and aligned down to its
+	// increment first, and the read-back is compared against THAT target - not against the
+	// raw request. A device that quantised the value did what was asked of it as closely as
+	// it can, so the row is ADJUSTED (reported, not fatal); only a read-back that does not
+	// match the target the write aimed at is a MISMATCH.
+	int applyIntNode_(INodeMap& map, const char* nodeName, long long value, ColorCameraApplyResult* r)
+	{
+		if (value < 0) { return CAM_FIELD_NOT_REQUESTED; }
+
+		char requested[LSO_CAMERA_NAME_MAX] = {};
+		snprintf(requested, sizeof(requested), "%lld", value);
+		ColorCameraFieldResult* row = beginRow_(r, nodeName, requested);
+		try {
+			CIntegerPtr node = map.GetNode(nodeName);
+			if (!IsAvailable(node) || !IsReadable(node)) {
+				return finishRow_(r, row, CAM_FIELD_UNSUPPORTED, "node not implemented");
+			}
+
+			long long target = value;
+			const long long lo = node->GetMin();
+			const long long hi = node->GetMax();
+			const long long inc = node->GetInc() > 0 ? node->GetInc() : 1;
+			if (target < lo) { target = lo; }
+			if (target > hi) { target = hi; }
+			target -= ((target - lo) % inc);
+
+			// Already holding it: nothing to write, so a node locked in this state is not a
+			// problem - the camera is what the caller asked it to be.
+			if (node->GetValue() != target) {
+				if (!IsWritable(node)) {
+					return finishRow_(r, row, CAM_FIELD_LOCKED, "not writable in this state");
+				}
+				node->SetValue(target);
+			}
+
+			const long long actual = node->GetValue();
+			char actualText[LSO_CAMERA_NAME_MAX] = {};
+			snprintf(actualText, sizeof(actualText), "%lld", actual);
+			if (actual != target) {
+				return finishRow_(r, row, CAM_FIELD_MISMATCH, actualText);
+			}
+			return finishRow_(r, row, (target == value) ? CAM_FIELD_APPLIED : CAM_FIELD_ADJUSTED, actualText);
+		}
+		catch (const std::exception& e) {
+			WsoLogError(std::string("[CAM-EXT] ") + nodeName + " write failed: " + e.what());
+			return finishRow_(r, row, CAM_FIELD_WRITE_FAILED, "SDK refused the write");
+		}
+	}
+
+	// Float node. Same rule as the integer path: clamp into range first, compare the
+	// read-back against that target, and report a clamp as ADJUSTED rather than as a
+	// failure. The device quantises to its own increment, so the comparison carries that
+	// increment as its tolerance, and the reported actual is always the device's value.
+	int applyFloatNode_(INodeMap& map, const char* nodeName, double value, ColorCameraApplyResult* r,
+		double* previousValue)
+	{
+		if (value < 0.0) { return CAM_FIELD_NOT_REQUESTED; }
+
+		char requested[LSO_CAMERA_NAME_MAX] = {};
+		snprintf(requested, sizeof(requested), "%.6g", value);
+		ColorCameraFieldResult* row = beginRow_(r, nodeName, requested);
+		try {
+			CFloatPtr node = map.GetNode(nodeName);
+			if (!IsAvailable(node) || !IsReadable(node)) {
+				return finishRow_(r, row, CAM_FIELD_UNSUPPORTED, "node not implemented");
+			}
+
+			const double before = node->GetValue();
+			if (previousValue != nullptr) { *previousValue = before; }
+
+			const double lo = node->GetMin();
+			const double hi = node->GetMax();
+			const double target = detail::clampCameraFloat(value, lo, hi);
+			const double inc = (node->HasInc() && node->GetInc() > 0.0) ? node->GetInc() : 0.0;
+
+			// Already holding it: skip the write, exactly as the enum, integer and boolean
+			// helpers do. Without this a camera that has the right value but reports the
+			// node locked in this state fails a start that would have been fine.
+			if (!detail::cameraFloatReadbackMatches(target, before, inc)) {
+				if (!IsWritable(node)) {
+					return finishRow_(r, row, CAM_FIELD_LOCKED, "not writable in this state");
+				}
+				node->SetValue(target);
+			}
+
+			const double actual = node->GetValue();
+			char actualText[LSO_CAMERA_NAME_MAX] = {};
+			snprintf(actualText, sizeof(actualText), "%.6g", actual);
+
+			if (!detail::cameraFloatReadbackMatches(target, actual, inc)) {
+				return finishRow_(r, row, CAM_FIELD_MISMATCH, actualText);
+			}
+			return finishRow_(r, row, detail::cameraFloatReadbackMatches(value, actual, inc)
+				? CAM_FIELD_APPLIED : CAM_FIELD_ADJUSTED, actualText);
+		}
+		catch (const std::exception& e) {
+			WsoLogError(std::string("[CAM-EXT] ") + nodeName + " write failed: " + e.what());
+			return finishRow_(r, row, CAM_FIELD_WRITE_FAILED, "SDK refused the write");
+		}
+	}
+
+	int applyBoolNode_(INodeMap& map, const char* nodeName, int value, ColorCameraApplyResult* r)
+	{
+		if (value < 0) { return CAM_FIELD_NOT_REQUESTED; }
+
+		const bool target = (value != 0);
+		ColorCameraFieldResult* row = beginRow_(r, nodeName, target ? "true" : "false");
+		try {
+			CBooleanPtr node = map.GetNode(nodeName);
+			if (!IsAvailable(node) || !IsReadable(node)) {
+				return finishRow_(r, row, CAM_FIELD_UNSUPPORTED, "node not implemented");
+			}
+			if (node->GetValue() != target) {
+				if (!IsWritable(node)) {
+					return finishRow_(r, row, CAM_FIELD_LOCKED, "not writable in this state");
+				}
+				node->SetValue(target);
+			}
+			const bool actual = node->GetValue();
+			return finishRow_(r, row, actual == target ? CAM_FIELD_APPLIED : CAM_FIELD_MISMATCH,
+				actual ? "true" : "false");
+		}
+		catch (const std::exception& e) {
+			WsoLogError(std::string("[CAM-EXT] ") + nodeName + " write failed: " + e.what());
+			return finishRow_(r, row, CAM_FIELD_WRITE_FAILED, "SDK refused the write");
+		}
+	}
+
+	// What counts as "the camera is now what the caller asked for". ADJUSTED is included:
+	// the write succeeded and the device holds the nearest value it can, which is a
+	// configuration it can actually run. It still shows up in the result table with the
+	// requested and actual values side by side, so it is reported, never silent.
+	bool rowOk_(int status)
+	{
+		return status == CAM_FIELD_APPLIED
+			|| status == CAM_FIELD_NOT_REQUESTED
+			|| status == CAM_FIELD_ADJUSTED;
+	}
+
+	// Current symbolic value of an enum node, or "" when it cannot be read. A snapshot
+	// built from this therefore states only what could actually be read back, so restoring
+	// it never invents a value for a node this module cannot see.
+	void readEnumNode_(INodeMap& map, const char* nodeName, char* dst)
+	{
+		dst[0] = '\0';
+		try {
+			CEnumerationPtr node = map.GetNode(nodeName);
+			if (!IsAvailable(node) || !IsReadable(node)) { return; }
+			CEnumEntryPtr current = node->GetCurrentEntry();
+			if (!IsReadable(current)) { return; }
+			copyName_(dst, current->GetSymbolic().c_str());
+		}
+		catch (const std::exception&) {
+		}
+	}
+
+	long long readIntNode_(INodeMap& map, const char* nodeName)
+	{
+		try {
+			CIntegerPtr node = map.GetNode(nodeName);
+			if (!IsAvailable(node) || !IsReadable(node)) { return -1; }
+			return node->GetValue();
+		}
+		catch (const std::exception&) {
+			return -1;
+		}
+	}
+
+	double readFloatNode_(INodeMap& map, const char* nodeName)
+	{
+		try {
+			CFloatPtr node = map.GetNode(nodeName);
+			if (!IsAvailable(node) || !IsReadable(node)) { return -1.0; }
+			return node->GetValue();
+		}
+		catch (const std::exception&) {
+			return -1.0;
+		}
+	}
+
+	int readBoolNode_(INodeMap& map, const char* nodeName)
+	{
+		try {
+			CBooleanPtr node = map.GetNode(nodeName);
+			if (!IsAvailable(node) || !IsReadable(node)) { return -1; }
+			return node->GetValue() ? 1 : 0;
+		}
+		catch (const std::exception&) {
+			return -1;
+		}
+	}
+
+	void lineName_(char* dst, int index)
+	{
+		snprintf(dst, LSO_CAMERA_NAME_MAX, "Line%d", index);
+	}
+}
+
+bool wso_device::ColorCamera::applyExtendedSettings(const ColorCameraExtendedParam& params,
+	ColorCameraApplyResult* result)
+{
+	if (result != nullptr) {
+		result->structSize = (unsigned int)sizeof(ColorCameraApplyResult);
+		result->version = LSO_CAMERA_CONFIG_VERSION;
+		result->fieldCount = 0;
+		result->failedCount = 0;
+	}
+	return applyExtendedInto_(params, result);
+}
+
+bool wso_device::ColorCamera::applyExtendedInto_(const ColorCameraExtendedParam& params,
+	ColorCameraApplyResult* result)
+{
+	if (!isInitiated()) {
+		return false;
+	}
+	if (params.structSize != (unsigned int)sizeof(ColorCameraExtendedParam)
+		|| params.version != LSO_CAMERA_CONFIG_VERSION) {
+		WsoLogError("[CAM-EXT] extended parameter ABI mismatch - nothing applied");
+		return false;
+	}
+
+	bool ok = true;
+	try {
+		INodeMap& map = impl().getCamera()->GetNodeMap();
+
+		// 1) Trigger off first. Everything structural below is locked while the camera is
+		//    armed, and a half-written trigger configuration must never be live.
+		//    Only done when this block actually states a trigger value: a preset that says
+		//    nothing about the trigger must not disturb the mode the caller set up.
+		const bool touchesTrigger = stated_(params.triggerMode) || stated_(params.triggerSource)
+			|| stated_(params.triggerActivation) || stated_(params.triggerSelector)
+			|| stated_(params.triggerOverlap) || params.triggerDelayUs >= 0.0;
+		if (touchesTrigger) {
+			try {
+				CEnumerationPtr mode = map.GetNode("TriggerMode");
+				if (IsAvailable(mode) && IsWritable(mode)) {
+					CEnumEntryPtr off = mode->GetEntryByName("Off");
+					if (IsAvailable(off) && IsReadable(off)) {
+						mode->SetIntValue(off->GetValue());
+					}
+				}
+			}
+			catch (const std::exception& e) {
+				WsoLogError("[CAM-EXT] pre-apply TriggerMode Off failed: " + std::string(e.what()));
+			}
+		}
+
+		// 2) Sensor / acquisition group.
+		ok &= rowOk_(applyEnumNode_(map, "ExposureAuto", params.exposureAuto, result));
+		ok &= rowOk_(applyEnumNode_(map, "BinningSelector", params.binningSelector, result));
+		ok &= rowOk_(applyEnumNode_(map, "BinningHorizontalMode", params.binningHorizontalMode, result));
+		ok &= rowOk_(applyEnumNode_(map, "BinningVerticalMode", params.binningVerticalMode, result));
+		ok &= rowOk_(applyEnumNode_(map, "SensorShutterMode", params.sensorShutterMode, result));
+		ok &= rowOk_(applyBoolNode_(map, "IspEnable", params.ispEnable, result));
+		ok &= rowOk_(applyEnumNode_(map, "TestPattern", params.testPattern, result));
+		ok &= rowOk_(applyIntNode_(map, "AcquisitionBurstFrameCount", params.acquisitionBurstFrameCount, result));
+		// The writable limit node, NOT the read-only DeviceLinkThroughput reading - the two
+		// are easy to confuse and only one of them is a setting.
+		ok &= rowOk_(applyIntNode_(map, "DeviceLinkThroughputLimit", params.deviceLinkThroughput, result));
+
+		// 3) GPIO lines. Each row is selected, its source dropped to Off first (a line whose
+		//    source is driving cannot change mode), then mode/source/inverter. The selector
+		//    is restored afterwards, so editing one row never leaves another row's value
+		//    behind the selector the operator sees.
+		bool touchedLines = false;
+		for (int i = 0; i < LSO_CAMERA_LINE_COUNT; ++i) {
+			const ColorCameraLineConfig& line = params.lines[i];
+			if (!stated_(line.mode) && !stated_(line.source) && line.inverter < 0) {
+				continue;
+			}
+			touchedLines = true;
+
+			char selector[LSO_CAMERA_NAME_MAX] = {};
+			lineName_(selector, i);
+			const int selectStatus = applyEnumNode_(map, "LineSelector", selector, result);
+			ok &= rowOk_(selectStatus);
+			if (selectStatus != CAM_FIELD_APPLIED) {
+				continue;   // the row cannot be addressed; its fields are not claimed applied
+			}
+
+			if (stated_(line.mode)) {
+				// Drop the source before the mode, exactly as the DevKit does: an output
+				// that is currently driving refuses a mode change.
+				try {
+					CEnumerationPtr source = map.GetNode("LineSource");
+					if (IsAvailable(source) && IsWritable(source)) {
+						CEnumEntryPtr off = source->GetEntryByName("Off");
+						if (IsAvailable(off) && IsReadable(off)) {
+							source->SetIntValue(off->GetValue());
+						}
+					}
+				}
+				catch (const std::exception&) {
+				}
+			}
+			ok &= rowOk_(applyEnumNode_(map, "LineMode", line.mode, result));
+			ok &= rowOk_(applyEnumNode_(map, "LineSource", line.source, result));
+			ok &= rowOk_(applyBoolNode_(map, "LineInverter", line.inverter, result));
+		}
+		if (stated_(params.lineSelector)) {
+			ok &= rowOk_(applyEnumNode_(map, "LineSelector", params.lineSelector, result));
+		}
+
+		// 4) Trigger group, TriggerMode last: the camera must be fully configured before it
+		//    is allowed to arm.
+		ok &= rowOk_(applyEnumNode_(map, "TriggerSelector", params.triggerSelector, result));
+		ok &= rowOk_(applyEnumNode_(map, "TriggerSource", params.triggerSource, result));
+		ok &= rowOk_(applyEnumNode_(map, "TriggerActivation", params.triggerActivation, result));
+		ok &= rowOk_(applyEnumNode_(map, "TriggerOverlap", params.triggerOverlap, result));
+
+		ok &= rowOk_(applyEnumNode_(map, "TriggerMode", params.triggerMode, result));
+
+		// TriggerDelay LAST, after the mode is armed. The path that worked before A-1 wrote
+		// it exactly there - startTriggeredLiveMode() ran it after setupHwTriggerSetting()
+		// had installed and enabled the trigger - and on this family the node is only
+		// writable once the trigger selector and mode are set. Writing it while the trigger
+		// was still Off (which is where this used to sit) makes the node report itself
+		// locked, and every hardware-triggered capture would then fail at apply time.
+		double previousDelay = 0.0;
+		const int delayStatus = applyFloatNode_(map, "TriggerDelay", params.triggerDelayUs, result, &previousDelay);
+		ok &= rowOk_(delayStatus);
+		if (delayStatus != CAM_FIELD_NOT_REQUESTED && !impl().hasSavedTriggerDelay) {
+			// Same ledger startTriggeredLiveMode() uses: the value is remembered once, so
+			// the teardown puts back what was there before anything overwrote it.
+			impl().savedTriggerDelayUs = previousDelay;
+			impl().hasSavedTriggerDelay = true;
+		}
+
+		// A stated trigger or GPIO configuration is device state this class installed, so
+		// the teardown has to put the strobe line back exactly as it does for the hardcoded
+		// HW-trigger setup.
+		if (touchesTrigger || touchedLines) {
+			impl().hwTriggerInstalled = true;
+		}
+	}
+	catch (const std::exception& e) {
+		WsoLogError("[CAM-EXT] extended apply failed: " + std::string(e.what()));
+		return false;
+	}
+	catch (...) {
+		WsoLogError("[CAM-EXT] extended apply failed (unknown exception)");
+		return false;
+	}
+
+	if (!ok && result != nullptr) {
+		for (int i = 0; i < result->fieldCount; ++i) {
+			const ColorCameraFieldResult& row = result->fields[i];
+			if (row.status == CAM_FIELD_APPLIED || row.status == CAM_FIELD_NOT_REQUESTED) {
+				continue;
+			}
+			WsoLogError("[CAM-EXT] " + fieldText_(row.node) + " req=" + fieldText_(row.requested)
+				+ " actual=" + fieldText_(row.actual) + " status=" + std::to_string(row.status));
+		}
+	}
+	return ok;
+}
+
+bool wso_device::ColorCamera::readExtendedSettings(ColorCameraExtendedParam* out, bool includeLines)
+{
+	if (out == nullptr) {
+		return false;
+	}
+
+	*out = ColorCameraExtendedParam{};
+	out->structSize = (unsigned int)sizeof(ColorCameraExtendedParam);
+	out->version = LSO_CAMERA_CONFIG_VERSION;
+	out->acquisitionBurstFrameCount = -1;
+	out->deviceLinkThroughput = -1;
+	out->triggerDelayUs = -1.0;
+	out->ispEnable = -1;
+	for (int i = 0; i < LSO_CAMERA_LINE_COUNT; ++i) {
+		out->lines[i].inverter = -1;
+	}
+
+	if (!isInitiated()) {
+		return false;
+	}
+
+	try {
+		INodeMap& map = impl().getCamera()->GetNodeMap();
+
+		readEnumNode_(map, "ExposureAuto", out->exposureAuto);
+		readEnumNode_(map, "BinningSelector", out->binningSelector);
+		readEnumNode_(map, "BinningHorizontalMode", out->binningHorizontalMode);
+		readEnumNode_(map, "BinningVerticalMode", out->binningVerticalMode);
+		readEnumNode_(map, "TestPattern", out->testPattern);
+		readEnumNode_(map, "SensorShutterMode", out->sensorShutterMode);
+		readEnumNode_(map, "TriggerMode", out->triggerMode);
+		readEnumNode_(map, "TriggerSource", out->triggerSource);
+		readEnumNode_(map, "TriggerActivation", out->triggerActivation);
+		readEnumNode_(map, "TriggerSelector", out->triggerSelector);
+		readEnumNode_(map, "TriggerOverlap", out->triggerOverlap);
+		out->acquisitionBurstFrameCount = readIntNode_(map, "AcquisitionBurstFrameCount");
+		out->deviceLinkThroughput = readIntNode_(map, "DeviceLinkThroughputLimit");
+		out->triggerDelayUs = readFloatNode_(map, "TriggerDelay");
+		out->ispEnable = readBoolNode_(map, "IspEnable");
+
+		if (!includeLines) {
+			// The caller does not need the GPIO rows, so the selector is left exactly where
+			// the operator put it. Reading a row means WRITING the selector, and that is
+			// device state - not something a read should spend on a hot path that will not
+			// use the answer.
+			readEnumNode_(map, "LineSelector", out->lineSelector);
+			return true;
+		}
+
+		// Reading the four rows moves the selector, so the operator's selection is put back
+		// before returning. If it cannot be read there is nothing to put back, and walking
+		// the rows anyway would leave the camera selecting whichever line this loop ended
+		// on - so the rows are left unstated instead, which is the honest answer.
+		char selectorBefore[LSO_CAMERA_NAME_MAX] = {};
+		readEnumNode_(map, "LineSelector", selectorBefore);
+		if (!stated_(selectorBefore)) {
+			WsoLogInfo("[CAM-EXT] LineSelector is unreadable - the GPIO rows are reported "
+				"unstated rather than moving a selector this read cannot restore");
+			return true;
+		}
+
+		for (int i = 0; i < LSO_CAMERA_LINE_COUNT; ++i) {
+			char selector[LSO_CAMERA_NAME_MAX] = {};
+			lineName_(selector, i);
+			if (applyEnumNode_(map, "LineSelector", selector, nullptr) != CAM_FIELD_APPLIED) {
+				continue;
+			}
+			readEnumNode_(map, "LineMode", out->lines[i].mode);
+			readEnumNode_(map, "LineSource", out->lines[i].source);
+			out->lines[i].inverter = readBoolNode_(map, "LineInverter");
+		}
+
+		applyEnumNode_(map, "LineSelector", selectorBefore, nullptr);
+		copyName_(out->lineSelector, selectorBefore);
+		return true;
+	}
+	catch (const std::exception& e) {
+		WsoLogError("[CAM-EXT] extended read-back failed: " + std::string(e.what()));
+		return false;
+	}
+	catch (...) {
+		return false;
+	}
+}
+
+bool wso_device::ColorCamera::applyFullSettings(const ColorCameraSettingParam& base,
+	const ColorCameraExtendedParam& ext, ColorCameraApplyResult* result, bool* baseVerified)
+{
+	if (baseVerified != nullptr) { *baseVerified = false; }
+	if (result != nullptr) {
+		result->structSize = (unsigned int)sizeof(ColorCameraApplyResult);
+		result->version = LSO_CAMERA_CONFIG_VERSION;
+		result->fieldCount = 0;
+		result->failedCount = 0;
+	}
+
+	if (!isInitiated()) {
+		return false;
+	}
+
+	// Configuration nodes are locked while the camera streams; ending the acquisition here
+	// is what makes the whole contract writable in one pass instead of silently skipping
+	// half of it.
+	try {
+		if (impl().getCamera()->IsStreaming()) {
+			impl().getCamera()->EndAcquisition();
+		}
+	}
+	catch (const std::exception& e) {
+		WsoLogError("[CAM-EXT] could not end the acquisition before applying: " + std::string(e.what()));
+		return false;
+	}
+
+	// The extended block runs in two halves around the 14 structural fields, because the
+	// binning selector and its modes decide what ROI ranges the structural write is then
+	// validated against, while the trigger and GPIO nodes must land after it.
+	ColorCameraExtendedParam sensorPhase = ext;
+	ColorCameraExtendedParam devicePhase = ext;
+
+	// First half: binning selector/modes and the exposure-auto decision only.
+	sensorPhase.testPattern[0] = '\0';
+	sensorPhase.sensorShutterMode[0] = '\0';
+	sensorPhase.ispEnable = -1;
+	sensorPhase.acquisitionBurstFrameCount = -1;
+	sensorPhase.deviceLinkThroughput = -1;
+	sensorPhase.triggerMode[0] = '\0';
+	sensorPhase.triggerSource[0] = '\0';
+	sensorPhase.triggerActivation[0] = '\0';
+	sensorPhase.triggerSelector[0] = '\0';
+	sensorPhase.triggerOverlap[0] = '\0';
+	sensorPhase.triggerDelayUs = -1.0;
+	sensorPhase.lineSelector[0] = '\0';
+	for (int i = 0; i < LSO_CAMERA_LINE_COUNT; ++i) {
+		sensorPhase.lines[i] = ColorCameraLineConfig{};
+		sensorPhase.lines[i].inverter = -1;
+	}
+
+	// Second half: everything the first half left out.
+	devicePhase.exposureAuto[0] = '\0';
+	devicePhase.binningSelector[0] = '\0';
+	devicePhase.binningHorizontalMode[0] = '\0';
+	devicePhase.binningVerticalMode[0] = '\0';
+
+	auto applyCheckedFloat = [&](const char* nodeName, double value) {
+		try {
+			INodeMap& map = impl().getCamera()->GetNodeMap();
+			const bool automatic = std::strcmp(nodeName, "ExposureTime") == 0
+				&& impl().getCamera()->ExposureAuto.GetValue() != ExposureAuto_Off;
+			return detail::applyManualCameraFloat(automatic, [&] {
+				return rowOk_(applyFloatNode_(map, nodeName, value, result, nullptr));
+			});
+		}
+		catch (const std::exception& e) {
+			WsoLogError(std::string("[CAM-EXT] final ") + nodeName + " verify failed: " + e.what());
+			return false;
+		}
+		catch (...) {
+			WsoLogError(std::string("[CAM-EXT] final ") + nodeName + " verify failed");
+			return false;
+		}
+	};
+
+	const detail::ColorCameraFullApplyVerdict verdict = detail::runColorCameraFullApply(
+		[&] { return applyExtendedInto_(sensorPhase, result); },
+		[&] {
+			// The 14 structural/acquisition fields, with their own read-back verification.
+			const bool verified = setCameraSettingsChecked_(base, false);
+
+			// A single row for the structural group, so the caller's report covers all of it.
+			if (result != nullptr && result->fieldCount < LSO_CAMERA_FIELD_MAX) {
+				ColorCameraFieldResult& row = result->fields[result->fieldCount++];
+				copyName_(row.node, "PixelFormat/Binning/ROI");
+				copyNumber_(row.requested, (double)base.roi_x_width);
+				copyNumber_(row.actual, (double)getROI_X_Width());
+				row.status = verified ? CAM_FIELD_APPLIED : CAM_FIELD_MISMATCH;
+				if (!verified) { ++result->failedCount; }
+			}
+			return verified;
+		},
+		[&] { return applyExtendedInto_(devicePhase, result); },
+		[&] { return applyCheckedFloat("ExposureTime", (double)base.exposure_time); },
+		[&] { return applyCheckedFloat("Gain", base.gain < 0.0f ? 0.0 : (double)base.gain); });
+	const bool ok = verdict.extendedVerified;
+	const bool baseOk = verdict.baseVerified;
+	if (baseVerified != nullptr) { *baseVerified = baseOk; }
+
+	WsoLogInfo("[CAM-EXT] full apply extendedOk=" + std::to_string(ok ? 1 : 0)
+		+ " baseVerified=" + std::to_string(baseOk ? 1 : 0)
+		+ " fields=" + std::to_string(result ? result->fieldCount : 0)
+		+ " failed=" + std::to_string(result ? result->failedCount : 0));
+	return ok;
+}
+
+int wso_device::ColorCamera::enumerateNodeEntries(const char* nodeName,
+	ColorCameraEnumValue* buffer, int maxCount)
+{
+	if (!isInitiated() || nodeName == nullptr || buffer == nullptr || maxCount <= 0) {
+		return 0;
+	}
+
+	try {
+		INodeMap& map = impl().getCamera()->GetNodeMap();
+		CEnumerationPtr node = map.GetNode(nodeName);
+		if (!IsAvailable(node) || !IsReadable(node)) {
+			return 0;
+		}
+
+		NodeList_t entries;
+		node->GetEntries(entries);
+
+		int written = 0;
+		for (size_t i = 0; i < entries.size() && written < maxCount; ++i) {
+			CEnumEntryPtr entry = entries[i];
+			if (!IsAvailable(entry) || !IsReadable(entry)) {
+				continue;   // implemented by the SDK but not by this model / not in this state
+			}
+			copyName_(buffer[written].name, entry->GetSymbolic().c_str());
+			++written;
+		}
+		return written;
+	}
+	catch (const std::exception& e) {
+		WsoLogError(std::string("[CAM-EXT] entry enumeration failed for ") + nodeName + ": " + e.what());
+		return 0;
+	}
+	catch (...) {
+		return 0;
+	}
+}
+
+bool wso_device::ColorCamera::queryNodeRange(const char* nodeName, double* minValue,
+	double* maxValue, double* increment, bool* writable)
+{
+	if (minValue) { *minValue = 0.0; }
+	if (maxValue) { *maxValue = 0.0; }
+	if (increment) { *increment = 0.0; }
+	if (writable) { *writable = false; }
+
+	if (!isInitiated() || nodeName == nullptr) {
+		return false;
+	}
+
+	try {
+		INodeMap& map = impl().getCamera()->GetNodeMap();
+		// Kept as the raw INode*: a typed CPointer is constructed from that, not from
+		// another CPointer, which the GenApi smart pointers do not convert between.
+		INode* raw = map.GetNode(nodeName);
+		CNodePtr node = raw;
+		if (!IsAvailable(node) || !IsReadable(node)) {
+			return false;
+		}
+
+		switch (node->GetPrincipalInterfaceType()) {
+		case intfIInteger: {
+			CIntegerPtr value = raw;
+			if (minValue) { *minValue = (double)value->GetMin(); }
+			if (maxValue) { *maxValue = (double)value->GetMax(); }
+			if (increment) { *increment = (double)value->GetInc(); }
+			if (writable) { *writable = IsWritable(value); }
+			return true;
+		}
+		case intfIFloat: {
+			CFloatPtr value = raw;
+			if (minValue) { *minValue = value->GetMin(); }
+			if (maxValue) { *maxValue = value->GetMax(); }
+			if (increment) { *increment = value->HasInc() ? value->GetInc() : 0.0; }
+			if (writable) { *writable = IsWritable(value); }
+			return true;
+		}
+		default:
+			return false;
+		}
+	}
+	catch (const std::exception& e) {
+		WsoLogError(std::string("[CAM-EXT] range query failed for ") + nodeName + ": " + e.what());
+		return false;
+	}
+	catch (...) {
+		return false;
+	}
+}
+
+bool wso_device::ColorCamera::queryNodeValue(const char* nodeName, double* value)
+{
+	if (value) { *value = 0.0; }
+
+	if (!isInitiated() || nodeName == nullptr || value == nullptr) {
+		return false;
+	}
+
+	try {
+		INodeMap& map = impl().getCamera()->GetNodeMap();
+		INode* raw = map.GetNode(nodeName);
+		CNodePtr node = raw;
+		if (!IsAvailable(node) || !IsReadable(node)) {
+			return false;
+		}
+
+		switch (node->GetPrincipalInterfaceType()) {
+		case intfIInteger: {
+			CIntegerPtr typed = raw;
+			*value = (double)typed->GetValue();
+			return true;
+		}
+		case intfIFloat: {
+			CFloatPtr typed = raw;
+			*value = typed->GetValue();
+			return true;
+		}
+		default:
+			return false;
+		}
+	}
+	catch (const std::exception& e) {
+		WsoLogError(std::string("[CAM-EXT] value query failed for ") + nodeName + ": " + e.what());
 		return false;
 	}
 	catch (...) {
@@ -1399,7 +2587,21 @@ void wso_device::ColorCamera::setBinningVertical(unsigned int val)
 void wso_device::ColorCamera::setGain(float val)
 {
 	val = (val < 0 ? 0 : val);
-	impl().getCamera()->Gain.SetValue(val);
+	auto& node = impl().getCamera()->Gain;
+	// A GenICam float node rejects a value one epsilon past its live limit and that throws
+	// away the WHOLE write: a preset holding 27.046 dB for a camera whose Gain.Max is
+	// 27.045664 left the gain at whatever the previous session applied - a dark preview whose
+	// only symptom was one [SET] error line. Clamp to the live range and say so instead.
+	const double lo = node.GetMin();
+	const double hi = node.GetMax();
+	const double req = (double)val;
+	const double out = (req < lo ? lo : (req > hi ? hi : req));
+	if (out != req) {
+		WsoLogInfo("[SET] Gain clamped to the camera range: requested " + std::to_string(req)
+			+ ", min " + std::to_string(lo) + ", max " + std::to_string(hi)
+			+ " -> applied " + std::to_string(out));
+	}
+	node.SetValue(out);
 	return;
 }
 
@@ -1637,6 +2839,12 @@ void wso_device::ColorCamera::acquireCameraData(void)
 		frameSize = getFrameSizeForBpp(nBytesPerPixel);
 		frameCount = 0;
 
+		// Read once. ReverseX/ReverseY are configuration nodes and are locked while the
+		// camera streams, so re-reading them per frame only adds two USB register reads
+		// inside the callback lock - which is exactly what a UI-thread camera access then
+		// waits on, for every frame.
+		const unsigned int flipMode = getFlipMode();
+
 		impl().getCamera()->BeginAcquisition();
 
 		do {
@@ -1646,8 +2854,7 @@ void wso_device::ColorCamera::acquireCameraData(void)
 			std::memcpy(buffer, impl().rawImage->GetData(), frameSize);
 
 			unique_lock<mutex> lock(impl().mutexLock);
-			//CallbackRegistry::getInstance()->runColorCameraFrameCaptured(buffer, width, height, frameCount, getFlipMode());
-			CallbackRegistry::getInstance()->runColorCameraFrameCaptured(buffer, width, height, frameCount, getFlipMode(), nPixelFormat, nBytesPerPixel);
+			CallbackRegistry::getInstance()->runColorCameraFrameCaptured(buffer, width, height, frameCount, flipMode, nPixelFormat, nBytesPerPixel);
 
 		} while (impl().liveMode);
 
@@ -1661,6 +2868,71 @@ void wso_device::ColorCamera::acquireCameraData(void)
 		//impl().getCamera()->OffsetX.SetValue(400);
 	}
 	return;
+}
+
+// Hardware-triggered aiming live worker. Entered with the acquisition already running and
+// the camera armed (startTriggeredLiveMode did both), so this only pumps frames until
+// pauseLiveMode() clears liveMode.
+// The per-image wait is BOUNDED: under a hardware trigger "no image yet" is the normal
+// state between board sweeps, so a blocking GetNextImage() would make pauseLiveMode() -
+// which joins this thread - hang until a trigger happened to arrive, i.e. forever if the
+// board was never started or has already been stopped.
+void wso_device::ColorCamera::acquireCameraTriggeredLiveData(void)
+{
+	try {
+		const uint32_t width = getFrameWidth();
+		const uint32_t height = getFrameHeight();
+		const int nPixelFormat = impl().getCamera()->PixelFormat.GetValue();
+		const int nBytesPerPixel = getBytesPerPixel();
+		const uint32_t frameSize = getFrameSizeForBpp(nBytesPerPixel);
+		// Read once, for the same reason the free-running loop does: a per-frame node read
+		// inside the callback lock is what a UI-thread camera call ends up queueing behind.
+		const unsigned int flipMode = getFlipMode();
+		unsigned char* buffer = impl().sonyFrameBuffer;
+
+		// Same budget rule the HW-trigger capture loop uses: one exposure plus a margin.
+		const unsigned int imageTimeoutMs = getExposureTime() / 1000U + 200U;
+
+		WsoLogInfo("[COLOR-PRV] triggered live begin pf=" + std::to_string(nPixelFormat)
+			+ " w=" + std::to_string(width) + " h=" + std::to_string(height)
+			+ " waitMs=" + std::to_string(imageTimeoutMs));
+
+		uint32_t frameCount = 0;
+		while (impl().liveMode) {
+			try {
+				impl().rawImage = impl().getCamera()->GetNextImage(imageTimeoutMs);
+			}
+			catch (const Spinnaker::Exception&) {
+				// No trigger within the budget: re-test liveMode and wait again. This is
+				// the normal idle path, so it must not be logged per iteration.
+				continue;
+			}
+
+			try {
+				std::memcpy(buffer, impl().rawImage->GetData(), frameSize);
+				++frameCount;
+				unique_lock<mutex> lock(impl().mutexLock);
+				CallbackRegistry::getInstance()->runColorCameraFrameCaptured(buffer, width, height, frameCount, flipMode, nPixelFormat, nBytesPerPixel);
+			}
+			catch (...) {
+				impl().rawImage->Release();
+				throw;
+			}
+			impl().rawImage->Release();
+		}
+
+		WsoLogInfo("[COLOR-PRV] triggered live end frames=" + std::to_string(frameCount));
+	}
+	catch (const std::exception& e) {
+		WsoLogError("[COLOR-PRV] triggered live exception: " + std::string(e.what()));
+	}
+	catch (...) {
+		WsoLogError("[COLOR-PRV] triggered live unknown exception");
+	}
+
+	// Ends the acquisition and puts back exactly what the trigger setup installed
+	// (TriggerMode, the Line2 output source and the FrameStart trigger delay).
+	abortCaptureFrames();
 }
 
 void wso_device::ColorCamera::acquireCameraSingleFrameData(void) // Single Frame Live
@@ -2526,7 +3798,7 @@ bool wso_device::ColorCamera::onSequencer(void)
 			impl().getCamera()->SequencerSetSelector.SetValue(i);
 
 			// Set i?? ???? ?????? ????
-			//impl().getCamera()->ExposureTime.SetValue(2000);  // 20ms ???? ?��?
+			//impl().getCamera()->ExposureTime.SetValue(2000);  // 20ms ???? ????
 			//impl().getCamera()->Gain.SetValue(2.0);            // ???? ????
 			impl().getCamera()->OffsetX.SetValue(0);         
 			impl().getCamera()->OffsetY.SetValue(0);
@@ -2624,7 +3896,7 @@ bool wso_device::ColorCamera::setSequencer(std::vector<LsoCaptureFrameROI> param
 			impl().getCamera()->SequencerSetSelector.SetValue(i);
 
 			// Set i?? ???? ?????? ????
-			//impl().getCamera()->ExposureTime.SetValue(2000);  // 20ms ???? ?��?
+			//impl().getCamera()->ExposureTime.SetValue(2000);  // 20ms ???? ????
 			//impl().getCamera()->Gain.SetValue(2.0);            // ???? ????
 			impl().getCamera()->OffsetX.SetValue(0);
 			impl().getCamera()->OffsetY.SetValue(0);
@@ -2787,7 +4059,7 @@ void wso_device::ColorCamera::acquireCameraCaptureData(void)
 	int nPixelFormat = impl().getCamera()->PixelFormat.GetValue();
 	int nBytesPerPixel = getBytesPerPixel();
 
-	// [�ӽ� ����] ĸó ������ ���� ī�޶� ����(����/binning/�ػ�) Ȯ�ο�. ���� �� ����.
+	// [??? ????] ��o ?????? ???? ???? ????(????/binning/???) ??��?. ???? ?? ????.
 	WsoLogInfo("[CAP] pf=" + std::to_string(nPixelFormat) + " (0=Mono8,4=BayerRG8) binH="
 		+ std::to_string(getBinningHorizontal()) + " binV=" + std::to_string(getBinningVertical())
 		+ " w=" + std::to_string(width) + " h=" + std::to_string(height)

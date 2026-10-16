@@ -26,7 +26,10 @@ namespace WsoToolkit
         public MainWindow()
         {
             InitializeComponent();
-            this.Title = "Huvitz Wide LSO-OCT Toolkit (ver 0.03.0 - 2026/09/04)";
+            // The build date is the assembly's own timestamp, so a rebuild dates itself.
+            DateTime built = System.IO.File.GetLastWriteTime(
+                System.Reflection.Assembly.GetExecutingAssembly().Location);
+            this.Title = $"Huvitz Wide LSO-OCT Toolkit (ver 0.4.0 - {built:yyyy/MM/dd HH:mm})";
 
             _logMsgCallback = new WsoLogMsgCallback(this.CallbackWsoLogMessage);
             _logMsgItems = new ObservableCollection<LogMsgItem>();
@@ -55,6 +58,7 @@ namespace WsoToolkit
             if (result)
             {
                 ReleaseButton.IsEnabled = true;
+                SetFeatureButtonsEnabled(true);
             }
             else
             {
@@ -71,8 +75,18 @@ namespace WsoToolkit
             {
                 StartupButton.IsEnabled = true;
                 ReleaseButton.IsEnabled = false;
+                SetFeatureButtonsEnabled(false);
             }
             Mouse.OverrideCursor = null;
+        }
+
+        // Every other window drives hardware, so keep them unreachable until the
+        // WSO system is initialized (and lock them again after release).
+        private void SetFeatureButtonsEnabled(bool enabled)
+        {
+            ScanModePanel.IsEnabled = enabled;
+            TestPanel.IsEnabled = enabled;
+            ControlPanel.IsEnabled = enabled;
         }
 
         private void PatientListButton_Click(object sender, RoutedEventArgs e)

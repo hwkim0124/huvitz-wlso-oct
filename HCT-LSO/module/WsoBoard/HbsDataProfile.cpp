@@ -752,6 +752,25 @@ bool wso_board::HbsDataProfile::saveLsoScannerParam(void)
 	return false;
 }
 
+bool wso_board::HbsDataProfile::saveLsoScannerProfile(int patternId)
+{
+	if (patternId < 0 || patternId > MAX_LSO_TRAJ_NUM) {
+		return false;
+	}
+
+	auto* channel = getDataChannel();
+	if (auto desc = getHbsTableDescriptor(); channel) {
+		auto data = getHbsLsoScanner();
+		if (data == nullptr) {
+			return false;
+		}
+		if (channel->writeLsoScannerProfile((std::uint8_t)patternId, &data->traj_profile[patternId], desc)) {
+			return true;
+		}
+	}
+	return false;
+}
+
 bool wso_board::HbsDataProfile::saveGalvanoDynamicParam(void)
 {
 	auto* channel = getDataChannel();

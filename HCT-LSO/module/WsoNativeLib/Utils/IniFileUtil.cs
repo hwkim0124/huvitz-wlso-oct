@@ -5,20 +5,25 @@ using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Text;
 
-namespace WsoToolkit.utils
+namespace WsoNativeLib.Utils
 {
     /// <summary>
     /// UNICODE 기반 INI 파일 읽기/쓰기 유틸리티 클래스.
     /// C++ <c>cpp_util::IniFile</c>과 동일한 Windows API를 사용합니다.
     /// </summary>
     [SupportedOSPlatform("windows")]
-    internal sealed class IniFileUtil
+    public sealed class IniFileUtil
     {
         private const int DefaultStringBufferSize = 1024;
 
         private readonly string _filePath;
 
         public IniFileUtil(string filePath)
+            : this(filePath, createIfMissing: true)
+        {
+        }
+
+        public IniFileUtil(string filePath, bool createIfMissing)
         {
             if (string.IsNullOrWhiteSpace(filePath))
             {
@@ -27,7 +32,7 @@ namespace WsoToolkit.utils
 
             _filePath = filePath;
 
-            if (!File.Exists(_filePath))
+            if (createIfMissing && !File.Exists(_filePath))
             {
                 using FileStream _ = File.Create(_filePath);
             }

@@ -10,7 +10,7 @@ namespace WsoNativeLib
         public enum EyeAlignMode : int
         {
             Manual = 0,
-            Single = 1,
+            Auto = 1,
             Full = 2,
         }
 
@@ -21,8 +21,9 @@ namespace WsoNativeLib
             ToEyeX,
             SwingToTilt,
             Searching,
-            CenteringXY,
+            CenteringY,
             Approaching,
+            CenteringX,
             CenteringZ,
             Focused,
             Monitoring,
@@ -37,6 +38,8 @@ namespace WsoNativeLib
             UserCancel,
             EyeNotFound,
             PupilLost,
+            LowerEyeNotFound,
+            AlignTimeout,
             NotInitialized,
             PreviewNotRunning,
             Busy,
@@ -52,7 +55,7 @@ namespace WsoNativeLib
         {
             None = 0,
             FullAlignStarted,
-            SingleAlignStarted,
+            AutoAlignStarted,
             ManualAlignStarted,
             AlignCancelled,
             AlignFailed,
@@ -62,9 +65,12 @@ namespace WsoNativeLib
             SearchStarted,
             EyeFound,
             EyeNotFound,
-            XYCentered,
+            YCentered,
             ApproachStarted,
             LowerEyeFound,
+            LowerEyeNotFound,
+            XCentered,
+            ZCentered,
             FocusAligned,
             FocusLost,
             EyeLost,
@@ -81,6 +87,7 @@ namespace WsoNativeLib
             EndOfSwingRight,
             MotorMoveFailed,
             PhaseTimeout,
+            AlignTimeout,
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -111,11 +118,16 @@ namespace WsoNativeLib
             public int searchLimitPosZ;
             public int minSafePosZ;
             public int posToleranceSteps;
+            public int stepZ;
 
-            public float tolerancePx;
+            public float toleranceYPx;
+            public float approachTolZPx;
+            public float toleranceXPx;
             public float toleranceZPx;
             public float startDeadbandPx;
-            public float stopDeadbandPx;
+            public float stepsPerPxX;
+            public float stepsPerPxY;
+            public float stepsPerPxZ;
 
             public int detectConsecutive;
             public int lostFramesToStop;
@@ -128,33 +140,41 @@ namespace WsoNativeLib
             public int swingTimeoutMs;
             public int eyeXTimeoutMs;
             public int searchTimeoutMs;
+            public int alignTimeoutMs;
 
             public int backOffOnEnd;
+            public int irLedIntensity;
 
             public PupilDetectParam detLeft;
             public PupilDetectParam detRight;
             public PupilDetectParam detLower;
 
+            // Same defaults as the in-class initializers of the C++ struct.
             public EyeAlignConfigParam()
             {
-                readyPosZ = 0;
-                swingTiltPos_OD = 0;
-                swingTiltPos_OS = 0;
-                eyePosX_OD = 0;
-                eyePosX_OS = 0;
-                searchLimitPosZ = 0;
+                readyPosZ = -10000;
+                swingTiltPos_OD = -1500;
+                swingTiltPos_OS = +1500;
+                eyePosX_OD = +15000;
+                eyePosX_OS = -15000;
+                searchLimitPosZ = -4000;
                 minSafePosZ = 0;
                 posToleranceSteps = 20;
+                stepZ = 300;
 
-                tolerancePx = 6.0f;
+                toleranceYPx = 6.0f;
+                approachTolZPx = 8.0f;
+                toleranceXPx = 6.0f;
                 toleranceZPx = 8.0f;
                 startDeadbandPx = 10.0f;
-                stopDeadbandPx = 4.0f;
+                stepsPerPxX = 1.0f;
+                stepsPerPxY = 1.0f;
+                stepsPerPxZ = 1.0f;
 
                 detectConsecutive = 3;
                 lostFramesToStop = 5;
                 lostFramesToCancel = 300;
-                settleFrames = 5;
+                settleFrames = 2;
                 maxJumpPx = 60.0f;
                 smoothingAlpha = 0.5f;
 
@@ -162,11 +182,13 @@ namespace WsoNativeLib
                 swingTimeoutMs = 10000;
                 eyeXTimeoutMs = 10000;
                 searchTimeoutMs = 20000;
+                alignTimeoutMs = 30000;
 
                 backOffOnEnd = 1;
+                irLedIntensity = 3;
 
-                detLeft = new PupilDetectParam();
-                detRight = new PupilDetectParam();
+                detLeft = new PupilDetectParam { signV = -1 };     // side cameras, see the C++ header
+                detRight = new PupilDetectParam { signV = -1 };
                 detLower = new PupilDetectParam();
             }
         }

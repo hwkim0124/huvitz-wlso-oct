@@ -155,6 +155,7 @@
   <ItemGroup>
     <ClInclude Include="Bootstrapper.h" />
     <ClInclude Include="Calibration.h" />
+    <ClInclude Include="CaptureSequence.h" />
     <ClInclude Include="Configuration.h" />
     <ClInclude Include="Controller.h" />
     <ClInclude Include="exts_calibration.h" />
@@ -187,6 +188,7 @@
   <ItemGroup>
     <ClCompile Include="Bootstrapper.cpp" />
     <ClCompile Include="Calibration.cpp" />
+    <ClCompile Include="CaptureSequence.cpp" />
     <ClCompile Include="Configuration.cpp" />
     <ClCompile Include="Controller.cpp" />
     <ClCompile Include="dllmain.cpp" />

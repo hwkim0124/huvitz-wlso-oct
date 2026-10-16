@@ -1,0 +1,318 @@
+<Window x:Class="WsoToolkit.LsoModeSettingWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:WsoToolkit"
+        Title="LSO Mode Settings"
+        Height="800" Width="1180"
+        WindowStartupLocation="CenterOwner"
+        Loaded="Window_Loaded">
+    <DockPanel Margin="8">
+        <!-- Preset bar: the mode picks which preset every control below edits. -->
+        <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}"
+                BorderThickness="0,0,0,1" Padding="0,0,0,8" Margin="0,0,0,8">
+            <StackPanel Orientation="Horizontal">
+                <RadioButton x:Name="rbModePreview" Content="Preview" GroupName="presetMode"
+                             VerticalAlignment="Center" Margin="0,0,12,0" Checked="Mode_Checked"/>
+                <RadioButton x:Name="rbModeCapture" Content="Capture" GroupName="presetMode" IsChecked="True"
+                             VerticalAlignment="Center" Margin="0,0,20,0" Checked="Mode_Checked"/>
+                <Label Content="Preset :" Style="{StaticResource LabelStyle}" VerticalAlignment="Center"/>
+                <ComboBox x:Name="myCbPreset" Style="{StaticResource ComboBoxStyle}" Width="180" IsEditable="True" IsTextSearchEnabled="False"
+                          VerticalAlignment="Center" Margin="4,0,0,0"
+                          ToolTip="Active preset for this mode. Type a name and press Save As / New to add one."
+                          SelectionChanged="myCbPreset_SelectionChanged"/>
+                <Button x:Name="myBtPresetSaveAs" Content="Save As" Style="{StaticResource ButtonS1Style}" Width="60"
+                        Margin="6,0,0,0" ToolTip="Save the current values under the name typed in the box"
+                        Click="myBtPresetSaveAs_Click"/>
+                <Button x:Name="myBtPresetNew" Content="New" Style="{StaticResource ButtonS1Style}" Width="48"
+                        Margin="4,0,0,0" ToolTip="Create a preset from the built-in defaults under the typed name"
+                        Click="myBtPresetNew_Click"/>
+                <Button x:Name="myBtPresetDelete" Content="Delete" Style="{StaticResource ButtonS1Style}" Width="56"
+                        Margin="4,0,0,0" ToolTip="Delete the selected preset file" Click="myBtPresetDelete_Click"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Action bar -->
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+            <Button x:Name="myBtDefault" Content="Load Defaults" Style="{StaticResource ButtonM1Style}" Margin="4"
+                    ToolTip="Load this mode's built-in (DevKit) values into the fields (nothing is written or saved)" Click="myBtDefault_Click"/>
+            <Button x:Name="myBtSaveAsDefault" Content="Save as Default" Style="{StaticResource ButtonM1Style}" Margin="4"
+                    ToolTip="Save the current fields as this mode's built-in 'Preview' / 'Capture' preset and select it (DevKit 'Set Default')"
+                    Click="myBtSaveAsDefault_Click"/>
+            <Button x:Name="myBtLoadBoard" Content="Load Board" Style="{StaticResource ButtonM1Style}" Margin="4"
+                    ToolTip="Read the scanner slot back from the board into the fields" Click="myBtLoadBoard_Click"/>
+            <Button x:Name="myBtApply" Content="Apply" Style="{StaticResource ButtonM1Style}" Margin="4"
+                    ToolTip="Save the preset and write camera + galvo + light + motors to the board" Click="myBtApply_Click"/>
+            <Button x:Name="myBtClose" Content="Close" Style="{StaticResource ButtonM1Style}" Margin="4" Click="myBtClose_Click"/>
+        </StackPanel>
+
+        <!-- One page: camera on the left, galvo on the right, light and motors underneath -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="620"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <GroupBox Grid.Row="0" Grid.Column="0" Header="Camera">
+                <ContentControl x:Name="cameraHost" Focusable="False"/>
+            </GroupBox>
+
+            <StackPanel Grid.Row="0" Grid.Column="1" Margin="8,0,0,0">
+            <GroupBox Header="Galvo (Scan)">
+                <Grid VerticalAlignment="Top">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="150"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="150"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Label Grid.Row="0" Grid.Column="0" Content="Trigger src :" Style="{StaticResource LabelStyle}"/>
+                    <ComboBox x:Name="myCbTriggerSrc" Grid.Row="0" Grid.Column="1" Style="{StaticResource ComboBoxStyle}"
+                              SelectionChanged="ScanControl_Changed"/>
+                    <CheckBox x:Name="myCheckBoxFixedFrame" Grid.Row="0" Grid.Column="3" Content="Fixed Frame"
+                              Style="{StaticResource CheckBoxStyle}" Checked="ScanControl_Changed" Unchecked="ScanControl_Changed"/>
+
+                    <Label Grid.Row="1" Grid.Column="0" Content="Time Step(us) :" Style="{StaticResource LabelStyle}"/>
+                    <TextBox x:Name="myTbCameraTimeStep" Grid.Row="1" Grid.Column="1" Style="{StaticResource TextBoxStyle}"
+                             KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
+                    <Label Grid.Row="1" Grid.Column="2" Content="Exposure Time(us) :" Style="{StaticResource LabelStyle}"/>
+                    <TextBox x:Name="myTbCameraExposureTime" Grid.Row="1" Grid.Column="3" Style="{StaticResource TextBoxStyle}"
+                             IsReadOnly="True" Background="#FFEFEFEF"
+                             ToolTip="Mirrors the Camera panel's Exposure Time (the camera preset is the authority). Edit it there."/>
+
+                    <Label Grid.Row="2" Grid.Column="0" Content="Acq Frame :" Style="{StaticResource LabelStyle}"/>
+                    <TextBox x:Name="myTbAcqFrame" Grid.Row="2" Grid.Column="1" Style="{StaticResource TextBoxStyle}"
+                             KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
+                    <Label Grid.Row="2" Grid.Column="2" Content="Sub Frame Count :" Style="{StaticResource LabelStyle}"/>
+                    <TextBox x:Name="myTbSubFrame" Grid.Row="2" Grid.Column="3" Style="{StaticResource TextBoxStyle}"
+                             KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
+
+                    <Label Grid.Row="3" Grid.Column="0" Content="Galvo. Pattern Size :" Style="{StaticResource LabelStyle}"/>
+                    <TextBox x:Name="myTbGalvoPatternSize" Grid.Row="3" Grid.Column="1" Style="{StaticResource TextBoxStyle}"
+                             KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
+                    <Label Grid.Row="3" Grid.Column="2" Content="Galvo. Rewind Offset :" Style="{StaticResource LabelStyle}"/>
+                    <TextBox x:Name="myTbGalvoRewindOffset" Grid.Row="3" Grid.Column="3" Style="{StaticResource TextBoxStyle}"
+                             ToolTip="prescan_pos_rewind_offset: how far the mirror moves from one subframe to the next (one step, negative for a downward frame). Derived from the full-frame range while 'Use rewind offset' is on."
+                             KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
+
+                    <!-- Full-frame range. Measured on the board: Start->End Pos is the movement
+                         INSIDE one subframe (equal values = the mirror stands still), and the
+                         Rewind Offset is what moves it BETWEEN subframes, accumulating over
+                         Sub Frame Count - 1 hops. Stored nowhere - derived back from
+                         Start/End Pos, Rewind Offset and Sub Frame Count. -->
+                    <Label Grid.Row="4" Grid.Column="0" Content="Full Frame Start :" Style="{StaticResource LabelStyle}"/>
+                    <TextBox x:Name="myTbGalvoTotalStart" Grid.Row="4" Grid.Column="1" Style="{StaticResource TextBoxStyle}"
+                             ToolTip="Where the whole frame starts (e.g. 19000). Start Pos is pinned to this."
+                             KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
+                    <Label Grid.Row="4" Grid.Column="2" Content="Full Frame End :" Style="{StaticResource LabelStyle}"/>
+                    <TextBox x:Name="myTbGalvoTotalEnd" Grid.Row="4" Grid.Column="3" Style="{StaticResource TextBoxStyle}"
+                             ToolTip="Where the whole frame ends (e.g. -19000). Rewind Offset = (Full End - Full Start - (End Pos - Start Pos)) / (Sub Frame Count - 1)."
+                             KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
+
+                    <StackPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="4" Orientation="Horizontal" Margin="0,4,0,4">
+                        <CheckBox x:Name="myCheckGalvoAutoSweep" Content="Use rewind offset (fill it from the full frame)"
+                                  Style="{StaticResource CheckBoxStyle}" VerticalAlignment="Center"
+                                  ToolTip="Pins Start Pos to Full Frame Start and works the Rewind Offset out of the full-frame range, the subframe's own sweep (End Pos - Start Pos, usually 0) and Sub Frame Count - 1 hops. End Pos stays yours. On by default; turn it off to hand-tune all three."
+                                  Checked="GalvoAutoSweep_Changed" Unchecked="GalvoAutoSweep_Changed"/>
+                        <Label x:Name="myLbGalvoSweep" Content="" Style="{StaticResource LabelStyle}" Margin="16,0,0,0" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <Label Grid.Row="6" Grid.Column="0" Content="Galvo. Start Pos :" Style="{StaticResource LabelStyle}"/>
+                    <TextBox x:Name="myTbGalvoStartPos" Grid.Row="6" Grid.Column="1" Style="{StaticResource TextBoxStyle}"
+                             KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
+                    <Label Grid.Row="6" Grid.Column="2" Content="Galvo. End Pos :" Style="{StaticResource LabelStyle}"/>
+                    <TextBox x:Name="myTbGalvoEndPos" Grid.Row="6" Grid.Column="3" Style="{StaticResource TextBoxStyle}"
+                             ToolTip="Where the mirror ends up WITHIN one subframe. Same value as Start Pos = the mirror stands still for that camera frame and the Rewind Offset does all the scanning."
+                             KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
+
+                    <Label Grid.Row="7" Grid.Column="0" Content="Light Index On :" Style="{StaticResource LabelStyle}"/>
+                    <TextBox x:Name="myTbLightIndexOn" Grid.Row="7" Grid.Column="1" Style="{StaticResource TextBoxStyle}"
+                             KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
+                    <Label Grid.Row="7" Grid.Column="2" Content="Light Index Off :" Style="{StaticResource LabelStyle}"/>
+                    <TextBox x:Name="myTbLightIndexOff" Grid.Row="7" Grid.Column="3" Style="{StaticResource TextBoxStyle}"
+                             KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
+
+                    <Label Grid.Row="8" Grid.Column="0" Content="Lead-in (samples) :" Style="{StaticResource LabelStyle}"/>
+                    <TextBox x:Name="myTbLeadIn" Grid.Row="8" Grid.Column="1" Style="{StaticResource TextBoxStyle}"
+                             ToolTip="Acceleration ramp before Start Pos, in DAC samples (DevKit 'Lead'). Not stored on the board: Load Board keeps the preset's value."
+                             KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
+                    <Label Grid.Row="8" Grid.Column="2" Content="Lead-out (samples) :" Style="{StaticResource LabelStyle}"/>
+                    <TextBox x:Name="myTbLeadOut" Grid.Row="8" Grid.Column="3" Style="{StaticResource TextBoxStyle}"
+                             ToolTip="Deceleration ramp after End Pos, in DAC samples (DevKit 'Tail'). Not stored on the board: Load Board keeps the preset's value."
+                             KeyDown="myTbScanSettings_KeyDown" LostFocus="myTbScanSettings_LostFocus"/>
+
+                    <!-- Optional per-sample table, owned by the Trajectory Editor. While set, the
+                         board gets that file instead of the linear Start->End sweep; Start/End/
+                         Lead-in/out then only feed the calculator and the Slit Align park position.
+                         Per mode on purpose - not copied by 'both modes'. -->
+                    <Label Grid.Row="9" Grid.Column="0" Content="Trajectory :" Style="{StaticResource LabelStyle}"/>
+                    <DockPanel Grid.Row="9" Grid.Column="1" Grid.ColumnSpan="3" LastChildFill="True">
+                        <Button x:Name="myBtTrajectoryEdit" DockPanel.Dock="Right" Content="Edit..." Width="60" Margin="4,0,0,0"
+                                ToolTip="Open the trajectory editor: graph of pos[i], CSV import/export, range edits."
+                                Click="myBtTrajectoryEdit_Click"/>
+                        <Label x:Name="myLbTrajectory" Style="{StaticResource LabelStyle}"
+                               ToolTip="What the board's pos[] table is built from for this mode."/>
+                    </DockPanel>
+
+                    <CheckBox x:Name="myCheckBoxDeriveAcquisition" Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="4"
+                              Content="Derive camera acquisition mode/count from scan (Capture, Normal trigger)"
+                              Style="{StaticResource CheckBoxStyle}" Margin="0,8,0,0"
+                              ToolTip="At Apply on the Capture slot under Normal trigger, AcquisitionFrameCount = Acq Frame x Sub Frame. Exposure always follows the Camera panel."
+                              Checked="DeriveAcquisition_Changed" Unchecked="DeriveAcquisition_Changed"/>
+                    <CheckBox x:Name="myCheckBoxSyncModes" Grid.Row="11" Grid.Column="0" Grid.ColumnSpan="4"
+                              Content="Apply scan edits to both Preview and Capture presets (Trigger src / Fixed Frame stay per mode)"
+                              Style="{StaticResource CheckBoxStyle}" Margin="0,4,0,0"
+                              ToolTip="DevKit 'Preview/Capture Update Sync'. Edits go to both presets in memory; Apply still writes only the selected mode to the board."/>
+                </Grid>
+            </GroupBox>
+
+            <GroupBox Header="Timing calculator (rolling shutter)" Margin="0,8,0,0"
+                      ToolTip="DevKit 'Synchronization &amp; Timing Parameters'. Fills Pattern Size, Lead-in/out and Light Index On/Off from the sensor line time and the galvo delays. Line Rate / Sensor Rows / Galvo Delay / Decel / Slit are saved with the preset.">
+                <Grid VerticalAlignment="Top">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="150"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="150"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Label Grid.Row="0" Grid.Column="0" Content="Line Rate (Hz) :" Style="{StaticResource LabelStyle}"/>
+                    <TextBox x:Name="myTbLineRate" Grid.Row="0" Grid.Column="1" Style="{StaticResource TextBoxStyle}"
+                             ToolTip="Camera AcquisitionLineRate. Read it from the camera below, or type it in. Line Time = 1e6 / Line Rate."
+                             LostFocus="myTbLineRate_LostFocus" KeyDown="myTbLineRate_KeyDown"/>
+                    <Label Grid.Row="0" Grid.Column="2" Content="Line Time (us) :" Style="{StaticResource LabelStyle}"/>
+                    <TextBox x:Name="myTbLineTime" Grid.Row="0" Grid.Column="3" Style="{StaticResource TextBoxStyle}"
+                             IsReadOnly="True" Background="#FFEFEFEF"
+                             ToolTip="1e6 / Line Rate. Derived - edit Line Rate instead."/>
+
+                    <Label Grid.Row="1" Grid.Column="0" Content="Sensor Rows :" Style="{StaticResource LabelStyle}"/>
+                    <TextBox x:Name="myTbSensorRows" Grid.Row="1" Grid.Column="1" Style="{StaticResource TextBoxStyle}"
+                             ToolTip="Physical sensor rows the sweep has to cover (defaults to the camera preset's RoiMaxHeight). Saved with the preset."
+                             KeyDown="myTbTiming_KeyDown" LostFocus="myTbTiming_LostFocus"/>
+                    <Label Grid.Row="1" Grid.Column="2" Content="Cam Delay (us) :" Style="{StaticResource LabelStyle}"/>
+                    <TextBox x:Name="myTbCamDelay" Grid.Row="1" Grid.Column="3" Style="{StaticResource TextBoxStyle}"
+                             IsReadOnly="True" Background="#FFEFEFEF"
+                             ToolTip="Mirrors the Camera panel's Trigger Delay (the same physical delay, owned by the camera preset). Only used for the PreTrig readout. Edit it there."/>
+
+                    <Label Grid.Row="2" Grid.Column="0" Content="Galvo Delay (us) :" Style="{StaticResource LabelStyle}"/>
+                    <TextBox x:Name="myTbGalvoDelay" Grid.Row="2" Grid.Column="1" Style="{StaticResource TextBoxStyle}"
+                             ToolTip="Acceleration time -> Lead-in = Delay / Time Step. Saved with the preset."
+                             KeyDown="myTbTiming_KeyDown" LostFocus="myTbTiming_LostFocus"/>
+                    <Label Grid.Row="2" Grid.Column="2" Content="Galvo Decel (us) :" Style="{StaticResource LabelStyle}"/>
+                    <TextBox x:Name="myTbGalvoDecel" Grid.Row="2" Grid.Column="3" Style="{StaticResource TextBoxStyle}"
+                             ToolTip="Deceleration time -> Lead-out = Decel / Time Step. Saved with the preset."
+                             KeyDown="myTbTiming_KeyDown" LostFocus="myTbTiming_LostFocus"/>
+
+                    <Button x:Name="myBtRecalcTiming" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Content="Recalculate scan from timing"
+                            Style="{StaticResource ButtonS1Style}" Margin="0,8,8,0"
+                            ToolTip="Pattern Size = Lead-in + round(Rows x Line Time / Time Step) + Lead-out; Light On = Lead-in - 5; Light Off = Lead-in + active + 5"
+                            Click="myBtRecalcTiming_Click"/>
+                    <Label x:Name="myLbPreTrig" Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="2" Content="PreTrig: -" Style="{StaticResource LabelStyle}"
+                           Margin="0,8,0,0" VerticalAlignment="Center"/>
+
+                    <Button x:Name="myBtReadLineRate" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Content="Read Line Rate from camera"
+                            Style="{StaticResource ButtonS1Style}" Margin="0,4,8,0"
+                            ToolTip="Reads AcquisitionLineRate from the connected color camera and fills Line Rate / Line Time."
+                            Click="myBtReadLineRate_Click"/>
+                    <CheckBox x:Name="myCheckBoxAutoSync" Grid.Row="4" Grid.Column="2" Grid.ColumnSpan="2" Content="Auto-recalculate"
+                              Style="{StaticResource CheckBoxStyle}" Margin="0,4,0,0" VerticalAlignment="Center"
+                              ToolTip="DevKit 'Auto-Calculate Sync'. Recalculates after a Time Step / Start Pos / End Pos edit, after reading the line rate, and when a preset is loaded - OVERWRITING Pattern Size, the ramps and the Light indices the preset stored."/>
+
+                    <!-- ERS exposure recommendation. The slit height is measured in the main
+                         window (Slit Alignment); here it can also be typed in when it is known. -->
+                    <Label Grid.Row="5" Grid.Column="0" Content="Slit (rows) :" Style="{StaticResource LabelStyle}" Margin="0,4,0,0"/>
+                    <TextBox x:Name="myTbSlitRows" Grid.Row="5" Grid.Column="1" Style="{StaticResource TextBoxStyle}" Margin="0,4,0,0"
+                             ToolTip="Illuminated slit height in sensor rows. Measure it in the main window's Slit Alignment panel, or type a known value. Saved with the preset."
+                             KeyDown="myTbTiming_KeyDown" LostFocus="myTbTiming_LostFocus"/>
+                    <Label x:Name="myLbRecExposure" Grid.Row="5" Grid.Column="2" Content="Rec Exp: -" Style="{StaticResource LabelStyle}"
+                           Margin="0,4,0,0" VerticalAlignment="Center"
+                           ToolTip="ERS: Rec Exp = Slit Rows x Line Time."/>
+                    <Button x:Name="myBtApplyRecExposure" Grid.Row="5" Grid.Column="3" Content="Apply to Exposure"
+                            Style="{StaticResource ButtonS1Style}" Margin="0,4,0,0"
+                            ToolTip="Writes the recommendation into the Camera panel's Exposure Time (the authority). The hardware gets it on Apply."
+                            Click="myBtApplyRecExposure_Click"/>
+
+                    <!-- Row 0 slit-centre offset (DevKit fd72e97). Measured on the image; the
+                         TRIG_FIRST lead-in is Galvo Delay + this x Line Time. Stored under the
+                         old SensorBlankingRows key; the board never sees it. -->
+                    <Label Grid.Row="6" Grid.Column="0" Content="Row 0 Offset (rows) :" Style="{StaticResource LabelStyle}" Margin="0,4,0,0"/>
+                    <TextBox x:Name="myTbBlankRows" Grid.Row="6" Grid.Column="1" Style="{StaticResource TextBoxStyle}" Margin="0,4,0,0"
+                             ToolTip="Row 0 slit-centre offset in sensor rows (measured; absorbs blanking, dummy rows and pipeline latency). TRIG_FIRST lead-in = Galvo Delay + rows x Line Time. Saved with the preset."
+                             KeyDown="myTbTiming_KeyDown" LostFocus="myTbTiming_LostFocus"/>
+                    <Label x:Name="myLbBlankTime" Grid.Row="6" Grid.Column="2" Grid.ColumnSpan="2" Content="" Style="{StaticResource LabelStyle}"
+                           Margin="0,4,0,0" VerticalAlignment="Center"
+                           ToolTip="Offset time = Row 0 Offset x Line Time. Added to Galvo Delay to give the TRIG_FIRST lead-in."/>
+                </Grid>
+            </GroupBox>
+            </StackPanel>
+
+            <GroupBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Header="Light" Margin="0,8,0,0">
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Lamp :" Style="{StaticResource LabelStyle}" VerticalAlignment="Center"/>
+                    <ComboBox x:Name="myCbLightType" Style="{StaticResource ComboBoxStyle}" Width="120" Margin="8,0,0,0"
+                              VerticalAlignment="Center" SelectionChanged="myCbLightType_SelectionChanged"
+                              ToolTip="Which lamp this mode switches on. A FAF preset must pick the LSO Blue / Green lamp that matches its filter wheel position."/>
+                    <Slider x:Name="mySliderLight" Style="{StaticResource SliderStyle}" Width="260" Minimum="0" Maximum="255"
+                            VerticalAlignment="Center" Margin="8,0,0,0" IsSnapToTickEnabled="True" TickFrequency="1"
+                            ValueChanged="mySliderLight_ValueChanged"/>
+                    <TextBox x:Name="myTbLight" Style="{StaticResource TextBoxS1Style}" Margin="8,0,0,0"
+                             VerticalAlignment="Center" KeyDown="myTbLight_KeyDown" LostFocus="myTbLight_LostFocus"/>
+                    <CheckBox x:Name="myCheckLightContinuous" Content="Continuous" Style="{StaticResource CheckBoxStyle}"
+                              Margin="16,0,0,0" VerticalAlignment="Center" Checked="LightMode_Changed" Unchecked="LightMode_Changed"/>
+                    <Label Content="(0 = leave the board's current intensity)" Style="{StaticResource LabelStyle}"
+                           VerticalAlignment="Center" Margin="16,0,0,0"/>
+                </StackPanel>
+            </GroupBox>
+
+            <GroupBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Header="Motor" Margin="0,8,0,0">
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="LSO Filter :" Style="{StaticResource LabelStyle}" VerticalAlignment="Center"/>
+                    <ComboBox x:Name="myCbLsoFilterMode" Width="160" Margin="8,0,0,0" VerticalAlignment="Center"
+                              SelectionChanged="myCbLsoFilterMode_SelectionChanged"/>
+                    <Label Content="LSO Focus Position :" Style="{StaticResource LabelStyle}"
+                           VerticalAlignment="Center" Margin="24,0,0,0"/>
+                    <TextBox x:Name="myTbLsoFocusPosition" Style="{StaticResource TextBoxS1Style}" Margin="8,0,0,0"
+                             VerticalAlignment="Center" KeyDown="myTbLsoFocusPosition_KeyDown"
+                             LostFocus="myTbLsoFocusPosition_LostFocus"/>
+                    <Label Content="(-1 = leave the motor where it is)" Style="{StaticResource LabelStyle}"
+                           VerticalAlignment="Center" Margin="16,0,0,0"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- Capture only: the raw Bayer frame is divided by a flat of a uniform target
+                 before anything demosaics or saves it (Toolkit review and Agent alike). -->
+            <GroupBox x:Name="myGroupPostProcess" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2"
+                      Header="Post-process (Capture)" Margin="0,8,0,0">
+                <StackPanel Orientation="Horizontal">
+                    <CheckBox x:Name="myCheckFlatField" Content="Flat-field correction" Style="{StaticResource CheckBoxStyle}"
+                              VerticalAlignment="Center" Checked="FlatField_Changed" Unchecked="FlatField_Changed"
+                              ToolTip="Divide every captured frame by the flat below (per pixel, per Bayer plane, gain capped at 4x). Saved with the preset; the Agent applies it too."/>
+                    <Label Content="Flat :" Style="{StaticResource LabelStyle}" VerticalAlignment="Center" Margin="24,0,0,0"/>
+                    <Label x:Name="myLbFlatField" Style="{StaticResource LabelStyle}" VerticalAlignment="Center" MinWidth="260"
+                           ToolTip="Raw Bayer PGM of a uniform target shot with this preset (e.g. lsotune capture's frame.pgm)."/>
+                    <Button x:Name="myBtFlatFieldBrowse" Content="Browse..." Style="{StaticResource ButtonS1Style}" Width="70"
+                            VerticalAlignment="Center" Margin="8,0,0,0" Click="myBtFlatFieldBrowse_Click"/>
+                    <Button x:Name="myBtFlatFieldClear" Content="Clear" Style="{StaticResource ButtonS1Style}" Width="50"
+                            VerticalAlignment="Center" Margin="4,0,0,0" Click="myBtFlatFieldClear_Click"/>
+                </StackPanel>
+            </GroupBox>
+        </Grid>
+    </DockPanel>
+</Window>

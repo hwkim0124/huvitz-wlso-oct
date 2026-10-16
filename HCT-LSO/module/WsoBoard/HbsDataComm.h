@@ -56,6 +56,9 @@ namespace wso_board
 		virtual bool writeSystemConfigure(const HbsSystemConfig* data, const HbsTableDescriptor* desc) = 0;
 		virtual bool writeGalvanoDynamicParam(const HbsGalvanoDynamicParam* data, const HbsTableDescriptor* desc) = 0;
 		virtual bool writeLsoScannerParam(const HbsLsoScanner* data, const HbsTableDescriptor* desc) = 0;
+		// One trajectory slot only: the capture-status header and the other slots are left
+		// untouched, which is what the DevKit does when it uploads a scan pattern.
+		virtual bool writeLsoScannerProfile(std::uint8_t patternId, const HbsLsoScanProfile* data, const HbsTableDescriptor* desc) = 0;
 		virtual bool writeOctPhaseControl(const HbsOctPhaseControl* data, const HbsTableDescriptor* desc) = 0;
 
 		virtual bool writeTrajectoryParam(std::uint8_t tid, const TrajectoryProfileParam* param, const HbsTableDescriptor* desc) = 0;

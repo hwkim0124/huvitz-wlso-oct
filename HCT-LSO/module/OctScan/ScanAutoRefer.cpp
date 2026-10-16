@@ -1018,7 +1018,7 @@ bool oct_scan::ScanAutoRefer::moveReferenceMotor(int dist)
 {
 	auto* motor = getMainBoard()->getOctReferMotor();
 
-	if (!motor->updatePositionByOffset(dist)) {
+	if (!motor->moveByStepOffset(dist)) {
 		return false;
 	}
 	return true;

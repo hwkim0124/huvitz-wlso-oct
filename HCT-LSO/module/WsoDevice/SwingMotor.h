@@ -25,6 +25,7 @@ namespace wso_device
 
 	public:
 		bool initializeSwingMotor(void);
+		bool updatePositionToOrigin(int mode) override;
 
 		bool isAtPiPostion(void);
 

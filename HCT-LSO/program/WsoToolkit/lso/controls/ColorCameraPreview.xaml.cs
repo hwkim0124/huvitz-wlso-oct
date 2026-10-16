@@ -62,7 +62,7 @@ namespace WsoToolkit.controls
         /// Mono8/Bayer + full FOV -> centered-square ROI -> IR LED -> IR scanner pattern -> live);
         /// this control only selects display-side grayscale and provides the frame callback.
         /// </summary>
-        public void PlayPreview(ColorPreviewMonoMode mode)
+        public void PlayPreview(ColorPreviewMonoMode mode, LsoFundusPreviewRequest request)
         {
             var callback = LiveCallback;
             if (callback == null)
@@ -79,19 +79,25 @@ namespace WsoToolkit.controls
 
             myImagePreview.SetLiveMode();
 
-            // Single source of truth for the orchestration, shared with Agent — do not
-            // duplicate the param/ROI/LED/scanner sequence here.
-            ColorMonoPreviewMode nativeMode = (mode == ColorPreviewMonoMode.BayerSwGray)
-                ? ColorMonoPreviewMode.BayerSwGray
-                : ColorMonoPreviewMode.SensorMono8;
-            LsoCamera.StartColorMonoPreview(nativeMode, callback);
+            // Single source of truth for the orchestration - do not duplicate the
+            // param/ROI/profile/LED/scanner sequence here, and in particular do not start
+            // the scanner as well: the one-call already does, and doing both sends the
+            // board an extra off/on pair per transition.
+            if (!LsoCamera.StartFundusPreview(ref request, callback))
+            {
+                // Nothing was started (params/profile restored by the callee) - do not enter the
+                // aiming state, or a silent failure looks exactly like a dark, non-sweeping preview.
+                myImagePreview.StopTimer();
+                System.Windows.MessageBox.Show($"Preview start failed: {LsoCamera.GetLastCaptureError()}");
+                return;
+            }
 
             myImagePreview.StartTimer();
             _aiming = true;
         }
 
-        /// <summary>Stop the mono aiming live. The native one-call pauses live + IR scanner pattern,
-        /// turns off the IR LED, and restores the saved camera params.</summary>
+        /// <summary>Stop the mono aiming live. The native one-call pauses live + the scan
+        /// pattern, applies the request's restore illumination, and restores camera params.</summary>
         public void StopPreview()
         {
             if (!_aiming)
@@ -99,7 +105,7 @@ namespace WsoToolkit.controls
                 return;
             }
 
-            LsoCamera.StopColorMonoPreview();
+            LsoCamera.StopFundusPreview();
             myImagePreview.StopTimer();
             myImagePreview.IsForceGrayLiveDisplay = false;
             _aiming = false;
@@ -137,18 +143,6 @@ namespace WsoToolkit.controls
         {
             get => myImagePreview.IsReviewMode;
             set => myImagePreview.IsReviewMode = value;
-        }
-
-        public bool IsReviewSliceMode
-        {
-            get => myImagePreview.IsReviewSliceMode;
-            set => myImagePreview.IsReviewSliceMode = value;
-        }
-
-        public bool IsReviewROIMode
-        {
-            get => myImagePreview.IsReviewROIMode;
-            set => myImagePreview.IsReviewROIMode = value;
         }
 
         public int AcqFrameCount

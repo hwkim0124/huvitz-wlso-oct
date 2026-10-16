@@ -64,9 +64,9 @@ void wso_device::CorneaCamera::applyConfigParameters(CorneaCameraConfigParam par
 	setDigitalGain(IrCameraId::CORNEA_RIGHT, param.dgain_right, true);
 	setDigitalGain(IrCameraId::CORNEA_LOWER, param.dgain_lower, true);
 
-	setExposureTime(IrCameraId::CORNEA_LEFT, (unsigned int)param.exposTime_left, true);	
-	setExposureTime(IrCameraId::CORNEA_RIGHT, (unsigned int)param.exposTime_right, true);
-	setExposureTime(IrCameraId::CORNEA_LOWER, (unsigned int)param.exposTime_lower, true);	
+	setExposureTime(IrCameraId::CORNEA_LEFT, param.exposTime_left, true);	
+	setExposureTime(IrCameraId::CORNEA_RIGHT, param.exposTime_right, true);
+	setExposureTime(IrCameraId::CORNEA_LOWER, param.exposTime_lower, true);	
 	return;
 }
 

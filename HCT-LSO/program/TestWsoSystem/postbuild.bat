@@ -15,3 +15,5 @@ xcopy %1\*.json %2\ /y /d
 
 xcopy %1\system_libs\*.dll %2\system_libs\ /y /d
 xcopy %1\system_libs\*.cti %2\system_libs\ /y /d /c
+
+xcopy %1\models\*.* %2\models\ /y /d

@@ -206,12 +206,26 @@ bool wso_device::StepMotor::updatePositionUseThread(int pos)
 }
 */
 
-bool wso_device::StepMotor::updatePositionByOffset(int offset)
+bool wso_device::StepMotor::moveToPosition(int pos, bool async)
 {
-	int pos = getPosition() + offset;
-	return updatePosition(pos);
+	if (!isInitiated()) {
+		return false;
+	}
+
+	bool ret = controlMoveOverride(pos, async);
+	return ret;
 }
 
+bool wso_device::StepMotor::moveByStepOffset(int offset, bool async)
+{
+	if (!isInitiated()) {
+		return false;
+	}
+
+	int pos = getPosition() + offset;
+	bool ret = controlMoveOverride(pos, async);
+	return ret;
+}
 
 bool wso_device::StepMotor::updatePositionByValue(float value)
 {
@@ -282,6 +296,42 @@ bool wso_device::StepMotor::controlMove(int pos, bool async)
 		return true;
 	}
 	LogD() << "StepMotor::controlMove() failed, name: " << getName() << ", pos: " << pos << ", async: " << async;
+	return false;
+}
+
+bool wso_device::StepMotor::controlMoveOverride(int pos, bool async)
+{
+	if (!isInitiated()) {
+		return false;
+	}
+
+	pos = (pos < getRangeMin() ? getRangeMin() : pos);
+	pos = (pos > getRangeMax() ? getRangeMax() : pos);
+	impl().targetPos = pos;
+
+	UsbComm& usbComm = getMainBoard()->getUsbComm();
+	bool sent = false;
+	{
+		// Sending the command and clearing isStopped must be one step. A stop
+		// arriving in between would set the flag and then be clobbered here,
+		// so waitForUpdate() would never see it and would run to full timeout.
+		lock_guard<mutex> lock(impl().mutexMoveStop);
+		sent = usbComm.MotorMoveOverride(getMotorId(), pos);
+		if (sent) {
+			impl().isStopped = false;
+		}
+	}
+
+	if (sent)
+	{
+		async = async || isAsyncMode();
+		if (!async) {
+			// Outside the lock: a stop must be able to interrupt this.
+			return waitForUpdate();
+		}
+		return true;
+	}
+	LogD() << "StepMotor::controlMoveOverride() failed, name: " << getName() << ", pos: " << pos << ", async: " << async;
 	return false;
 }
 

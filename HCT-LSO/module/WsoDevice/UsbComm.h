@@ -102,6 +102,7 @@ namespace wso_device
 		bool writeSystemConfigure(const HbsSystemConfig* data, const HbsTableDescriptor* desc) override;
 		bool writeGalvanoDynamicParam(const HbsGalvanoDynamicParam* data, const HbsTableDescriptor* desc) override;
 		bool writeLsoScannerParam(const HbsLsoScanner* data, const HbsTableDescriptor* desc) override;
+		bool writeLsoScannerProfile(std::uint8_t patternId, const HbsLsoScanProfile* data, const HbsTableDescriptor* desc) override;
 		bool writeOctPhaseControl(const HbsOctPhaseControl* data, const HbsTableDescriptor* desc) override;
 
 		bool writeTrajectoryParam(std::uint8_t tid, const TrajectoryProfileParam* param, const HbsTableDescriptor* desc) override;
@@ -116,6 +117,8 @@ namespace wso_device
 		bool MotorJogg(std::uint8_t mid, int delta);
 		bool MotorMove(std::uint8_t mid, int pos);
 		bool MotorHome(std::uint8_t mid);
+		bool MotorMoveOverride(std::uint8_t mid, std::int32_t pos);
+
 		bool StepMotorStop(std::uint8_t mid);
 		bool StepMotorVertMove(std::uint8_t mid, std::uint8_t dir);
 
@@ -142,6 +145,8 @@ namespace wso_device
 
 		bool LsoScannerControl(std::uint8_t patternId, std::uint8_t onOff);
 		bool LsoGalvanoMoveY(std::int16_t ypos);
+		// Board-global, no pattern id: whoever starts a mode last owns the setting.
+		bool LsoScanSequence(std::uint8_t seqMode, std::int16_t preMoveOffset, std::uint16_t preMoveDelayUs);
 		bool LsoScannerTriggerControl(std::uint8_t onOff);
 
 		bool LedSetIntensity(LightType type, std::uint8_t value);

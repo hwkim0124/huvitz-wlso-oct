@@ -59,6 +59,11 @@ bool wso_device::SwingMotor::initializeSwingMotor(void)
 	return StepMotor::initializeStepMotor();
 }
 
+bool wso_device::SwingMotor::updatePositionToOrigin(int mode)
+{
+	return updatePosition(MOTOR_SWING_INIT_POS);
+}
+
 bool wso_device::SwingMotor::isAtPiPostion(void)
 {
 	if (auto* board = getMainBoard(); board) {

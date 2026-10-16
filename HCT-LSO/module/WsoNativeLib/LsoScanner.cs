@@ -29,6 +29,10 @@ namespace WsoNativeLib
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool setLsoScannerTrajectory(int patternId, short[]? pos, int count);
+
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
         private static extern bool obtainLsoScannerCaptureParam(int patternId, ref LsoScannerCaptureParam param);
 
         [DllImport(LibraryName)]
@@ -38,6 +42,10 @@ namespace WsoNativeLib
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
         private static extern bool moveLsoScannerYposition(int ypos);
+
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool setLsoScanSequence(int seqMode, int preMoveOffset, int preMoveDelayUs);
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
@@ -68,6 +76,14 @@ namespace WsoNativeLib
             return submitLsoScannerControlParam(patternId, param);
         }
 
+        // Installs (or with null/empty clears) the per-slot pos[] override the native side
+        // copies into the board profile on every submit instead of the linear sweep. The
+        // length has to equal the profile's sampleSize when that submit happens.
+        public static bool SetLsoScannerTrajectory(int patternId, short[]? pos)
+        {
+            return setLsoScannerTrajectory(patternId, pos, pos?.Length ?? 0);
+        }
+
         public static bool ObtainLsoScannerCaptureParam(int patternId, ref LsoScannerCaptureParam param)
         {
             return obtainLsoScannerCaptureParam(patternId, ref param);
@@ -81,6 +97,16 @@ namespace WsoNativeLib
         public static bool MoveLsoScannerYposition(int ypos)
         {
             return moveLsoScannerYposition(ypos);
+        }
+
+        // Which entity starts a scan frame. The board keeps ONE setting - the command has no
+        // pattern id - so the caller that starts an acquisition sends the sequence of the mode
+        // it is about to run, rather than assuming the board still holds it.
+        // preMoveOffset / preMoveDelayUs only apply to GALVANO_FIRST; the native side zeroes
+        // them for TRIG_FIRST.
+        public static bool SetLsoScanSequence(LsoScanSequenceMode mode, short preMoveOffset, ushort preMoveDelayUs)
+        {
+            return setLsoScanSequence((int)mode, preMoveOffset, preMoveDelayUs);
         }
 
         public static bool ControlLsoScannerCapture(int patternId, int onOff)

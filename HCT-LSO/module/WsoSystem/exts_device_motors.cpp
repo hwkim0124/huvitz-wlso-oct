@@ -39,7 +39,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStepMotorPosition(MotorType typ
 bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStepMotorByPositionOffset(MotorType type, int offset)
 {
 	if (auto* motor = Hardware::getInstance()->getStepMotor(type); motor) {
-		if (motor->updatePositionByOffset(offset)) {
+		if (motor->moveByStepOffset(offset)) {
 			return true;
 		}
 	}
@@ -206,7 +206,7 @@ float WSOSYSTEM_DLL_API __stdcall wso_system::getStepMotorValueAtPosition(MotorT
 bool WSOSYSTEM_DLL_API __stdcall wso_system::moveHeadLeft(void)
 {
 	if (auto* motor = Hardware::getInstance()->getMainBoard()->getXstageMotor(); motor) {
-		return motor->moveInVelocityMode(0);
+		return motor->moveInVelocityMode(1);
 	}
 	return false;
 }
@@ -214,7 +214,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::moveHeadLeft(void)
 bool WSOSYSTEM_DLL_API __stdcall wso_system::moveHeadRight(void)
 {
 	if (auto* motor = Hardware::getInstance()->getMainBoard()->getXstageMotor(); motor) {
-		return motor->moveInVelocityMode(1);
+		return motor->moveInVelocityMode(0);
 	}
 	return false;
 }
@@ -222,7 +222,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::moveHeadRight(void)
 bool WSOSYSTEM_DLL_API __stdcall wso_system::moveHeadUp(void)
 {
 	if (auto* motor = Hardware::getInstance()->getMainBoard()->getYstageMotor(); motor) {
-		return motor->moveInVelocityMode(1);
+		return motor->moveInVelocityMode(0);
 	}
 	return false;
 }
@@ -230,7 +230,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::moveHeadUp(void)
 bool WSOSYSTEM_DLL_API __stdcall wso_system::moveHeadDown(void)
 {
 	if (auto* motor = Hardware::getInstance()->getMainBoard()->getYstageMotor(); motor) {
-		return motor->moveInVelocityMode(0);
+		return motor->moveInVelocityMode(1);
 	}
 	return false;
 }
@@ -238,7 +238,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::moveHeadDown(void)
 bool WSOSYSTEM_DLL_API __stdcall wso_system::moveHeadForward(void)
 {
 	if (auto* motor = Hardware::getInstance()->getMainBoard()->getZstageMotor(); motor) {
-		return motor->moveInVelocityMode(0);
+		return motor->moveInVelocityMode(1);
 	}
 	return false;
 }
@@ -246,7 +246,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::moveHeadForward(void)
 bool WSOSYSTEM_DLL_API __stdcall wso_system::moveHeadBackward(void)
 {
 	if (auto* motor = Hardware::getInstance()->getMainBoard()->getZstageMotor(); motor) {
-		return motor->moveInVelocityMode(1);
+		return motor->moveInVelocityMode(0);
 	}
 	return false;
 }

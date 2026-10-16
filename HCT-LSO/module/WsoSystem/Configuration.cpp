@@ -117,10 +117,8 @@ bool wso_system::Configuration::applySystemConfiguration(void)
 					auto param = camera->getCorneaCameraConfigParam();
 					cornea->applyConfigParameters(*param);
 				}
-				if (auto* retina = board->getRetinaCamera(); retina) {
-					auto param = camera->getRetinaCameraConfigParam();
-					retina->applyConfigParameters(*param);
-				}
+				// No retina IR camera on the instrument anymore - its config would only
+				// push gain/exposure commands at a device that was never initialized.
 			}
 		}
 

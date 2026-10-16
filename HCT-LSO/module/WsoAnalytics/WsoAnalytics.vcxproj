@@ -135,7 +135,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalLibraryDirectories>$(OutDir);</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(OutDir);$(SolutionDir)externs\FTDI\x64;$(SolutionDir)externs\Spinnaker\lib64\vs2015</AdditionalLibraryDirectories>
       <AdditionalDependencies>FTD3XX.lib;Spinnaker_v140.lib;cpputil.lib;wsodomain.lib;wsoboard.lib;wsoconfig.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>
@@ -159,7 +159,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalLibraryDirectories>$(OutDir);</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(OutDir);$(SolutionDir)externs\FTDI\x64;$(SolutionDir)externs\Spinnaker\lib64\vs2015</AdditionalLibraryDirectories>
       <AdditionalDependencies>FTD3XX.lib;Spinnaker_v140.lib;cpputil.lib;wsodomain.lib;wsoboard.lib;wsoconfig.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>

@@ -820,13 +820,18 @@ bool wso_config::SysConfigFile::loadSectionOfAlignment(AlignmentSettings* aset, 
 		readInt(elem, "searchLimitPosZ", param.searchLimitPosZ);
 		readInt(elem, "minSafePosZ", param.minSafePosZ);
 		readInt(elem, "posToleranceSteps", param.posToleranceSteps);
+		readInt(elem, "stepZ", param.stepZ);
 	}
 
 	if ((elem = group->FirstChildElement("Control")) != nullptr) {
-		readFloat(elem, "tolerancePx", param.tolerancePx);
+		readFloat(elem, "toleranceYPx", param.toleranceYPx);
+		readFloat(elem, "approachTolZPx", param.approachTolZPx);
+		readFloat(elem, "toleranceXPx", param.toleranceXPx);
 		readFloat(elem, "toleranceZPx", param.toleranceZPx);
 		readFloat(elem, "startDeadbandPx", param.startDeadbandPx);
-		readFloat(elem, "stopDeadbandPx", param.stopDeadbandPx);
+		readFloat(elem, "stepsPerPxX", param.stepsPerPxX);
+		readFloat(elem, "stepsPerPxY", param.stepsPerPxY);
+		readFloat(elem, "stepsPerPxZ", param.stepsPerPxZ);
 	}
 
 	if ((elem = group->FirstChildElement("Frames")) != nullptr) {
@@ -843,13 +848,26 @@ bool wso_config::SysConfigFile::loadSectionOfAlignment(AlignmentSettings* aset, 
 		readInt(elem, "swingMs", param.swingTimeoutMs);
 		readInt(elem, "eyeXMs", param.eyeXTimeoutMs);
 		readInt(elem, "searchMs", param.searchTimeoutMs);
+		readInt(elem, "alignMs", param.alignTimeoutMs);
 		readInt(elem, "backOffOnEnd", param.backOffOnEnd);
+	}
+
+	if ((elem = group->FirstChildElement("Light")) != nullptr) {
+		readInt(elem, "irLedIntensity", param.irLedIntensity);
 	}
 
 	if (XMLElement* cams = group->FirstChildElement("Camera"); cams != nullptr) {
 		if ((elem = cams->FirstChildElement("Left")) != nullptr)  readDetect(elem, param.detLeft);
 		if ((elem = cams->FirstChildElement("Right")) != nullptr) readDetect(elem, param.detRight);
 		if ((elem = cams->FirstChildElement("Lower")) != nullptr) readDetect(elem, param.detLower);
+	}
+
+	if ((elem = group->FirstChildElement("Detector")) != nullptr) {
+		PupilModelConfig model = aset->getModelConfig();
+		if (const char* path = elem->Attribute("modelPath"); path != nullptr && *path != '\0') model.modelPath = path;
+		readFloat(elem, "presenceThreshold", model.presenceThreshold);
+		readInt(elem, "intraOpThreads", model.intraOpThreads);
+		aset->setModelConfig(model);
 	}
 
 	aset->setParam(param);
@@ -871,13 +889,18 @@ bool wso_config::SysConfigFile::saveSectionOfAlignment(const AlignmentSettings* 
 	item->SetAttribute("searchLimitPosZ", param.searchLimitPosZ);
 	item->SetAttribute("minSafePosZ", param.minSafePosZ);
 	item->SetAttribute("posToleranceSteps", param.posToleranceSteps);
+	item->SetAttribute("stepZ", param.stepZ);
 
 	item = pdoc->NewElement("Control");
 	group->LinkEndChild(item);
-	item->SetAttribute("tolerancePx", param.tolerancePx);
+	item->SetAttribute("toleranceYPx", param.toleranceYPx);
+	item->SetAttribute("approachTolZPx", param.approachTolZPx);
+	item->SetAttribute("toleranceXPx", param.toleranceXPx);
 	item->SetAttribute("toleranceZPx", param.toleranceZPx);
 	item->SetAttribute("startDeadbandPx", param.startDeadbandPx);
-	item->SetAttribute("stopDeadbandPx", param.stopDeadbandPx);
+	item->SetAttribute("stepsPerPxX", param.stepsPerPxX);
+	item->SetAttribute("stepsPerPxY", param.stepsPerPxY);
+	item->SetAttribute("stepsPerPxZ", param.stepsPerPxZ);
 
 	item = pdoc->NewElement("Frames");
 	group->LinkEndChild(item);
@@ -894,7 +917,12 @@ bool wso_config::SysConfigFile::saveSectionOfAlignment(const AlignmentSettings* 
 	item->SetAttribute("swingMs", param.swingTimeoutMs);
 	item->SetAttribute("eyeXMs", param.eyeXTimeoutMs);
 	item->SetAttribute("searchMs", param.searchTimeoutMs);
+	item->SetAttribute("alignMs", param.alignTimeoutMs);
 	item->SetAttribute("backOffOnEnd", param.backOffOnEnd);
+
+	item = pdoc->NewElement("Light");
+	group->LinkEndChild(item);
+	item->SetAttribute("irLedIntensity", param.irLedIntensity);
 
 	XMLElement* cams = pdoc->NewElement("Camera");
 	group->LinkEndChild(cams);
@@ -910,6 +938,13 @@ bool wso_config::SysConfigFile::saveSectionOfAlignment(const AlignmentSettings* 
 	writeDetect("Left", param.detLeft);
 	writeDetect("Right", param.detRight);
 	writeDetect("Lower", param.detLower);
+
+	const PupilModelConfig model = aset->getModelConfig();
+	item = pdoc->NewElement("Detector");
+	group->LinkEndChild(item);
+	item->SetAttribute("modelPath", model.modelPath.c_str());
+	item->SetAttribute("presenceThreshold", model.presenceThreshold);
+	item->SetAttribute("intraOpThreads", model.intraOpThreads);
 	return true;
 }
 

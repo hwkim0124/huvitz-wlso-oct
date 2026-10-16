@@ -130,10 +130,10 @@ namespace WsoNativeLib
             ACC_MODE = 1
         }
 
-        public const int FIXATION_ROW_MIN = 0;      // -199;
-        public const int FIXATION_ROW_MAX = +199;
-        public const int FIXATION_COL_MIN = 0;      // -199;
-        public const int FIXATION_COL_MAX = +199;
+        public const int FIXATION_ROW_MIN = 0;
+        public const int FIXATION_ROW_MAX = 319;
+        public const int FIXATION_COL_MIN = 0;
+        public const int FIXATION_COL_MAX = 239;
 
 
         // Callback function type 

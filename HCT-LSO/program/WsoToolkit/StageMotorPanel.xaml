@@ -1,0 +1,71 @@
+<UserControl x:Class="WsoToolkit.StageMotorPanel"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Loaded="UserControl_Loaded"
+        Unloaded="UserControl_Unloaded">
+    <!-- Column widths are sized for the narrowest host, the scan-test screen's 334px column;
+         the standalone StageMotorWindow simply renders the same panel with a wider slider.
+         Everything fixed adds up to 268px, so the slider keeps whatever is left. -->
+    <GroupBox Header="Stage Motor">
+        <Grid Margin="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="26"/>
+                <RowDefinition Height="26"/>
+                <RowDefinition Height="26"/>
+                <RowDefinition Height="26"/>
+                <RowDefinition Height="26"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="44"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="46"/>
+                <ColumnDefinition Width="46"/>
+                <ColumnDefinition Width="26"/>
+                <ColumnDefinition Width="26"/>
+                <ColumnDefinition Width="42"/>
+                <ColumnDefinition Width="38"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="X" ToolTip="X Stage" FontWeight="SemiBold" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,6,0"/>
+            <Slider x:Name="sliderXstage" Grid.Row="0" Grid.Column="1" Style="{StaticResource SliderStyle}" Margin="4,0" ValueChanged="SliderXstage_ValueChanged" Thumb.DragStarted="SliderXstage_DragStarted" Thumb.DragCompleted="SliderXstage_DragCompleted"/>
+            <TextBox x:Name="editXstagePos" Grid.Row="0" Grid.Column="2" Style="{StaticResource TextBoxStyleS1}" Width="42" ToolTip="Position" KeyDown="EditXstagePos_KeyDown"/>
+            <TextBox x:Name="editXstageValue" Grid.Row="0" Grid.Column="3" Style="{StaticResource TextBoxStyleS1}" Width="42" ToolTip="Step"/>
+            <Button x:Name="btnXstageBwd" Grid.Row="0" Grid.Column="4" Content="-" Style="{StaticResource ButtonStyleS1}" Width="24" Click="BtnXstageBwd_Click"/>
+            <Button x:Name="btnXstageFwd" Grid.Row="0" Grid.Column="5" Content="+" Style="{StaticResource ButtonStyleS1}" Width="24" Click="BtnXstageFwd_Click"/>
+            <Button x:Name="btnXstageOrigin" Grid.Row="0" Grid.Column="6" Content="Org" ToolTip="Origin" Style="{StaticResource ButtonStyleS1}" Width="38" Click="BtnXstageOrigin_Click"/>
+            <Button x:Name="btnXstageSetAs" Grid.Row="0" Grid.Column="7" Content="Set" ToolTip="Set As" Style="{StaticResource ButtonStyleS1}" Width="34" Click="BtnXstageSetAs_Click"/>
+
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Y" ToolTip="Y Stage" FontWeight="SemiBold" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,6,0"/>
+            <Slider x:Name="sliderYstage" Grid.Row="1" Grid.Column="1" Style="{StaticResource SliderStyle}" Margin="4,0" ValueChanged="SliderYstage_ValueChanged" Thumb.DragStarted="SliderYstage_DragStarted" Thumb.DragCompleted="SliderYstage_DragCompleted"/>
+            <TextBox x:Name="editYstagePos" Grid.Row="1" Grid.Column="2" Style="{StaticResource TextBoxStyleS1}" Width="42" ToolTip="Position" KeyDown="EditYstagePos_KeyDown"/>
+            <TextBox x:Name="editYstageValue" Grid.Row="1" Grid.Column="3" Style="{StaticResource TextBoxStyleS1}" Width="42" ToolTip="Step"/>
+            <Button x:Name="btnYstageBwd" Grid.Row="1" Grid.Column="4" Content="-" Style="{StaticResource ButtonStyleS1}" Width="24" Click="BtnYstageBwd_Click"/>
+            <Button x:Name="btnYstageFwd" Grid.Row="1" Grid.Column="5" Content="+" Style="{StaticResource ButtonStyleS1}" Width="24" Click="BtnYstageFwd_Click"/>
+            <Button x:Name="btnYstageOrigin" Grid.Row="1" Grid.Column="6" Content="Org" ToolTip="Origin" Style="{StaticResource ButtonStyleS1}" Width="38" Click="BtnYstageOrigin_Click"/>
+            <Button x:Name="btnYstageSetAs" Grid.Row="1" Grid.Column="7" Content="Set" ToolTip="Set As" Style="{StaticResource ButtonStyleS1}" Width="34" Click="BtnYstageSetAs_Click"/>
+
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="Z" ToolTip="Z Stage" FontWeight="SemiBold" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,6,0"/>
+            <Slider x:Name="sliderZstage" Grid.Row="2" Grid.Column="1" Style="{StaticResource SliderStyle}" Margin="4,0" ValueChanged="SliderZstage_ValueChanged" Thumb.DragStarted="SliderZstage_DragStarted" Thumb.DragCompleted="SliderZstage_DragCompleted"/>
+            <TextBox x:Name="editZstagePos" Grid.Row="2" Grid.Column="2" Style="{StaticResource TextBoxStyleS1}" Width="42" ToolTip="Position" KeyDown="EditZstagePos_KeyDown"/>
+            <TextBox x:Name="editZstageValue" Grid.Row="2" Grid.Column="3" Style="{StaticResource TextBoxStyleS1}" Width="42" ToolTip="Step"/>
+            <Button x:Name="btnZstageBwd" Grid.Row="2" Grid.Column="4" Content="-" Style="{StaticResource ButtonStyleS1}" Width="24" Click="BtnZstageBwd_Click"/>
+            <Button x:Name="btnZstageFwd" Grid.Row="2" Grid.Column="5" Content="+" Style="{StaticResource ButtonStyleS1}" Width="24" Click="BtnZstageFwd_Click"/>
+            <Button x:Name="btnZstageOrigin" Grid.Row="2" Grid.Column="6" Content="Org" ToolTip="Origin" Style="{StaticResource ButtonStyleS1}" Width="38" Click="BtnZstageOrigin_Click"/>
+            <Button x:Name="btnZstageSetAs" Grid.Row="2" Grid.Column="7" Content="Set" ToolTip="Set As" Style="{StaticResource ButtonStyleS1}" Width="34" Click="BtnZstageSetAs_Click"/>
+
+            <TextBlock Grid.Row="3" Grid.Column="0" Text="Sw" ToolTip="Swing" FontWeight="SemiBold" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,6,0"/>
+            <Slider x:Name="sliderSwing" Grid.Row="3" Grid.Column="1" Style="{StaticResource SliderStyle}" Margin="4,0" ValueChanged="SliderSwing_ValueChanged" Thumb.DragStarted="SliderSwing_DragStarted" Thumb.DragCompleted="SliderSwing_DragCompleted"/>
+            <TextBox x:Name="editSwingPos" Grid.Row="3" Grid.Column="2" Style="{StaticResource TextBoxStyleS1}" Width="42" ToolTip="Position" KeyDown="EditSwingPos_KeyDown"/>
+            <TextBox x:Name="editSwingValue" Grid.Row="3" Grid.Column="3" Style="{StaticResource TextBoxStyleS1}" Width="42" ToolTip="Step"/>
+            <Button x:Name="btnSwingBwd" Grid.Row="3" Grid.Column="4" Content="-" Style="{StaticResource ButtonStyleS1}" Width="24" Click="BtnSwingBwd_Click"/>
+            <Button x:Name="btnSwingFwd" Grid.Row="3" Grid.Column="5" Content="+" Style="{StaticResource ButtonStyleS1}" Width="24" Click="BtnSwingFwd_Click"/>
+            <Button x:Name="btnSwingOrigin" Grid.Row="3" Grid.Column="6" Content="Org" ToolTip="Origin" Style="{StaticResource ButtonStyleS1}" Width="38" Click="BtnSwingOrigin_Click"/>
+            <Button x:Name="btnSwingSetAs" Grid.Row="3" Grid.Column="7" Content="Set" ToolTip="Set As" Style="{StaticResource ButtonStyleS1}" Width="34" Click="BtnSwingSetAs_Click"/>
+
+            <TextBlock Grid.Row="4" Grid.Column="0" Text="Chinrest" FontWeight="SemiBold" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,6,0"/>
+            <Button x:Name="btnChinrestUp" Grid.Row="4" Grid.Column="1" Content="Up" ToolTip="Move Up" Style="{StaticResource ButtonStyleS1}" Margin="4,0,188,0" Click="BtnChinrestUp_Click"/>
+            <Button x:Name="btnChinrestDown" Grid.Row="4" Grid.Column="1" Content="Down" ToolTip="Move Down" Style="{StaticResource ButtonStyleS1}" Margin="72,0,120,0" Click="BtnChinrestDown_Click"/>
+            <Button x:Name="btnChinrestStop" Grid.Row="4" Grid.Column="1" Content="Stop" Style="{StaticResource ButtonStyleS1}" Margin="143,0,49,0" Click="BtnChinrestStop_Click"/>
+        </Grid>
+    </GroupBox>
+</UserControl>

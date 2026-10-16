@@ -193,6 +193,16 @@ namespace wso_device
 				std::uint8_t crc[PACKET_CRC_SIZE];
 			} ctrl7;
 
+			// mode + signed position + unsigned time, 5 payload bytes. Mirror of the
+			// DevKit's CmdSetLsoScanSequence_t (Pack = 1), which is the only command that
+			// carries this combination.
+			struct {
+				std::uint8_t c1;
+				std::int16_t s1;
+				std::uint16_t s2;
+				std::uint8_t crc[PACKET_CRC_SIZE];
+			} lsoSeq;
+
 			struct {
 				std::uint8_t c1;
 				std::uint8_t c2;

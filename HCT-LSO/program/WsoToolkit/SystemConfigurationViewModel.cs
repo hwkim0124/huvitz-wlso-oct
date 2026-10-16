@@ -43,14 +43,20 @@ namespace WsoToolkit
             editAlignEyeXOD.Text = p.eyePosX_OD.ToString();
             editAlignEyeXOS.Text = p.eyePosX_OS.ToString();
             editAlignPosTol.Text = p.posToleranceSteps.ToString();
+            editAlignStepZ.Text = p.stepZ.ToString();
             editAlignSwingOD.Text = p.swingTiltPos_OD.ToString();
             editAlignSwingOS.Text = p.swingTiltPos_OS.ToString();
             checkAlignBackOff.IsChecked = p.backOffOnEnd != 0;
+            editAlignIrLed.Text = p.irLedIntensity.ToString();
 
-            editAlignTolPx.Text = p.tolerancePx.ToString("F1");
-            editAlignTolZPx.Text = p.toleranceZPx.ToString("F1");
+            editAlignTolY.Text = p.toleranceYPx.ToString("F1");
+            editAlignTolZApp.Text = p.approachTolZPx.ToString("F1");
+            editAlignTolX.Text = p.toleranceXPx.ToString("F1");
+            editAlignTolZ.Text = p.toleranceZPx.ToString("F1");
             editAlignStartDb.Text = p.startDeadbandPx.ToString("F1");
-            editAlignStopDb.Text = p.stopDeadbandPx.ToString("F1");
+            editAlignStepsPxX.Text = p.stepsPerPxX.ToString("F2");
+            editAlignStepsPxY.Text = p.stepsPerPxY.ToString("F2");
+            editAlignStepsPxZ.Text = p.stepsPerPxZ.ToString("F2");
 
             editAlignDetectN.Text = p.detectConsecutive.ToString();
             editAlignSettleN.Text = p.settleFrames.ToString();
@@ -63,6 +69,7 @@ namespace WsoToolkit
             editAlignToSwing.Text = p.swingTimeoutMs.ToString();
             editAlignToEyeX.Text = p.eyeXTimeoutMs.ToString();
             editAlignToSearch.Text = p.searchTimeoutMs.ToString();
+            editAlignToAlign.Text = p.alignTimeoutMs.ToString();
 
             ReflectPupilTarget(p.detLeft, editAlignLeftTX, editAlignLeftTY, editAlignLeftSH, editAlignLeftSV);
             ReflectPupilTarget(p.detRight, editAlignRightTX, editAlignRightTY, editAlignRightSH, editAlignRightSV);
@@ -100,14 +107,20 @@ namespace WsoToolkit
             p.eyePosX_OD = ToInt(editAlignEyeXOD.Text);
             p.eyePosX_OS = ToInt(editAlignEyeXOS.Text);
             p.posToleranceSteps = ToInt(editAlignPosTol.Text);
+            p.stepZ = ToInt(editAlignStepZ.Text);
             p.swingTiltPos_OD = ToInt(editAlignSwingOD.Text);
             p.swingTiltPos_OS = ToInt(editAlignSwingOS.Text);
             p.backOffOnEnd = (checkAlignBackOff.IsChecked ?? false) ? 1 : 0;
+            p.irLedIntensity = ToInt(editAlignIrLed.Text);
 
-            p.tolerancePx = ToFloat(editAlignTolPx.Text);
-            p.toleranceZPx = ToFloat(editAlignTolZPx.Text);
+            p.toleranceYPx = ToFloat(editAlignTolY.Text);
+            p.approachTolZPx = ToFloat(editAlignTolZApp.Text);
+            p.toleranceXPx = ToFloat(editAlignTolX.Text);
+            p.toleranceZPx = ToFloat(editAlignTolZ.Text);
             p.startDeadbandPx = ToFloat(editAlignStartDb.Text);
-            p.stopDeadbandPx = ToFloat(editAlignStopDb.Text);
+            p.stepsPerPxX = ToFloat(editAlignStepsPxX.Text);
+            p.stepsPerPxY = ToFloat(editAlignStepsPxY.Text);
+            p.stepsPerPxZ = ToFloat(editAlignStepsPxZ.Text);
 
             p.detectConsecutive = ToInt(editAlignDetectN.Text);
             p.settleFrames = ToInt(editAlignSettleN.Text);
@@ -120,6 +133,7 @@ namespace WsoToolkit
             p.swingTimeoutMs = ToInt(editAlignToSwing.Text);
             p.eyeXTimeoutMs = ToInt(editAlignToEyeX.Text);
             p.searchTimeoutMs = ToInt(editAlignToSearch.Text);
+            p.alignTimeoutMs = ToInt(editAlignToAlign.Text);
 
             p.detLeft = UploadPupilTarget(editAlignLeftTX, editAlignLeftTY, editAlignLeftSH, editAlignLeftSV);
             p.detRight = UploadPupilTarget(editAlignRightTX, editAlignRightTY, editAlignRightSH, editAlignRightSV);

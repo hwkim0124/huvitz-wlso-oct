@@ -61,6 +61,11 @@ bool wso_device::ZstageMotor::initializeZstageMotor(void)
 	return StepMotor::initializeStepMotor();
 }
 
+bool wso_device::ZstageMotor::updatePositionToOrigin(int mode)
+{
+	return updatePosition(MOTOR_STAGE_Z_INIT_POS);
+}
+
 bool wso_device::ZstageMotor::isAtPiPostion(void)
 {
 	if (auto* board = getMainBoard(); board) {

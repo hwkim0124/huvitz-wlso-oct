@@ -43,7 +43,6 @@ Hardware* wso_system::Hardware::getInstance(void)
 	return &instance;
 }
 
-
 bool wso_system::Hardware::initializeBoardDevices(void)
 {
 	auto* p = getMainBoard();

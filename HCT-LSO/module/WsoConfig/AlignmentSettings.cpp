@@ -7,6 +7,7 @@ using namespace wso_config;
 struct AlignmentSettings::AlignmentSettingsImpl
 {
 	EyeAlignConfigParam param;
+	PupilModelConfig model;
 
 	AlignmentSettingsImpl() {
 		initializeAlignmentSettingsImpl();
@@ -15,6 +16,7 @@ struct AlignmentSettings::AlignmentSettingsImpl
 	void initializeAlignmentSettingsImpl(void) {
 		// The in-class initializers of EyeAlignConfigParam are the defaults.
 		param = EyeAlignConfigParam();
+		model = PupilModelConfig();
 	}
 };
 
@@ -73,6 +75,16 @@ void wso_config::AlignmentSettings::setDetectParam(CameraType type, const PupilD
 	case CameraType::IR_CORNEA_LOWER: impl().param.detLower = param; break;
 	default: break;
 	}
+}
+
+PupilModelConfig wso_config::AlignmentSettings::getModelConfig(void) const
+{
+	return impl().model;
+}
+
+void wso_config::AlignmentSettings::setModelConfig(const PupilModelConfig& config)
+{
+	impl().model = config;
 }
 
 AlignmentSettings::AlignmentSettingsImpl& wso_config::AlignmentSettings::impl(void) const

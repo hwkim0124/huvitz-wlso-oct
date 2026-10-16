@@ -68,10 +68,10 @@ namespace wso_device
 
 	// LCD Fixation
 	///////////////////////////////////////////////////////////////////////////////////////
-	constexpr int LCD_FIXATION_ROW_MIN = -199;
-	constexpr int LCD_FIXATION_ROW_MAX = +199;
-	constexpr int LCD_FIXATION_COL_MIN = -199;
-	constexpr int LCD_FIXATION_COL_MAX = +199;
+	constexpr int LCD_FIXATION_ROW_MIN = 0;
+	constexpr int LCD_FIXATION_ROW_MAX = 319;
+	constexpr int LCD_FIXATION_COL_MIN = 0;
+	constexpr int LCD_FIXATION_COL_MAX = 239;
 	constexpr int LCD_FIXATION_ROW_MID = ((LCD_FIXATION_ROW_MAX - LCD_FIXATION_ROW_MIN) / 2);
 	constexpr int LCD_FIXATION_COL_MID = ((LCD_FIXATION_COL_MAX - LCD_FIXATION_COL_MIN) / 2);
 
@@ -166,7 +166,7 @@ namespace wso_device
 
 	constexpr std::float_t IR_CAMERA_EXPOSURE_MIN = 1.0f;
 	constexpr std::float_t IR_CAMERA_EXPOSURE_MAX = 300.0f;
-	constexpr std::float_t IR_CAMERA_EXPOSURE_INIT = 30.0f;
+	constexpr std::float_t IR_CAMERA_EXPOSURE_INIT = 3.0f;
 
 	// Control Value
 	////////////////////////////////////////////////////////////////////////////////////////////
@@ -268,6 +268,7 @@ namespace wso_device
 		LOAD_SM_DEFAULT = 0x0105,
 		MOT_VMOVE = 0x0106,
 		SMOTSTOP = 0x0107,
+		MOTOVERRIDE_MOVE = 0x0113,
 		SET_IRCAM_MIRROR = 0x0204,
 		IRCAM = 0x0205,
 		IRLED = 0x0206,
@@ -321,6 +322,10 @@ namespace wso_device
 
 		LSO_SCANNER_CTRL = 0x6000,
 		LSO_Y_GALVO_MOVE = 0x6001,
+		// Which entity starts a scan frame, plus the pre-move the open-loop mode needs.
+		// DevKit LsoCmdCodes.SET_LSO_SCAN_SEQUENCE = { 0x02, 0x60 }. The commented-out
+		// SLO_CAPTURE_CMD below claimed the same number for a device that is not this one.
+		LSO_SCAN_SEQUENCE = 0x6002,
 		OCT_PHASE_CTRL = 0x7000,
 		OCT_SET_PHASE = 0x7001,
 		/*

@@ -1,0 +1,500 @@
+<Window x:Class="WsoToolkit.LsoScanTestWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:WsoToolkit.controls"
+        xmlns:local="clr-namespace:WsoToolkit"
+        mc:Ignorable="d"
+        Title="Lso Scan Test" Height="1060" Width="1920" WindowStartupLocation="Manual" Left="1" Top="1" Closed="Window_Closed"
+        PreviewKeyDown="Window_PreviewKeyDown_SlitMeasure_">
+    <!-- Layout note: every column below has an explicit width. The previous layout divided the
+         right half into seven equal columns and gave the controls three of them (~650px), which
+         is narrower than the synchronisation rows need - they were clipped on the right, and the
+         scan buttons were pushed past the bottom edge. Widths are stated here instead so a row
+         that no longer fits is visible as a mistake at design time.
+
+         The three columns are grouped by what the operator is doing, not by device kind:
+         anterior (patient alignment) | preview (what is being shot) | LSO scan (how it is shot). -->
+    <Grid Margin="12,12,12,12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="342"/>
+            <ColumnDefinition Width="8"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!--Anterior column: the three cornea cameras and their own gain/exposure. Stage control
+            moved to the bottom-right where its sliders have enough width to be usable.-->
+        <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Vertical">
+            <controls:CorneaCameraPreview x:Name="corneaPreview1" Width="334" Height="280"/>
+            <controls:CorneaCameraPreview x:Name="corneaPreview2" Width="334" Height="280"/>
+            <controls:CorneaCameraPreview x:Name="corneaPreview3" Width="334" Height="280"/>
+
+            <!-- Anterior (cornea IR) camera gain / exposure, per channel. The values are
+                 written straight to the camera; they are not part of a mode preset. -->
+            <GroupBox Header="Anterior Camera" Margin="0,8,0,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="26"/>
+                        <RowDefinition Height="26"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="72"/>
+                        <ColumnDefinition Width="64"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Label Grid.Row="0" Grid.Column="0" Content="Camera :" Style="{StaticResource LabelStyle}"/>
+                    <ComboBox x:Name="myCbAnteriorCamera" Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Style="{StaticResource ComboBoxStyle}" Width="90" HorizontalAlignment="Left" SelectionChanged="myCbAnteriorCamera_SelectionChanged"/>
+                    <Label Grid.Row="1" Grid.Column="0" Content="Gain / Exp :" Style="{StaticResource LabelStyle}"
+                           ToolTip="Analog gain [1~31] and exposure time."/>
+                    <TextBox x:Name="myTbAnteriorGain" Grid.Row="1" Grid.Column="1" Style="{StaticResource TextBoxS2Style}" Width="54" HorizontalAlignment="Left"
+                             ToolTip="Analog gain [1~31]. Enter applies it." KeyDown="myTbAnteriorValue_KeyDown"/>
+                    <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal">
+                        <TextBox x:Name="myTbAnteriorExposure" Style="{StaticResource TextBoxS2Style}" Width="54"
+                                 ToolTip="Exposure time. Enter applies it." KeyDown="myTbAnteriorValue_KeyDown"/>
+                        <Button x:Name="myBtAnteriorApply" Content="Set" Style="{StaticResource ButtonS1Style}" Width="38" Margin="4,0,0,0" Click="myBtAnteriorApply_Click"/>
+                    </StackPanel>
+                </Grid>
+            </GroupBox>
+        </StackPanel>
+
+        <Grid Grid.Row="0" Grid.Column="2">
+            <Grid.ColumnDefinitions>
+                <!--Preview column: the preview itself plus what is used while looking at it.-->
+                <ColumnDefinition Width="732"/>
+                <ColumnDefinition Width="8"/>
+                <!--LSO scan column: illumination, the LSO optics and the scan timing block.-->
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!--720x720: larger than the first compact layout, while still leaving the scan
+                    column enough width for four timing fields per row.-->
+                <controls:ColorCameraPreview x:Name="myColorPreview" Grid.Row="0" Width="720" Height="720"
+                                             HorizontalAlignment="Left" VerticalAlignment="Top"/>
+
+                <GroupBox Grid.Row="1" Header="Acquisition" Margin="0,8,8,0">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Button x:Name="myBtStartScan" Style="{StaticResource ButtonM1Style}" Content="Start Scan" Click="myBtStartScan_Click"/>
+                            <Button x:Name="myBtCapture" Style="{StaticResource ButtonM1Style}" Content="Capture" Margin="8,0,0,0" Click="myBtCapture_Click"/>
+                            <Button x:Name="myBtCorneaStart" Style="{StaticResource ButtonM1Style}" Content="Start Cornea" Margin="8,0,0,0" Click="myBtCorneaStart_Click"/>
+                            <Button x:Name="myBtImageAdjust" Style="{StaticResource ButtonM1Style}" Content="Image Adjust" Margin="8,0,0,0" Click="myBtImageAdjust_Click"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                            <CheckBox x:Name="myCheckAlignGuide" Style="{StaticResource CheckBoxStyle}" Content="Align Guide" VerticalAlignment="Center"
+                                      IsChecked="False" Checked="myCheckAlignGuide_CheckedNUnchecked" Unchecked="myCheckAlignGuide_CheckedNUnchecked"/>
+                            <Button x:Name="myBtSettings" Style="{StaticResource ButtonM1Style}" Content="Settings" Margin="16,0,0,0" Click="myBtSettings_Click"/>
+                        </StackPanel>
+                    </StackPanel>
+                </GroupBox>
+
+                <!--Per-mode presets (camera + galvo + light, XML files in Presets/).
+                    Selecting a preset never reprograms a running session: it is applied
+                    by the Preview/Capture one-call at start, or by Settings > Apply.
+                    Capture has one preset per image mode: Mode picks which one the Capture
+                    row, Capture, Settings and the Sync block edit.-->
+                <GroupBox Grid.Row="2" Header="Preset" Margin="0,8,8,0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="60"/>
+                            <ColumnDefinition Width="150"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Grid.Row="0" Grid.Column="0" Content="Preview :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
+                        <ComboBox x:Name="myCbPreviewPreset" Grid.Row="0" Grid.Column="1" Style="{StaticResource ComboBoxStyle}" Width="140" IsEditable="True" ToolTip="Preview camera preset. Type a name and Save As to add one." SelectionChanged="myCbPreviewPreset_SelectionChanged"/>
+                        <Button Grid.Row="0" Grid.Column="2" Content="Save As" Style="{StaticResource ButtonS1Style}" Width="56" HorizontalAlignment="Left" Margin="4,0,0,0" Click="myBtPreviewPresetSaveAs_Click"/>
+                        <Label Grid.Row="1" Grid.Column="0" Content="Mode :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
+                        <ComboBox x:Name="myCbCaptureImageMode" Grid.Row="1" Grid.Column="1" Style="{StaticResource ComboBoxStyle}" Width="140"
+                                  ToolTip="Capture image mode. Each mode keeps its own Capture preset (WsoDeviceCfg.ini [MODE_PRESET] CapturePreset.&lt;Mode&gt;; Color uses CapturePreset)."
+                                  SelectionChanged="myCbCaptureImageMode_SelectionChanged"/>
+                        <Label Grid.Row="2" Grid.Column="0" Content="Capture :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
+                        <ComboBox x:Name="myCbCapturePreset" Grid.Row="2" Grid.Column="1" Style="{StaticResource ComboBoxStyle}" Width="140" IsEditable="True" ToolTip="Capture preset of the selected Mode. Type a name and Save As to add one." SelectionChanged="myCbCapturePreset_SelectionChanged"/>
+                        <Button Grid.Row="2" Grid.Column="2" Content="Save As" Style="{StaticResource ButtonS1Style}" Width="56" HorizontalAlignment="Left" Margin="4,0,0,0" Click="myBtCapturePresetSaveAs_Click"/>
+                    </Grid>
+                </GroupBox>
+
+                <GroupBox Grid.Row="3" Header="Internal Fixation" Margin="0,8,8,0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="26"/>
+                            <RowDefinition Height="26"/>
+                            <RowDefinition Height="26"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <Label Grid.Row="0" Grid.Column="0" Content="Row :" Style="{StaticResource LabelStyle}"/>
+                        <Slider x:Name="mySliderFixationRow" Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" VerticalAlignment="Center" TickFrequency="1" LargeChange="1" SmallChange="1" IsSnapToTickEnabled="True" AutoToolTipPlacement="BottomRight" ValueChanged="mySliderFixationRow_ValueChanged"/>
+                        <TextBox x:Name="myTbFixationRow" Grid.Row="0" Grid.Column="4" Style="{StaticResource TextBoxS2Style}" HorizontalAlignment="Center" KeyDown="myTbFixationRow_KeyDown"/>
+                        <Label Grid.Row="1" Grid.Column="0" Content="Col :" Style="{StaticResource LabelStyle}"/>
+                        <Slider x:Name="mySliderFixationCol" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" VerticalAlignment="Center" TickFrequency="1" LargeChange="1" SmallChange="1" IsSnapToTickEnabled="True" AutoToolTipPlacement="BottomRight" ValueChanged="mySliderFixationCol_ValueChanged"/>
+                        <TextBox x:Name="myTbFixationCol" Grid.Row="1" Grid.Column="4" Style="{StaticResource TextBoxS2Style}" HorizontalAlignment="Center" KeyDown="myTbFixationCol_KeyDown"/>
+                        <RadioButton x:Name="myRbSideOD" Grid.Row="2" Grid.Column="0" GroupName="groupFixationEyeSide" Content="OD" Style="{StaticResource RadioButtonStyle}" IsChecked="True"/>
+                        <RadioButton x:Name="myRbSideOS" Grid.Row="2" Grid.Column="1" GroupName="groupFixationEyeSide" Content="OS" Style="{StaticResource RadioButtonStyle}"/>
+                        <Button x:Name="myBtFixationFundus" Grid.Row="2" Grid.Column="2" Content="Fundus" Style="{StaticResource ButtonS1Style}" Width="50" Click="myBtFixationFundus_Click"/>
+                        <Button x:Name="myBtFixationMarcular" Grid.Row="2" Grid.Column="3" Content="Macular" Style="{StaticResource ButtonS1Style}" Width="56" Click="myBtFixationMarcular_Click"/>
+                        <Button x:Name="myBtFixationDisc" Grid.Row="2" Grid.Column="4" Content="Disc" Style="{StaticResource ButtonS1Style}" Width="50" Click="myBtFixationDisc_Click"/>
+                    </Grid>
+                </GroupBox>
+            </Grid>
+
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <!--Illumination + the two LSO motors share one band; 330px is what the
+                        six stacked light channels need (22 + 6*44 + 8 margin + GroupBox chrome
+                        = ~317) and it is about what the previous three separate rows occupied
+                        (160 + 8 + ~82 + 8 + ~56 = ~314), so the Galvano block below keeps its
+                        height.-->
+                    <RowDefinition Height="330"/>
+                    <RowDefinition Height="8"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="8"/>
+                    <RowDefinition Height="176"/>
+                </Grid.RowDefinitions>
+
+                <!--Light Control keeps the left half of this column, the two LSO motors take the
+                    right half: Focus on top, Filter directly below it. Both halves are a star
+                    column with one 8px gutter, so at this column's ~790px (1904 client - 24
+                    margin - 342 - 8 - 732 - 8) they are ~391px each; the motor GroupBoxes sit
+                    on two equal star rows of (330-8)/2 = 161px, which is what makes them the
+                    same width AND the same height.-->
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Light Control is always visible here; no popup window is needed from this
+                         screen. It is the same control the standalone LightControlWindow hosts, so
+                         the hardware lifecycle has one implementation. Its channels are stacked one
+                         per row so the panel fits this half-width host. -->
+                    <local:LightControlPanel x:Name="myLightControlPanel" Grid.Row="0" Grid.RowSpan="3" Grid.Column="0"/>
+
+                    <GroupBox Grid.Row="0" Grid.Column="2" Header="LSO Focus Motor">
+                        <!--Focus on top, Return Mirror below. Auto columns keep Pos/In/Out/Set As
+                            from clipping; the slider takes the leftover width.-->
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Label x:Name="myLbLsoFocusMin" Grid.Row="0" Grid.Column="0" Content="" Style="{StaticResource LabelStyle}"/>
+                            <Slider x:Name="mySliderLsoFocus" Grid.Row="0" Grid.Column="1" Margin="4,0" VerticalAlignment="Center" TickFrequency="1" LargeChange="3" SmallChange="3" IsSnapToTickEnabled="True" AutoToolTipPlacement="BottomRight" Thumb.DragStarted="mySliderLsoFocus_DragStarted" Thumb.DragCompleted="mySliderLsoFocus_DragCompleted" ValueChanged="mySliderLsoFocus_ValueChanged"/>
+                            <Label x:Name="myLbLsoFocusMax" Grid.Row="0" Grid.Column="2" Content="" Style="{StaticResource LabelStyle}"/>
+                            <TextBox x:Name="myTbLsoFocusPos" Grid.Row="0" Grid.Column="3" Style="{StaticResource TextBoxS1Style}" Margin="4,0,0,0" MinWidth="56" ToolTip="Pos" KeyDown="myTbLsoFocusPos_KeyDown"/>
+                            <TextBox x:Name="myTbLsoFocusValue" Grid.Row="0" Grid.Column="4" Style="{StaticResource TextBoxS1Style}" Margin="4,0,0,0" MinWidth="56" ToolTip="Diopter" KeyDown="myTbLsoFocusValue_KeyDown"/>
+
+                            <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="5" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,2,0,0">
+                                <Button x:Name="myBtLsoFocusBwd" Content="-1D" Style="{StaticResource ButtonS1Style}" Width="48" MinWidth="48" Click="myBtLsoFocusBwd_Click"/>
+                                <Button x:Name="myBtLsoFocusFwd" Content="+1D" Style="{StaticResource ButtonS1Style}" Width="48" MinWidth="48" Margin="4,0,0,0" Click="myBtLsoFocusFwd_Click"/>
+                                <Button x:Name="myBtLsoFocusZero" Content="0D" Style="{StaticResource ButtonS1Style}" Width="48" MinWidth="48" Margin="4,0,0,0" Click="myBtLsoFocusZero_Click"/>
+                            </StackPanel>
+
+                            <Label Grid.Row="2" Grid.Column="0" Content="RM" Style="{StaticResource LabelStyle}" ToolTip="Return Mirror" Margin="0,6,0,0"/>
+                            <Slider x:Name="mySliderRetMirror" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Margin="4,6,0,0" VerticalAlignment="Center" TickFrequency="1" IsSnapToTickEnabled="True" AutoToolTipPlacement="BottomRight" Thumb.DragStarted="mySliderRetMirror_DragStarted" Thumb.DragCompleted="mySliderRetMirror_DragCompleted" ValueChanged="mySliderRetMirror_ValueChanged"/>
+                            <TextBox x:Name="myTbRetMirrorPos" Grid.Row="2" Grid.Column="3" Style="{StaticResource TextBoxS1Style}" Margin="4,6,0,0" MinWidth="56" ToolTip="Pos" KeyDown="myTbRetMirrorPos_KeyDown"/>
+                            <ComboBox x:Name="myCbRetMirror" Grid.Row="2" Grid.Column="4" Style="{StaticResource ComboBoxStyle}" Width="64" MinWidth="64" Margin="4,6,0,0" ToolTip="Set As target">
+                                <ComboBoxItem Content="IN" IsSelected="True"/>
+                                <ComboBoxItem Content="OUT"/>
+                            </ComboBox>
+
+                            <StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="5" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,2,0,0">
+                                <Button x:Name="myBtRetMirrorIn" Content="In" Style="{StaticResource ButtonS1Style}" Width="48" MinWidth="48" Click="myBtRetMirrorIn_Click"/>
+                                <Button x:Name="myBtRetMirrorOut" Content="Out" Style="{StaticResource ButtonS1Style}" Width="48" MinWidth="48" Margin="4,0,0,0" Click="myBtRetMirrorOut_Click"/>
+                                <Button x:Name="myBtRetMirrorSetAs" Content="Set As" Style="{StaticResource ButtonS1Style}" MinWidth="64" Margin="4,0,0,0" Click="myBtRetMirrorSetAs_Click"/>
+                            </StackPanel>
+                        </Grid>
+                    </GroupBox>
+
+                    <!--Two rows instead of one: the four filter radio buttons plus Pos and Move
+                        add up to ~445px, more than the ~391px this half is wide.-->
+                    <GroupBox Grid.Row="2" Grid.Column="2" Header="LSO Filter Motor">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton x:Name="myRbLsoFilterColor" GroupName="groupLsoFilterMode" Tag="0" Content="Color" Style="{StaticResource RadioButtonStyle}" IsChecked="True" Click="myRbLsoFilterMode_Click"/>
+                                <RadioButton x:Name="myRbLsoFilterBlueFaf" GroupName="groupLsoFilterMode" Tag="1" Content="Blue FAF" Style="{StaticResource RadioButtonStyle}" Margin="8,0,0,0" Click="myRbLsoFilterMode_Click"/>
+                                <RadioButton x:Name="myRbLsoFilterGreenFaf" GroupName="groupLsoFilterMode" Tag="2" Content="Green FAF" Style="{StaticResource RadioButtonStyle}" Margin="8,0,0,0" Click="myRbLsoFilterMode_Click"/>
+                                <RadioButton x:Name="myRbLsoFilterIcga" GroupName="groupLsoFilterMode" Tag="3" Content="ICGA" Style="{StaticResource RadioButtonStyle}" Margin="8,0,0,0" Click="myRbLsoFilterMode_Click"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                <Label Content="Pos :" Style="{StaticResource LabelStyle}" VerticalAlignment="Center"/>
+                                <TextBox x:Name="myTbLsoFilterPos" Style="{StaticResource TextBoxS1Style}" Width="60" VerticalAlignment="Center" ToolTip="Pos" KeyDown="myTbLsoFilterPos_KeyDown"/>
+                                <Button x:Name="myBtLsoFilterMove" Content="Move" Style="{StaticResource ButtonS1Style}" Margin="8,0,0,0" Click="myBtLsoFilterMove_Click"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </GroupBox>
+                </Grid>
+
+                <!--Galvano / Slit / Sync: alignment, the ERS slit measurement, the rolling-shutter
+                    timing inputs and the scan sequence. One block because they all describe the
+                    same sweep and are tuned while watching the same live image.-->
+                <GroupBox Grid.Row="2" Header="Galvano / Slit / Sync" VerticalAlignment="Top">
+                    <StackPanel>
+                        <!-- Galvo position, as in the DevKit: a typed position plus a slider over the
+                             galvo's full command range. Both are live only in alignment mode. -->
+                        <StackPanel Orientation="Horizontal">
+                            <StackPanel x:Name="myPanelAlignPos" Orientation="Horizontal" IsEnabled="False">
+                                <Label Content="Galvo Pos :" Style="{StaticResource LabelStyle}" VerticalAlignment="Center"/>
+                                <TextBox x:Name="myTbGalvanoYPos" Style="{StaticResource TextBoxS2Style}" Width="60" VerticalAlignment="Center"
+                                         ToolTip="Galvo command position [-32768 ~ 32767]. Enter moves there."
+                                         KeyDown="myTbGalvanoYPos_KeyDown"/>
+                                <Slider x:Name="mySliderGalvanoYPos" Width="150" Margin="8,0,0,0" VerticalAlignment="Center"
+                                        Minimum="-32768" Maximum="32767" SmallChange="10" LargeChange="1000"
+                                        ToolTip="Dragging moves the galvo on release; clicks and arrow keys move immediately."
+                                        Thumb.DragStarted="mySliderGalvanoYPos_DragStarted"
+                                        Thumb.DragCompleted="mySliderGalvanoYPos_DragCompleted"
+                                        ValueChanged="mySliderGalvanoYPos_ValueChanged"/>
+                            </StackPanel>
+
+                            <!-- Slit alignment (DevKit LsoPatternForm group E): park the galvo,
+                                 light the slit continuously and run the camera free-running so the
+                                 stationary slit can be seen and its ends locked as Start/End. -->
+                            <CheckBox x:Name="myCheckAlignMode" Content="Alignment" Style="{StaticResource CheckBoxStyle}"
+                                      VerticalAlignment="Center" Margin="10,0,0,0"
+                                      ToolTip="Stops scanning, parks the galvo, switches the illumination to continuous and starts a free-running live view. Turning it off restores the scan state and switches the light back off."
+                                      Checked="myCheckAlignMode_CheckedNUnchecked" Unchecked="myCheckAlignMode_CheckedNUnchecked"/>
+                            <!-- DevKit "Continuous Slit": the lamp can be switched off while staying in
+                                 alignment mode, e.g. to check what the camera sees unlit. -->
+                            <CheckBox x:Name="myCheckContinuousSlit" Content="Cont. Slit" Style="{StaticResource CheckBoxStyle}"
+                                      VerticalAlignment="Center" Margin="8,0,0,0" IsChecked="True"
+                                      ToolTip="While aligning, keeps the lamp lit continuously so the parked slit is visible. Unchecking switches the lamp off without leaving alignment mode."
+                                      Checked="myCheckContinuousSlit_CheckedNUnchecked" Unchecked="myCheckContinuousSlit_CheckedNUnchecked"/>
+                            <Label Content="Mode :" Style="{StaticResource LabelStyle}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                            <ComboBox x:Name="myCbAlignTargetMode" Style="{StaticResource ComboBoxStyle}" Width="86" VerticalAlignment="Center"
+                                      ToolTip="Which mode preset the Go / Set as buttons, the timing fields and the sequence below read and write."
+                                      SelectionChanged="myCbAlignTargetMode_SelectionChanged">
+                                <ComboBoxItem Content="Preview" IsSelected="True"/>
+                                <ComboBoxItem Content="Capture"/>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                            <StackPanel x:Name="myPanelAlignJog" Orientation="Horizontal" IsEnabled="False">
+                                <Button x:Name="myBtJogMinus1000" Content="-1000" Style="{StaticResource ButtonS1Style}" Width="48" Click="myBtAlignJog_Click" Tag="-1000"/>
+                                <Button x:Name="myBtJogMinus100" Content="-100" Style="{StaticResource ButtonS1Style}" Width="44" Margin="3,0,0,0" Click="myBtAlignJog_Click" Tag="-100"/>
+                                <Button x:Name="myBtJogMinus10" Content="-10" Style="{StaticResource ButtonS1Style}" Width="38" Margin="3,0,0,0" Click="myBtAlignJog_Click" Tag="-10"/>
+                                <Button x:Name="myBtJogPlus10" Content="+10" Style="{StaticResource ButtonS1Style}" Width="38" Margin="3,0,0,0" Click="myBtAlignJog_Click" Tag="10"/>
+                                <Button x:Name="myBtJogPlus100" Content="+100" Style="{StaticResource ButtonS1Style}" Width="44" Margin="3,0,0,0" Click="myBtAlignJog_Click" Tag="100"/>
+                                <Button x:Name="myBtJogPlus1000" Content="+1000" Style="{StaticResource ButtonS1Style}" Width="48" Margin="3,0,0,0" Click="myBtAlignJog_Click" Tag="1000"/>
+                            </StackPanel>
+
+                            <StackPanel x:Name="myPanelAlignGoto" Orientation="Horizontal" Margin="10,0,0,0" IsEnabled="False">
+                                <Button x:Name="myBtGoStart" Content="Go Start" Style="{StaticResource ButtonS1Style}" Width="62" Click="myBtAlignGoStart_Click"/>
+                                <Button x:Name="myBtGoCenter" Content="Go Center" Style="{StaticResource ButtonS1Style}" Width="68" Margin="3,0,0,0" Click="myBtAlignGoCenter_Click"/>
+                                <Button x:Name="myBtGoEnd" Content="Go End" Style="{StaticResource ButtonS1Style}" Width="58" Margin="3,0,0,0" Click="myBtAlignGoEnd_Click"/>
+                                <Button x:Name="myBtSetAsStart" Content="Set as Start" Style="{StaticResource ButtonS1Style}" Width="74" Margin="10,0,0,0"
+                                        ToolTip="Writes the current galvo position into the selected mode preset's Galvo Start Pos."
+                                        Click="myBtAlignSetAsStart_Click"/>
+                                <Button x:Name="myBtSetAsEnd" Content="Set as End" Style="{StaticResource ButtonS1Style}" Width="70" Margin="3,0,0,0"
+                                        ToolTip="Writes the current galvo position into the selected mode preset's Galvo End Pos."
+                                        Click="myBtAlignSetAsEnd_Click"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- What Set as Start / End writes and what Go Start / Go End move to: the
+                             sweep the selected preset currently describes. Editable, so a known
+                             position can be typed instead of being driven to. -->
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                            <Label Content="Galvo Start :" Style="{StaticResource LabelStyle}" VerticalAlignment="Center"/>
+                            <TextBox x:Name="myTbGalvoStartPos" Style="{StaticResource TextBoxS2Style}" Width="62" VerticalAlignment="Center"
+                                     ToolTip="Galvo Start Pos of the selected mode preset [-32768 ~ 32767]. Set as Start writes it; typing here edits it directly."
+                                     KeyDown="myTbSync_KeyDown" LostFocus="myTbSync_LostFocus"/>
+                            <Label Content="Galvo End :" Style="{StaticResource LabelStyle}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                            <TextBox x:Name="myTbGalvoEndPos" Style="{StaticResource TextBoxS2Style}" Width="62" VerticalAlignment="Center"
+                                     ToolTip="Galvo End Pos of the selected mode preset [-32768 ~ 32767]. Set as End writes it; typing here edits it directly."
+                                     KeyDown="myTbSync_KeyDown" LostFocus="myTbSync_LostFocus"/>
+                            <Label x:Name="myLbAlignRange" Content="" Style="{StaticResource LabelStyle}" Margin="10,0,0,0" VerticalAlignment="Center"
+                                   ToolTip="Sweep the stored Start / End describes."/>
+                        </StackPanel>
+
+                        <!-- Illumination and camera gain: what makes the slit visible while aligning.
+                             Neither is written to the preset - they are viewing aids. -->
+                        <StackPanel x:Name="myPanelAlignLight" Orientation="Horizontal" Margin="0,4,0,0" IsEnabled="False">
+                            <Label x:Name="myLbAlignLight" Content="Light : -" Style="{StaticResource LabelStyle}" VerticalAlignment="Center"/>
+                            <Label Content="Intensity :" Style="{StaticResource LabelStyle}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                            <TextBox x:Name="myTbAlignIntensity" Style="{StaticResource TextBoxS2Style}" Width="44" VerticalAlignment="Center"
+                                     ToolTip="Continuous illumination intensity while aligning. Not written to the preset."
+                                     KeyDown="myTbAlignIntensity_KeyDown"/>
+                            <Button x:Name="myBtAlignIntensityApply" Content="Set" Style="{StaticResource ButtonS1Style}" Width="36" Margin="4,0,0,0" Click="myBtAlignIntensityApply_Click"/>
+                            <Label Content="Cam Gain (dB) :" Style="{StaticResource LabelStyle}" Margin="12,0,0,0" VerticalAlignment="Center"/>
+                            <TextBox x:Name="myTbAlignCamGain" Style="{StaticResource TextBoxS2Style}" Width="52" VerticalAlignment="Center"
+                                     ToolTip="Color camera analog gain while aligning. Enter applies it; the preset is not changed."
+                                     KeyDown="myTbAlignCamGain_KeyDown"/>
+                            <Button x:Name="myBtAlignCamGainApply" Content="Set" Style="{StaticResource ButtonS1Style}" Width="36" Margin="4,0,0,0" Click="myBtAlignCamGainApply_Click"/>
+                        </StackPanel>
+
+                        <!-- Slit height + ERS exposure recommendation (DevKit LsoPatternForm group D).
+                             Usable without alignment mode: the height can also be typed in. -->
+                        <StackPanel x:Name="myPanelSlitMeasure" Orientation="Horizontal" Margin="0,4,0,0">
+                            <Label Content="Slit (rows) :" Style="{StaticResource LabelStyle}" VerticalAlignment="Center"/>
+                            <TextBox x:Name="myTbSlitRows" Style="{StaticResource TextBoxS2Style}" Width="52" VerticalAlignment="Center"
+                                     ToolTip="Slit height in sensor rows. Measured or typed; stored in the selected mode preset."
+                                     TextChanged="myTbSlitRows_TextChanged"/>
+                            <Button x:Name="myBtMeasureSlit" Content="Measure" Style="{StaticResource ButtonS1Style}" Width="66" Margin="4,0,0,0"
+                                    ToolTip="Click the top edge and then the bottom edge of the slit on the live image. Right-click or Esc cancels."
+                                    Click="myBtMeasureSlit_Click"/>
+                            <Button x:Name="myBtAutoSlit" Content="Auto" Style="{StaticResource ButtonS1Style}" Width="52" Margin="3,0,0,0" ToolTip="Measure the stationary slit on the live image: centre row, FWHM and equivalent width. The equivalent width goes into Slit Rows for Rec Exp." Click="myBtAutoSlit_Click"/>
+                            <Button x:Name="myBtClearSlitMarkers" Content="Clear" Style="{StaticResource ButtonS1Style}" Width="56" Margin="3,0,0,0" Click="myBtClearSlitMarkers_Click"/>
+                            <Label x:Name="myLbSlitResult" Content="Rec Exp : -" Style="{StaticResource LabelStyle}" Margin="10,0,0,0" VerticalAlignment="Center"
+                                   ToolTip="Exposure the measured slit height recommends for the selected mode preset."/>
+                            <Button x:Name="myBtApplyRecExposure" Content="Apply" Style="{StaticResource ButtonS1Style}" Width="52" Margin="6,0,0,0"
+                                    ToolTip="Writes the recommended exposure into the selected mode preset's camera exposure."
+                                    Click="myBtApplyRecExposure_Click"/>
+                        </StackPanel>
+
+                        <Label x:Name="myLbErsFormula" Content="Rec Exp (us) = Slit Rows * Line Time" Style="{StaticResource LabelStyle}"/>
+                        <Label x:Name="myLbSlitBand" Content="Center : -   FWHM : -   Eq : -" Style="{StaticResource LabelStyle}" ToolTip="Last slit measurement in sensor rows (Auto: centroid / half-max width / equivalent width; 2-click: centre of the two edges / height)."/>
+
+                        <Separator Margin="0,4,0,4"/>
+
+                        <!-- Synchronisation and timing (DevKit LsoPatternForm "Synchronization &amp;
+                             Timing Parameters"). Inputs of the rolling-shutter rule; they belong to
+                             the mode preset the combo above selects, and none of them is written to
+                             the board on its own - Recalculate turns them into Pattern Size, the
+                             ramps and the light indices, and Apply sends those.
+                             Four fields per row: the block is ~880px wide, and a row that needs more
+                             than that is exactly how the previous layout ended up clipped. -->
+                        <StackPanel Orientation="Horizontal">
+                            <Label Content="Line Rate :" Style="{StaticResource LabelStyle}" VerticalAlignment="Center"/>
+                            <TextBox x:Name="myTbSyncLineRate" Style="{StaticResource TextBoxS2Style}" Width="66" VerticalAlignment="Center"
+                                     ToolTip="Camera AcquisitionLineRate (Hz). Editing it recomputes Line Time."
+                                     KeyDown="myTbSync_KeyDown" LostFocus="myTbSync_LostFocus"/>
+                            <Label Content="Line Time :" Style="{StaticResource LabelStyle}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                            <TextBox x:Name="myTbSyncLineTime" Style="{StaticResource TextBoxS2Style}" Width="54" VerticalAlignment="Center"
+                                     ToolTip="Sensor line time (us), as in the DevKit. The two are one value: editing either recomputes the other (Line Time = 1e6 / Line Rate). The preset stores the rate."
+                                     KeyDown="myTbSync_KeyDown" LostFocus="myTbSync_LostFocus"/>
+                            <Label Content="Rows :" Style="{StaticResource LabelStyle}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                            <TextBox x:Name="myTbSyncRows" Style="{StaticResource TextBoxS2Style}" Width="50" VerticalAlignment="Center"
+                                     ToolTip="Physical sensor rows the sweep has to cover."
+                                     KeyDown="myTbSync_KeyDown" LostFocus="myTbSync_LostFocus"/>
+                            <Label Content="Row0 Ofs :" Style="{StaticResource LabelStyle}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                            <TextBox x:Name="myTbSyncBlank" Style="{StaticResource TextBoxS2Style}" Width="44" VerticalAlignment="Center"
+                                     ToolTip="Row 0 slit-centre offset in sensor rows. TRIG_FIRST lead-in = G.Delay + rows x Line Time. Tune it on the image: +1 row moves the slit arrival 1 line time later."
+                                     KeyDown="myTbSync_KeyDown" LostFocus="myTbSync_LostFocus"/>
+                            <Label x:Name="myLbSyncBlankUs" Content="(- us)" Style="{StaticResource LabelStyle}" Margin="2,0,0,0" VerticalAlignment="Center"
+                                   ToolTip="Row 0 offset time = Row0 Ofs x Line Time."/>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                            <Label Content="G.Delay :" Style="{StaticResource LabelStyle}" VerticalAlignment="Center"/>
+                            <TextBox x:Name="myTbSyncGalvoDelay" Style="{StaticResource TextBoxS2Style}" Width="50" VerticalAlignment="Center"
+                                     ToolTip="Galvo acceleration time (us). Lead is derived from it."
+                                     KeyDown="myTbSync_KeyDown" LostFocus="myTbSync_LostFocus"/>
+                            <Label Content="G.Decel :" Style="{StaticResource LabelStyle}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                            <TextBox x:Name="myTbSyncGalvoDecel" Style="{StaticResource TextBoxS2Style}" Width="50" VerticalAlignment="Center"
+                                     ToolTip="Galvo deceleration time (us). Tail is derived from it."
+                                     KeyDown="myTbSync_KeyDown" LostFocus="myTbSync_LostFocus"/>
+                            <Label Content="Cam Delay :" Style="{StaticResource LabelStyle}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                            <TextBox x:Name="myTbSyncCamDelay" Style="{StaticResource TextBoxS2Style}" Width="50" VerticalAlignment="Center"
+                                     IsReadOnly="True" Background="#FFEFEFEF"
+                                     ToolTip="The camera preset's Trigger Delay - one physical delay, one owner. Edit it in Settings."/>
+                            <Button x:Name="myBtSyncReadLineRate" Content="Read Line Rate" Style="{StaticResource ButtonS1Style}" Width="96" Margin="12,0,0,0"
+                                    ToolTip="Reads AcquisitionLineRate from the connected color camera."
+                                    Click="myBtSyncReadLineRate_Click"/>
+                        </StackPanel>
+
+                        <!-- Results, not inputs: Lead / Tail / Pattern / LED all come out of the
+                             rule above, so they are shown read-only. Editing one by hand would
+                             describe a sweep the next Recalculate silently disagrees with. -->
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                            <Label Content="Lead :" Style="{StaticResource LabelStyle}" VerticalAlignment="Center"/>
+                            <TextBox x:Name="myTbSyncLeadIn" Style="{StaticResource TextBoxS2Style}" Width="46" VerticalAlignment="Center"
+                                     IsReadOnly="True" Background="#FFEFEFEF"
+                                     ToolTip="Samples run before the imaged sweep: G.Delay + Row 0 offset (TRIG_FIRST)."/>
+                            <Label Content="Tail :" Style="{StaticResource LabelStyle}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                            <TextBox x:Name="myTbSyncLeadOut" Style="{StaticResource TextBoxS2Style}" Width="46" VerticalAlignment="Center"
+                                     IsReadOnly="True" Background="#FFEFEFEF"
+                                     ToolTip="Samples run after the imaged sweep, derived from G.Decel."/>
+                            <Label Content="Pattern :" Style="{StaticResource LabelStyle}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                            <TextBox x:Name="myTbSyncPattern" Style="{StaticResource TextBoxS2Style}" Width="54" VerticalAlignment="Center"
+                                     IsReadOnly="True" Background="#FFEFEFEF" ToolTip="Total DAC samples = Lead + active sweep + Tail."/>
+                            <Label Content="LED On/Off :" Style="{StaticResource LabelStyle}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                            <TextBox x:Name="myTbSyncLedOn" Style="{StaticResource TextBoxS2Style}" Width="46" VerticalAlignment="Center"
+                                     IsReadOnly="True" Background="#FFEFEFEF"/>
+                            <TextBox x:Name="myTbSyncLedOff" Style="{StaticResource TextBoxS2Style}" Width="54" VerticalAlignment="Center" Margin="3,0,0,0"
+                                     IsReadOnly="True" Background="#FFEFEFEF"/>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                            <CheckBox x:Name="myCheckSyncAuto" Content="Auto" Style="{StaticResource CheckBoxStyle}" VerticalAlignment="Center" IsChecked="True"
+                                      ToolTip="Recalculate after every edit here. It OVERWRITES Pattern Size, Lead/Tail, the light indices and the pre-move values."/>
+                            <CheckBox x:Name="myCheckSyncBoth" Content="Both modes" Style="{StaticResource CheckBoxStyle}" Margin="8,0,0,0" VerticalAlignment="Center"
+                                      ToolTip="Apply the edits and the recalculation to the Preview AND Capture presets."/>
+                            <Button x:Name="myBtSyncRecalc" Content="Recalculate" Style="{StaticResource ButtonS1Style}" Width="78" Margin="12,0,0,0"
+                                    ToolTip="Runs the rolling-shutter rule and writes its results into the preset."
+                                    Click="myBtSyncRecalc_Click"/>
+                        </StackPanel>
+
+                        <Separator Margin="0,4,0,4"/>
+
+                        <!-- Scan sequence (DevKit "Scan Sequence Control"). Board-global: the command
+                             carries no pattern id, so whichever mode starts last owns it. -->
+                        <StackPanel Orientation="Horizontal">
+                            <Label Content="Sequence :" Style="{StaticResource LabelStyle}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            <ComboBox x:Name="myCbScanSequence" Style="{StaticResource ComboBoxStyle}" Width="130" VerticalAlignment="Center"
+                                      ToolTip="TRIG_FIRST: the board starts the sweep on EXPOSURE_ACTIVE (closed loop, recommended). GALVANO_FIRST: the mirror pre-moves and the board fires the trigger after the pre-move delay (open loop, needs a calibrated camera trigger delay)."
+                                      SelectionChanged="myCbScanSequence_SelectionChanged">
+                                <ComboBoxItem Content="TRIG_FIRST" IsSelected="True"/>
+                                <ComboBoxItem Content="GALVANO_FIRST"/>
+                            </ComboBox>
+                            <Label Content="Pre-move Off :" Style="{StaticResource LabelStyle}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                            <TextBox x:Name="myTbSyncPreMoveOffset" Style="{StaticResource TextBoxS2Style}" Width="58" VerticalAlignment="Center"
+                                     ToolTip="DAC offset of the parked position relative to Galvo Start. GALVANO_FIRST only."
+                                     KeyDown="myTbSync_KeyDown" LostFocus="myTbSync_LostFocus"/>
+                            <Label Content="Delay :" Style="{StaticResource LabelStyle}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                            <TextBox x:Name="myTbSyncPreMoveDelay" Style="{StaticResource TextBoxS2Style}" Width="54" VerticalAlignment="Center"
+                                     ToolTip="Ramp start to camera trigger, in us. GALVANO_FIRST only."
+                                     KeyDown="myTbSync_KeyDown" LostFocus="myTbSync_LostFocus"/>
+                            <Button x:Name="myBtSyncApply" Content="Apply to board" Style="{StaticResource ButtonS1Style}" Width="96" Margin="12,0,0,0"
+                                    ToolTip="Uploads the scan profile of the selected mode and sends the scan sequence. Not available while a scan, capture or alignment is running."
+                                    Click="myBtSyncApply_Click"/>
+                        </StackPanel>
+
+                        <Label x:Name="myLbSyncStatus" Content="" Style="{StaticResource LabelStyle}" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </GroupBox>
+
+                <!--Stage control belongs at the far bottom-right: the full scan-column width makes
+                    the X/Y/Z/Swing sliders usable. The labels themselves stay compact (X/Y/Z/Sw).-->
+                <local:StageMotorPanel Grid.Row="4"/>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

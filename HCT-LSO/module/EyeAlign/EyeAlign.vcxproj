@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\packages\Microsoft.ML.OnnxRuntime.1.22.1\build\native\Microsoft.ML.OnnxRuntime.props" Condition="Exists('..\..\packages\Microsoft.ML.OnnxRuntime.1.22.1\build\native\Microsoft.ML.OnnxRuntime.props')" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -132,7 +133,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)module\CppUtil;$(SolutionDir)module\WsoDomain;$(SolutionDir)module\WsoConfig;$(SolutionDir)module\WsoDevice;$(SolutionDir)module\WsoBoard</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)module\CppUtil;$(SolutionDir)module\WsoDomain;$(SolutionDir)module\WsoConfig;$(SolutionDir)module\WsoDevice;$(SolutionDir)module\WsoBoard;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -156,7 +157,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)module\CppUtil;$(SolutionDir)module\WsoDomain;$(SolutionDir)module\WsoConfig;$(SolutionDir)module\WsoDevice;$(SolutionDir)module\WsoBoard</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)module\CppUtil;$(SolutionDir)module\WsoDomain;$(SolutionDir)module\WsoConfig;$(SolutionDir)module\WsoDevice;$(SolutionDir)module\WsoBoard;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -178,7 +179,9 @@
     <ClInclude Include="EyeAligner.h" />
     <ClInclude Include="eye_align.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="GrayResampler.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="PupilCenterModel.h" />
     <ClInclude Include="PupilDetector.h" />
     <ClInclude Include="PupilTracker.h" />
   </ItemGroup>
@@ -187,6 +190,8 @@
     <ClCompile Include="CorneaFrameStore.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="EyeAligner.cpp" />
+    <ClCompile Include="GrayResampler.cpp" />
+    <ClCompile Include="PupilCenterModel.cpp" />
     <ClCompile Include="PupilDetector.cpp" />
     <ClCompile Include="PupilTracker.cpp" />
     <ClCompile Include="pch.cpp">
@@ -196,7 +201,18 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\..\packages\Microsoft.ML.OnnxRuntime.1.22.1\build\native\Microsoft.ML.OnnxRuntime.targets" Condition="Exists('..\..\packages\Microsoft.ML.OnnxRuntime.1.22.1\build\native\Microsoft.ML.OnnxRuntime.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\..\packages\Microsoft.ML.OnnxRuntime.1.22.1\build\native\Microsoft.ML.OnnxRuntime.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.ML.OnnxRuntime.1.22.1\build\native\Microsoft.ML.OnnxRuntime.props'))" />
+    <Error Condition="!Exists('..\..\packages\Microsoft.ML.OnnxRuntime.1.22.1\build\native\Microsoft.ML.OnnxRuntime.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\Microsoft.ML.OnnxRuntime.1.22.1\build\native\Microsoft.ML.OnnxRuntime.targets'))" />
+  </Target>
 </Project>

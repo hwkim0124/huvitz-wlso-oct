@@ -31,6 +31,9 @@ namespace wso_board
 
 	using HbsLedStatus = LED_Info_st;
 	using HbsLsoScanner = LsoScanner_st;
+	// One trajectory slot of HbsLsoScanner::traj_profile, so a scan profile can be written
+	// on its own instead of rewriting the whole table (see writeLsoScannerProfile).
+	using HbsLsoScanProfile = lso_scan_profile_st;
 	using HbsOctGalvano = OctGalvano_st;
 	using HbsRetinaIrCamera = IRCamInfo_st;
 	using HbsAnteriorCamera1 = IRCamInfo_st;

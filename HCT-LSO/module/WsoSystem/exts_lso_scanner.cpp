@@ -22,6 +22,14 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::submitLsoScannerControlParam(int pa
 	return false;
 }
 
+bool WSOSYSTEM_DLL_API __stdcall wso_system::setLsoScannerTrajectory(int patternId, const short* pos, int count)
+{
+	if (auto* scan = Hardware::getInstance()->getMainBoard()->getLsoScanner(); scan) {
+		return scan->setCustomTrajectory(patternId, pos, count);
+	}
+	return false;
+}
+
 bool WSOSYSTEM_DLL_API __stdcall wso_system::obtainLsoScannerCaptureParam(int patternId, LsoScannerCaptureParam* param)
 {
 	if (auto* scan = Hardware::getInstance()->getMainBoard()->getLsoScanner(); scan) {
@@ -42,6 +50,14 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::moveLsoScannerYposition(int ypos)
 {
 	if (auto* scan = Hardware::getInstance()->getMainBoard()->getLsoScanner(); scan) {
 		return scan->controlYGalvoMove(ypos);
+	}
+	return false;
+}
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::setLsoScanSequence(int seqMode, int preMoveOffset, int preMoveDelayUs)
+{
+	if (auto* scan = Hardware::getInstance()->getMainBoard()->getLsoScanner(); scan) {
+		return scan->controlScanSequence(seqMode, preMoveOffset, preMoveDelayUs);
 	}
 	return false;
 }

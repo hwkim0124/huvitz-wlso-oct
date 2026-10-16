@@ -31,12 +31,12 @@
                 <Button x:Name="StartupButton" Content="Startup WSO System" Style="{StaticResource ButtonStyle}" Width="200" Click="StartupButton_Click"/>
                 <Button x:Name="ReleaseButton" Content="Release WSO System" Style="{StaticResource ButtonStyle}" Width="200" Margin="0,12,0,0" Click="ReleaseButton_Click" IsEnabled="False"/>
             </StackPanel>
-            <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="2">
+            <StackPanel x:Name="ScanModePanel" Orientation="Vertical" Grid.Row="1" Grid.Column="2" IsEnabled="False">
                 <Button x:Name="btnLsoScanMode" Content="LSO Scan Mode" Width="200" Margin="0,0,0,0" Style="{StaticResource ButtonStyle}" Click="BtnLsoScanMode_Click"/>
                 <Button x:Name="btnOctScanMode" Content="OCT Scan Mode" Width="200" Margin="0,12,0,0" Style="{StaticResource ButtonStyle}" Click="btnOctScanMode_Click"/>
                 <Button x:Name="btnOctAngioMode" Content="OCT Angio Mode" Width="200" Margin="0,12,0,0" Style="{StaticResource ButtonStyle}" Click="btnOctAngioMode_Click"/>
             </StackPanel>
-            <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="3">
+            <StackPanel x:Name="TestPanel" Orientation="Vertical" Grid.Row="1" Grid.Column="3" IsEnabled="False">
                 <Button x:Name="btnLsoScanTest" Content="LSO Scanner Test" Width="200" Style="{StaticResource ButtonStyle}" Click="BtnLsoScanTest_Click"/>
                 <Button x:Name="btnOctSignalTest" Content="OCT Signal Test" Width="200" Margin="0,12,0,0" Style="{StaticResource ButtonStyle}" Click="btnOctSignalTest_Click"/>
                 <Button x:Name="btnOctSpectroCalib" Content="OCT Spectrometer Calib." Width="200" Margin="0,12,0,0" Style="{StaticResource ButtonStyle}" Click="BtnOctSpectroCalib_Click"/>
@@ -44,7 +44,7 @@
                 <Button x:Name="btnIrCameraTest" Content="IR Camera Test" Width="200" Margin="0,12,0,0" Style="{StaticResource ButtonStyle}" Click="BtnIrCameraTest_Click"/>
                 <Button x:Name="btnLongRunTest" Content="Long Run Test" Width="200" Margin="0,12,0,0" Style="{StaticResource ButtonStyle}" Click="BtnLongRunTest_Click"/>
             </StackPanel>
-            <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="4">
+            <StackPanel x:Name="ControlPanel" Orientation="Vertical" Grid.Row="1" Grid.Column="4" IsEnabled="False">
                 <Button x:Name="btnOctSldControl" Content="OCT SLD Control" Width="200" Margin="0,0,0,0" Style="{StaticResource ButtonStyle}" Click="BtnOctSldControl_Click"/>
                 <Button x:Name="btnXadcMonitor" Content="xADC Monitor" Width="200" Margin="0,12,0,0" Style="{StaticResource ButtonStyle}" Click="BtnXadcMonitor_Click"/>
                 <Button x:Name="ConfigreButton" Content="System Configuration" Width="200" Margin="0,12,0,0" Style="{StaticResource ButtonStyle}" Click="ConfigButton_Click" />

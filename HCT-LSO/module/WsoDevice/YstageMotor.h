@@ -24,6 +24,7 @@ namespace wso_device
 
 	public:
 		bool initializeYstageMotor(void);
+		bool updatePositionToOrigin(int mode) override;
 
 		bool isAtUpperLimit(void);
 		bool isAtLowerLimit(void);

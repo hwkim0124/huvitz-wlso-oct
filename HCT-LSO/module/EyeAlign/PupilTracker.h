@@ -7,9 +7,9 @@ namespace eye_align
 {
 	struct PupilTrackerConfig
 	{
-		int detectConsecutive = 3;		// consecutive detections needed to lock
-		int unlockAfterMisses = 5;		// consecutive misses that drop the lock
-		float maxJumpPx = 60.0f;		// a centre jump larger than this counts as a miss
+		int lockAfterConsecutiveHits = 3;		// consecutive detections needed to lock
+		int unlockAfterConsecutiveMisses = 5;		// consecutive misses that drop the lock
+		float maxCenterJumpPixels = 60.0f;		// a centre jump larger than this counts as a miss
 		float smoothingAlpha = 0.5f;	// EMA weight of the newest detection (1 = no smoothing)
 	};
 
@@ -38,22 +38,22 @@ namespace eye_align
 		int consecutiveHits(void) const;
 		int lostFrames(void) const;			// consecutive frames without a detection
 
-		float cx(void) const;				// smoothed centre / radius of the lock
-		float cy(void) const;
+		float centerX(void) const;			// smoothed centre / radius of the lock
+		float centerY(void) const;
 		float radius(void) const;
 		const PupilDetectResult& lastResult(void) const;
 
 	private:
-		PupilTrackerConfig cfg_;
+		PupilTrackerConfig config_;
 		PupilDetectResult last_;
 		bool locked_;
 		bool everLocked_;
 		bool justLocked_;
 		bool justUnlocked_;
-		int hits_;
-		int misses_;
-		float cx_;
-		float cy_;
+		int consecutiveHits_;
+		int consecutiveMisses_;
+		float centerX_;
+		float centerY_;
 		float radius_;
 	};
 }

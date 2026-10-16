@@ -42,6 +42,12 @@
     <ClInclude Include="PupilTracker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GrayResampler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PupilCenterModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -65,5 +71,14 @@
     <ClCompile Include="PupilTracker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GrayResampler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PupilCenterModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

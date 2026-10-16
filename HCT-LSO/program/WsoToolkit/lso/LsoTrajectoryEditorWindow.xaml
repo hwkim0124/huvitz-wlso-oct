@@ -1,0 +1,210 @@
+<Window x:Class="WsoToolkit.LsoTrajectoryEditorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:WsoToolkit"
+        xmlns:oxy="http://oxyplot.org/wpf"
+        Title="Galvo Trajectory Editor"
+        Height="900" Width="1240" MinHeight="760" MinWidth="1100"
+        WindowStartupLocation="CenterOwner">
+    <DockPanel Margin="8">
+
+        <!-- File bar -->
+        <GroupBox DockPanel.Dock="Top" Header="File" Margin="0,0,0,8">
+            <DockPanel LastChildFill="True" Margin="4">
+                <Button x:Name="myBtImport" DockPanel.Dock="Left" Content="Import CSV..." Style="{StaticResource ButtonM1Style}"
+                        ToolTip="Load a table (one int16 per line; '#' comments). Becomes the CSV source; the file itself is not changed."
+                        Click="myBtImport_Click"/>
+                <Button x:Name="myBtExport" DockPanel.Dock="Left" Content="Export CSV..." Style="{StaticResource ButtonM1Style}" Margin="4,0,0,0"
+                        ToolTip="Write the table currently shown (CSV or generated) to a file of your choice."
+                        Click="myBtExport_Click"/>
+                <Button x:Name="myBtClear" DockPanel.Dock="Right" Content="Clear (use generated)" Width="150" Height="26" Margin="4,0,0,0"
+                        ToolTip="Drop the CSV source; Save to preset then makes the board use the generated linear sweep."
+                        Click="myBtClear_Click"/>
+                <Label Content="Current :" Style="{StaticResource LabelStyle}" Margin="12,0,0,0"/>
+                <TextBox x:Name="myTbCurrentFile" Style="{StaticResource TextBoxStyle}" IsReadOnly="True" Background="#FFEFEFEF"
+                         VerticalAlignment="Center"/>
+            </DockPanel>
+        </GroupBox>
+
+        <!-- Action bar -->
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+            <Button x:Name="myBtSave" Content="Save to preset" Style="{StaticResource ButtonM1Style}" Width="120" Margin="4"
+                    ToolTip="CSV mode: writes &lt;Preset&gt;_traj.csv next to the preset file and points the preset at it. Generated mode: clears the preset's file. The board is written by the Setting window's Apply."
+                    Click="myBtSave_Click"/>
+            <Button x:Name="myBtClose" Content="Close" Style="{StaticResource ButtonM1Style}" Margin="4" Click="myBtClose_Click"/>
+        </StackPanel>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="320"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Plots + sensor strip + playback -->
+            <Grid Grid.Column="0" Margin="0,0,8,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="0.8*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="150"/>
+                </Grid.ColumnDefinitions>
+                <Border Grid.Row="0" Grid.Column="0" BorderBrush="Gray" BorderThickness="1">
+                    <oxy:PlotView x:Name="plotPos" Background="White"/>
+                </Border>
+
+                <!-- Shutter alignment: the rolling-shutter exposure corridor (row r is open
+                     from tRow0 + r * lineTime for Exposure) against where the slit actually is
+                     (physical mirror through the calibration table). Aligned = the orange band
+                     runs inside the blue corridor along its midpoint. Velocity is the second tab. -->
+                <TabControl x:Name="myTabLower" Grid.Row="1" Grid.Column="0" Margin="0,6,0,0" SelectionChanged="myTabLower_SelectionChanged">
+                    <TabItem Header="Shutter alignment">
+                        <DockPanel>
+                            <TextBlock x:Name="myTbShutterMetrics" DockPanel.Dock="Bottom" FontSize="11" Margin="4,2,4,2" TextWrapping="Wrap" Text=""/>
+                            <oxy:PlotView x:Name="plotShutter" Background="White"/>
+                        </DockPanel>
+                    </TabItem>
+                    <TabItem Header="Velocity">
+                        <oxy:PlotView x:Name="plotVel" Background="White"/>
+                    </TabItem>
+                </TabControl>
+
+                <!-- Sensor as seen from the camera: row 0 at the top. Left column = predicted
+                     brightness per row (how long the lit slit overlapped that row's exposure),
+                     the thing to compare with a real frame. Right column, live: blue = rows whose
+                     exposure is open at the playback time, orange = where the slit lands
+                     (physical mirror, i.e. command delayed by Galvo Delay), grey slit = LED off. -->
+                <Border Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" BorderBrush="Gray" BorderThickness="1" Margin="6,0,0,0" Background="White">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Top" Text="Sensor (row 0 top)" FontSize="10" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                        <TextBlock DockPanel.Dock="Top" Text="predicted | live" FontSize="9" Foreground="Gray" HorizontalAlignment="Center" Margin="0,0,0,2"/>
+                        <TextBlock x:Name="myTbSensorFoot" DockPanel.Dock="Bottom" FontSize="10" HorizontalAlignment="Center" Margin="0,2,0,2" Text=""/>
+                        <Grid Margin="6,0,6,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="4"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Canvas x:Name="myBrightCanvas" Grid.Column="0" Background="Black" ClipToBounds="True" SizeChanged="SensorCanvas_SizeChanged"/>
+                            <Canvas x:Name="mySensorCanvas" Grid.Column="2" Background="#FFF4F4F4" ClipToBounds="True" SizeChanged="SensorCanvas_SizeChanged"/>
+                        </Grid>
+                    </DockPanel>
+                </Border>
+
+                <TextBlock x:Name="myTbStatus" Grid.Row="2" Grid.ColumnSpan="2" Margin="4,4,0,0" FontSize="11" TextWrapping="Wrap"/>
+
+                <!-- Playback: DAC playback starts at t = 0 (EXPOSURE_ACTIVE in TRIG_FIRST), one
+                     sample per Time Step; the whole table is stretched over the chosen seconds. -->
+                <GroupBox Grid.Row="3" Grid.ColumnSpan="2" Header="Slit simulation" Margin="0,6,0,0">
+                    <StackPanel Margin="4">
+                        <DockPanel LastChildFill="True">
+                            <Button x:Name="myBtSimPlay" DockPanel.Dock="Left" Content="Play" Width="56" Height="24" Click="myBtSimPlay_Click"/>
+                            <Button x:Name="myBtSimStop" DockPanel.Dock="Left" Content="Stop" Width="56" Height="24" Margin="4,0,0,0" Click="myBtSimStop_Click"/>
+                            <Label DockPanel.Dock="Left" Content="whole sweep in" Style="{StaticResource LabelStyle}" Margin="10,0,0,0"/>
+                            <ComboBox x:Name="myCbSimDuration" DockPanel.Dock="Left" Width="64" Height="24" SelectedIndex="1">
+                                <ComboBoxItem Content="2 s"/><ComboBoxItem Content="5 s"/><ComboBoxItem Content="10 s"/><ComboBoxItem Content="30 s"/>
+                            </ComboBox>
+                            <Button x:Name="myBtSimLoadCal" DockPanel.Dock="Right" Content="Load calibration..." Width="120" Height="24" Margin="8,0,0,0"
+                                    ToolTip="CSV with 3 numeric columns per line: angle, sensor row (relative to centre), DAC - e.g. LSO_Galvo_angle_to_sensor_cal_input saved as CSV. Without it the slit row is a LINEAR map Start -> row 0, End -> last row, which misrepresents a sensor-linear table."
+                                    Click="myBtSimLoadCal_Click"/>
+                            <TextBlock x:Name="myTbSimCal" DockPanel.Dock="Right" FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0" Foreground="DarkGoldenrod" Text="mapping: linear (no calibration)"/>
+                            <Slider x:Name="mySliderSim" Minimum="0" Maximum="1" Margin="10,0,0,0" VerticalAlignment="Center"
+                                    IsMoveToPointEnabled="True" ValueChanged="mySliderSim_ValueChanged"/>
+                        </DockPanel>
+                        <TextBlock x:Name="myTbSimReadout" FontSize="11" Margin="0,4,0,0" Text=""/>
+                    </StackPanel>
+                </GroupBox>
+            </Grid>
+
+            <!-- Right column -->
+            <StackPanel Grid.Column="1">
+                <GroupBox Header="Source">
+                    <StackPanel Margin="4">
+                        <RadioButton x:Name="rbSourceGenerated" Content="Generated (linear, from preset)" GroupName="src"
+                                     Style="{StaticResource RadioButtonStyle}" Checked="Source_Checked"/>
+                        <RadioButton x:Name="rbSourceCsv" Content="CSV table" GroupName="src"
+                                     Style="{StaticResource RadioButtonStyle}" Checked="Source_Checked"/>
+                        <TextBlock FontSize="11" Foreground="Gray" TextWrapping="Wrap" Margin="0,4,0,4"
+                                   Text="Generated is a read-only preview of what the board gets without a file. To edit, seed a CSV from it."/>
+                        <Button x:Name="myBtCopyGenerated" Content="Copy generated -&gt; CSV" Width="170" Height="26" HorizontalAlignment="Left"
+                                Click="myBtCopyGenerated_Click"/>
+                    </StackPanel>
+                </GroupBox>
+
+                <GroupBox Header="Preset geometry (read-only)" Margin="0,8,0,0">
+                    <Grid Margin="4">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="82"/><ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="70"/><ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Label Grid.Row="0" Grid.Column="0" Content="Pattern Size" Style="{StaticResource LabelStyle}"/>
+                        <TextBox x:Name="myTbGeoN" Grid.Row="0" Grid.Column="1" Style="{StaticResource TextBoxStyle}" IsReadOnly="True" Background="#FFEFEFEF"/>
+                        <Label Grid.Row="0" Grid.Column="2" Content="Time Step" Style="{StaticResource LabelStyle}"/>
+                        <TextBox x:Name="myTbGeoStep" Grid.Row="0" Grid.Column="3" Style="{StaticResource TextBoxStyle}" IsReadOnly="True" Background="#FFEFEFEF"/>
+                        <Label Grid.Row="1" Grid.Column="0" Content="Start" Style="{StaticResource LabelStyle}"/>
+                        <TextBox x:Name="myTbGeoStart" Grid.Row="1" Grid.Column="1" Style="{StaticResource TextBoxStyle}" IsReadOnly="True" Background="#FFEFEFEF"/>
+                        <Label Grid.Row="1" Grid.Column="2" Content="End" Style="{StaticResource LabelStyle}"/>
+                        <TextBox x:Name="myTbGeoEnd" Grid.Row="1" Grid.Column="3" Style="{StaticResource TextBoxStyle}" IsReadOnly="True" Background="#FFEFEFEF"/>
+                        <Label Grid.Row="2" Grid.Column="0" Content="Lead-in" Style="{StaticResource LabelStyle}"/>
+                        <TextBox x:Name="myTbGeoLeadIn" Grid.Row="2" Grid.Column="1" Style="{StaticResource TextBoxStyle}" IsReadOnly="True" Background="#FFEFEFEF"/>
+                        <Label Grid.Row="2" Grid.Column="2" Content="Lead-out" Style="{StaticResource LabelStyle}"/>
+                        <TextBox x:Name="myTbGeoLeadOut" Grid.Row="2" Grid.Column="3" Style="{StaticResource TextBoxStyle}" IsReadOnly="True" Background="#FFEFEFEF"/>
+                        <Label Grid.Row="3" Grid.Column="0" Content="LED on" Style="{StaticResource LabelStyle}"/>
+                        <TextBox x:Name="myTbGeoLedOn" Grid.Row="3" Grid.Column="1" Style="{StaticResource TextBoxStyle}" IsReadOnly="True" Background="#FFEFEFEF"/>
+                        <Label Grid.Row="3" Grid.Column="2" Content="LED off" Style="{StaticResource LabelStyle}"/>
+                        <TextBox x:Name="myTbGeoLedOff" Grid.Row="3" Grid.Column="3" Style="{StaticResource TextBoxStyle}" IsReadOnly="True" Background="#FFEFEFEF"/>
+                    </Grid>
+                </GroupBox>
+
+                <GroupBox x:Name="myGbEdit" Header="Edit (CSV mode only)" Margin="0,8,0,0">
+                    <StackPanel Margin="4">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="82"/><ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Label Grid.Row="0" Grid.Column="0" Content="Range i" Style="{StaticResource LabelStyle}"/>
+                            <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal">
+                                <TextBox x:Name="myTbRangeFrom" Style="{StaticResource TextBoxStyle}" Width="80"/>
+                                <Label Content="~" Style="{StaticResource LabelStyle}"/>
+                                <TextBox x:Name="myTbRangeTo" Style="{StaticResource TextBoxStyle}" Width="80"/>
+                            </StackPanel>
+                            <Label Grid.Row="1" Grid.Column="0" Content="Operation" Style="{StaticResource LabelStyle}"/>
+                            <ComboBox x:Name="myCbEditOp" Grid.Row="1" Grid.Column="1" Style="{StaticResource ComboBoxStyle}"
+                                      SelectionChanged="myCbEditOp_SelectionChanged"/>
+                            <Label x:Name="myLbEditValue" Grid.Row="2" Grid.Column="0" Content="Value" Style="{StaticResource LabelStyle}"/>
+                            <TextBox x:Name="myTbEditValue" Grid.Row="2" Grid.Column="1" Style="{StaticResource TextBoxStyle}"/>
+                        </Grid>
+                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                            <Button x:Name="myBtApplyEdit" Content="Apply to range" Width="110" Height="26" Click="myBtApplyEdit_Click"/>
+                            <Button x:Name="myBtUndo" Content="Undo" Style="{StaticResource ButtonS1Style}" Margin="6,0,0,0" Click="myBtUndo_Click"/>
+                        </StackPanel>
+                        <TextBlock x:Name="myTbEditHint" FontSize="11" Foreground="Gray" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </GroupBox>
+
+                <GroupBox Header="View" Margin="0,8,0,0">
+                    <StackPanel Margin="4">
+                        <CheckBox x:Name="myCheckShowGenerated" Content="Show generated overlay" IsChecked="True"
+                                  Style="{StaticResource CheckBoxStyle}" Checked="View_Changed" Unchecked="View_Changed"/>
+                        <CheckBox x:Name="myCheckTimeAxis" Content="X axis = time (us)"
+                                  Style="{StaticResource CheckBoxStyle}" Checked="View_Changed" Unchecked="View_Changed"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                            <Button Content="Fit sweep" Width="80" Height="26" ToolTip="Zoom X to the LED on..off window" Click="myBtFitSweep_Click"/>
+                            <Button Content="Fit all" Width="80" Height="26" Margin="6,0,0,0" Click="myBtFitAll_Click"/>
+                        </StackPanel>
+                    </StackPanel>
+                </GroupBox>
+            </StackPanel>
+        </Grid>
+    </DockPanel>
+</Window>

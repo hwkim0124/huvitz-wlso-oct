@@ -9,7 +9,9 @@
 # (e.g. firmware/, hardware/, tools/) be added later without changes here.
 # =====================================================================
 
+packages/*
 externs/*
+!externs/MANIFEST.md
 program/TestWsoSystem/obj/
 program/LSO_DevKit
 

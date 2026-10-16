@@ -2,100 +2,10 @@
         Style="{StaticResource WindowStyle}"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WsoToolkit"
-        mc:Ignorable="d"
-        Title="Light Leds Control" Height="Auto" Width="Auto" Initialized="Window_Initialized" Loaded="Window_Loaded" Closed="Window_Closed" ResizeMode="NoResize" SizeToContent="WidthAndHeight">
-    <Grid  Margin="12,12,12,12">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="0"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="0"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="0"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="8"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <Grid Grid.Row="0" Grid.Column="0">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <Label x:Name="label101" Content="LSO White" Style="{StaticResource HeaderStyle}"/>
-                <StackPanel Grid.Row="1" Orientation="Horizontal">
-                    <Slider x:Name="sliderWhite" Style="{StaticResource SliderStyle}" HorizontalAlignment="Left" Width="200" Margin="8,0,0,0" ValueChanged="SliderWhite_ValueChanged" Thumb.DragStarted="SliderWhite_DragStarted" Thumb.DragCompleted="SliderWhite_DragCompleted"/>
-                    <TextBox x:Name="editWhite" Style="{StaticResource TextBoxS1Style}" Margin="8,0,12,0" KeyDown="EditWhite_KeyDown"/>
-                </StackPanel>
-                <StackPanel Grid.Row="2" Orientation="Horizontal" FlowDirection="RightToLeft" Margin="0,8,0,24">
-                    <Button x:Name="btnWhiteOff" Content="Off" Style="{StaticResource ButtonS1Style}" Margin="8,0,4,0" Click="BtnWhiteOff_Click"/>
-                    <Button x:Name="btnWhiteOn" Content="On" Style="{StaticResource ButtonS1Style}" Margin="0,0,16,0" Click="BtnWhiteOn_Click"/>
-                    <CheckBox x:Name="checkWhiteMode" Content="Continuous" Style="{StaticResource CheckBoxStyle}" Margin="0,0,12,0" FlowDirection="LeftToRight" Click="CheckWhiteMode_Click"/>
-                </StackPanel>
-                <Border BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" BorderThickness="1" Margin="0,0,0,10" Grid.RowSpan="3"/>
-            </Grid>
-            <Grid Grid.Row="2" Grid.Column="0">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <Label x:Name="label201" Content="Cornea IR (L)" Style="{StaticResource HeaderStyle}"/>
-                <StackPanel Grid.Row="1" Orientation="Horizontal">
-                    <Slider x:Name="sliderCornea1" Style="{StaticResource SliderStyle}" HorizontalAlignment="Left" Width="200" Margin="8,0,0,0" ValueChanged="SliderCornea1_ValueChanged" Thumb.DragStarted="SliderCornea1_DragStarted" Thumb.DragCompleted="SliderCornea1_DragCompleted"/>
-                    <TextBox x:Name="editCornea1" Style="{StaticResource TextBoxS1Style}" Margin="8,0,12,0" KeyDown="EditCornea1_KeyDown"/>
-                </StackPanel>
-                <StackPanel Grid.Row="2" Orientation="Horizontal" FlowDirection="RightToLeft" Margin="0,8,0,24">
-                    <Button x:Name="btnCorneaOff1" Content="Off" Style="{StaticResource ButtonS1Style}" Margin="8,0,4,0" Click="BtnCorneaOff1_Click"/>
-                    <Button x:Name="btnCorneaOn1" Content="On" Style="{StaticResource ButtonS1Style}" Margin="0,0,16,0" Click="BtnCorneaOn1_Click"/>
-                </StackPanel>
-                <Border BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" BorderThickness="1" Margin="0,0,0,10" Grid.RowSpan="3"/>
-            </Grid>
-            <Grid Grid.Row="0" Grid.Column="2">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <Label x:Name="label301" Content="Retina IR" Style="{StaticResource HeaderStyle}"/>
-                <StackPanel Grid.Row="1" Orientation="Horizontal">
-                    <Slider x:Name="sliderRetina" Style="{StaticResource SliderStyle}" HorizontalAlignment="Left" Width="200" Margin="8,0,0,0" ValueChanged="SliderRetina_ValueChanged" Thumb.DragStarted="SliderRetina_DragStarted" Thumb.DragCompleted="SliderRetina_DragCompleted"/>
-                    <TextBox x:Name="editRetina" Style="{StaticResource TextBoxS1Style}" Margin="8,0,12,0" KeyDown="EditRetina_KeyDown"/>
-                </StackPanel>
-                <StackPanel Grid.Row="2" Orientation="Horizontal" FlowDirection="RightToLeft" Margin="0,8,0,24">
-                    <Button x:Name="btnRetinaOff" Content="Off" Style="{StaticResource ButtonS1Style}" Margin="8,0,4,0" Click="BtnWhiteOff_Click"/>
-                    <Button x:Name="btnRetinaOn" Content="On" Style="{StaticResource ButtonS1Style}" Margin="0,0,16,0" Click="BtnWhiteOn_Click"/>
-                    <CheckBox x:Name="checkRetinaMode" Content="Continuous" Style="{StaticResource CheckBoxStyle}" Margin="0,0,12,0" FlowDirection="LeftToRight" Click="CheckRetinaMode_Click"/>
-                </StackPanel>
-                <Border BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" BorderThickness="1" Margin="0,0,0,10" Grid.RowSpan="3"/>
-            </Grid>
-            <Grid Grid.Row="2" Grid.Column="2">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <Label x:Name="label401" Content="Cornea IR (R)" Style="{StaticResource HeaderStyle}"/>
-                <StackPanel Grid.Row="1" Orientation="Horizontal">
-                    <Slider x:Name="sliderCornea2" Style="{StaticResource SliderStyle}" HorizontalAlignment="Left" Width="200" Margin="8,0,0,0" ValueChanged="SliderCornea2_ValueChanged" Thumb.DragStarted="SliderCornea2_DragStarted" Thumb.DragCompleted="SliderCornea2_DragCompleted"/>
-                    <TextBox x:Name="editCornea2" Style="{StaticResource TextBoxS1Style}" Margin="8,0,12,0" KeyDown="EditCornea2_KeyDown"/>
-                </StackPanel>
-                <StackPanel Grid.Row="2" Orientation="Horizontal" FlowDirection="RightToLeft" Margin="0,8,0,24">
-                    <Button x:Name="btnCorneaOff2" Content="Off" Style="{StaticResource ButtonS1Style}" Margin="8,0,4,0" Click="BtnCorneaOff2_Click"/>
-                    <Button x:Name="btnCorneaOn2" Content="On" Style="{StaticResource ButtonS1Style}" Margin="0,0,16,0" Click="BtnCorneaOn2_Click"/>
-                </StackPanel>
-                <Border BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" BorderThickness="1" Margin="0,0,0,10" Grid.RowSpan="3"/>
-            </Grid>
-        </Grid>
-    </Grid>
+        Title="Light Leds Control"
+        ResizeMode="NoResize"
+        SizeToContent="WidthAndHeight"
+        Activated="Window_Activated">
+    <local:LightControlPanel x:Name="myLightPanel" />
 </Window>

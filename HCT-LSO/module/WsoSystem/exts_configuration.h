@@ -14,7 +14,6 @@ namespace wso_system
 		void WSOSYSTEM_DLL_API __stdcall submitCorneaCameraConfigParam(CorneaCameraConfigParam param); 
 		void WSOSYSTEM_DLL_API __stdcall submitRetinaCameraConfigParam(RetinaCameraConfigParam param);
 
-		// Eye alignment parameters (by pointer: the struct is large).
 		bool WSOSYSTEM_DLL_API __stdcall obtainEyeAlignConfigParam(EyeAlignConfigParam* param);
 		bool WSOSYSTEM_DLL_API __stdcall submitEyeAlignConfigParam(const EyeAlignConfigParam* param);
 

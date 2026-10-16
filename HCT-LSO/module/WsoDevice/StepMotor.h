@@ -28,7 +28,8 @@ namespace wso_device
 
 		virtual bool updatePosition(int pos);
 		// virtual bool updatePositionUseThread(int pos);
-		virtual bool updatePositionByOffset(int offset);
+		virtual bool moveToPosition(int pos, bool async = false);
+		virtual bool moveByStepOffset(int offset, bool async = false);
 
 		virtual bool updatePositionByValue(float value);
 		virtual bool updatePositionByValueOffset(float offset);
@@ -40,6 +41,7 @@ namespace wso_device
 		virtual float getValueAtPosition(int pos) const;
 
 		bool controlMove(int pos, bool async = false);
+		bool controlMoveOverride(int pos, bool async = false);
 		bool controlHome(void);
 		bool controlStop(void);
 		bool controlJogg(int delta);

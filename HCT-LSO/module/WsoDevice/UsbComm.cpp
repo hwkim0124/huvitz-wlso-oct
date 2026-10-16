@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "UsbComm.h"
+#include "LsoProfileWritePlan.h"
 #include "UsbPort.h"
 #include "crc.h"
 
@@ -1228,6 +1229,41 @@ bool wso_device::UsbComm::writeLsoScannerParam(const HbsLsoScanner* data, const 
 	return true;
 }
 
+// Writes ONE trajectory slot, at the same address the DevKit uses:
+//   buf_addr + sizeof(lso_capture_status_st) + patternId * sizeof(lso_scan_profile_st)
+// writeLsoScannerParam above pushes the whole table instead, which also rewrites the
+// capture-status header (ctrl_status/acq_cnt) the board owns and the slots this submit did
+// not touch. Both offsets below are firmware layout, so they are asserted at compile time.
+bool wso_device::UsbComm::writeLsoScannerProfile(std::uint8_t patternId, const HbsLsoScanProfile* data, const HbsTableDescriptor* desc)
+{
+	static_assert(sizeof(lso_capture_status_st) == 8, "HBS capture-status header must stay 8 bytes");
+	static_assert(sizeof(lso_scan_profile_st) == 16412, "HBS scan profile must stay 16412 bytes");
+	static_assert(offsetof(LsoScanner_st, traj_profile) == sizeof(lso_capture_status_st),
+		"traj_profile must start right after the capture-status header");
+
+	assert(data != nullptr);
+	assert(desc != nullptr);
+	if (data == nullptr || desc == nullptr) {
+		return false;
+	}
+	lock_guard<mutex> lock(impl().mutexControl);
+	const auto base = desc->entries[TBL_LSO_SCANNER_ID].buf_addr;
+	const auto size = desc->entries[TBL_LSO_SCANNER_ID].buf_size;
+	const detail::LsoProfileWritePlan plan = detail::makeLsoProfileWritePlan(patternId, data, base, size);
+	if (!plan) {
+		LogDebug() << "LSO scanner profile write rejected, slot: " << (int)patternId
+			<< ", table addr: " << base << ", table size: " << size;
+		return false;
+	}
+
+	if (!writeAddress(plan.address, const_cast<unsigned char*>(plan.payload), plan.size)) {
+		LogDebug() << "LSO scanner profile write failed!, slot: " << (int)patternId << ", addr: " << plan.address << ", size: " << plan.size;
+		return false;
+	}
+	LogD() << "LSO scanner profile written, slot: " << (int)patternId << ", addr: " << plan.address << ", size: " << plan.size;
+	return true;
+}
+
 bool wso_device::UsbComm::writeOctPhaseControl(const HbsOctPhaseControl* data, const HbsTableDescriptor* desc)
 {
 	assert(data != nullptr);
@@ -1367,6 +1403,16 @@ bool wso_device::UsbComm::MotorHome(std::uint8_t mid)
 	MsgCommand* msg = getMsgCommand(CommandType::MOTHOME, 1);
 	msg->packet.ctrl1.c1 = mid;
 	attachCRC(msg->packet.ctrl1.crc);
+	return sendMsgCmd(msg);
+}
+
+bool wso_device::UsbComm::MotorMoveOverride(std::uint8_t mid, std::int32_t pos)
+{
+	lock_guard<mutex> lock(impl().mutexControl);
+	MsgCommand* msg = getMsgCommand(CommandType::MOTOVERRIDE_MOVE, 5);
+	msg->packet.motor.c1 = mid;
+	msg->packet.motor.n1 = pos;
+	attachCRC(msg->packet.motor.crc);
 	return sendMsgCmd(msg);
 }
 
@@ -1561,6 +1607,21 @@ bool wso_device::UsbComm::LsoGalvanoMoveY(std::int16_t ypos)
 	MsgCommand* msg = getMsgCommand(CommandType::LSO_Y_GALVO_MOVE, 2);
 	msg->packet.ctrl5.s1 = ypos;
 	attachCRC(msg->packet.ctrl5.crc);
+	return sendMsgCmd(msg);
+}
+
+// Sets how a scan frame starts (0 = TRIG_FIRST, 1 = GALVANO_FIRST) and, for the open-loop
+// mode, where the mirror parks and how long before the camera trigger it starts moving.
+// The board keeps ONE such setting - it is not per pattern - so every acquisition start
+// re-sends the sequence of the mode it is about to run.
+bool wso_device::UsbComm::LsoScanSequence(std::uint8_t seqMode, std::int16_t preMoveOffset, std::uint16_t preMoveDelayUs)
+{
+	lock_guard<mutex> lock(impl().mutexControl);
+	MsgCommand* msg = getMsgCommand(CommandType::LSO_SCAN_SEQUENCE, 5);
+	msg->packet.lsoSeq.c1 = seqMode;
+	msg->packet.lsoSeq.s1 = preMoveOffset;
+	msg->packet.lsoSeq.s2 = preMoveDelayUs;
+	attachCRC(msg->packet.lsoSeq.crc);
 	return sendMsgCmd(msg);
 }
 

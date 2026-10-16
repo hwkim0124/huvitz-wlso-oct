@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -16,6 +16,7 @@ using static WsoNativeLib.WsoDevice;
 using static WsoNativeLib.WsoDomain;
 using static WsoNativeLib.WsoLsoDefs;
 using static WsoToolkit.controls.LsoScanImagePreview;
+using WsoNativeLib.Presets;
 using static WsoToolkit.utils.NumberUtil;
 
 namespace WsoToolkit
@@ -36,12 +37,22 @@ namespace WsoToolkit
             _onCorneaLowerFrameCaptured = new WsoCallback.CorneaCameraFrameCaptured(this.OnCorneaCameraLowerFrameCaptured);
 
             _onLsoFocusPositionChanged = new StepMotorPositionChanged(this.OnLsoFocusPositionChanged);
+            _onRetMirrorPositionChanged = new StepMotorPositionChanged(this.OnRetMirrorPositionChanged);
+            _onLsoFilterPositionChanged = new StepMotorPositionChanged(this.OnLsoFilterPositionChanged);
 
             InitializeComponent();
 
             initSetting_();
             initLsoFocusMotor_();
+            initRetMirrorMotor_();
+            initLsoFilterMotor_();
             initFixation_();
+            updateAlignControls_();
+            reflectScanTiming_();
+
+            // The anterior (cornea IR) preview is always running while this window is open.
+            StartCorneaCameraPreview();
+            initAnteriorCamera_();
         }
 
         private void Window_Closed(object sender, EventArgs e)
@@ -53,6 +64,10 @@ namespace WsoToolkit
             }
 
             myColorPreview.CloseAdjustmentWindow();
+
+            // Alignment holds the illumination on continuously - release it before anything else
+            // so no close path can leave the light burning.
+            releaseSlitAlign_();
 
             // If the aiming (mono live) is on, stop it first (IR LED off + param restore + live pause).
             // Do this before pausing color live so the IR LED is reliably turned off.
@@ -66,7 +81,14 @@ namespace WsoToolkit
                 PauseColorCameraLive();
             }
 
+            if (isCorneaCameraPreviewing_())
+            {
+                CloseCorneaCameraPreview();
+            }
+
             releaseLsoFocusMotor_();
+            releaseRetMirrorMotor_();
+            releaseLsoFilterMotor_();
         }
 
         #region Scan Mode
@@ -115,67 +137,9 @@ namespace WsoToolkit
                 PauseColorCameraLive();
             }
 
-            readyToCapture_(PreviewDisplayMode.REVIEW);
+            readyToCapture_();
 
             StartColorCameraOriginal();
-        }
-
-        private void myBtCaptureSlide_Click(object sender, RoutedEventArgs e)
-        {
-            if (LsoCamera.IsCapturing())
-            {
-                return; // capture one-call in progress
-            }
-            if (IsRetinaPreviewing_())
-            {
-                StopRetinaPreview_();
-            }
-
-            ShowColorPreview_();
-
-            if (IsColorCameraLive())
-            {
-                PauseColorCameraLive();
-            }
-
-            readyToCapture_(PreviewDisplayMode.REVIEW_SLICE);
-
-            StartColorCameraOriginal();
-        }
-
-        private void myBtStartColorCameraLive_Click(object sender, RoutedEventArgs e)
-        {
-            if (LsoCamera.IsCapturing())
-            {
-                return; // capture one-call in progress
-            }
-            // If the aiming (mono live) is on, stop it first (restores Bayer params) before color live.
-            if (IsRetinaPreviewing_())
-            {
-                StopRetinaPreview_();
-            }
-
-            myColorPreview.ClearReviewImages();
-
-            if (IsColorCameraLive())
-            {
-                myBtStartColorCameraLive.Content = "Start Color Live";
-                PauseColorCameraLive();
-
-                applyScannerControlParam_((int)WsoNativeLib.WsoLsoDefs.LsoScannerPatternId.COLOR); // Color Camera Galvano Setting 다시 복원
-            }
-            else
-            {
-                updateScannerControls_();
-
-                myBtStartColorCameraLive.Content = "Pause Color Live";
-                StartColorCameraLive();
-            }
-        }
-
-        private void myCbPreviewMonoMode_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            commitPreviewMonoMode_();
         }
 
         private void myBtCorneaStart_Click(object sender, RoutedEventArgs e)
@@ -194,150 +158,99 @@ namespace WsoToolkit
 
         #region Settings 
 
-        private void myBtSettingColorCamera_Click(object sender, RoutedEventArgs e)
+        private void myBtSettings_Click(object sender, RoutedEventArgs e)
         {
-            if (LsoCamera.IsCapturing())
-            {
-                return; // capture one-call in progress - do not read/write params mid-session
-            }
-            // Stop the aiming preview before opening the settings window, so the preview's
-            // live params (e.g. Mono8) are not read into it and values applied there are not
-            // rolled back by StopPreview's restore.
-            if (IsRetinaPreviewing_())
-            {
-                StopRetinaPreview_();
-            }
-
-            var window = new ColorCameraSettingWindow(_scanTestModel) { Owner = this };
-            window.ShowDialog();
+            openModeSettings_();
         }
 
-        private void myBtSettingFixation_Click(object sender, RoutedEventArgs e)
+        #region Camera Preset
+
+        private void myCbPreviewPreset_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            var window = new FixationSettingWindow { Owner = this };
-            window.ShowDialog();
+            commitCameraPresetSelection_(ColorCameraPresetMode.Preview);
         }
+
+        private void myCbCapturePreset_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            commitCameraPresetSelection_(ColorCameraPresetMode.Capture);
+        }
+
+        private void myCbCaptureImageMode_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            commitCaptureImageMode_();
+        }
+
+        private void myBtPreviewPresetSaveAs_Click(object sender, RoutedEventArgs e)
+        {
+            saveCameraPresetAs_(ColorCameraPresetMode.Preview);
+        }
+
+        private void myBtCapturePresetSaveAs_Click(object sender, RoutedEventArgs e)
+        {
+            saveCameraPresetAs_(ColorCameraPresetMode.Capture);
+        }
+
+        #endregion Camera Preset
+
+        #region Anterior Camera
+
+        private void initAnteriorCamera_()
+        {
+            myCbAnteriorCamera.ItemsSource = new string[] { "Lower", "Left", "Right" };
+            myCbAnteriorCamera.SelectedIndex = 0;
+            reflectAnteriorCamera_();
+        }
+
+        private CameraType anteriorCameraSelected_()
+        {
+            return myCbAnteriorCamera.SelectedIndex switch
+            {
+                1 => CameraType.IrCorneaLeft,
+                2 => CameraType.IrCorneaRight,
+                _ => CameraType.IrCorneaLower,
+            };
+        }
+
+        private void reflectAnteriorCamera_()
+        {
+            var type = anteriorCameraSelected_();
+            myTbAnteriorGain.Text = CorneaCamera.GetAnalogGain(type).ToString("F0");
+            myTbAnteriorExposure.Text = CorneaCamera.GetExposureTime(type).ToString();
+        }
+
+        private void applyAnteriorCamera_()
+        {
+            var type = anteriorCameraSelected_();
+            CorneaCamera.SetAnalogGain(type, ToFloat(myTbAnteriorGain.Text));
+            CorneaCamera.SetExposureTime(type, ToFloat(myTbAnteriorExposure.Text));
+            reflectAnteriorCamera_();
+        }
+
+        private void myCbAnteriorCamera_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (!IsInitialized)
+            {
+                return;
+            }
+            reflectAnteriorCamera_();
+        }
+
+        private void myTbAnteriorValue_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                applyAnteriorCamera_();
+            }
+        }
+
+        private void myBtAnteriorApply_Click(object sender, RoutedEventArgs e)
+        {
+            applyAnteriorCamera_();
+        }
+
+        #endregion Anterior Camera
 
         #endregion Setting 
-
-        #region Stage Motor
-        private void BtnShowStageM_Click(object sender, RoutedEventArgs e)
-        {
-            if (_stageMotorWindow == null || !_stageMotorWindow.IsLoaded)
-            {
-                _stageMotorWindow = new();
-                _stageMotorWindow.Show();
-            }
-            else
-            {
-                _stageMotorWindow?.Focus();
-            }
-        }
-
-        #endregion Stage Motor
-
-        #region LSO Scanner Setting
-
-        private void myCbPatternID_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (_isUpdatingScannerControls)
-            {
-                return;
-            }
-
-            updateScannerControls_();
-        }
-
-        private void myCbTriggerSrc_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (_isUpdatingScannerControls)
-            {
-                return;
-            }
-
-            int nPatternId = myCbPatternID.SelectedIndex;
-            _scanTestModel.GetScanProfile(nPatternId).TriggerSource = (ushort)myCbTriggerSrc.SelectedIndex;
-            applyScannerControlParam_(nPatternId);
-        }
-
-        private void myCheckBoxFixedFrame_CheckedNUnchecked(object sender, RoutedEventArgs e)
-        {
-            if (_isUpdatingScannerControls)
-            {
-                return;
-            }
-
-            int nPatternId = myCbPatternID.SelectedIndex;
-            _scanTestModel.GetScanProfile(nPatternId).AcquisitionMode = (ushort)(myCheckBoxFixedFrame.IsChecked == true ? 1 : 0);
-            applyScannerControlParam_(nPatternId);
-        }
-
-        private void myTbScanSettings_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.Key != Key.Enter)
-            {
-                return;
-            }
-
-            commitScanSettingTextBox_(sender as TextBox);
-        }
-
-        private void myTbScanSettings_LostFocus(object sender, RoutedEventArgs e)
-        {
-            commitScanSettingTextBox_(sender as TextBox);
-        }
-
-        // Reads the selected pattern back from the board into the panel, so the shown values
-        // can be compared against the INI-backed ones instead of only ever being written out.
-        private void myBtLoad_Click(object sender, RoutedEventArgs e)
-        {
-            int nPatternId = myCbPatternID.SelectedIndex;
-            if (nPatternId < 0)
-            {
-                return;
-            }
-
-            loadScannerControlParam_(nPatternId);
-        }
-
-        private void myBtApply_Click(object sender, RoutedEventArgs e)
-        {
-            int nPatternId = myCbPatternID.SelectedIndex;
-            if (nPatternId < 0)
-            {
-                return;
-            }
-
-            if (!applyScannerControlParam_(nPatternId))
-            {
-                MessageBox.Show($"Apply scanner parameters failed! (patternId={nPatternId})\r\n"
-                    + "Galvo. Pattern Size must be non-zero - press Load to read the board's current profile first.");
-                return;
-            }
-
-            _scanTestModel.SaveConfigToIniFile();
-        }
-
-        #endregion  LSO Scanner Setting
-
-        #region Galvano Move
-
-        private void myTbGalvanoYPos_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.Key != Key.Enter)
-            {
-                return;
-            }
-
-            moveGalvanoPositionY_();
-        }
-
-        private void myBtGalvanoYPosMove_Click(object sender, RoutedEventArgs e)
-        {
-            moveGalvanoPositionY_();
-        }
-
-        #endregion Galvano Move
 
         #region LSO Focus Motor
 
@@ -423,6 +336,85 @@ namespace WsoToolkit
 
         #endregion LSO Focus Motor
 
+        #region Return Mirror
+
+        private void mySliderRetMirror_DragStarted(object sender, DragStartedEventArgs e)
+        {
+            _isRetMirrorSliderDragging = true;
+        }
+
+        private void mySliderRetMirror_DragCompleted(object sender, DragCompletedEventArgs e)
+        {
+            _isRetMirrorSliderDragging = false;
+            DeviceMotors.MoveStepMotorPositionAsync(MotorType.RetMirror, (int)mySliderRetMirror.Value);
+        }
+
+        private void mySliderRetMirror_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (!_isRetMirrorSliderDragging && !_isRetMirrorPositionChanged)
+            {
+                DeviceMotors.MoveStepMotorPositionAsync(MotorType.RetMirror, (int)mySliderRetMirror.Value);
+            }
+            _isRetMirrorPositionChanged = false;
+        }
+
+        private void myTbRetMirrorPos_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Enter)
+            {
+                return;
+            }
+
+            DeviceMotors.MoveStepMotorPositionAsync(MotorType.RetMirror, ToInt(myTbRetMirrorPos.Text));
+        }
+
+        private void myBtRetMirrorIn_Click(object sender, RoutedEventArgs e)
+        {
+            myCbRetMirror.SelectedIndex = 0;
+            DeviceMotors.MoveStepMotorToOriginAsync(MotorType.RetMirror, (int)MirrorMotorMode.MirrorIn);
+        }
+
+        private void myBtRetMirrorOut_Click(object sender, RoutedEventArgs e)
+        {
+            myCbRetMirror.SelectedIndex = 1;
+            DeviceMotors.MoveStepMotorToOriginAsync(MotorType.RetMirror, (int)MirrorMotorMode.MirrorOut);
+        }
+
+        private void myBtRetMirrorSetAs_Click(object sender, RoutedEventArgs e)
+        {
+            var mode = myCbRetMirror.SelectedIndex == 0 ? MirrorMotorMode.MirrorIn : MirrorMotorMode.MirrorOut;
+            DeviceMotors.SetStepMotorCurrentPositionAsOrigin(MotorType.RetMirror, (int)mode);
+        }
+
+        #endregion Return Mirror
+
+        #region LSO Filter Motor
+
+        // Tag = LsoFilterMode(0:Color, 1:BlueFaf, 2:GreenFaf, 3:Icga).
+        // 각 모드는 네이티브가 보유한 필터 위치(HBS 프로파일 캘리브 값)로 이동한다.
+        private void myRbLsoFilterMode_Click(object sender, RoutedEventArgs e)
+        {
+            int mode = ToInt((string)((RadioButton)sender).Tag);
+            DeviceMotors.MoveStepMotorToOriginAsync(MotorType.LsoFilter, mode);
+        }
+
+        private void myBtLsoFilterMove_Click(object sender, RoutedEventArgs e)
+        {
+            DeviceMotors.MoveStepMotorPositionAsync(MotorType.LsoFilter, ToInt(myTbLsoFilterPos.Text));
+        }
+
+        private void myTbLsoFilterPos_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Enter)
+            {
+                return;
+            }
+
+            DeviceMotors.MoveStepMotorPositionAsync(MotorType.LsoFilter, ToInt(myTbLsoFilterPos.Text));
+        }
+
+        #endregion LSO Filter Motor
+
         #region Internal Fixation
 
         private void mySliderFixationRow_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -502,94 +494,5 @@ namespace WsoToolkit
         }
         #endregion Align Guide
 
-        private void myBtCaptureHWTrig_Click(object sender, RoutedEventArgs e)
-        {
-            if (LsoCamera.IsCapturing())
-            {
-                return; // capture one-call in progress
-            }
-            if (IsRetinaPreviewing_())
-            {
-                StopRetinaPreview_();
-            }
-
-            ShowColorPreview_();
-
-            readyToCapture_(PreviewDisplayMode.REVIEW);
-
-            if (IsColorCameraLive())
-            {
-                StopColorCameraHWTriggerLive();
-            }
-
-            StartColorCameraHWTriggerLive();
-
-            bool bBegin = false;
-            for (int i = 0; i < 20; ++i)
-            {
-                bBegin = LsoCamera.IsColorCameraStreaming(); // Color Camera가 Acqusition 중인지 확인
-                if (bBegin)
-                {
-                    break;
-                }
-                Thread.Sleep(10);
-            }
-
-            LsoScanner.StartLsoScannerGrabbing((int)LsoScannerPatternId.COLOR);
-        }
-
-        private void myBtCaptureROI_Click(object sender, RoutedEventArgs e)
-        {
-            if (LsoCamera.IsCapturing())
-            {
-                return; // capture one-call in progress
-            }
-            if (IsRetinaPreviewing_())
-            {
-                StopRetinaPreview_();
-            }
-
-            ShowColorPreview_();
-
-            if (IsColorCameraLive())
-            {
-                PauseColorCameraLive();
-            }
-
-            readyToCapture_(PreviewDisplayMode.REVIEW_ROI);
-
-            StartColorCameraOriginal();
-        }
-
-        private void myBtCaptureROISetting_Click(object sender, RoutedEventArgs e)
-        {
-            var window = new CaptureROISettingWindow(_scanTestModel)
-            {
-                Owner = this
-            };
-
-            System.Windows.Point pt = myBtCaptureROISetting.PointToScreen(new System.Windows.Point(0, 0));
-            window.WindowStartupLocation = WindowStartupLocation.Manual;
-            window.Left = pt.X + (myBtCaptureROISetting.ActualWidth / 2) - (window.Width / 2);
-            window.Top = pt.Y + myBtCaptureROISetting.ActualHeight;
-
-            int nFrameCount = ToInt(myTbSubFrame.Text);
-            window.FrameCount = nFrameCount;
-
-            window.ShowDialog();
-        }
-
-        private void myBtSettingLeds_Click(object sender, RoutedEventArgs e)
-        {
-            if (_lightControlWindow == null || !_lightControlWindow.IsLoaded)
-            {
-                _lightControlWindow = new();
-                _lightControlWindow.Show();
-            }
-            else
-            {
-                _lightControlWindow.Focus();
-            }
-        }
     }
 }
