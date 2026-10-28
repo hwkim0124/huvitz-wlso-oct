@@ -8,6 +8,13 @@ using static WsoNativeLib.WsoLsoScan;
 
 namespace WsoNativeLib.Presets
 {
+    // How the board table is built when the preset names no CSV. DevKit LsoPatternConfig.TrajectoryMode.
+    public enum LsoTrajectoryMode
+    {
+        Linear = 0,
+        CalibratedFov = 1,
+    }
+
     // The galvo scan half of a mode preset, and the DevKit aiming profile it defaults to.
     //
     // These live in their own file rather than beside LsoScanTestWindow because the whole
@@ -60,6 +67,16 @@ namespace WsoNativeLib.Presets
         public string TrajectoryFile { get; set; } = string.Empty;
 
         public bool HasTrajectoryFile => !string.IsNullOrWhiteSpace(TrajectoryFile);
+
+        // CalibratedFov: the table is generated from CalibrationFile (LsoGalvoSlitCalibration)
+        // at the CURRENT Pattern Size / Lead / Tail / Sensor Rows each time it is installed, so a
+        // Row 0 offset nudge never leaves a stale table behind. It takes precedence over
+        // TrajectoryFile; Start/End then only set the sweep direction.
+        public LsoTrajectoryMode TrajectoryMode { get; set; } = LsoTrajectoryMode.Linear;
+
+        public string CalibrationFile { get; set; } = string.Empty;
+
+        public bool IsCalibratedTrajectory => TrajectoryMode == LsoTrajectoryMode.CalibratedFov;
 
         // One int16 per sample, separated by newline / comma / semicolon / whitespace; blank
         // lines and lines starting with '#' are skipped. Returns null with a reason on any
@@ -373,6 +390,13 @@ namespace WsoNativeLib.Presets
         // where the board waits on EXPOSURE_ACTIVE instead of timing the trigger itself.
         public ushort PreMoveDelayUs { get; set; }
 
+        // 계산 결과는 DevKit처럼 PreMoveDelayUs에 저장하고 보드로 보낸다.
+        // 원래 요청은 별도로 보존하여 반올림된 결과가 다음 계산의 입력이 되지 않게 한다.
+        // 이전 프리셋에는 이 값이 없으므로 기존 PreMoveDelayUs를 요청으로 사용한다.
+        public ushort? RequestedPreMoveDelayUs { get; set; }
+
+        public ushort TimingPreMoveDelayUs => RequestedPreMoveDelayUs ?? PreMoveDelayUs;
+
         public double LineTimeUs => LineRateHz > 0 ? 1_000_000.0 / LineRateHz : 0.0;
 
         // Row 0 offset time: how long after the trigger the slit centre is meant to reach row 0.
@@ -415,7 +439,11 @@ namespace WsoNativeLib.Presets
             SequenceMode = (LsoScanSequenceMode)ini.ReadInt(section, "SequenceMode");
             PreMoveOffset = (short)ini.ReadInt(section, "PreMoveOffset");
             PreMoveDelayUs = (ushort)ini.ReadInt(section, "PreMoveDelayUs");
+            int requestedDelay = ini.ReadInt(section, "RequestedPreMoveDelayUs", -1);
+            RequestedPreMoveDelayUs = requestedDelay >= 0 ? (ushort)requestedDelay : null;
             TrajectoryFile = ini.ReadString(section, "TrajectoryFile");
+            TrajectoryMode = (LsoTrajectoryMode)ini.ReadInt(section, "TrajectoryMode");
+            CalibrationFile = ini.ReadString(section, "CalibrationFile");
         }
 
         public void SaveToIni(IniFileUtil ini, int patternId)
@@ -445,7 +473,11 @@ namespace WsoNativeLib.Presets
             ini.WriteInt(section, "SequenceMode", (int)SequenceMode);
             ini.WriteInt(section, "PreMoveOffset", PreMoveOffset);
             ini.WriteInt(section, "PreMoveDelayUs", PreMoveDelayUs);
+            ini.WriteInt(section, "RequestedPreMoveDelayUs", RequestedPreMoveDelayUs.HasValue
+                ? RequestedPreMoveDelayUs.Value : -1);
             ini.WriteString(section, "TrajectoryFile", TrajectoryFile);
+            ini.WriteInt(section, "TrajectoryMode", (int)TrajectoryMode);
+            ini.WriteString(section, "CalibrationFile", CalibrationFile);
         }
 
         // Note: the galvano position table is not built here. Only start/end/sampleSize
@@ -497,7 +529,10 @@ namespace WsoNativeLib.Presets
             SequenceMode = source.SequenceMode;
             PreMoveOffset = source.PreMoveOffset;
             PreMoveDelayUs = source.PreMoveDelayUs;
+            RequestedPreMoveDelayUs = source.RequestedPreMoveDelayUs;
             TrajectoryFile = source.TrajectoryFile;
+            TrajectoryMode = source.TrajectoryMode;
+            CalibrationFile = source.CalibrationFile;
         }
 
         // Lead/Tail are deliberately NOT taken from param: obtain() reads pos[] back from the

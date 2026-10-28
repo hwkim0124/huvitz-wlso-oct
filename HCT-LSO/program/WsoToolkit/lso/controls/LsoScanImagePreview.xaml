@@ -5,7 +5,10 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:WsoToolkit.controls"
              mc:Ignorable="d" 
-             Width="1024" Height="1072">
+             Width="1024" Height="1072"
+             PreviewMouseWheel="UserControl_PreviewMouseWheel" PreviewMouseDown="UserControl_PreviewMouseDown"
+             PreviewMouseMove="UserControl_PreviewMouseMove" PreviewMouseUp="UserControl_PreviewMouseUp"
+             LostMouseCapture="UserControl_LostMouseCapture">
     <Border BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" BorderThickness="1">
         <Grid Background="White">
             <Grid Margin="4">
@@ -16,14 +19,54 @@
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="48"/>
                 </Grid.RowDefinitions>
-                <Grid x:Name="myViewportHost" Grid.Row="0" Grid.Column="0" Background="LightGray" IsHitTestVisible="False">
-                    <Image x:Name="imageViewport" Grid.Row="0" Style="{StaticResource ImageStyle}" Stretch="Uniform"/>
-                    <!--Align Guide Overlay (viewport 기준 노란색 십자선 + tick mark)-->
+                <!--Viewport. Click-through except while a slit measurement runs, so the zoom/pan
+                    gestures are read from this control's Preview mouse events instead
+                    (LsoScanImagePreviewZoom.cs); ClipToBounds keeps a zoomed image inside it.-->
+                <Grid x:Name="myViewportHost" Grid.Row="0" Grid.Column="0" Background="LightGray" IsHitTestVisible="False" ClipToBounds="True">
+                    <!--Only this surface carries the zoom; at x1 the image sits where it always did.-->
+                    <Grid x:Name="myZoomSurface">
+                        <Grid.RenderTransform>
+                            <TransformGroup>
+                                <ScaleTransform x:Name="myZoomScale"/>
+                                <TranslateTransform x:Name="myZoomPan"/>
+                            </TransformGroup>
+                        </Grid.RenderTransform>
+                        <Image x:Name="imageViewport" Grid.Row="0" Style="{StaticResource ImageStyle}" Stretch="Uniform" SizeChanged="imageViewport_SizeChanged"/>
+                    </Grid>
+                    <!--Align Guide Overlay (viewport 기준 노란색 십자선 + tick mark). Drawn in viewport
+                        space; when zoomed it follows the image centre (DrawAlignGuide).-->
                     <Canvas x:Name="myAlignGuideOverlay" Visibility="Collapsed" IsHitTestVisible="False" ClipToBounds="True" SizeChanged="myAlignGuideOverlay_SizeChanged"/>
+                    <!--Internal fixation marker (LsoScanImagePreview.Fixation.cs), only while the Fixation
+                        toggle is on and the preview is live. Drawn in viewport space like the Zoom Area ROI.-->
+                    <Canvas x:Name="myFixationOverlay" Visibility="Collapsed" IsHitTestVisible="False" ClipToBounds="True" SizeChanged="myFixationOverlay_SizeChanged"/>
+                    <!--Zoom Area ROI (DevKit Zoom Area View), only while that window is open. Drawn in
+                        viewport space; input comes through the Preview mouse events
+                        (LsoScanImagePreview.ZoomArea.cs).-->
+                    <Canvas x:Name="myZoomAreaOverlay" Visibility="Collapsed" IsHitTestVisible="False" ClipToBounds="True"/>
                     <!--Slit height measurement. Only hit-testable while a measurement runs (the
                         host grid gates it), so the preview stays click-through otherwise.-->
                     <local:SlitMeasureOverlay x:Name="mySlitOverlay"/>
+                    <!--Zoom readout (DevKit ZoomPanPictureBox overlay), only while zoomed in: the slit
+                        banner's dark plate with the DevKit cyan, bottom-right so it stays clear of
+                        the left-aligned slit labels.-->
+                    <Border x:Name="myZoomBadge" Visibility="Collapsed" IsHitTestVisible="False"
+                            HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="8" Padding="6,3"
+                            Background="#C8000000" BorderBrush="#B400C8DC" BorderThickness="1">
+                        <TextBlock Foreground="Cyan" FontSize="12"><Run x:Name="myZoomText" FontWeight="Bold"/><Run Text="   Wheel zoom | Ctrl+Drag pan | Middle-click reset"/></TextBlock>
+                    </Border>
                 </Grid>
+                <!--FAF review controls (DevKit parity): color <-> extracted gray, and the
+                    Blue-FAF emission composite. Shown only for a FAF capture in review.-->
+                <StackPanel x:Name="myFafPanel" Grid.Row="0" Orientation="Horizontal"
+                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8"
+                            Visibility="Collapsed">
+                    <Button x:Name="myBtFafView" Content="FAF View" Style="{StaticResource ButtonS1Style}"
+                            Width="86" Click="myBtFafView_Click"
+                            ToolTip="Switch the FAF review between the extracted gray image and the color frame"/>
+                    <ComboBox x:Name="myCbFafOption" Style="{StaticResource ComboBoxStyle}" Width="122" Margin="4,0,0,0"
+                              SelectionChanged="myCbFafOption_SelectionChanged"
+                              ToolTip="Blue-FAF emission: G only (default) or 0.6 G + 0.4 R"/>
+                </StackPanel>
                 <!--Live Menu-->
                 <Grid Grid.Row="1" x:Name="myGridLive" Visibility="Visible">
                     <Grid.ColumnDefinitions>
@@ -37,6 +80,12 @@
                     </Grid>
                     <Grid Grid.Column="1">
                         <Label x:Name="lblImageStatusLive" Content="LSO View" Style="{StaticResource LabelStyle}" HorizontalAlignment="Center"/>
+                    </Grid>
+                    <Grid Grid.Column="2">
+                        <ToggleButton x:Name="myToggleFixationOverlay" Content="Fixation" IsChecked="False" Width="64" Height="26"
+                                      HorizontalAlignment="Center" VerticalAlignment="Center"
+                                      ToolTip="Show the internal fixation position (map: [FIXATION_OVERLAY] in WsoDeviceCfg.ini)"
+                                      Checked="myToggleFixationOverlay_Checked" Unchecked="myToggleFixationOverlay_Unchecked"/>
                     </Grid>
                 </Grid>
                 <!--Review Menu-->

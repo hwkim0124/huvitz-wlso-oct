@@ -537,7 +537,7 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::startColorCameraMonoPreview(int mod
 		turnOnLight(LightType::RETINA_IR_LED);
 
 		// 5) LSO scanner IR pattern grabbing (reuse scanner export; IR pattern id = 1)
-		startLsoScannerGrabbing(1);
+		startLsoScannerGrabbing(1, 1);
 
 		// 6) start color-camera live with the caller's frame callback
 		inst->connectColorCameraFrameCaptured(cb);
@@ -641,6 +641,7 @@ int WSOSYSTEM_DLL_API __stdcall wso_system::startColorCameraColorCaptureEx(const
 namespace {
 int startColorCaptureLegacyCore(const ColorCameraSettingParam* param, int scanPatternId, bool hwTrigger, ColorCameraImageCaptured cb, ColorCaptureCompleted onCompleted)
 {
+	const unsigned char fundusMode = 0; // Legacy color-only API has no mode request.
 	bool scannerStarted = false;
 	bool callbackConnected = false;
 	bool cameraArmed = false;
@@ -712,7 +713,7 @@ int startColorCaptureLegacyCore(const ColorCameraSettingParam* param, int scanPa
 		// Keep Normal's established scanner-first free-run sequence. HW setup and its
 		// bounded readiness wait run on the worker so the UI caller is never blocked.
 		if (!hwTrigger) {
-			if (!startLsoScannerGrabbing(scanPatternId)) {
+			if (!startLsoScannerGrabbing(scanPatternId, fundusMode)) {
 				return failStart(CAP_STAGE_SCANNER,
 					"scanner grabbing start failed (patternId=" + std::to_string(scanPatternId) + ")");
 			}
@@ -728,7 +729,7 @@ int startColorCaptureLegacyCore(const ColorCameraSettingParam* param, int scanPa
 			cameraArmed = true;
 		}
 
-		s_captureWorker.t = std::thread([cam, scanPatternId, totalFrameCount, hwTrigger, onCompleted] {
+		s_captureWorker.t = std::thread([cam, scanPatternId, totalFrameCount, hwTrigger, onCompleted, fundusMode] {
 			int frames = 0;
 			int result = CAP_STAGE_OK;
 			bool workerScannerStarted = !hwTrigger;
@@ -755,7 +756,7 @@ int startColorCaptureLegacyCore(const ColorCameraSettingParam* param, int scanPa
 					cam->abortCaptureFrames();
 					result = CAP_STAGE_CAMERA;
 				}
-				else if (!startLsoScannerGrabbing(scanPatternId)) {
+				else if (!startLsoScannerGrabbing(scanPatternId, fundusMode)) {
 					setLastCaptureError("scanner grabbing start failed (patternId=" + std::to_string(scanPatternId) + ")");
 					cam->abortCaptureFrames();
 					result = CAP_STAGE_SCANNER;
@@ -1065,13 +1066,15 @@ namespace {
 		return ops;
 	}
 
-	bool applyFundusLight(int light, int mode, unsigned short intensity)
+	bool applyFundusLight(int light, int mode, unsigned short intensity, bool intensityOnly = false)
 	{
 		const LightType type = (LightType)light;
 		const unsigned short calibrated = calibratedFundusLightIntensity(type);
 		const unsigned short applied = capture::resolveFundusLightIntensity(intensity, calibrated);
-		const bool ok = capture::runFundusLightApply(fundusLightOps(), nullptr,
-			light, mode, applied);
+		// Firmware 10-16 selects and lights the capture LED from fundus_mode.
+		const bool ok = intensityOnly
+			? (applied == 0 || setLightIntensity(type, applied))
+			: capture::runFundusLightApply(fundusLightOps(), nullptr, light, mode, applied);
 		WsoLogInfo("[FUNDUS-LIGHT] type=" + std::to_string(light)
 			+ " mode=" + std::to_string(mode)
 			+ " requested=" + std::to_string(intensity)
@@ -1101,10 +1104,18 @@ namespace {
 		}
 	}
 
-	bool restoreFundusLight(const LsoFundusCaptureRequest& request)
+	bool restoreFundusLight(const LsoFundusCaptureRequest& request, bool captureFailed = false)
 	{
-		return restoreFundusLight(request.captureLight, request.restoreLight,
-			request.restoreLightMode, request.restoreLightIntensity);
+		// Scanner OFF already returns firmware to PreviewIR. No capture lamp was
+		// switched on by the host; restore only the aiming LED's saved intensity.
+		// On failure the scanner command may not have reached the board: retain a
+		// safe OFF rather than leave the firmware-selected capture lamp lit.
+		if (captureFailed && !turnOffLight((LightType)request.captureLight)) {
+			return false;
+		}
+		const unsigned short applied = capture::resolveFundusLightIntensity(
+			request.restoreLightIntensity, calibratedFundusLightIntensity((LightType)request.restoreLight));
+		return applied == 0 || setLightIntensity((LightType)request.restoreLight, applied);
 	}
 
 	// Callers must hold s_captureStateLock.
@@ -1221,11 +1232,10 @@ namespace {
 			s_fundusState.acquire(capture::SequenceResource::FrameCallback);
 
 			s_fundusGate.waitAtStep(CAP_STEP_CAPTURE_LIGHT);
-			// Reserve before the first board write: mode or intensity can take even when a
-			// later command is refused, and that partial application still needs cleanup.
+			// Reserve before the intensity write so rollback restores the aiming intensity.
 			s_fundusState.acquire(capture::SequenceResource::CaptureLight);
 			if (!applyFundusLight(req.captureLight, req.captureLightMode,
-				req.captureLightIntensity)) {
+				req.captureLightIntensity, true)) {
 				const bool restored = restoreFundusLight(req);
 				inst->disconnectColorCameraImageCaptured();
 				s_fundusState.releaseAll();
@@ -1297,7 +1307,7 @@ namespace {
 					if (cancelled("scanner start")) {
 						result = CAP_STAGE_CANCELLED;
 					}
-					else if (!startLsoScannerGrabbing(req.scanPatternId)) {
+					else if (!startLsoScannerGrabbing(req.scanPatternId, req.fundusMode)) {
 						setLastCaptureError("scanner grabbing start failed (patternId="
 							+ std::to_string(req.scanPatternId) + ")");
 						result = CAP_STAGE_SCANNER;
@@ -1327,7 +1337,8 @@ namespace {
 							cam->abortCaptureFrames();	// idempotent: acquire already aborts
 							break;
 						case capture::SequenceResource::CaptureLight:
-							teardownOk = restoreFundusLight(req) && teardownOk;
+							teardownOk = restoreFundusLight(req,
+								result != CAP_STAGE_OK || !teardownOk) && teardownOk;
 							break;
 						case capture::SequenceResource::FrameCallback:
 							if (auto* inst2 = Hardware::getInstance(); inst2) {
@@ -1372,7 +1383,7 @@ namespace {
 						if (cam) { cam->abortCaptureFrames(); }
 						break;
 					case capture::SequenceResource::CaptureLight:
-						restoreFundusLight(req);
+						restoreFundusLight(req, true);
 						break;
 					case capture::SequenceResource::FrameCallback:
 						if (auto* inst = Hardware::getInstance(); inst) {
@@ -1622,7 +1633,7 @@ namespace {
 	bool previewStartScanner(void* ctx)
 	{
 		PreviewContext& c = previewCtx(ctx);
-		if (!startLsoScannerGrabbing(c.req.scanPatternId)) {
+		if (!startLsoScannerGrabbing(c.req.scanPatternId, c.req.fundusMode)) {
 			setLastCaptureError("preview scanner grabbing start failed (patternId="
 				+ std::to_string(c.req.scanPatternId) + ")");
 			WsoLogWarn("[FUNDUS-PRV] scanner start failed");

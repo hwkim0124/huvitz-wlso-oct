@@ -15,6 +15,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.IO;
 using WsoNativeLib;
+using WsoNativeLib.Presets;
 using WsoToolkit.utils;
 
 namespace WsoToolkit.controls
@@ -339,9 +340,11 @@ namespace WsoToolkit.controls
         private void UserControl_Unloaded(object sender, RoutedEventArgs e)
         {
             _stopwatch.Stop();
+            StopCorneaJog("unloaded");
+            AttachJogHostWindow(null);
         }
 
-        public void SaveFrameImage(string filename = "")
+        public void SaveFrameImage(string filename = "", string dirname = ".\\cornea")
         {
             if (_imageMat.Empty())
             {
@@ -354,7 +357,6 @@ namespace WsoToolkit.controls
                 filename = $"{GetCameraName()}_{timestamp}.png";
             }
 
-            string dirname = ".\\cornea";
             if (!Directory.Exists(dirname))
             {
                 Directory.CreateDirectory(dirname);
@@ -368,8 +370,30 @@ namespace WsoToolkit.controls
             return;
         }
 
+        // Cornea-click velocity jog. UI thread only, except the hold's stop action, which marshals to the
+        // dispatcher. _jogHolding is cleared before ReleaseMouseCapture, which re-enters
+        // StopCorneaJog through LostMouseCapture. The device stop runs as the hold's stop action, which
+        // StageJog runs once per hold (EndVelocityHold, watchdog or StopAll, whichever removes the hold), and
+        // once more when a StopAll raced the start (StageJog.StartVelocityHold).
+        private const string JogOwner = "cornea";
+        private bool _jogHolding = false;
+        private int _jogHoldGeneration = 0;
+        private int _jogWheelDelta = 0;
+        private System.Windows.Window? _jogHostWindow;
+        private readonly System.Windows.Threading.DispatcherTimer _jogFeedbackTimer = new();
+
         private void RegisterMouseEventHandlers()
         {
+            _jogFeedbackTimer.Tick += (sender, e) =>
+            {
+                _jogFeedbackTimer.Stop();
+                if (!_jogHolding)
+                {
+                    myJogOverlay.Children.Clear();
+                    myJogBadge.Visibility = Visibility.Collapsed;
+                }
+            };
+
             imageViewport.MouseDown += (sender, e) =>
             {
                 // Test hook for the eye aligner while the pupil detector is a stub:
@@ -393,84 +417,350 @@ namespace WsoToolkit.controls
                     return;
                 }
 
-                if (IsStageControlEnabled && e.LeftButton == MouseButtonState.Pressed)
+                if (IsStageControlEnabled && e.ChangedButton == MouseButton.Left && !_jogHolding)
                 {
-                    var position = e.GetPosition(imageViewport);
-                    double normalizedX = position.X / imageViewport.ActualWidth;
-                    double normalizedY = position.Y / imageViewport.ActualHeight;
-                    double targetX1 = 0.5 - 0.08;
-                    double targetX2 = 0.5 + 0.08;
-                    double targetY1 = 0.5 - 0.08;
-                    double targetY2 = 0.5 + 0.08;
-                    double centerX = 0.5;
-                    double centerY = 0.5;
-
-                    if (IsCorneaLeftPreview() || IsCorneaRightPreview())
-                    {
-                        if (normalizedX < targetX1 || normalizedX > targetX2)
-                        {
-                            if (normalizedX < centerX)
-                            {
-                                AlignStage.MoveHeadLeft();
-                            }
-                            else
-                            {
-                                AlignStage.MoveHeadRight();
-                            }
-
-                            if (normalizedY < targetY1)
-                            {
-                                AlignStage.MoveHeadUp();
-                            }
-                            else if (normalizedY > targetY2)
-                            {
-                                AlignStage.MoveHeadDown();
-                            }
-                        }
-                        else
-                        {
-                            if (normalizedY < centerY)
-                            {
-                                AlignStage.MoveHeadUp();
-                            }
-                            else
-                            {
-                                AlignStage.MoveHeadDown();
-                            }
-                            if (normalizedY >= targetY1 && normalizedY <= targetY2)
-                            {
-                                if (normalizedX < centerX)
-                                {
-                                    AlignStage.MoveHeadLeft();
-                                }
-                                else
-                                {
-                                    AlignStage.MoveHeadRight();
-                                }
-                            }
-                        }
-                    }
-                    else if (IsCorneaLowerPreview())
-                    {
-                        if (normalizedY < targetY1)
-                        {
-                            AlignStage.MoveHeadForward();
-                        }
-                        else if (normalizedY > targetY2)
-                        {
-                            AlignStage.MoveHeadBackward();
-                        }
-                    }
+                    StartCorneaJog(e);
                 }
             };
 
             imageViewport.MouseUp += (sender, e) =>
             {
-                if (IsStageControlEnabled && e.LeftButton == MouseButtonState.Released)
+                if (e.ChangedButton == MouseButton.Left)
                 {
-                    AlignStage.StopHeadXYZ();
+                    StopCorneaJog("mouse up");
                 }
             };
+
+            imageViewport.LostMouseCapture += (sender, e) => StopCorneaJog("lost capture");
+
+            imageViewport.MouseWheel += (sender, e) =>
+            {
+                if (!IsStageControlEnabled)
+                {
+                    return;
+                }
+                StepCorneaWheel(e.Delta);
+                e.Handled = true;
+            };
+
+            IsEnabledChanged += (sender, e) =>
+            {
+                if (!(bool)e.NewValue)
+                {
+                    StopCorneaJog("disabled");
+                }
+            };
+
+            IsVisibleChanged += (sender, e) =>
+            {
+                if (!(bool)e.NewValue)
+                {
+                    StopCorneaJog("hidden");
+                }
+            };
+
+            Loaded += (sender, e) =>
+            {
+                AttachJogHostWindow(System.Windows.Window.GetWindow(this));
+            };
+        }
+
+        private void StartCorneaJog(MouseButtonEventArgs e)
+        {
+            System.Windows.Point position = e.GetPosition(imageViewport);
+            System.Windows.Point mark = e.GetPosition(myJogOverlay);
+            double nx = position.X / imageViewport.ActualWidth;
+            double ny = position.Y / imageViewport.ActualHeight;
+
+            LsoHeadMove move = LsoCorneaClickJog.Classify(IsCorneaLeftPreview() || IsCorneaRightPreview(), nx, ny);
+            if (move == LsoHeadMove.None)
+            {
+                ShowJogFeedback(mark, Brushes.Gray, LsoHeadMove.None, "no move", 600);
+                return;
+            }
+
+            string moves = DescribeJogMove(move);
+            JogAxis[] axes = JogAxesFor(move);
+            foreach (JogAxis axis in axes)
+            {
+                if (!StageJog.IsAxisFree(axis, out string reason))
+                {
+                    RefuseCorneaJog(mark, $"{moves} refused: {reason}");
+                    return;
+                }
+            }
+
+            if (!imageViewport.CaptureMouse())
+            {
+                RefuseCorneaJog(mark, $"{moves} refused: no capture");
+                return;
+            }
+
+            int generation = ++_jogHoldGeneration;
+            _jogHolding = true;
+            HoldStartResult result = StageJog.StartVelocityHold(
+                JogOwner, () => StopHeadForJog(generation), () => StartHeadMoves(move), StopHeadWithRetry, axes);
+            switch (result)
+            {
+                case HoldStartResult.Started:
+                    break;
+                case HoldStartResult.Busy:
+                    _jogHolding = false;
+                    imageViewport.ReleaseMouseCapture();
+                    RefuseCorneaJog(mark, $"{moves} refused: busy");
+                    return;
+                case HoldStartResult.Rejected:
+                    EndCorneaHold();
+                    RefuseCorneaJog(mark, $"{moves} rejected");
+                    return;
+                default:
+                    // The second stop's result is the one that counts, so the update that the first stop
+                    // posted is dropped (generation bump).
+                    _jogHoldGeneration++;
+                    StopCorneaJog("raced stop all");
+                    if (result == HoldStartResult.RacedStopFailed)
+                    {
+                        ShowStopFailed();
+                    }
+                    return;
+            }
+
+            imageViewport.Cursor = Cursors.Hand;
+            ShowJogFeedback(mark, Brushes.LimeGreen, move, moves, 0);
+            Console.WriteLine($"[LSO-JOG] cornea {moves}");
+        }
+
+        private void StopCorneaJog(string why)
+        {
+            if (!_jogHolding)
+            {
+                return;
+            }
+
+            EndCorneaHold();
+            Console.WriteLine($"[LSO-JOG] cornea stop ({why})");
+            ShowJogFeedback(null, Brushes.Gray, LsoHeadMove.None, "Stopped", 800);
+        }
+
+        private void EndCorneaHold()
+        {
+            _jogHolding = false;
+            StageJog.EndVelocityHold(JogOwner);
+            if (imageViewport.IsMouseCaptured)
+            {
+                imageViewport.ReleaseMouseCapture();
+            }
+            imageViewport.Cursor = null;
+        }
+
+        private void RefuseCorneaJog(System.Windows.Point mark, string text)
+        {
+            Console.WriteLine($"[LSO-JOG] cornea {text}");
+            ShowJogFeedback(mark, Brushes.Red, LsoHeadMove.None, text, 800);
+        }
+
+        // The hold's stop action. Runs on the UI thread or on the StageJog watchdog timer thread: device calls,
+        // log and BeginInvoke only (never Invoke), so a StopAll from elsewhere also clears this control's UI and
+        // a failed stop (false twice, or a throw) is shown even after the UI already said "Stopped".
+        private void StopHeadForJog(int generation)
+        {
+            bool stopped = false;
+            try
+            {
+                stopped = StopHeadWithRetry();
+            }
+            finally
+            {
+                Dispatcher.BeginInvoke(() => OnCorneaHoldEnded(generation, stopped));
+            }
+        }
+
+        private static bool StopHeadWithRetry()
+        {
+            if (AlignStage.StopHeadXYZ())
+            {
+                return true;
+            }
+            Console.WriteLine("[LSO-JOG] cornea StopHeadXYZ returned false, retrying once");
+            if (AlignStage.StopHeadXYZ())
+            {
+                return true;
+            }
+            Console.WriteLine("[LSO-JOG] cornea StopHeadXYZ returned false twice");
+            return false;
+        }
+
+        // Ignored when a newer hold has started since (generation mismatch). StopCorneaJog is a no-op when this
+        // control already released the hold itself (_jogHolding false).
+        private void OnCorneaHoldEnded(int generation, bool stopped)
+        {
+            if (generation != _jogHoldGeneration)
+            {
+                return;
+            }
+
+            StopCorneaJog("stop all");
+            if (!stopped)
+            {
+                ShowStopFailed();
+            }
+        }
+
+        // Stays up (no timeout) until the next feedback replaces it.
+        private void ShowStopFailed()
+        {
+            ShowJogFeedback(null, Brushes.Red, LsoHeadMove.None, "STOP FAILED - press STOP ALL", 0);
+        }
+
+        private static bool StartHeadMoves(LsoHeadMove move)
+        {
+            if (move.HasFlag(LsoHeadMove.Left) && !AlignStage.MoveHeadLeft())
+            {
+                return false;
+            }
+            if (move.HasFlag(LsoHeadMove.Right) && !AlignStage.MoveHeadRight())
+            {
+                return false;
+            }
+            if (move.HasFlag(LsoHeadMove.Up) && !AlignStage.MoveHeadUp())
+            {
+                return false;
+            }
+            if (move.HasFlag(LsoHeadMove.Down) && !AlignStage.MoveHeadDown())
+            {
+                return false;
+            }
+            if (move.HasFlag(LsoHeadMove.Forward) && !AlignStage.MoveHeadForward())
+            {
+                return false;
+            }
+            if (move.HasFlag(LsoHeadMove.Backward) && !AlignStage.MoveHeadBackward())
+            {
+                return false;
+            }
+            return true;
+        }
+
+        private static JogAxis[] JogAxesFor(LsoHeadMove move)
+        {
+            var axes = new List<JogAxis>();
+            if ((move & (LsoHeadMove.Left | LsoHeadMove.Right)) != 0)
+            {
+                axes.Add(JogAxis.X);
+            }
+            if ((move & (LsoHeadMove.Up | LsoHeadMove.Down)) != 0)
+            {
+                axes.Add(JogAxis.Y);
+            }
+            if ((move & (LsoHeadMove.Forward | LsoHeadMove.Backward)) != 0)
+            {
+                axes.Add(JogAxis.Z);
+            }
+            return axes.ToArray();
+        }
+
+        private static string DescribeJogMove(LsoHeadMove move)
+        {
+            var parts = new List<string>();
+            if (move.HasFlag(LsoHeadMove.Left)) parts.Add("X Left");
+            if (move.HasFlag(LsoHeadMove.Right)) parts.Add("X Right");
+            if (move.HasFlag(LsoHeadMove.Up)) parts.Add("Y Up");
+            if (move.HasFlag(LsoHeadMove.Down)) parts.Add("Y Down");
+            if (move.HasFlag(LsoHeadMove.Forward)) parts.Add("Z Fwd");
+            if (move.HasFlag(LsoHeadMove.Backward)) parts.Add("Z Back");
+            return string.Join("  ", parts);
+        }
+
+        // One Fine Z step per wheel event once the accumulated delta reaches a notch (120), so a coalesced
+        // multi-notch delta still sends one step; a reversal drops the leftover. A wheel event during a click
+        // hold is ignored: the hold owns the head until it stops.
+        private void StepCorneaWheel(int delta)
+        {
+            if (delta == 0 || _jogHolding)
+            {
+                return;
+            }
+
+            if (Math.Sign(delta) != Math.Sign(_jogWheelDelta))
+            {
+                _jogWheelDelta = 0;
+            }
+            _jogWheelDelta += delta;
+            if (Math.Abs(_jogWheelDelta) < Mouse.MouseWheelDeltaForOneLine)
+            {
+                return;
+            }
+
+            int direction = Math.Sign(_jogWheelDelta);
+            _jogWheelDelta %= Mouse.MouseWheelDeltaForOneLine;
+            string text = StageJog.TryStep(JogAxis.Z, LsoJogSize.Fine, direction, out int sent, out string reason)
+                ? $"Z {sent:+0;-0}"
+                : $"Z refused: {reason}";
+            ShowJogFeedback(null, Brushes.Gray, LsoHeadMove.None, text, 900);
+        }
+
+        // durationMs 0 keeps the feedback until the next ShowJogFeedback (used while holding).
+        private void ShowJogFeedback(System.Windows.Point? mark, Brush brush, LsoHeadMove arrows, string text, int durationMs)
+        {
+            myJogOverlay.Children.Clear();
+            if (mark is System.Windows.Point p)
+            {
+                const double radius = 9;
+                var ring = new Ellipse { Width = radius * 2, Height = radius * 2, Stroke = brush, StrokeThickness = 2 };
+                Canvas.SetLeft(ring, p.X - radius);
+                Canvas.SetTop(ring, p.Y - radius);
+                myJogOverlay.Children.Add(ring);
+
+                if (arrows.HasFlag(LsoHeadMove.Left)) AddJogArrow(p, -1, 0, brush);
+                if (arrows.HasFlag(LsoHeadMove.Right)) AddJogArrow(p, 1, 0, brush);
+                if (arrows.HasFlag(LsoHeadMove.Up) || arrows.HasFlag(LsoHeadMove.Forward)) AddJogArrow(p, 0, -1, brush);
+                if (arrows.HasFlag(LsoHeadMove.Down) || arrows.HasFlag(LsoHeadMove.Backward)) AddJogArrow(p, 0, 1, brush);
+            }
+
+            myJogBadge.Text = text;
+            myJogBadge.Visibility = Visibility.Visible;
+            _jogFeedbackTimer.Stop();
+            if (durationMs > 0)
+            {
+                _jogFeedbackTimer.Interval = TimeSpan.FromMilliseconds(durationMs);
+                _jogFeedbackTimer.Start();
+            }
+        }
+
+        private void AddJogArrow(System.Windows.Point p, double dx, double dy, Brush brush)
+        {
+            var tail = new System.Windows.Point(p.X + dx * 12, p.Y + dy * 12);
+            var tip = new System.Windows.Point(p.X + dx * 30, p.Y + dy * 30);
+            var wing1 = new System.Windows.Point(tip.X - dx * 6 - dy * 5, tip.Y - dy * 6 + dx * 5);
+            var wing2 = new System.Windows.Point(tip.X - dx * 6 + dy * 5, tip.Y - dy * 6 - dx * 5);
+            myJogOverlay.Children.Add(new Polyline
+            {
+                Stroke = brush,
+                StrokeThickness = 2,
+                Points = new PointCollection { tail, tip, wing1, tip, wing2 },
+            });
+        }
+
+        private void AttachJogHostWindow(System.Windows.Window? window)
+        {
+            if (ReferenceEquals(window, _jogHostWindow))
+            {
+                return;
+            }
+            if (_jogHostWindow != null)
+            {
+                _jogHostWindow.Deactivated -= OnJogHostWindowDeactivated;
+            }
+            _jogHostWindow = window;
+            if (_jogHostWindow != null)
+            {
+                _jogHostWindow.Deactivated += OnJogHostWindowDeactivated;
+            }
+        }
+
+        private void OnJogHostWindowDeactivated(object? sender, EventArgs e)
+        {
+            StopCorneaJog("window deactivated");
         }
     }
 }

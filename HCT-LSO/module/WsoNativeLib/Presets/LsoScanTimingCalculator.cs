@@ -14,9 +14,10 @@ namespace WsoNativeLib.Presets
     // the preset plus two values the camera owns - exposure and trigger delay.
     public static class LsoScanTimingCalculator
     {
-        // Positive margin between the board firing the camera trigger and the mirror having
-        // to be in place (GALVANO_FIRST only). DevKit minPreMoveMarginUs.
-        public const double PreMoveMarginUs = 50.0;
+        // Default ramp-start -> camera-trigger delay for GALVANO_FIRST: the fallback of the
+        // DevKit's txtPreMoveDelayUs (LsoPatternForm.cs:1083). The operator value lives in the
+        // preset (TimingPreMoveDelayUs) and is passed back in as desiredPreMoveDelayUs.
+        public const double DefaultPreMoveDelayUs = 500.0;
 
         // Open-loop playback has to span the whole sensor frame plus a quiet margin, because
         // nothing re-synchronises it once it starts. DevKit safetyMarginPercent.
@@ -84,8 +85,12 @@ namespace WsoNativeLib.Presets
         //
         // Returns false only when an input cannot describe a sweep at all; `reason` then names
         // the field, so a caller mid-edit can stay quiet and a button press can complain.
+        // desiredPreMoveDelayUs is the DevKit's "Pre Move Delay" input. It only shapes
+        // GALVANO_FIRST; TRIG_FIRST ignores it, exactly as the DevKit does. 0 (or less) means
+        // "not stated" and falls back to DefaultPreMoveDelayUs.
         public static bool TryCalculate(LsoScanProfileModel scan, double camTriggerDelayUs,
-            double exposureUs, out Result result, out string reason)
+            double exposureUs, out Result result, out string reason,
+            double desiredPreMoveDelayUs = DefaultPreMoveDelayUs)
         {
             if (scan == null) { throw new ArgumentNullException(nameof(scan)); }
 
@@ -128,9 +133,23 @@ namespace WsoNativeLib.Presets
 
             if (scan.SequenceMode == LsoScanSequenceMode.GalvanoFirst)
             {
-                // Open loop. The lead-in has to outlast BOTH the camera's own trigger latency
-                // (plus a dispatch margin) and the mirror's mechanical settling.
-                leadIn = (int)Math.Ceiling(Math.Max(galvoDelayUs, camDelayUs + PreMoveMarginUs) / timeStepUs);
+                // Open loop, ported from DevKit LsoPatternForm.RecalculateSyncParameters
+                // (LsoPatternForm.cs:1080-1088):
+                //
+                //   T_sensor_lead = camDelay + blankingTime + exposure / 2
+                //   requiredLead  = max(galvoDelay,
+                //                       desiredDelay + T_sensor_lead - galvoDelay)
+                //   leadIn        = ceil(requiredLead / timeStep)
+                //
+                // The "- galvoDelay" is the DevKit's: the mirror is already ramping during the
+                // lead-in, so only the part of the delay beyond that ramp has to be waited out.
+                double desiredDelayUs = desiredPreMoveDelayUs > 0.0
+                    ? desiredPreMoveDelayUs
+                    : DefaultPreMoveDelayUs;
+                double slitCenteringUs = exposureUs > 0.0 ? exposureUs / 2.0 : 0.0;
+                double totalSensorLeadUs = camDelayUs + blankingTimeUs + slitCenteringUs;
+                leadIn = (int)Math.Ceiling(
+                    Math.Max(galvoDelayUs, desiredDelayUs + totalSensorLeadUs - galvoDelayUs) / timeStepUs);
 
                 double frameUs = ((rows * lineTimeUs) + Math.Max(0.0, exposureUs))
                     * (1.0 + (FrameTimeSafetyMarginPercent / 100.0));
@@ -180,11 +199,27 @@ namespace WsoNativeLib.Presets
             }
 
             double leadInUs = leadIn * timeStepUs;
-            ushort preMoveDelayUs = scan.SequenceMode == LsoScanSequenceMode.GalvanoFirst
-                ? (ushort)Math.Clamp(Math.Round(Math.Max(0.0, leadInUs - camDelayUs)), 0, ushort.MaxValue)
-                : (ushort)0;
-
-            int preTrig = Math.Max(0, (int)Math.Round((leadInUs - camDelayUs) / timeStepUs, MidpointRounding.AwayFromZero));
+            ushort preMoveDelayUs;
+            int preTrig;
+            if (scan.SequenceMode == LsoScanSequenceMode.GalvanoFirst)
+            {
+                // DevKit (LsoPatternForm.cs:1153-1157): recompute the trigger delay from the
+                // ROUNDED lead-in for the readout and the persisted board value:
+                //   delay   = leadIn * timeStep + galvoDelay - T_sensor_lead
+                //   preTrig = round(delay / timeStep)
+                double slitCenteringUs = exposureUs > 0.0 ? exposureUs / 2.0 : 0.0;
+                double totalSensorLeadUs = camDelayUs + blankingTimeUs + slitCenteringUs;
+                int triggerDelayUs = (int)Math.Max(0.0, Math.Round(leadInUs + galvoDelayUs - totalSensorLeadUs));
+                preMoveDelayUs = (ushort)Math.Clamp(triggerDelayUs, 0, ushort.MaxValue);
+                preTrig = Math.Max(0, (int)Math.Round((double)triggerDelayUs / timeStepUs));
+            }
+            else
+            {
+                // TRIG_FIRST is unchanged: the board waits on EXPOSURE_ACTIVE, so the readout
+                // is the lead-in minus the camera latency and there is no pre-move delay.
+                preMoveDelayUs = 0;
+                preTrig = Math.Max(0, (int)Math.Round((leadInUs - camDelayUs) / timeStepUs, MidpointRounding.AwayFromZero));
+            }
 
             result = new Result(leadIn, leadOut, total, active, ledOn, ledOff,
                 preMoveOffset, preMoveDelayUs, preTrig, blankingTimeUs, capped);
@@ -205,6 +240,7 @@ namespace WsoNativeLib.Presets
             scan.LedOnPosIndex = (ushort)result.LedOnIndex;
             scan.LedOffPosIndex = (ushort)result.LedOffIndex;
             scan.PreMoveOffset = result.PreMoveOffset;
+            scan.RequestedPreMoveDelayUs ??= scan.PreMoveDelayUs;
             scan.PreMoveDelayUs = result.PreMoveDelayUs;
         }
 

@@ -1,0 +1,176 @@
+<Window x:Class="WsoToolkit.LsoDevKitImportWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Import DevKit Presets" Height="820" Width="1060" MinHeight="600" MinWidth="840"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+    <!-- The rest of the Toolkit reports problems through MsgBoxUtil modals, so App.xaml has no
+         status colours yet. They live here with their only user, and every element below
+         refers to them by key. #FFEFEFEF and #FF888888 are the read-only and hint greys the
+         other LSO windows already use. -->
+    <Window.Resources>
+        <SolidColorBrush x:Key="WarningBackgroundBrush" Color="#FFFFF4CE"/>
+        <SolidColorBrush x:Key="WarningAccentBrush" Color="#FFE0B000"/>
+        <SolidColorBrush x:Key="WarningForegroundBrush" Color="#FF5C4600"/>
+        <SolidColorBrush x:Key="RejectionBackgroundBrush" Color="#FFFDE7E9"/>
+        <SolidColorBrush x:Key="RejectionAccentBrush" Color="#FFD13438"/>
+        <SolidColorBrush x:Key="RejectionForegroundBrush" Color="#FFA4262C"/>
+        <SolidColorBrush x:Key="MutedForegroundBrush" Color="#FF888888"/>
+        <SolidColorBrush x:Key="ReadOnlyBackgroundBrush" Color="#FFEFEFEF"/>
+
+        <Style x:Key="PathBoxStyle" TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxStyle}">
+            <Setter Property="Width" Value="Auto"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Setter Property="Background" Value="{StaticResource ReadOnlyBackgroundBrush}"/>
+        </Style>
+        <Style x:Key="NameBoxStyle" TargetType="{x:Type TextBox}" BasedOn="{StaticResource TextBoxStyle}">
+            <Setter Property="Width" Value="200"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        </Style>
+        <Style x:Key="HintTextStyle" TargetType="{x:Type TextBlock}">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="8,0,0,0"/>
+            <Setter Property="Foreground" Value="{StaticResource MutedForegroundBrush}"/>
+        </Style>
+
+        <!-- One row per LsoDevKitImportField. Rows the importer marks "Not persisted" are
+             greyed so the mapped values stand out. -->
+        <Style x:Key="FieldGridStyle" TargetType="{x:Type DataGrid}">
+            <Setter Property="AutoGenerateColumns" Value="False"/>
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Setter Property="CanUserAddRows" Value="False"/>
+            <Setter Property="CanUserDeleteRows" Value="False"/>
+            <Setter Property="HeadersVisibility" Value="Column"/>
+            <Setter Property="SelectionUnit" Value="FullRow"/>
+            <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"/>
+            <Setter Property="RowStyle">
+                <Setter.Value>
+                    <Style TargetType="{x:Type DataGridRow}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Destination}" Value="Not persisted">
+                                <Setter Property="Foreground" Value="{StaticResource MutedForegroundBrush}"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <DockPanel Margin="12">
+        <!-- Where it comes from, where it goes, and the three choices the import leaves open. -->
+        <Grid DockPanel.Dock="Top">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="112"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="30"/>
+            </Grid.RowDefinitions>
+
+            <Label Grid.Row="0" Grid.Column="0" Content="DevKit folder :" Style="{StaticResource LabelStyle2}"/>
+            <TextBox x:Name="myTbSource" Grid.Row="0" Grid.Column="1" Style="{StaticResource PathBoxStyle}"
+                     ToolTip="Read only. ActivePatterns.json (or ActiveSlots.json), the selected BFS patterns, BfsCameraConfig(Preview).json and GalvoSlitCalibration.json are read from here."/>
+
+            <Label Grid.Row="1" Grid.Column="0" Content="Preset folder :" Style="{StaticResource LabelStyle2}"/>
+            <TextBox x:Name="myTbTarget" Grid.Row="1" Grid.Column="1" Style="{StaticResource PathBoxStyle}"
+                     ToolTip="Save writes the two presets and their calibration copies here. Existing files are never overwritten."/>
+
+            <Label Grid.Row="2" Grid.Column="0" Content="Preview name :" Style="{StaticResource LabelStyle2}"/>
+            <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal">
+                <TextBox x:Name="myTbPreviewName" Style="{StaticResource NameBoxStyle}"
+                         ToolTip="Name of the new Preview preset. It must not exist yet." TextChanged="myTbInput_TextChanged"/>
+                <TextBlock x:Name="myLbPreviewBase" Style="{StaticResource HintTextStyle}"/>
+            </StackPanel>
+
+            <Label Grid.Row="3" Grid.Column="0" Content="Capture name :" Style="{StaticResource LabelStyle2}"/>
+            <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal">
+                <TextBox x:Name="myTbCaptureName" Style="{StaticResource NameBoxStyle}"
+                         ToolTip="Name of the new Color Capture preset. It must not exist yet." TextChanged="myTbInput_TextChanged"/>
+                <TextBlock x:Name="myLbCaptureBase" Style="{StaticResource HintTextStyle}"/>
+            </StackPanel>
+
+            <Label Grid.Row="4" Grid.Column="0" Content="LED intensity :" Style="{StaticResource LabelStyle2}"/>
+            <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal">
+                <TextBox x:Name="myTbLedIntensity" Style="{StaticResource TextBoxStyleS1}"
+                         ToolTip="Optional. Written to both new presets. Empty keeps each base preset's intensity; 0 means 'leave the board's value'."
+                         TextChanged="myTbInput_TextChanged"/>
+                <TextBlock x:Name="myLbLedHint" Style="{StaticResource HintTextStyle}"/>
+            </StackPanel>
+
+            <StackPanel Grid.Row="5" Grid.Column="1" Orientation="Horizontal">
+                <CheckBox x:Name="myCheckActivate" Content="Activate after import" Style="{StaticResource CheckBoxStyle}" IsChecked="False"
+                          ToolTip="After both presets are saved, select them as the active Preview preset and the active Color Capture preset."/>
+                <TextBlock x:Name="myLbActivateHint" Style="{StaticResource HintTextStyle}"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Action bar: why Save is (not) available, then the two buttons. -->
+        <DockPanel DockPanel.Dock="Bottom" Margin="0,8,0,0">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                <Button x:Name="myBtSave" Content="Save" Style="{StaticResource ButtonM1Style}" Margin="4" IsEnabled="False"
+                        ToolTip="Import both presets into the preset folder, then activate them if the box is checked."
+                        Click="myBtSave_Click"/>
+                <Button x:Name="myBtCancel" Content="Cancel" Style="{StaticResource ButtonM1Style}" Margin="4" IsCancel="True"/>
+            </StackPanel>
+            <TextBlock x:Name="myLbStatus" VerticalAlignment="Center" TextWrapping="Wrap"/>
+        </DockPanel>
+
+        <!-- Rejections (red) block Save; warnings (yellow) are values the import substituted or
+             questioned. Both modes are listed together, rejections first. -->
+        <StackPanel DockPanel.Dock="Bottom" Margin="0,8,0,0">
+            <TextBlock x:Name="myLbIssueCount" FontWeight="Medium" Margin="0,0,0,4"/>
+            <ScrollViewer MaxHeight="140" VerticalScrollBarVisibility="Auto" Focusable="False">
+                <ItemsControl x:Name="myListIssues" Focusable="False">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border x:Name="issueCard" Background="{StaticResource WarningBackgroundBrush}"
+                                    BorderBrush="{StaticResource WarningAccentBrush}" BorderThickness="4,0,0,0"
+                                    Padding="8,4,8,4" Margin="0,0,0,4">
+                                <TextBlock x:Name="issueText" Text="{Binding Text}" TextWrapping="Wrap"
+                                           Foreground="{StaticResource WarningForegroundBrush}"/>
+                            </Border>
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding IsRejection}" Value="True">
+                                    <Setter TargetName="issueCard" Property="Background" Value="{StaticResource RejectionBackgroundBrush}"/>
+                                    <Setter TargetName="issueCard" Property="BorderBrush" Value="{StaticResource RejectionAccentBrush}"/>
+                                    <Setter TargetName="issueText" Property="Foreground" Value="{StaticResource RejectionForegroundBrush}"/>
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </StackPanel>
+
+        <!-- What Save would write, field by field, per mode. -->
+        <TabControl Margin="0,8,0,0">
+            <TabItem x:Name="myTabPreview" Header="Preview">
+                <DataGrid x:Name="myGridPreview" Style="{StaticResource FieldGridStyle}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Source key" Width="5*" Binding="{Binding Source}"/>
+                        <DataGridTextColumn Header="Source value" Width="3*" Binding="{Binding SourceValue}"/>
+                        <DataGridTextColumn Header="Toolkit key" Width="5*" Binding="{Binding Destination}"/>
+                        <DataGridTextColumn Header="Result" Width="3*" Binding="{Binding ResultValue}"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+            <TabItem x:Name="myTabCapture" Header="Capture">
+                <DataGrid x:Name="myGridCapture" Style="{StaticResource FieldGridStyle}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Source key" Width="5*" Binding="{Binding Source}"/>
+                        <DataGridTextColumn Header="Source value" Width="3*" Binding="{Binding SourceValue}"/>
+                        <DataGridTextColumn Header="Toolkit key" Width="5*" Binding="{Binding Destination}"/>
+                        <DataGridTextColumn Header="Result" Width="3*" Binding="{Binding ResultValue}"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </TabItem>
+        </TabControl>
+    </DockPanel>
+</Window>

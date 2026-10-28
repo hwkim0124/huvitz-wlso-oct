@@ -62,10 +62,10 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::setLsoScanSequence(int seqMode, int
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::controlLsoScannerCapture(int patternId, int onOff)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::controlLsoScannerCapture(int patternId, int onOff, std::uint8_t fundusMode)
 {
 	if (auto* scan = Hardware::getInstance()->getMainBoard()->getLsoScanner(); scan) {
-		return scan->controlCapture(patternId, onOff);
+		return scan->controlCapture(patternId, onOff, fundusMode);
 	}
 	return false;
 }
@@ -78,10 +78,10 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::setLsoScannerTriggerMode(int onOff)
 	return false;
 }
 
-bool WSOSYSTEM_DLL_API __stdcall wso_system::startLsoScannerGrabbing(int patternId)
+bool WSOSYSTEM_DLL_API __stdcall wso_system::startLsoScannerGrabbing(int patternId, std::uint8_t fundusMode)
 {
 	if (auto* scan = Hardware::getInstance()->getMainBoard()->getLsoScanner(); scan) {
-		return scan->startGrabbing(patternId);
+		return scan->startGrabbing(patternId, fundusMode);
 	}
 	return false;
 }

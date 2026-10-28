@@ -17,6 +17,7 @@ using static WsoNativeLib.WsoDomain;
 using static WsoNativeLib.WsoLsoDefs;
 using static WsoToolkit.controls.LsoScanImagePreview;
 using WsoNativeLib.Presets;
+using WsoToolkit.utils;
 using static WsoToolkit.utils.NumberUtil;
 
 namespace WsoToolkit
@@ -43,10 +44,12 @@ namespace WsoToolkit
             InitializeComponent();
 
             initSetting_();
+            LightControlState.Changed += onLightStateChanged_;
             initLsoFocusMotor_();
             initRetMirrorMotor_();
             initLsoFilterMotor_();
             initFixation_();
+            myColorPreview.Image.FixationDragRequested += onFixationDragRequested_;
             updateAlignControls_();
             reflectScanTiming_();
 
@@ -57,6 +60,8 @@ namespace WsoToolkit
 
         private void Window_Closed(object sender, EventArgs e)
         {
+            LightControlState.Changed -= onLightStateChanged_;
+            stopLiveCapture_();
             // Stop a running capture one-call first (cancels + joins the native worker).
             if (LsoCamera.IsCapturing())
             {
@@ -95,6 +100,7 @@ namespace WsoToolkit
 
         private void myBtStartScan_Click(object sender, RoutedEventArgs e)
         {
+            stopLiveCapture_();
             System.Console.WriteLine("myBtStartScan_Click");
             if (LsoCamera.IsCapturing())
             {
@@ -120,6 +126,7 @@ namespace WsoToolkit
 
         private void myBtCapture_Click(object sender, RoutedEventArgs e)
         {
+            stopLiveCapture_();
             System.Console.WriteLine("myBtCapture_Click");
             if (LsoCamera.IsCapturing())
             {
@@ -155,6 +162,11 @@ namespace WsoToolkit
         }
 
         #endregion Scan Mode
+
+        private void myBtImageAnalysis_Click(object sender, RoutedEventArgs e)
+        {
+            new LsoImageAnalysisWindow { Owner = this }.ShowDialog();
+        }
 
         #region Settings 
 
@@ -220,10 +232,33 @@ namespace WsoToolkit
 
         private void applyAnteriorCamera_()
         {
+            if (!LsoScanTestInput.TryParseAnterior(myTbAnteriorGain.Text, myTbAnteriorExposure.Text,
+                    out int gain, out float exposureMs, out string error))
+            {
+                MsgBoxUtil.ShowWarning(error);
+                return;
+            }
+
             var type = anteriorCameraSelected_();
-            CorneaCamera.SetAnalogGain(type, ToFloat(myTbAnteriorGain.Text));
-            CorneaCamera.SetExposureTime(type, ToFloat(myTbAnteriorExposure.Text));
+            myLbAnteriorResult.Text = anteriorCameraName_(type) + " " + applyAnteriorCameraTo_(type, gain, exposureMs);
             reflectAnteriorCamera_();
+        }
+
+        private static string anteriorCameraName_(CameraType type)
+        {
+            return type switch
+            {
+                CameraType.IrCorneaLeft => "Left",
+                CameraType.IrCorneaRight => "Right",
+                _ => "Lower",
+            };
+        }
+
+        private static string applyAnteriorCameraTo_(CameraType type, int gain, float exposureMs)
+        {
+            bool gainOk = CorneaCamera.SetAnalogGain(type, gain);
+            bool exposureOk = CorneaCamera.SetExposureTime(type, exposureMs);
+            return gainOk && exposureOk ? "OK" : "FAIL";
         }
 
         private void myCbAnteriorCamera_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -246,6 +281,22 @@ namespace WsoToolkit
         private void myBtAnteriorApply_Click(object sender, RoutedEventArgs e)
         {
             applyAnteriorCamera_();
+        }
+
+        private void myBtAnteriorApplyAll_Click(object sender, RoutedEventArgs e)
+        {
+            if (!LsoScanTestInput.TryParseAnterior(myTbAnteriorGain.Text, myTbAnteriorExposure.Text,
+                    out int gain, out float exposureMs, out string error))
+            {
+                MsgBoxUtil.ShowWarning(error);
+                return;
+            }
+
+            string lower = applyAnteriorCameraTo_(CameraType.IrCorneaLower, gain, exposureMs);
+            string left = applyAnteriorCameraTo_(CameraType.IrCorneaLeft, gain, exposureMs);
+            string right = applyAnteriorCameraTo_(CameraType.IrCorneaRight, gain, exposureMs);
+            myLbAnteriorResult.Text = $"Lower {lower}, Left {left}, Right {right}";
+            reflectAnteriorCamera_();
         }
 
         #endregion Anterior Camera
@@ -419,11 +470,13 @@ namespace WsoToolkit
 
         private void mySliderFixationRow_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
+            if (_isFixationSyncing) return;
             setCurrentInternalFixation_();
         }
 
         private void mySliderFixationCol_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
+            if (_isFixationSyncing) return;
             setCurrentInternalFixation_();
         }
 
@@ -457,12 +510,12 @@ namespace WsoToolkit
 
         private void myBtFixationFundus_Click(object sender, RoutedEventArgs e)
         {
-            setPresetInternalFixation_(FixationTarget.FUNDUS);
+            setCenterInternalFixation_();
         }
 
         private void myBtFixationMarcular_Click(object sender, RoutedEventArgs e)
         {
-            setPresetInternalFixation_(FixationTarget.CENTER);
+            setCenterInternalFixation_();
         }
 
         private void myBtFixationDisc_Click(object sender, RoutedEventArgs e)
@@ -471,6 +524,33 @@ namespace WsoToolkit
         }
 
         #endregion Internal Fixation
+
+        #region LSO Trigger Mode (0x4007)
+
+        // Board-global LSO_TRIG_MODE command (0x4007), the same setting the DevKit LED window
+        // exposes as "Flash Trig Mode". The mode byte is sent as-is:
+        //   0 = Traj.Controller: the trajectory controller starts the camera
+        //   1 = Camera: the camera triggers the scan
+        // The board serializes the USB command inside the native facade, which is the same
+        // call path PauseColorCameraLive uses (it sends 0 when it pauses the live view).
+        private void myCbLsoTriggerMode_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // XAML selects index 0 while InitializeComponent runs; do not touch the board
+            // before the window has loaded. The pause path still sends its 0 as before.
+            if (!IsLoaded)
+            {
+                return;
+            }
+
+            int mode = myCbLsoTriggerMode.SelectedIndex == 1 ? 1 : 0;
+            if (!LsoScanner.SetLsoScannerTriggerMode(mode))
+            {
+                MsgBoxUtil.ShowWarning("The board refused the LSO trigger mode command (0x4007). "
+                    + "Check the board connection and firmware.");
+            }
+        }
+
+        #endregion LSO Trigger Mode (0x4007)
 
         #region Align Guide
 
@@ -491,6 +571,32 @@ namespace WsoToolkit
         private void myBtImageAdjust_Click(object sender, RoutedEventArgs e)
         {
             myColorPreview.OpenImageAdjustment();
+        }
+
+        // Owned window: closes with this one; closing it un-toggles the button.
+        private LsoZoomAreaWindow? _zoomAreaWindow;
+
+        private void myToggleZoomView_Click(object sender, RoutedEventArgs e)
+        {
+            if (myToggleZoomView.IsChecked != true)
+            {
+                _zoomAreaWindow?.Close();
+                return;
+            }
+
+            if (_zoomAreaWindow != null)
+            {
+                _zoomAreaWindow.Activate();
+                return;
+            }
+
+            _zoomAreaWindow = new LsoZoomAreaWindow(myColorPreview.Image) { Owner = this };
+            _zoomAreaWindow.Closed += (_, _) =>
+            {
+                _zoomAreaWindow = null;
+                myToggleZoomView.IsChecked = false;
+            };
+            _zoomAreaWindow.Show();
         }
         #endregion Align Guide
 

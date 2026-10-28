@@ -36,12 +36,14 @@ namespace WsoNativeLib.Presets
             ColorCaptureTriggerMode triggerMode,
             LsoColorCameraSettingParam cameraReadBack,
             ushort captureLightFallback,
-            ushort restoreLightFallback)
+            ushort restoreLightFallback,
+            LsoImageMode imageMode = LsoImageMode.Color)
         {
             if (capture == null) { throw new ArgumentNullException(nameof(capture)); }
             if (preview == null) { throw new ArgumentNullException(nameof(preview)); }
 
             var request = LsoFundusCaptureRequest.Create();
+            request.fundusMode = LsoImageModes.FundusMode(imageMode, capture.ColorIllumination);
             request.triggerMode = (int)triggerMode;
             request.scanPatternId = LsoModePreset.ScanPatternId(ColorCameraPresetMode.Capture);
             request.sequenceMode = (int)capture.Scan.SequenceMode;
@@ -77,6 +79,7 @@ namespace WsoNativeLib.Presets
             if (preview == null) { throw new ArgumentNullException(nameof(preview)); }
 
             var request = LsoFundusPreviewRequest.Create();
+            request.fundusMode = LsoImageModes.FundusMode(LsoImageMode.IR);
             request.monoMode = (int)monoMode;
             request.scanPatternId = LsoModePreset.ScanPatternId(ColorCameraPresetMode.Preview);
             request.sequenceMode = (int)preview.Scan.SequenceMode;
@@ -159,7 +162,8 @@ namespace WsoNativeLib.Presets
             return pixelFormat switch
             {
                 (uint)ColorPixelFormat.Mono8 or (uint)ColorPixelFormat.BayerRG8 => 1,
-                (uint)ColorPixelFormat.Mono16 or (uint)ColorPixelFormat.BayerRG16 => 2,
+                (uint)ColorPixelFormat.Mono16 or (uint)ColorPixelFormat.BayerRG16
+                    or (uint)ColorPixelFormat.BayerRG12Packed => 2,
                 (uint)ColorPixelFormat.RGB8Packed or (uint)ColorPixelFormat.BGR8 => 3,
                 _ => 1,
             };

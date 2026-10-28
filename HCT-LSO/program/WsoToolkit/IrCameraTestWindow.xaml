@@ -29,6 +29,8 @@
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="24,16,0,4">
                 <Button x:Name="btnStartCamera" Content="Start Camera" Style="{StaticResource ButtonStyle}" Margin="0" Click="BtnStartCamera_Click"/>
+                <Button x:Name="btnSelectFolder" Content="Folder..." Style="{StaticResource ButtonStyle}" Margin="4,0,0,0" ToolTip=".\cornea" Click="BtnSelectFolder_Click"/>
+                <TextBox x:Name="txtFileName" Width="180" Margin="4,0,0,0"/>
                 <Button x:Name="btnSaveFrame" Content="Save Frame" Style="{StaticResource ButtonStyle}" Margin="4,0,0,0" Click="BtnSaveFrame_Click"/>
                 <Button x:Name="btnClose" Content="Close" Style="{StaticResource ButtonStyle}" Margin="4,0,0,0" Click="BtnClose_Click"/>
             </StackPanel>

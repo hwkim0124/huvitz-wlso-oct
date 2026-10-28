@@ -19,6 +19,9 @@ namespace WsoToolkit
 
     public partial class IrCameraTestWindow : Window
     {
+        // Save Frame 저장 폴더. 선택 전에는 기존 기본값(실행 폴더의 cornea)
+        private string _saveFolder = ".\\cornea";
+
         public IrCameraTestWindow()
         {
             InitializeComponent();
@@ -174,10 +177,33 @@ namespace WsoToolkit
 
         private void BtnSaveFrame_Click(object sender, RoutedEventArgs e)
         {
-            corneaPreview1.SaveFrameImage();
-            corneaPreview2.SaveFrameImage();
-            corneaPreview3.SaveFrameImage();
-            MsgBoxUtil.ShowInfo("Cornea frame images saved in cornea folder.");
+            // Title을 입력하면 "Title_카메라이름.png", 비어 있으면 기존대로 "카메라이름_시각.png"
+            string title = txtFileName.Text.Trim();
+            if (title.IndexOfAny(System.IO.Path.GetInvalidFileNameChars()) >= 0)
+            {
+                MsgBoxUtil.ShowInfo("Title contains characters that cannot be used in a file name.");
+                return;
+            }
+
+            foreach (var preview in new[] { corneaPreview1, corneaPreview2, corneaPreview3 })
+            {
+                preview.SaveFrameImage(title.Length == 0 ? "" : $"{title}_{preview.GetCameraName()}.png", _saveFolder);
+            }
+            MsgBoxUtil.ShowInfo($"Cornea frame images saved in {System.IO.Path.GetFullPath(_saveFolder)}");
+        }
+
+        private void BtnSelectFolder_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new Microsoft.Win32.OpenFolderDialog
+            {
+                Title = "Select folder to save frame images",
+                InitialDirectory = System.IO.Path.GetFullPath(_saveFolder),
+            };
+            if (dialog.ShowDialog(this) == true)
+            {
+                _saveFolder = dialog.FolderName;
+                btnSelectFolder.ToolTip = _saveFolder;
+            }
         }
 
         private void CmbCorneaChannel_SelectionChanged(object sender, SelectionChangedEventArgs e)

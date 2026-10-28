@@ -49,7 +49,7 @@ namespace WsoNativeLib
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool controlLsoScannerCapture(int patternId, int onOff);
+        private static extern bool controlLsoScannerCapture(int patternId, int onOff, byte fundusMode);
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
@@ -57,7 +57,7 @@ namespace WsoNativeLib
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
-        private static extern bool startLsoScannerGrabbing(int patternId);
+        private static extern bool startLsoScannerGrabbing(int patternId, byte fundusMode);
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
@@ -109,9 +109,9 @@ namespace WsoNativeLib
             return setLsoScanSequence((int)mode, preMoveOffset, preMoveDelayUs);
         }
 
-        public static bool ControlLsoScannerCapture(int patternId, int onOff)
+        public static bool ControlLsoScannerCapture(int patternId, int onOff, byte fundusMode)
         {
-            return controlLsoScannerCapture(patternId, onOff);
+            return controlLsoScannerCapture(patternId, onOff, fundusMode);
         }
 
         public static bool SetLsoScannerTriggerMode(int onOff)
@@ -119,9 +119,9 @@ namespace WsoNativeLib
             return setLsoScannerTriggerMode(onOff);
         }
 
-        public static bool StartLsoScannerGrabbing(int patternId)
+        public static bool StartLsoScannerGrabbing(int patternId, byte fundusMode)
         {
-            return startLsoScannerGrabbing(patternId);
+            return startLsoScannerGrabbing(patternId, fundusMode);
         }
 
         public static bool PauseLsoScannerGrabbing(int patternId)

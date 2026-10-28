@@ -31,6 +31,7 @@ namespace WsoNativeLib
             RGB8Packed = 2, // 24 bit
             BayerRG8 = 4,   // 8 bit
             BayerRG16 = 8,  // 16 bit
+            BayerRG12Packed = 13, // SDK ordinal; callbacks carry unpacked 12-bit uint16
             BGR8 = 27,       // 24 bit
             UNKNOWN = -1
         }
@@ -214,6 +215,7 @@ namespace WsoNativeLib
             // GPIO value survives the start instead of being replaced by the hardcoded
             // trigger setup. Fields it leaves unstated stay owned by that start path.
             public LsoColorCameraExtendedParam cameraExt;
+            public byte fundusMode;
 
             public static LsoFundusCaptureRequest Create()
             {
@@ -260,6 +262,7 @@ namespace WsoNativeLib
             // validated top-level field, so the Toolkit leaves cameraExt.triggerDelayUs
             // unstated and one value never has two owners.
             public LsoColorCameraExtendedParam cameraExt;
+            public byte fundusMode;
 
             public static LsoFundusPreviewRequest Create()
             {
@@ -267,7 +270,60 @@ namespace WsoNativeLib
                 {
                     structSize = (uint)Marshal.SizeOf<LsoFundusPreviewRequest>(),
                     cameraExt = LsoColorCameraExtendedParam.Create(),
+                    fundusMode = 1,
                 };
+            }
+        }
+        // Which channel the adjusted image is displayed through (mirror of native
+        // LsoChannelView). A single channel is shown as grayscale, so Green alone is the
+        // red-free view.
+        public enum LsoChannelView : int
+        {
+            Rgb = 0,
+            Red = 1,
+            Green = 2,
+            Blue = 3,
+        }
+
+        // Byte order of a 3-channel buffer handed to the adjust call. The Toolkit review
+        // cache is Rgb (BayerRG2RGB), the Agent capture path is Bgr (BayerRG2BGR).
+        public enum LsoChannelOrder : int
+        {
+            Bgr = 0,
+            Rgb = 1,
+        }
+
+        // Result codes for the image adjust one-call (mirror of native ImageAdjustResult).
+        public enum ImageAdjustResult : int
+        {
+            Ok = 0,
+            Param = 2,
+            Fault = 9,
+        }
+
+
+        // Struct Definitions
+        /////////////////////////////////////////////////////////////////////////////////////////////
+        // Mirror of native wso_domain::LsoImageAdjust. Display-only, and every value is
+        // normalized so one preset serves both 8-bit and 16-bit images.
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+        public struct LsoImageAdjustParam
+        {
+            public int brightness;      // -100..100, additive offset in % of full scale
+            public int contrast;        // -100..100, gain about mid-scale
+            public float gamma;         // 0.1..5.0, 1.0 = neutral
+            public int sharpness;       // -100..100, >0 unsharp mask, <0 smoothing
+            public int saturation;      // -100..100, -100 = grayscale
+            public int channelView;     // LsoChannelView
+
+            public LsoImageAdjustParam()
+            {
+                brightness = 0;
+                contrast = 0;
+                gamma = 1.0f;
+                sharpness = 0;
+                saturation = 0;
+                channelView = (int)LsoChannelView.Rgb;
             }
         }
     }

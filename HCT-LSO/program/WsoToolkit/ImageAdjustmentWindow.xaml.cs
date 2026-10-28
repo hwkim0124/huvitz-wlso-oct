@@ -15,6 +15,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using OxyPlot.Axes;
+using WsoNativeLib;
+using static WsoNativeLib.WsoLsoDefs;
 
 namespace WsoToolkit
 {
@@ -26,7 +28,10 @@ namespace WsoToolkit
         public delegate void ImageAdjustmentDelegate(ImageAdjustParam param);
         private ImageAdjustmentDelegate? _adjustmentCallback = null;
 
-        private bool _isAdjusting = false;
+        // Starts true so the ValueChanged/Checked events that XAML initial values raise during
+        // InitializeComponent cannot reach the debounce timer or the curve before either has
+        // been constructed. Cleared at the end of the constructor.
+        private bool _isAdjusting = true;
         private bool _forceClose = false;
 
         // 현재 조정 값들
@@ -56,6 +61,8 @@ namespace WsoToolkit
 
             // Plot 초기화
             InitializePlot();
+
+            _isAdjusting = false;
         }
 
         #region radial Correction
@@ -399,8 +406,12 @@ namespace WsoToolkit
             _isAdjusting = true;
 
             _currentParam.Brightness = 0;
-            mySliderBright.Value = _currentParam.Brightness;
-
+            _currentParam.Contrast = 0;
+            _currentParam.Gamma = 1.0f;
+            _currentParam.Sharpness = 0;
+            _currentParam.Saturation = 0;
+            _currentParam.ChannelView = LsoChannelView.Rgb;
+            PushNativeValuesToControls();
 
             // Radial Correction
             _currentParam.IsRadialCorrection = false;
@@ -422,18 +433,17 @@ namespace WsoToolkit
             _isAdjusting = true;
 
             _currentParam.Brightness = param.Brightness;
-            _currentParam.BrightnessRangeMin = param.BrightnessRangeMin;
-            _currentParam.BrightnessRangeMax = param.BrightnessRangeMax;
+            _currentParam.Contrast = param.Contrast;
+            _currentParam.Gamma = param.Gamma;
+            _currentParam.Sharpness = param.Sharpness;
+            _currentParam.Saturation = param.Saturation;
+            _currentParam.ChannelView = param.ChannelView;
             _currentParam.IsRadialCorrection = param.IsRadialCorrection;
             _currentParam.RadialCorIntensity = param.RadialCorIntensity;
 
-            mySliderBright.Value = param.Brightness;
-            mySliderBright.Minimum = param.BrightnessRangeMin;
-            mySliderBright.Maximum = param.BrightnessRangeMax;
+            PushNativeValuesToControls();
             myCheckRadialCorrection.IsChecked = param.IsRadialCorrection;
             myTbRadialCorrection.Text = param.RadialCorIntensity.ToString();
-            myCheckUseRemoveReflectedLight.IsChecked = param.IsRemoveReflectedLight;
-            _currentParam.IsRemoveReflectedLight = param.IsRemoveReflectedLight;
             _currentParam.RadialCorrectionCurve = param.RadialCorrectionCurve;
 
             UpdateCurveFromIntensity(param.RadialCorIntensity);
@@ -482,28 +492,90 @@ namespace WsoToolkit
             this.Hide();
         }
 
-        private void mySliderBright_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        // One handler for every adjust slider: the Tag names the field it drives, so adding a
+        // control means adding a row in XAML rather than another handler here.
+        private void AdjustSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             if (_isAdjusting) return;
+            if (sender is not Slider slider) return;
 
-            _currentParam.Brightness = (int)mySliderBright.Value;
+            StoreAdjustValue(slider.Tag as string, slider.Value);
             ApplyAdjustmentDebounced(); // 디바운스 적용
         }
 
-        private void myTbBright_KeyDown(object sender, KeyEventArgs e)
+        // Enter in a value box drives its slider, which raises ValueChanged above. The text is
+        // left to the existing two-way binding.
+        private void AdjustText_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Enter)
+            if (e.Key != Key.Enter) return;
+            if (sender is not TextBox textBox) return;
+
+            Slider? slider = FindAdjustSlider(textBox.Tag as string);
+            if (slider == null) return;
+
+            if (double.TryParse(textBox.Text, out double dValue) == false)
             {
-                int value;
-                if (int.TryParse(myTbBright.Text, out value))
-                {
-                    mySliderBright.Value = value;
-                }
-                else
-                {
-                    mySliderBright.Value = 0;
-                }
+                dValue = DefaultAdjustValue(textBox.Tag as string);
             }
+
+            slider.Value = Math.Clamp(dValue, slider.Minimum, slider.Maximum);
+        }
+
+        private void AdjustChannel_Checked(object sender, RoutedEventArgs e)
+        {
+            if (_isAdjusting) return;
+            if (sender is not RadioButton radio) return;
+            if (Enum.TryParse(radio.Tag as string, out LsoChannelView eView) == false) return;
+
+            _currentParam.ChannelView = eView;
+            ApplyAdjustmentDebounced(); // 디바운스 적용
+        }
+
+        private void StoreAdjustValue(string? strField, double dValue)
+        {
+            switch (strField)
+            {
+                case "Brightness": _currentParam.Brightness = (int)dValue; break;
+                case "Contrast": _currentParam.Contrast = (int)dValue; break;
+                case "Gamma": _currentParam.Gamma = (float)dValue; break;
+                case "Sharpness": _currentParam.Sharpness = (int)dValue; break;
+                case "Saturation": _currentParam.Saturation = (int)dValue; break;
+            }
+        }
+
+        private Slider? FindAdjustSlider(string? strField) => strField switch
+        {
+            "Brightness" => mySliderBright,
+            "Contrast" => mySliderContrast,
+            "Gamma" => mySliderGamma,
+            "Sharpness" => mySliderSharpness,
+            "Saturation" => mySliderSaturation,
+            _ => null,
+        };
+
+        private static double DefaultAdjustValue(string? strField)
+        {
+            return strField == "Gamma" ? 1.0 : 0.0;
+        }
+
+        // Mirrors _currentParam onto the controls. Callers must hold _isAdjusting so the
+        // resulting ValueChanged events do not fire a round of adjustments back.
+        private void PushNativeValuesToControls()
+        {
+            mySliderBright.Value = _currentParam.Brightness;
+            mySliderContrast.Value = _currentParam.Contrast;
+            mySliderGamma.Value = _currentParam.Gamma;
+            mySliderSharpness.Value = _currentParam.Sharpness;
+            mySliderSaturation.Value = _currentParam.Saturation;
+
+            RadioButton radio = _currentParam.ChannelView switch
+            {
+                LsoChannelView.Red => myRadioChannelR,
+                LsoChannelView.Green => myRadioChannelG,
+                LsoChannelView.Blue => myRadioChannelB,
+                _ => myRadioChannelRgb,
+            };
+            radio.IsChecked = true;
         }
 
         private void myCheckRadialCorrection_CheckedNUnChecked(object sender, RoutedEventArgs e)
@@ -550,51 +622,58 @@ namespace WsoToolkit
                 ApplyAdjustmentDebounced(); // 디바운스 적용
             }
         }
-        private void myCheckUse_CheckedNUnChecked(object sender, RoutedEventArgs e)
-        {
-            if (_isAdjusting) return;
-
-            _currentParam.IsRemoveReflectedLight = myCheckUseRemoveReflectedLight.IsChecked ?? false;
-
-            ApplyAdjustmentDebounced(); // 디바운스 적용
-        }
 
         #endregion Event Handler
     }
 
     public class ImageAdjustParam
     {
-        public int Brightness { get; set; }
-        public int BrightnessRangeMin { get; set; }
-        public int BrightnessRangeMax { get; set; }
+        // Ranges the sliders bind to. Normalized, so they no longer depend on pixel depth.
+        public const int AdjustMin = -100;
+        public const int AdjustMax = 100;
+        public const float GammaMin = 0.1f;
+        public const float GammaMax = 5.0f;
 
+        // Native (normalized) adjustments — see WsoDomain LsoImageAdjust.
+        public int Brightness { get; set; }
+        public int Contrast { get; set; }
+        public float Gamma { get; set; }
+        public int Sharpness { get; set; }
+        public int Saturation { get; set; }
+        public LsoChannelView ChannelView { get; set; }
+
+        // Managed-side stages, applied around the native call.
         public bool IsRadialCorrection { get; set; }
 
         public float RadialCorIntensity { get; set; }
 
         public double[]? RadialCorrectionCurve { get; set; }
 
-        public bool IsRemoveReflectedLight { get; set; }
-
-        public ImageAdjustParam(int nBrightness = 0, int nPixelDepth = 0) // 생성자
+        public ImageAdjustParam(int nBrightness = 0) // 생성자
         {
             Brightness = nBrightness;
-
-            if (nPixelDepth == 2) // 16bit
-            {
-                BrightnessRangeMin = -32767;
-                BrightnessRangeMax = 32767;
-            }
-            else // nPixelDepth == 0 // 8bit
-            {
-                BrightnessRangeMin = -127;
-                BrightnessRangeMax = 127;
-            }
+            Contrast = 0;
+            Gamma = 1.0f;
+            Sharpness = 0;
+            Saturation = 0;
+            ChannelView = LsoChannelView.Rgb;
 
             IsRadialCorrection = false;
             RadialCorIntensity = 1;
             RadialCorrectionCurve = null!;
-            IsRemoveReflectedLight = false;
+        }
+
+        public LsoImageAdjustParam ToNativeParam()
+        {
+            return new LsoImageAdjustParam
+            {
+                brightness = Math.Clamp(Brightness, AdjustMin, AdjustMax),
+                contrast = Math.Clamp(Contrast, AdjustMin, AdjustMax),
+                gamma = Math.Clamp(Gamma, GammaMin, GammaMax),
+                sharpness = Math.Clamp(Sharpness, AdjustMin, AdjustMax),
+                saturation = Math.Clamp(Saturation, AdjustMin, AdjustMax),
+                channelView = (int)ChannelView,
+            };
         }
     }
 }

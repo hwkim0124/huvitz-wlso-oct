@@ -1,0 +1,55 @@
+{
+  "model": "UNextPupil",
+  "onnx_file": "pupil_track_engine.onnx",
+  "input": {
+    "name": "input",
+    "shape": [
+      1,
+      1,
+      192,
+      256
+    ],
+    "layout": "NCHW",
+    "dtype": "float32",
+    "preprocess": {
+      "grayscale": true,
+      "resize_to_hw": [
+        192,
+        256
+      ],
+      "resize_note": "downscale with an ANTIALIASED BILINEAR (triangle) filter as in training (torchvision antialias / PIL BILINEAR); box/area filters shift the centre by px",
+      "normalize": "(pixel / 255 - 0.5) / 0.5",
+      "mean": 0.5,
+      "std": 0.5
+    }
+  },
+  "outputs": {
+    "center": {
+      "shape": [
+        1,
+        2
+      ],
+      "meaning": "normalized (x, y) in [0, 1]; multiply by source width/height"
+    },
+    "presence": {
+      "shape": [
+        1
+      ],
+      "meaning": "P(pupil visible); visible when >= presence_threshold"
+    },
+    "heatmap": {
+      "shape": [
+        1,
+        1,
+        48,
+        64
+      ],
+      "meaning": "spatial probability of the centre at 1/4 input resolution (row-major, sums to 1); center is its expectation"
+    }
+  },
+  "presence_threshold": 0.5,
+  "source_frame_size_wh": [
+    640,
+    480
+  ]
+}

@@ -38,6 +38,12 @@ namespace WsoToolkit
         // slider's ValueChanged does not send the value straight back.
         private bool _isLoadingFromDevice = false;
 
+        // True while a shared-state notification is being mirrored into the controls. It is
+        // the local half of the echo guard; the state never writes hardware.
+        private bool _isApplyingLightState = false;
+
+        private bool _stateSubscribed = false;
+
         public LightControlPanel()
         {
             InitializeComponent();
@@ -62,6 +68,21 @@ namespace WsoToolkit
             }
 
             Refresh();
+
+            if (!_stateSubscribed)
+            {
+                LightControlState.Changed += onLightStateChanged_;
+                _stateSubscribed = true;
+            }
+        }
+
+        private void UserControl_Unloaded(object sender, RoutedEventArgs e)
+        {
+            if (_stateSubscribed)
+            {
+                LightControlState.Changed -= onLightStateChanged_;
+                _stateSubscribed = false;
+            }
         }
 
         /// <summary>
@@ -86,10 +107,13 @@ namespace WsoToolkit
                 ushort value = DeviceLights.GetLightIntensity(type);
                 row.Slider.Value = value;
                 row.Edit.Text = value.ToString();
+                LightControlState.PublishIntensity(type, value);
 
                 if (row.Mode != null)
                 {
-                    row.Mode.IsChecked = DeviceLights.GetLightMode(type) == LightMode.Continuous;
+                    bool continuous = DeviceLights.GetLightMode(type) == LightMode.Continuous;
+                    row.Mode.IsChecked = continuous;
+                    LightControlState.PublishContinuous(type, continuous);
                 }
             }
             finally
@@ -111,6 +135,7 @@ namespace WsoToolkit
 
             row.Edit.Text = value.ToString();
             DeviceLights.SetLightIntensity(type, value);
+            LightControlState.PublishIntensity(type, value);
         }
 
         private void Slider_DragStarted(object sender, DragStartedEventArgs e)
@@ -126,7 +151,7 @@ namespace WsoToolkit
 
         private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            if (_isLoadingFromDevice || _rows.Count == 0)
+            if (_isLoadingFromDevice || _isApplyingLightState || _rows.Count == 0)
             {
                 return;
             }
@@ -150,7 +175,9 @@ namespace WsoToolkit
             }
 
             LightRow row = _rows[lightOf_(sender)];
-            row.Slider.Value = Math.Clamp(ToInt(row.Edit.Text), row.Slider.Minimum, row.Slider.Maximum);
+            int value = Math.Clamp(ToInt(row.Edit.Text), (int)row.Slider.Minimum, (int)row.Slider.Maximum);
+            row.Slider.Value = value;
+            row.Edit.Text = value.ToString();
         }
 
         private void BtnOn_Click(object sender, RoutedEventArgs e)
@@ -170,8 +197,51 @@ namespace WsoToolkit
 
         private void CheckMode_Click(object sender, RoutedEventArgs e)
         {
+            if (_isApplyingLightState)
+            {
+                return;
+            }
+
+            LightType type = lightOf_(sender);
             LightMode mode = ((CheckBox)sender).IsChecked == true ? LightMode.Continuous : LightMode.Trigger;
-            DeviceLights.SetLightMode(lightOf_(sender), mode);
+            DeviceLights.SetLightMode(type, mode);
+            LightControlState.PublishContinuous(type, mode == LightMode.Continuous);
+        }
+
+        // A notification only mirrors the value into the editor: writing the board here would
+        // bounce the value back to the control that published it.
+        private void onLightStateChanged_(object? sender, LightControlState.ChangedEventArgs e)
+        {
+            if (!Dispatcher.CheckAccess())
+            {
+                Dispatcher.BeginInvoke(new Action(() => onLightStateChanged_(sender, e)));
+                return;
+            }
+
+            if (_isLoadingFromDevice || _isApplyingLightState || _rows.Count == 0
+                || !_rows.TryGetValue(e.Type, out LightRow? row))
+            {
+                return;
+            }
+
+            _isApplyingLightState = true;
+            try
+            {
+                if (e.IntensityChanged && !row.Edit.IsKeyboardFocusWithin)
+                {
+                    row.Slider.Value = e.Intensity;
+                    row.Edit.Text = e.Intensity.ToString();
+                }
+
+                if (e.ContinuousChanged && row.Mode != null)
+                {
+                    row.Mode.IsChecked = e.Continuous;
+                }
+            }
+            finally
+            {
+                _isApplyingLightState = false;
+            }
         }
 
         private void BtnRefresh_Click(object sender, RoutedEventArgs e)

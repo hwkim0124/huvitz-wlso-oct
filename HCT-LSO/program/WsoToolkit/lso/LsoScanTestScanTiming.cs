@@ -83,7 +83,7 @@ namespace WsoToolkit
 
                 myCbScanSequence.SelectedIndex = scan.SequenceMode == LsoScanSequenceMode.GalvanoFirst ? 1 : 0;
                 myTbSyncPreMoveOffset.Text = scan.PreMoveOffset.ToString(CultureInfo.InvariantCulture);
-                myTbSyncPreMoveDelay.Text = scan.PreMoveDelayUs.ToString(CultureInfo.InvariantCulture);
+                myTbSyncPreMoveDelay.Text = scan.TimingPreMoveDelayUs.ToString(CultureInfo.InvariantCulture);
             }
             finally
             {
@@ -92,6 +92,8 @@ namespace WsoToolkit
 
             updateSyncBlankUs_();
             updateSyncControls_();
+            reflectTrajectoryMode_();
+            showAlignMetrics_();
         }
 
         // "(N us)" beside Row0 Ofs: the offset rows converted with the line time on screen,
@@ -161,6 +163,7 @@ namespace WsoToolkit
                 scan.SequenceMode = sequence;
                 scan.PreMoveOffset = (short)Math.Clamp(ToInt(myTbSyncPreMoveOffset.Text), short.MinValue, short.MaxValue);
                 scan.PreMoveDelayUs = (ushort)Math.Clamp(ToInt(myTbSyncPreMoveDelay.Text), 0, ushort.MaxValue);
+                scan.RequestedPreMoveDelayUs = scan.PreMoveDelayUs;
             }
 
             // Both halves of the line-rate pair follow immediately, so what the next calculation
@@ -220,12 +223,16 @@ namespace WsoToolkit
 
             commitScanTiming_(editedLineTime: ReferenceEquals(sender, myTbSyncLineTime));
             autoRecalcScanTiming_();
+            if (ReferenceEquals(sender, myTbSyncBlank))
+                queueLiveOffsetUpdate_();
         }
 
         private void myTbSync_LostFocus(object sender, RoutedEventArgs e)
         {
             commitScanTiming_(editedLineTime: ReferenceEquals(sender, myTbSyncLineTime));
             autoRecalcScanTiming_();
+            if (ReferenceEquals(sender, myTbSyncBlank))
+                queueLiveOffsetUpdate_();
         }
 
         private void myCbScanSequence_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -257,6 +264,18 @@ namespace WsoToolkit
             recalcScanTiming_(quiet: false);
         }
 
+        private void myBtSyncNudge_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && int.TryParse(button.Tag?.ToString(), out int delta))
+            {
+                myTbSyncBlank.Text = Math.Max(0L, (long)ToInt(myTbSyncBlank.Text) + delta)
+                    .ToString(CultureInfo.InvariantCulture);
+                commitScanTiming_();
+                autoRecalcScanTiming_();
+                queueLiveOffsetUpdate_();
+            }
+        }
+
         // Straight off the camera, like the Settings window's button. A failure keeps the
         // typed rate instead of replacing it with a zero.
         private void myBtSyncReadLineRate_Click(object sender, RoutedEventArgs e)
@@ -286,7 +305,8 @@ namespace WsoToolkit
                     : preset.Scan.ExposureTimeUs;
 
                 if (!LsoScanTimingCalculator.TryCalculate(preset.Scan, camDelayUs, exposureUs,
-                    out LsoScanTimingCalculator.Result result, out string reason))
+                    out LsoScanTimingCalculator.Result result, out string reason,
+                    desiredPreMoveDelayUs: preset.Scan.TimingPreMoveDelayUs))
                 {
                     if (!quiet)
                     {
@@ -307,9 +327,7 @@ namespace WsoToolkit
             reflectScanTiming_();
         }
 
-        // Apply is the only thing here that touches the board: it uploads the scan profile the
-        // fields just produced. Editing a field never does - the same rule the rest of this
-        // screen follows, where the Preview/Capture one-call owns the board.
+        // 정지 중 명시적 Apply. Live Row0 변경은 직렬 Dispatcher 경로에서 즉시 RAM을 갱신한다.
         private void myBtSyncApply_Click(object sender, RoutedEventArgs e)
         {
             if (_alignActive || IsRetinaPreviewing_() || LsoCamera.IsCapturing())

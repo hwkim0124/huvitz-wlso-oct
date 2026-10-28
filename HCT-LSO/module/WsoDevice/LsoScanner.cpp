@@ -305,14 +305,14 @@ bool wso_device::LsoScanner::controlScanSequence(int seqMode, int preMoveOffset,
 }
 
 
-bool wso_device::LsoScanner::controlCapture(int nPatternId, int onOff)
+bool wso_device::LsoScanner::controlCapture(int nPatternId, int onOff, std::uint8_t fundusMode)
 {
 	if (!impl().initiated) {
 		return false;
 	}
 
 	UsbComm& usbComm = getMainBoard()->getUsbComm();
-	if (!usbComm.LsoScannerControl(nPatternId, onOff)) {
+	if (!usbComm.LsoScannerControl(nPatternId, onOff, fundusMode)) {
 		LogD() << "Lso scanner, control capture failed!";
 		return false;
 	}
@@ -335,7 +335,7 @@ bool wso_device::LsoScanner::controlTriggerMode(int onOff)
 	return true;
 }
 
-bool wso_device::LsoScanner::startGrabbing(int nPatternId)
+bool wso_device::LsoScanner::startGrabbing(int nPatternId, std::uint8_t fundusMode)
 {
 	if (!impl().initiated) {
 		return false;
@@ -343,7 +343,7 @@ bool wso_device::LsoScanner::startGrabbing(int nPatternId)
 
 	pauseGrabbing(nPatternId);
 
-	if (!controlCapture(nPatternId, 1)) {
+	if (!controlCapture(nPatternId, 1, fundusMode)) {
 		pauseGrabbing(nPatternId);
 		return false;
 	}
@@ -356,7 +356,7 @@ bool wso_device::LsoScanner::pauseGrabbing(int nPatternId)
 		return false;
 	}
 
-	if (!controlCapture(nPatternId, 0)) {
+	if (!controlCapture(nPatternId, 0, 1)) {
 		return false;
 	}
 	return true;

@@ -7,6 +7,7 @@
 
 #include "Logger.h"
 
+#include "CvAdjust.h"
 #include "CvImage.h"
 #include "CvProcess.h"
 #include "GuidedFilter.h"

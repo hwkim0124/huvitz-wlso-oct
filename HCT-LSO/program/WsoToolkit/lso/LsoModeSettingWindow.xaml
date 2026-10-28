@@ -159,6 +159,13 @@
                          Per mode on purpose - not copied by 'both modes'. -->
                     <Label Grid.Row="9" Grid.Column="0" Content="Trajectory :" Style="{StaticResource LabelStyle}"/>
                     <DockPanel Grid.Row="9" Grid.Column="1" Grid.ColumnSpan="3" LastChildFill="True">
+                        <ComboBox x:Name="myCbTrajectoryMode" DockPanel.Dock="Left" Width="135"
+                                  SelectionChanged="TrajectoryMode_Changed">
+                            <ComboBoxItem Content="Linear / CSV"/>
+                            <ComboBoxItem Content="Calibrated FOV"/>
+                        </ComboBox>
+                        <Button DockPanel.Dock="Right" Content="Calibration..." Width="90"
+                                Click="CalibrationBrowse_Click"/>
                         <Button x:Name="myBtTrajectoryEdit" DockPanel.Dock="Right" Content="Edit..." Width="60" Margin="4,0,0,0"
                                 ToolTip="Open the trajectory editor: graph of pos[i], CSV import/export, range edits."
                                 Click="myBtTrajectoryEdit_Click"/>
@@ -300,6 +307,7 @@
                  before anything demosaics or saves it (Toolkit review and Agent alike). -->
             <GroupBox x:Name="myGroupPostProcess" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2"
                       Header="Post-process (Capture)" Margin="0,8,0,0">
+                <StackPanel Orientation="Vertical">
                 <StackPanel Orientation="Horizontal">
                     <CheckBox x:Name="myCheckFlatField" Content="Flat-field correction" Style="{StaticResource CheckBoxStyle}"
                               VerticalAlignment="Center" Checked="FlatField_Changed" Unchecked="FlatField_Changed"
@@ -311,6 +319,14 @@
                             VerticalAlignment="Center" Margin="8,0,0,0" Click="myBtFlatFieldBrowse_Click"/>
                     <Button x:Name="myBtFlatFieldClear" Content="Clear" Style="{StaticResource ButtonS1Style}" Width="50"
                             VerticalAlignment="Center" Margin="4,0,0,0" Click="myBtFlatFieldClear_Click"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                    <CheckBox x:Name="myCheckReflectedLight" Content="Reflected light removal (White)" Style="{StaticResource CheckBoxStyle}"
+                              VerticalAlignment="Center" Checked="ReflectedLight_Changed" Unchecked="ReflectedLight_Changed"
+                              ToolTip="Subtracts this instrument's measured reflected-light map from White captures, per focus position; measured with Reflected Light Cal... in the LSO scan test window."/>
+                    <Label x:Name="myLbReflectedLight" Style="{StaticResource LabelStyle}" VerticalAlignment="Center"
+                           MinWidth="260" Margin="24,0,0,0"/>
+                </StackPanel>
                 </StackPanel>
             </GroupBox>
         </Grid>

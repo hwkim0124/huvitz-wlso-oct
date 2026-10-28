@@ -40,9 +40,9 @@ namespace wso_device
 		// Board-global scan sequence: 0 = TRIG_FIRST (board waits on EXPOSURE_ACTIVE),
 		// 1 = GALVANO_FIRST (mirror pre-moves, board fires the camera trigger).
 		bool controlScanSequence(int seqMode, int preMoveOffset, int preMoveDelayUs);
-		bool controlCapture(int nPatternId, int onOff);
+		bool controlCapture(int nPatternId, int onOff, std::uint8_t fundusMode);
 		bool controlTriggerMode(int onOff);
-		bool startGrabbing(int nPatternId);
+		bool startGrabbing(int nPatternId, std::uint8_t fundusMode);
 		bool pauseGrabbing(int nPatternId);
 
 		//virtual bool loadConfigFromIniFile(void) override;

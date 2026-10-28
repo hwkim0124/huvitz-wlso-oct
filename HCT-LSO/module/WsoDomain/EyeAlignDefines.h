@@ -22,7 +22,7 @@ namespace wso_domain
 		TO_READY_Z,			// 1   Z -> readyPosZ
 		TO_EYE_X,			// 2   X -> eyePosX_OD | eyePosX_OS
 		SWING_TO_TILT,		// 3   swing -> swingTiltPos_OD | swingTiltPos_OS
-		SEARCHING,			// 4a  Z forward to searchLimitPosZ, the side camera watched for the pupil
+		SEARCHING,			// 4a  Z forward to searchLimitPosZ (or until both cameras see the pupil near), the side camera watched for it
 		CENTERING_Y,		// 4b  Z stopped, Y centres the side-camera pupil vertically
 		APPROACHING,		// 5   Z forward until the lower-camera pupil sits on its vertical target
 		CENTERING_X,		// 6   X centres the lower-camera pupil horizontally
@@ -121,8 +121,8 @@ namespace wso_domain
 		int32_t swingTiltPos_OS = +1500;		// step 3 tilt for the left eye
 		int32_t eyePosX_OD = +15000;			// step 2 X position for the right eye
 		int32_t eyePosX_OS = -15000;			// step 2 X position for the left eye
-		int32_t searchLimitPosZ = -4000;	// step 4a always advances Z to here; no side lock there cancels (EYE_NOT_FOUND)
-		int32_t minSafePosZ = 0;			// Z never goes forward past this (moves are clipped); EYE_TOO_CLOSE once per excursion
+		int32_t searchLimitPosZ = 0;	// step 4a always advances Z to here; no side lock there cancels (EYE_NOT_FOUND)
+		int32_t minSafePosZ = 5000;			// Z never goes forward past this (moves are clipped); EYE_TOO_CLOSE once per excursion
 		int32_t posToleranceSteps = 100;		// a position move or a jog toward a target counts as arrived within this band
 		int32_t stepZ = 500;				// steps 4a and 5 advance Z by this many steps per frame while no pupil is locked
 
@@ -145,9 +145,9 @@ namespace wso_domain
 		float smoothingAlpha = 0.5f;		// EMA weight of the newest detection
 
 		// timeouts (ms)
-		int32_t readyTimeoutMs = 10000;		// position phases (steps 1..3)
+		int32_t readyTimeoutMs = 10000;		// position phases (steps 1..3) and the step 4b far move of Y
 		int32_t swingTimeoutMs = 10000;		// swing moves by position; its own wait (~10 s) bounds the block
-		int32_t eyeXTimeoutMs = 10000;
+		int32_t eyeXTimeoutMs = 10000;		// step 2 X position move and the step 6 far move of X
 		int32_t searchTimeoutMs = 20000;	// step 4a safety net for a stalled Z (fires before alignTimeoutMs with the better diagnosis)
 		int32_t alignTimeoutMs = 30000;		// whole sequence up to the first FOCUS_ALIGNED -> ALIGN_CANCELLED(ALIGN_TIMEOUT); held time excluded; 0 = no limit
 

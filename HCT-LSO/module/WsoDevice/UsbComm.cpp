@@ -6,6 +6,7 @@
 
 #include <mutex>
 #include <cassert>
+#include <iomanip>
 
 #include "wso_board.h"
 
@@ -1591,13 +1592,18 @@ bool wso_device::UsbComm::TestCommand(std::uint8_t cmd)
 }
 
 
-bool wso_device::UsbComm::LsoScannerControl(std::uint8_t patternId, std::uint8_t onOff)
+bool wso_device::UsbComm::LsoScannerControl(std::uint8_t patternId, std::uint8_t onOff, std::uint8_t fundusMode)
 {
 	lock_guard<mutex> lock(impl().mutexControl);
-	MsgCommand* msg = getMsgCommand(CommandType::LSO_SCANNER_CTRL, 2);
-	msg->packet.ctrl2.c1 = patternId;
-	msg->packet.ctrl2.c2 = (onOff > 0 ? 1 : 0);
-	attachCRC(msg->packet.ctrl2.crc);
+	MsgCommand* msg = getMsgCommand(CommandType::LSO_SCANNER_CTRL, 3);
+	msg->packet.lsoCapture.patternId = patternId;
+	msg->packet.lsoCapture.onOff = (onOff > 0 ? 1 : 0);
+	msg->packet.lsoCapture.fundusMode = fundusMode;
+	attachCRC(msg->packet.lsoCapture.crc);
+	LogD() << "[LSO-CMD] 0x6000 " << std::hex << std::setfill('0')
+		<< std::setw(2) << static_cast<unsigned int>(msg->packet.lsoCapture.patternId) << " "
+		<< std::setw(2) << static_cast<unsigned int>(msg->packet.lsoCapture.onOff) << " "
+		<< std::setw(2) << static_cast<unsigned int>(msg->packet.lsoCapture.fundusMode);
 	return sendMsgCmd(msg);
 }
 

@@ -73,5 +73,12 @@ namespace WsoNativeLib.Presets
         {
             return Path.Combine(Resolve(overrideDirectory), LsoModePresetStore.DirectoryName);
         }
+
+        public const string ReflectedLightDirectoryName = "ReflectedLight";
+
+        public static string ReflectedLightDirectory(string? overrideDirectory = null)
+        {
+            return Path.Combine(Resolve(overrideDirectory), ReflectedLightDirectoryName);
+        }
     }
 }

@@ -79,10 +79,15 @@ namespace WsoNativeLib.Presets
         // Raw Bayer PGM of a uniform target, shot with this preset's geometry.
         public string FlatFieldFile { get; set; } = string.Empty;
 
+        // Subtract this instrument's measured reflected-light map from White captures; the
+        // maps live in <config dir>\ReflectedLight (LsoReflectedLight).
+        public bool ReflectedLightEnabled { get; set; }
+
         public void CopyValuesFrom(LsoModePostProcess source)
         {
             FlatFieldEnabled = source.FlatFieldEnabled;
             FlatFieldFile = source.FlatFieldFile;
+            ReflectedLightEnabled = source.ReflectedLightEnabled;
         }
     }
 
@@ -121,6 +126,11 @@ namespace WsoNativeLib.Presets
         private const int FirstScanRampFormatVersion = 5;
 
         public string Name { get; set; } = string.Empty;
+        public ColorIllumination ColorIllumination { get; set; } = ColorIllumination.White;
+
+        // Blue-FAF emission composite. Absent in every file written before the option
+        // existed, and absence is the GreenOnly default - a migration, not damage.
+        public FafProcessingOption FafOption { get; set; } = FafProcessingOption.GreenOnly;
 
         public ColorCameraPreset Camera { get; } = new ColorCameraPreset();
 
@@ -185,6 +195,8 @@ namespace WsoNativeLib.Presets
 
         public void CopyValuesFrom(LsoModePreset source)
         {
+            ColorIllumination = source.ColorIllumination;
+            FafOption = source.FafOption;
             Camera.CopyValuesFrom(source.Camera);
             Scan.CopyValuesFrom(source.Scan);
             Light.CopyValuesFrom(source.Light);
@@ -192,6 +204,10 @@ namespace WsoNativeLib.Presets
             PostProcess.CopyValuesFrom(source.PostProcess);
         }
 
+        // A referenced file (trajectory CSV, flat PGM) that sits in the preset's own folder is
+        // written by name only, so the Presets folder can move with its files - another PC, or
+        // the shared folder in the repository. Load resolves such a name against the folder
+        // the preset is read from, so in memory the path is always absolute.
         public void Save(string path)
         {
             string? directory = Path.GetDirectoryName(path);
@@ -200,26 +216,50 @@ namespace WsoNativeLib.Presets
                 Directory.CreateDirectory(directory);
             }
 
-            new XDocument(new XDeclaration("1.0", "utf-8", null), ToElement()).Save(path);
+            string? folder = string.IsNullOrEmpty(directory) ? null : Path.GetFullPath(directory);
+            new XDocument(new XDeclaration("1.0", "utf-8", null), ToElement(folder)).Save(path);
         }
 
         // Same values as the file would store them - the comparison the "unsaved changes"
         // check needs, without a second field list that could fall out of step with Save.
         public bool ValueEquals(LsoModePreset other)
         {
-            return XNode.DeepEquals(ToElement(), other.ToElement());
+            return XNode.DeepEquals(ToElement(null), other.ToElement(null));
         }
 
-        private XElement ToElement()
+        private XElement ToElement(string? folder)
         {
             return new XElement(RootElementName,
                 new XAttribute("version", FormatVersion),
                 new XAttribute("name", Name),
+                new XElement(nameof(ColorIllumination), ColorIllumination),
+                new XElement(nameof(FafOption), FafOption),
                 Camera.ToElement("Camera"),
-                ScanElement(),
+                ScanElement(folder),
                 LightElement(),
                 MotorElement(),
-                PostProcessElement());
+                PostProcessElement(folder));
+        }
+
+        private static string RelativeToFolder(string file, string? folder)
+        {
+            if (file.Length == 0 || folder == null || !Path.IsPathRooted(file))
+            {
+                return file;
+            }
+
+            string fileFolder = Path.GetDirectoryName(Path.GetFullPath(file)) ?? string.Empty;
+            return string.Equals(Path.TrimEndingDirectorySeparator(fileFolder),
+                    Path.TrimEndingDirectorySeparator(folder), StringComparison.OrdinalIgnoreCase)
+                ? Path.GetFileName(file)
+                : file;
+        }
+
+        private static string ResolveInFolder(string file, string? folder)
+        {
+            return file.Length == 0 || folder == null || Path.IsPathRooted(file)
+                ? file
+                : Path.GetFullPath(Path.Combine(folder, file));
         }
 
         // Anything unreadable falls back to the mode's built-in default and is appended to
@@ -264,6 +304,36 @@ namespace WsoNativeLib.Presets
             // Translated into the camera preset's own numbering, because the two files
             // version independently.
             int fileVersion = ColorCameraPreset.ReadFormatVersion(root);
+            XElement? illumination = root.Element(nameof(ColorIllumination));
+            if (illumination != null)
+            {
+                if (Enum.TryParse(illumination.Value.Trim(), out ColorIllumination parsedIllumination)
+                    && Enum.IsDefined(parsedIllumination))
+                {
+                    preset.ColorIllumination = parsedIllumination;
+                }
+                else
+                {
+                    issues?.Add($"'{name}': ColorIllumination is invalid - White is used.");
+                    hasFallback = true;
+                }
+            }
+            // Absent in every file written before the Blue-FAF option existed: the mode's
+            // GreenOnly default, without a migration note.
+            XElement? fafOption = root.Element(nameof(FafOption));
+            if (fafOption != null)
+            {
+                if (Enum.TryParse(fafOption.Value.Trim(), out FafProcessingOption parsedFafOption)
+                    && Enum.IsDefined(parsedFafOption))
+                {
+                    preset.FafOption = parsedFafOption;
+                }
+                else
+                {
+                    issues?.Add($"'{name}': FafOption is invalid - GreenOnly is used.");
+                    hasFallback = true;
+                }
+            }
             XAttribute? declaredVersion = root.Attribute("version");
             if (declaredVersion != null
                 && (!int.TryParse(declaredVersion.Value.Trim(), NumberStyles.Integer,
@@ -350,8 +420,21 @@ namespace WsoNativeLib.Presets
                     0, name, issues) != 0;
                 preset.PostProcess.FlatFieldFile =
                     postProcess.Element(nameof(LsoModePostProcess.FlatFieldFile))?.Value?.Trim() ?? string.Empty;
+
+                // Optional like FlatFieldEnabled: absent in files written before the switch
+                // existed and means "off", not a fallback.
+                if (postProcess.Element(nameof(LsoModePostProcess.ReflectedLightEnabled)) != null)
+                {
+                    preset.PostProcess.ReflectedLightEnabled = ReadInt(postProcess,
+                        nameof(LsoModePostProcess.ReflectedLightEnabled), 0, name, issues) != 0;
+                }
                 hasFallback |= (issues?.Count ?? 0) > issueCountBeforePostProcess;
             }
+
+            string? folder = Path.GetDirectoryName(Path.GetFullPath(path));
+            preset.Scan.TrajectoryFile = ResolveInFolder(preset.Scan.TrajectoryFile, folder);
+            preset.Scan.CalibrationFile = ResolveInFolder(preset.Scan.CalibrationFile, folder);
+            preset.PostProcess.FlatFieldFile = ResolveInFolder(preset.PostProcess.FlatFieldFile, folder);
 
             preset.Camera.Name = name;
 
@@ -376,14 +459,15 @@ namespace WsoNativeLib.Presets
                 Int(nameof(LsoModeMotor.LsoFocusPosition), Motor.LsoFocusPosition));
         }
 
-        private XElement PostProcessElement()
+        private XElement PostProcessElement(string? folder)
         {
             return new XElement("PostProcess",
                 Int(nameof(LsoModePostProcess.FlatFieldEnabled), PostProcess.FlatFieldEnabled ? 1 : 0),
-                new XElement(nameof(LsoModePostProcess.FlatFieldFile), PostProcess.FlatFieldFile));
+                new XElement(nameof(LsoModePostProcess.FlatFieldFile), RelativeToFolder(PostProcess.FlatFieldFile, folder)),
+                Int(nameof(LsoModePostProcess.ReflectedLightEnabled), PostProcess.ReflectedLightEnabled ? 1 : 0));
         }
 
-        private XElement ScanElement()
+        private XElement ScanElement(string? folder)
         {
             return new XElement("Scan",
                 Int("TimeStepUs", Scan.TimeStepUs),
@@ -409,7 +493,11 @@ namespace WsoNativeLib.Presets
                 Int("SequenceMode", (int)Scan.SequenceMode),
                 Int("PreMoveOffset", Scan.PreMoveOffset),
                 Int("PreMoveDelayUs", Scan.PreMoveDelayUs),
-                new XElement("TrajectoryFile", Scan.TrajectoryFile));
+                Scan.RequestedPreMoveDelayUs.HasValue
+                    ? Int("RequestedPreMoveDelayUs", Scan.RequestedPreMoveDelayUs.Value) : null,
+                new XElement("TrajectoryFile", RelativeToFolder(Scan.TrajectoryFile, folder)),
+                Int("TrajectoryMode", (int)Scan.TrajectoryMode),
+                new XElement("CalibrationFile", RelativeToFolder(Scan.CalibrationFile, folder)));
         }
 
         private void ReadScan(XElement scan, string presetName, IList<string>? issues,
@@ -475,10 +563,30 @@ namespace WsoNativeLib.Presets
             {
                 Scan.PreMoveDelayUs = (ushort)ReadInt(scan, "PreMoveDelayUs", Scan.PreMoveDelayUs, presetName, issues);
             }
+            Scan.RequestedPreMoveDelayUs = scan.Element("RequestedPreMoveDelayUs") != null
+                ? (ushort)ReadInt(scan, "RequestedPreMoveDelayUs", Scan.PreMoveDelayUs, presetName, issues)
+                : null;
             hasFallback |= (issues?.Count ?? 0) > issueCountBeforeSequence;
 
             // Optional; absent in every file written before it existed and means "linear".
             Scan.TrajectoryFile = scan.Element("TrajectoryFile")?.Value?.Trim() ?? string.Empty;
+
+            // Optional as well; absent means Linear. A stated mode that is not one of the two is
+            // damage - it must not silently decide which table the galvo sweeps.
+            if (scan.Element("TrajectoryMode") != null)
+            {
+                int issueCountBeforeMode = issues?.Count ?? 0;
+                int trajectoryMode = ReadInt(scan, "TrajectoryMode", (int)LsoTrajectoryMode.Linear, presetName, issues);
+                if (!Enum.IsDefined(typeof(LsoTrajectoryMode), trajectoryMode))
+                {
+                    issues?.Add($"'{presetName}': <TrajectoryMode> {trajectoryMode} is not 0 (Linear) or 1 (CalibratedFov) "
+                        + "- Linear is used.");
+                    trajectoryMode = (int)LsoTrajectoryMode.Linear;
+                }
+                Scan.TrajectoryMode = (LsoTrajectoryMode)trajectoryMode;
+                hasFallback |= (issues?.Count ?? 0) > issueCountBeforeMode;
+            }
+            Scan.CalibrationFile = scan.Element("CalibrationFile")?.Value?.Trim() ?? string.Empty;
         }
 
         private XElement LightElement()

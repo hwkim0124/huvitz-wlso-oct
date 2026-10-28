@@ -21,17 +21,23 @@ namespace WsoToolkit
     // measurement will need.
     public partial class LsoScanTestWindow : Window
     {
-        private bool _alignActive;
+        private volatile bool _alignActive;
         private bool _alignToggling;
         private bool _slitMeasureHooked;
 
         // Latest coalesced live frame, kept only while aligning. Outside that mode the
         // galvo is sweeping, so a frame is not a stationary slit the Auto button can measure.
         private volatile AlignFrame? _alignFrame;
-        private sealed record AlignFrame(byte[] Data, int Width, int Height, int BytesPerPixel);
+        private sealed record AlignFrame(byte[] Data, int Width, int Height, int BytesPerPixel, int PixelFormat);
         private int _galvanoYPosition;
+        private int _calibrationPositionVersion;
+        private bool _calibrationPositionValid;
         private bool _galvanoSliderDragging;
         private bool _galvanoSliderSyncing;
+
+        // Suppresses the mode checkbox's own handler while a shared-state notification is
+        // mirrored into it; a mirrored value must never drive the board a second time.
+        private bool _isSyncingLightState;
 
         // The light this mode turned on, remembered so the exit path can turn off exactly that
         // one even if the target-mode combo changed meanwhile.
@@ -77,6 +83,7 @@ namespace WsoToolkit
 
         private bool enterAlignMode_()
         {
+            stopLiveCapture_();
             if (LsoCamera.IsCapturing())
             {
                 MsgBoxUtil.ShowWarning("A capture is in progress. Wait for it to finish before aligning.");
@@ -100,9 +107,12 @@ namespace WsoToolkit
             setGalvanoYPosition_(pos);
             if (!LsoScanner.MoveLsoScannerYposition(pos))
             {
+                _calibrationPositionValid = false;
                 MsgBoxUtil.ShowWarning("The galvo did not move to the alignment position.");
                 return false;
             }
+            _calibrationPositionVersion++;
+            _calibrationPositionValid = true;
 
             // 3. Continuous illumination. Intensity stays window-local: aligning brightness is
             //    not what the preset should remember.
@@ -111,16 +121,23 @@ namespace WsoToolkit
             myTbAlignIntensity.Text = intensity.ToString();
 
             DeviceLights.SetLightIntensity(_alignLight, intensity);
-            if (!DeviceLights.SetLightMode(_alignLight, LightMode.Continuous))
+            LightControlState.PublishIntensity(_alignLight, intensity);
+            bool continuousAccepted = DeviceLights.SetLightMode(_alignLight, LightMode.Continuous);
+            if (!continuousAccepted)
             {
                 MsgBoxUtil.ShowWarning($"{_alignLight} refused continuous mode; the slit may stay dark.");
             }
 
             // "Continuous Slit" decides whether the lamp is actually lit; the mode above is
             // set either way, so ticking the box mid-alignment only has to switch it on.
+            // Publish after that decision so mirroring the mode into the box cannot change it.
             if (ContinuousSlit)
             {
                 DeviceLights.TurnOnLight(_alignLight);
+            }
+            if (continuousAccepted)
+            {
+                LightControlState.PublishContinuous(_alignLight, true);
             }
             refreshLightControls_();
 
@@ -138,9 +155,11 @@ namespace WsoToolkit
 
         // The array is already the callback's private copy; this only remembers it, and
         // only while aligning - a frame from a sweeping galvo is not a stationary slit.
-        private void rememberAlignFrame_(byte[] data, int width, int height, int bytesPerPixel)
+        private void rememberAlignFrame_(byte[] data, int width, int height, int bytesPerPixel, int pixelFormat)
         {
-            _alignFrame = _alignActive ? new AlignFrame(data, width, height, bytesPerPixel) : null;
+            AlignFrame? frame = _alignActive ? new AlignFrame(data, width, height, bytesPerPixel, pixelFormat) : null;
+            _alignFrame = frame;
+            if (frame != null) signalAlignFrame_(frame);
         }
 
         // Never throws and never gives up halfway: a half-exited alignment leaves the
@@ -154,6 +173,9 @@ namespace WsoToolkit
 
             _alignActive = false;
             _alignFrame = null;
+            _calibrationPositionValid = false;
+            cancelCalibrationFrameWait_();
+            _calibrationWindow?.CancelMeasurement();
 
             try
             {
@@ -170,7 +192,11 @@ namespace WsoToolkit
             try
             {
                 DeviceLights.TurnOffLight(_alignLight);
-                DeviceLights.SetLightMode(_alignLight, (LightMode)AlignPreset.Light.Mode);
+                LightMode restored = (LightMode)AlignPreset.Light.Mode;
+                if (DeviceLights.SetLightMode(_alignLight, restored))
+                {
+                    LightControlState.PublishContinuous(_alignLight, restored == LightMode.Continuous);
+                }
             }
             catch (Exception ex)
             {
@@ -204,6 +230,8 @@ namespace WsoToolkit
         // Called from Window_Closed: the window may go away with the light still on.
         private void releaseSlitAlign_()
         {
+            cancelCalibrationFrameWait_();
+            _calibrationWindow?.CancelMeasurement();
             if (_alignActive)
             {
                 exitAlignMode_();
@@ -245,6 +273,10 @@ namespace WsoToolkit
             myLbAlignLight.Content = _alignActive
                 ? $"Light : {_alignLight}"
                 : $"Light : {AlignPreset.Light.Led}";
+
+            // The target-mode combo can select a different light; show that light's shared
+            // intensity / continuous state instead of the previous channel's numbers.
+            reflectLightState_();
 
             showAlignRange_();
 
@@ -288,19 +320,29 @@ namespace WsoToolkit
         // does nothing: the lamp then belongs to whatever the scan or the Light panel is doing.
         private void myCheckContinuousSlit_CheckedNUnchecked(object sender, RoutedEventArgs e)
         {
-            if (!IsLoaded || !_alignActive)
+            if (!IsLoaded || !_alignActive || _isSyncingLightState)
             {
                 return;
             }
 
             if (ContinuousSlit)
             {
-                DeviceLights.SetLightMode(_alignLight, LightMode.Continuous);
+                if (DeviceLights.SetLightMode(_alignLight, LightMode.Continuous))
+                {
+                    LightControlState.PublishContinuous(_alignLight, true);
+                }
                 DeviceLights.TurnOnLight(_alignLight);
             }
             else
             {
                 DeviceLights.TurnOffLight(_alignLight);
+
+                // Restore strobe mode as the DevKit does; leaving the hardware continuous
+                // while the shared state says otherwise would make the two controls diverge.
+                if (DeviceLights.SetLightMode(_alignLight, LightMode.Trigger))
+                {
+                    LightControlState.PublishContinuous(_alignLight, false);
+                }
             }
 
             refreshLightControls_();
@@ -314,7 +356,9 @@ namespace WsoToolkit
         // dragged and nothing in the native surface reports narrower hardware limits.
         private void setGalvanoYPosition_(int pos)
         {
-            _galvanoYPosition = Math.Clamp(pos, short.MinValue, short.MaxValue);
+            int clamped = Math.Clamp(pos, short.MinValue, short.MaxValue);
+            if (_galvanoYPosition != clamped) _calibrationPositionVersion++;
+            _galvanoYPosition = clamped;
 
             _galvanoSliderSyncing = true;
             try
@@ -333,7 +377,10 @@ namespace WsoToolkit
             int clamped = Math.Clamp(pos, short.MinValue, short.MaxValue);
             setGalvanoYPosition_(clamped);
 
-            if (!LsoScanner.MoveLsoScannerYposition(clamped))
+            _calibrationPositionVersion++;
+            _calibrationPositionValid = LsoScanner.MoveLsoScannerYposition(clamped);
+            _calibrationWindow?.RefreshTargetState();
+            if (!_calibrationPositionValid)
             {
                 MsgBoxUtil.ShowWarning("Move galvano position Y failed!");
             }
@@ -350,6 +397,7 @@ namespace WsoToolkit
         private void mySliderGalvanoYPos_DragStarted(object sender, System.Windows.Controls.Primitives.DragStartedEventArgs e)
         {
             _galvanoSliderDragging = true;
+            _calibrationWindow?.RefreshTargetState();
         }
 
         private void mySliderGalvanoYPos_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
@@ -369,6 +417,7 @@ namespace WsoToolkit
             if (_galvanoSliderDragging)
             {
                 // Dragging only previews the number; the move happens on release.
+                if (_galvanoYPosition != pos) _calibrationPositionVersion++;
                 _galvanoYPosition = pos;
                 myTbGalvanoYPos.Text = pos.ToString();
                 return;
@@ -439,6 +488,74 @@ namespace WsoToolkit
             if (!DeviceLights.SetLightIntensity(_alignLight, intensity))
             {
                 MsgBoxUtil.ShowWarning($"{_alignLight} did not accept intensity {intensity}.");
+            }
+
+            // Publish even when the board refuses: both editors keep showing the value the
+            // operator committed, and the warning above is what reports the failure.
+            LightControlState.PublishIntensity(_alignLight, intensity);
+        }
+
+        // Mirrors the shared LED state into the alignment block. Only the editors are touched:
+        // writing the board from a notification would echo back to the publishing control.
+        private void onLightStateChanged_(object? sender, LightControlState.ChangedEventArgs e)
+        {
+            if (!Dispatcher.CheckAccess())
+            {
+                Dispatcher.BeginInvoke(new Action(() => onLightStateChanged_(sender, e)));
+                return;
+            }
+
+            LightType type = _alignActive ? _alignLight : AlignPreset.Light.Led;
+            if (e.Type != type)
+            {
+                return;
+            }
+
+            _isSyncingLightState = true;
+            try
+            {
+                if (e.IntensityChanged && !myTbAlignIntensity.IsKeyboardFocusWithin)
+                {
+                    myTbAlignIntensity.Text = e.Intensity.ToString();
+                }
+
+                if (e.ContinuousChanged && myCheckContinuousSlit.IsChecked != e.Continuous)
+                {
+                    myCheckContinuousSlit.IsChecked = e.Continuous;
+                }
+            }
+            finally
+            {
+                _isSyncingLightState = false;
+            }
+        }
+
+        // Seeds the alignment block when the selected light changes (or when the panel has
+        // just read the device). Unknown channels are left alone.
+        private void reflectLightState_()
+        {
+            LightType type = _alignActive ? _alignLight : AlignPreset.Light.Led;
+            if (!LightControlState.TryGet(type, out int intensity, out bool continuous))
+            {
+                return;
+            }
+
+            _isSyncingLightState = true;
+            try
+            {
+                if (!myTbAlignIntensity.IsKeyboardFocusWithin)
+                {
+                    myTbAlignIntensity.Text = intensity.ToString();
+                }
+
+                if (myCheckContinuousSlit.IsChecked != continuous)
+                {
+                    myCheckContinuousSlit.IsChecked = continuous;
+                }
+            }
+            finally
+            {
+                _isSyncingLightState = false;
             }
         }
 

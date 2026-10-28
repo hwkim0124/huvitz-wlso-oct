@@ -1,0 +1,91 @@
+<Window x:Class="WsoToolkit.LsoPostProcessingWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Post Processing (draft)" Width="1400" Height="860" MinWidth="1000" MinHeight="600"
+        Closed="Window_Closed">
+    <!-- One input (a TIFF or the latest capture frame), one run on a worker, every stage listed
+         with its 8-bit view next to the original. Draft pipeline only: debayer, float white
+         balance, median, 8-bit. -->
+    <DockPanel Margin="8">
+        <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+            <Button x:Name="myBtOpen" Content="Open TIFF..." Click="Open_Click" Padding="8,4"/>
+            <Button x:Name="myBtLatest" Content="Latest Capture" Click="Latest_Click" Padding="8,4" Margin="6,0,0,0"
+                    ToolTip="The last frame the Capture delivered (after its reflected-light / flat correction)."/>
+            <CheckBox x:Name="myCheckGray16Bayer" Content="Gray16 = Bayer RGGB 12-bit" IsChecked="True" VerticalAlignment="Center" Margin="12,0,0,0"
+                      ToolTip="A Gray16 TIFF (the _raw16.tiff companion) is read as the Bayer mosaic. Unchecked: a Gray16 file is refused (mono is not processed in this draft)."/>
+            <CheckBox x:Name="myCheckAfterCapture" Content="Process after Capture" VerticalAlignment="Center" Margin="16,0,0,0"
+                      ToolTip="While this window is open, a successful single-frame Color capture in the Scan Test window is processed here with the settings below."/>
+        </WrapPanel>
+        <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,6">
+            <CheckBox x:Name="myCheckCircle" Content="Circle ROI (cut)" IsChecked="True" VerticalAlignment="Center" Margin="0,0,16,0"
+                      ToolTip="Before the debayer: everything outside the centred circle (r = ROI r x width) is zeroed and the image is cut to the circle's box. The product's illuminated field is not a clean circle, so nothing outside is processed."/>
+            <CheckBox x:Name="myCheckReflectedLight" Content="Reflected light (remove)" IsChecked="False" VerticalAlignment="Center" Margin="0,0,16,0"
+                      ToolTip="Subtracts the reflected-light map from the uncorrected capture frame before the circle cut. A live capture carries its map (and the focus position it was taken at); a saved TIFF finds it again through its *_capture.json sidecar."/>
+            <CheckBox x:Name="myCheckWb" Content="White balance" IsChecked="True" VerticalAlignment="Center"
+                      ToolTip="Applied right after the debayer, in float. 1 / 1 / 1 leaves the channels alone; the camera preset's balance can be typed in here."/>
+            <TextBlock Text=" R " VerticalAlignment="Center"/>
+            <TextBox x:Name="myTbWbR" Text="1.0" Width="48"/>
+            <TextBlock Text=" G " VerticalAlignment="Center"/>
+            <TextBox x:Name="myTbWbG" Text="1.0" Width="48"/>
+            <TextBlock Text=" B " VerticalAlignment="Center"/>
+            <TextBox x:Name="myTbWbB" Text="1.0" Width="48"/>
+            <CheckBox x:Name="myCheckDenoise" Content="Denoise (median 3x3)" IsChecked="True" VerticalAlignment="Center" Margin="16,0,0,0"/>
+            <CheckBox x:Name="myCheckFlatten" Content="Flatten illumination" IsChecked="True" VerticalAlignment="Center" Margin="16,0,0,0"
+                      ToolTip="Evens out the lamp's uneven entry into the eye per capture: the luminance is divided by its own large-scale estimate inside the ROI circle, same gain on R/G/B (colour kept), gain capped at 4x, outside the circle untouched."/>
+            <TextBlock Text=" sigma = " VerticalAlignment="Center"/>
+            <TextBox x:Name="myTbFlattenSigma" Text="0.035" Width="44" ToolTip="Blur radius of the illumination estimate as a fraction of the image width. Larger keeps more of the retina's own large structures; smaller flattens more aggressively."/>
+            <TextBlock Text=" x width, strength " VerticalAlignment="Center"/>
+            <TextBox x:Name="myTbFlattenStrength" Text="1.0" Width="40" ToolTip="1.0 = full correction, 0.5 = half way."/>
+            <TextBlock Text=" Brightness x " VerticalAlignment="Center" Margin="16,0,0,0"/>
+            <TextBox x:Name="myTbGain" Text="5.0" Width="44" ToolTip="Gain asked for on R, G and B after the white balance (exposure, not colour; WB 2/2/2 is the same thing). 1.0 = off. Ignored when Match circle median or Control from optic disc is on."/>
+            <CheckBox x:Name="myCheckDisc" Content="Control from optic disc" VerticalAlignment="Center" Margin="10,0,0,0"
+                      ToolTip="Replaces the fixed gain and Match circle median. Finds the optic disc before flatten and sets the gain so the disc p99 reaches the headroom and no higher. A specular point smaller than the disc does not decide the gain. Stop at saturation can still cut it."/>
+            <TextBox x:Name="myTbDiscHeadroom" Text="0.90" Width="40" ToolTip="How full the disc p99 may get. 0.90 = 90% of full scale (3686 of 4095). A value above 1 is a sensor value."/>
+            <CheckBox x:Name="myCheckDiscLocal" Content="Protect disc only" VerticalAlignment="Center" Margin="10,0,0,0"
+                      ToolTip="Keeps the chosen gain (fixed, Match circle median or Stop at saturation) everywhere, and around the optic disc compresses only what rises above the local retina level (linear knee on max(R,G,B), same factor on all channels) so the disc p99 lands at the headroom. Nothing falls below the retina level, so the peripapillary area keeps its brightness, no dark ring, and the disc does not clip. Fades out between 1.5x and blend x the disc radius."/>
+            <TextBlock Text=" blend " VerticalAlignment="Center"/>
+            <TextBox x:Name="myTbDiscBlend" Text="2.0" Width="34" ToolTip="Outer limit of the disc knee as a multiple of the disc radius (128 px at 3648); the retina level is read between 1.5x and this radius. 2.0 = 256 px."/>
+            <CheckBox x:Name="myCheckMatch" Content="Match circle median" IsChecked="True" VerticalAlignment="Center" Margin="10,0,0,0"
+                      ToolTip="Replaces the fixed gain with the gain that brings the circle median luminance to the target. Gain stays between 1 and 10. Ignored when Control from optic disc is on. Stop at saturation can still cut it."/>
+            <TextBox x:Name="myTbMatchTarget" Text="100" Width="40" ToolTip="Target median luminance in 8-bit display units. 110 of 255 is 1767 in 12-bit."/>
+            <CheckBox x:Name="myCheckAuto" Content="Stop at saturation" VerticalAlignment="Center" Margin="10,0,0,0"
+                      ToolTip="Cuts the gain back to the point where the brightest R/G/B inside the centred circle reaches the threshold, so the ROI never saturates. The whole image gets that gain; the corners outside the circle may clip."/>
+            <TextBlock Text=" ROI r = " VerticalAlignment="Center"/>
+            <TextBox x:Name="myTbRoiRatio" Text="0.5" Width="40" ToolTip="Circle radius as a fraction of the image width. 0.5 = the inscribed circle."/>
+            <TextBlock Text=" x width, threshold " VerticalAlignment="Center"/>
+            <TextBox x:Name="myTbAutoThreshold" Text="1.0" Width="46" ToolTip="Where saturation is taken to start: 1.0 = full scale (4095 for 12-bit), 0.9 = 90% of it. A value above 1 is read as a sensor value (e.g. 3800)."/>
+            <CheckBox x:Name="myCheckKnee" Content="Soft knee" IsChecked="True" VerticalAlignment="Center" Margin="10,0,0,0"
+                      ToolTip="Instead of clipping, rolls the top ~22% off (the Image Analysis curve). Usually not needed with Stop at saturation."/>
+            <CheckBox x:Name="myCheckGamma" Content="Gamma" IsChecked="True" VerticalAlignment="Center" Margin="10,0,0,0"
+                      ToolTip="Display encoding at the 8-bit step: value = (v / 4095) ^ (1 / gamma). Raises the mid-tones (10% -> 35% at 2.2) while full scale stays full scale, so a disc held at 90% stays unclipped. Off = linear x255/4095."/>
+            <TextBox x:Name="myTbGamma" Text="1.2" Width="36" ToolTip="2.2 is close to the sRGB curve a monitor decodes. 1.0 = linear."/>
+            <CheckBox x:Name="myCheckGammaOnValue" Content="on V" IsChecked="True" VerticalAlignment="Center" Margin="4,0,0,0"
+                      ToolTip="Unchecked: the gamma acts on each of R, G, B (display encoding; colour as the monitor decodes it). Checked: the gamma acts on V = max(R,G,B) and R, G, B are scaled by V'/V (Zhou 2018): channel ratios kept, no channel can clip, today's saturation kept."/>
+            <Button x:Name="myBtRun" Content="Run" Click="Run_Click" Padding="14,4" Margin="16,0,0,0" IsEnabled="False"/>
+            <Button x:Name="myBtCancel" Content="Cancel" Click="Cancel_Click" Padding="8,4" Margin="6,0,0,0" IsEnabled="False"/>
+            <Button x:Name="myBtSave" Content="Save selected stage (PNG / JPG)..." Click="Save_Click" Padding="8,4" Margin="6,0,0,0" IsEnabled="False"/>
+        </WrapPanel>
+        <TextBlock x:Name="myLbStatus" DockPanel.Dock="Top" Margin="0,0,0,6" TextWrapping="Wrap"
+                   Text="No input yet. Open a TIFF (_raw16.tiff or _rgb48.tiff) or take a Capture."/>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="330"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <ListBox x:Name="myListStages" Grid.Column="0" Margin="0,0,6,0" SelectionChanged="Stages_SelectionChanged"/>
+            <DockPanel Grid.Column="1" Margin="0,0,3,0">
+                <TextBlock x:Name="myLbOriginal" DockPanel.Dock="Top" Text="Original" FontWeight="Bold" Margin="0,0,0,4"/>
+                <Border Background="#181818">
+                    <Image x:Name="myImgOriginal" Stretch="Uniform"/>
+                </Border>
+            </DockPanel>
+            <DockPanel Grid.Column="2" Margin="3,0,0,0">
+                <TextBlock x:Name="myLbStage" DockPanel.Dock="Top" Text="Selected stage" FontWeight="Bold" Margin="0,0,0,4"/>
+                <Border Background="#181818">
+                    <Image x:Name="myImgStage" Stretch="Uniform"/>
+                </Border>
+            </DockPanel>
+        </Grid>
+    </DockPanel>
+</Window>

@@ -116,7 +116,8 @@ namespace wso_device
 	constexpr int MOTOR_MOVE_INIT_COUNT = 100;
 
 	constexpr int MOTOR_OCT_FOCUS_STEPS_PER_DIOPTER = 210;
-	constexpr int MOTOR_LSO_FOCUS_STEPS_PER_DIOPTER = 224;
+	// 21500 counts from the 0 D position (8500) to either end of -13000..30000, over 15 D.
+	constexpr int MOTOR_LSO_FOCUS_STEPS_PER_DIOPTER = 1433;
 	constexpr int MOTOR_OCT_POLAR_STEPS_PER_DEGREE = 40; // 4;
 
 	constexpr float MOTOR_LSO_FOCUS_DIOPTER_RANGE = 30.0f;

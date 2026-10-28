@@ -39,6 +39,12 @@
     <ClInclude Include="StopWatch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CvAdjust.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+	<ClInclude Include="CvAdjustExports.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="CvImage.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -84,6 +90,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="StopWatch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CvAdjust.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+	<ClCompile Include="CvAdjustExports.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CvImage.cpp">

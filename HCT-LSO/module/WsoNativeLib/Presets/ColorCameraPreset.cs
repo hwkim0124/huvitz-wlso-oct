@@ -138,6 +138,10 @@ namespace WsoNativeLib.Presets
 
         // --- A-1 extension ------------------------------------------------------------
         public string ExposureAuto { get; set; } = NotStated;
+        // White-balance ratios written to BalanceRatio (Red / Blue). Negative = not stated:
+        // the camera keeps whatever it holds. 1.0 / 1.0 is what the DevKit leaves.
+        public double BalanceRatioRed { get; set; } = 1.58;
+        public double BalanceRatioBlue { get; set; } = 1.84;
         public string BinningSelector { get; set; } = NotStated;
         public string BinningHorizontalMode { get; set; } = NotStated;
         public string BinningVerticalMode { get; set; } = NotStated;
@@ -300,6 +304,8 @@ namespace WsoNativeLib.Presets
                 && AdcDepthIndex == other.AdcDepthIndex
                 && TriggerDelayUs.Equals(other.TriggerDelayUs)
                 && string.Equals(ExposureAuto, other.ExposureAuto, StringComparison.Ordinal)
+                && BalanceRatioRed.Equals(other.BalanceRatioRed)
+                && BalanceRatioBlue.Equals(other.BalanceRatioBlue)
                 && string.Equals(BinningSelector, other.BinningSelector, StringComparison.Ordinal)
                 && string.Equals(BinningHorizontalMode, other.BinningHorizontalMode, StringComparison.Ordinal)
                 && string.Equals(BinningVerticalMode, other.BinningVerticalMode, StringComparison.Ordinal)
@@ -342,6 +348,8 @@ namespace WsoNativeLib.Presets
             TriggerDelayUs = source.TriggerDelayUs;
 
             ExposureAuto = source.ExposureAuto;
+            BalanceRatioRed = source.BalanceRatioRed;
+            BalanceRatioBlue = source.BalanceRatioBlue;
             BinningSelector = source.BinningSelector;
             BinningHorizontalMode = source.BinningHorizontalMode;
             BinningVerticalMode = source.BinningVerticalMode;
@@ -402,6 +410,8 @@ namespace WsoNativeLib.Presets
         {
             LsoColorCameraExtendedParam param = LsoColorCameraExtendedParam.Create();
             param.exposureAuto = ExposureAuto;
+            param.balanceRatioRed = BalanceRatioRed;
+            param.balanceRatioBlue = BalanceRatioBlue;
             param.binningSelector = BinningSelector;
             param.binningHorizontalMode = BinningHorizontalMode;
             param.binningVerticalMode = BinningVerticalMode;
@@ -451,6 +461,8 @@ namespace WsoNativeLib.Presets
         // the operator wrote into a blank.
         public void ApplyExtendedParam(LsoColorCameraExtendedParam param)
         {
+            if (param.balanceRatioRed >= 0.0) { BalanceRatioRed = param.balanceRatioRed; }
+            if (param.balanceRatioBlue >= 0.0) { BalanceRatioBlue = param.balanceRatioBlue; }
             ExposureAuto = Stated(param.exposureAuto, ExposureAuto);
             BinningSelector = Stated(param.binningSelector, BinningSelector);
             BinningHorizontalMode = Stated(param.binningHorizontalMode, BinningHorizontalMode);
@@ -536,6 +548,8 @@ namespace WsoNativeLib.Presets
                 // R round-trips a double exactly, for the same reason.
                 new XElement(nameof(TriggerDelayUs), TriggerDelayUs.ToString("R", CultureInfo.InvariantCulture)),
                 Text(nameof(ExposureAuto), ExposureAuto),
+                new XElement(nameof(BalanceRatioRed), BalanceRatioRed.ToString("R", CultureInfo.InvariantCulture)),
+                new XElement(nameof(BalanceRatioBlue), BalanceRatioBlue.ToString("R", CultureInfo.InvariantCulture)),
                 Text(nameof(BinningSelector), BinningSelector),
                 Text(nameof(BinningHorizontalMode), BinningHorizontalMode),
                 Text(nameof(BinningVerticalMode), BinningVerticalMode),
@@ -595,6 +609,14 @@ namespace WsoNativeLib.Presets
 
             bool migrating = fileVersion < FirstExtendedFormatVersion;
             ExposureAuto = ReadText(root, nameof(ExposureAuto), ExposureAuto, presetName, issues, migrating);
+            if (root.Element(nameof(BalanceRatioRed)) != null)
+            {
+                BalanceRatioRed = ReadDouble(root, nameof(BalanceRatioRed), BalanceRatioRed, presetName, issues);
+            }
+            if (root.Element(nameof(BalanceRatioBlue)) != null)
+            {
+                BalanceRatioBlue = ReadDouble(root, nameof(BalanceRatioBlue), BalanceRatioBlue, presetName, issues);
+            }
             BinningSelector = ReadText(root, nameof(BinningSelector), BinningSelector, presetName, issues, migrating);
             BinningHorizontalMode = ReadText(root, nameof(BinningHorizontalMode), BinningHorizontalMode, presetName, issues, migrating);
             BinningVerticalMode = ReadText(root, nameof(BinningVerticalMode), BinningVerticalMode, presetName, issues, migrating);

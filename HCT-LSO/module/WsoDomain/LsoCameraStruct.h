@@ -61,7 +61,7 @@ namespace wso_domain
 	constexpr int LSO_CAMERA_LINE_COUNT = 4;
 	constexpr int LSO_CAMERA_NAME_MAX = 32;
 	constexpr int LSO_CAMERA_FIELD_MAX = 40;
-	constexpr unsigned int LSO_CAMERA_CONFIG_VERSION = 1;
+	constexpr unsigned int LSO_CAMERA_CONFIG_VERSION = 2;
 
 	// One GPIO line row (Line0..Line3). LineSelector is the row index, not a stored field,
 	// so a single Line value and the four-row table cannot disagree.
@@ -96,6 +96,8 @@ namespace wso_domain
 		char triggerOverlap[LSO_CAMERA_NAME_MAX];
 		char lineSelector[LSO_CAMERA_NAME_MAX];  // which row the editor left selected
 		ColorCameraLineConfig lines[LSO_CAMERA_LINE_COUNT];
+		double balanceRatioRed = -1.0;           // negative = not stated
+		double balanceRatioBlue = -1.0;          // negative = not stated
 	};
 
 	// What actually happened to one node. A setter that returned without throwing is NOT
@@ -197,7 +199,7 @@ namespace wso_domain
 	// ABI sizes, pinned so the managed mirror can assert the same numbers without loading
 	// the DLL. A field added or reordered breaks these here and in TestCameraPreset.
 	constexpr unsigned int LSO_CAMERA_LINE_CONFIG_SIZE = 68;
-	constexpr unsigned int LSO_CAMERA_EXTENDED_PARAM_SIZE = 696;
+	constexpr unsigned int LSO_CAMERA_EXTENDED_PARAM_SIZE = 712;
 	constexpr unsigned int LSO_CAMERA_FIELD_RESULT_SIZE = 100;
 	constexpr unsigned int LSO_CAMERA_APPLY_RESULT_SIZE = 4016;
 
@@ -332,6 +334,7 @@ namespace wso_domain
 		// survives the start instead of being replaced by setupHwTriggerSetting()'s
 		// constants. Fields it leaves unstated stay owned by that start path.
 		ColorCameraExtendedParam cameraExt;
+		unsigned char fundusMode = 0;               // 0x6000 byte2: ColorW by default
 	};
 
 	// Request for the fundus preview one-call. Same ownership rule as the capture request:
@@ -390,10 +393,11 @@ namespace wso_domain
 		// (capture::resolvePreviewCameraConfig): with the trigger group owned by the preset
 		// the camera start only arms, so the block is what actually writes the node.
 		ColorCameraExtendedParam cameraExt;
+		unsigned char fundusMode = 1;               // 0x6000 byte2: PreviewIR
 	};
 
-	constexpr unsigned int LSO_FUNDUS_CAPTURE_REQUEST_SIZE = 832;
-	constexpr unsigned int LSO_FUNDUS_PREVIEW_REQUEST_SIZE = 840;
+	constexpr unsigned int LSO_FUNDUS_CAPTURE_REQUEST_SIZE = 856;
+	constexpr unsigned int LSO_FUNDUS_PREVIEW_REQUEST_SIZE = 864;
 
 	static_assert(sizeof(LsoFundusCaptureRequest) == LSO_FUNDUS_CAPTURE_REQUEST_SIZE,
 		"LsoFundusCaptureRequest ABI changed - update the managed mirror and pinned offsets");
@@ -406,6 +410,7 @@ namespace wso_domain
 	static_assert(offsetof(LsoFundusCaptureRequest, restoreLightMode) == 32);
 	static_assert(offsetof(LsoFundusCaptureRequest, profile) == 44);
 	static_assert(offsetof(LsoFundusCaptureRequest, cameraExt) == 136);
+	static_assert(offsetof(LsoFundusCaptureRequest, fundusMode) == 848);
 	static_assert(offsetof(LsoFundusPreviewRequest, sequenceMode) == 12);
 	static_assert(offsetof(LsoFundusPreviewRequest, preMoveOffset) == 16);
 	static_assert(offsetof(LsoFundusPreviewRequest, preMoveDelayUs) == 18);
@@ -413,6 +418,7 @@ namespace wso_domain
 	static_assert(offsetof(LsoFundusPreviewRequest, restoreLightMode) == 32);
 	static_assert(offsetof(LsoFundusPreviewRequest, profile) == 52);
 	static_assert(offsetof(LsoFundusPreviewRequest, cameraExt) == 144);
+	static_assert(offsetof(LsoFundusPreviewRequest, fundusMode) == 856);
 
 	struct LsoCaptureFrameROI
 	{
@@ -443,11 +449,40 @@ namespace wso_domain
 		int colorRadius = 0;
 	};
 
+	// Which channel the adjusted image is displayed through. A single channel is shown as
+	// grayscale, so GREEN alone is the red-free view.
+	enum LsoChannelView : int
+	{
+		CH_VIEW_RGB = 0,
+		CH_VIEW_RED = 1,
+		CH_VIEW_GREEN = 2,
+		CH_VIEW_BLUE = 3,
+	};
+
+	// Result codes for the image adjust one-call. Same numbering as ColorCaptureStage.
+	enum ImageAdjustResult : int
+	{
+		ADJ_OK = 0,
+		ADJ_PARAM = 2,
+		ADJ_FAULT = 9,
+	};
+
 	//Image Adjust Setting
+	// Display-only. Every value is normalized so one preset serves both 8-bit and 16-bit
+	// images; none of them depend on the pixel depth.
 	struct LsoImageAdjust
 	{
-		int brightness = 0;
+		int   brightness = 0;		// -100..100, additive offset in % of full scale
+		int   contrast = 0;			// -100..100, gain about mid-scale
+		float gamma = 1.0f;			// 0.1..5.0, 1.0 = neutral
+		int   sharpness = 0;		// -100..100, >0 unsharp mask, <0 smoothing
+		int   saturation = 0;		// -100..100, -100 = grayscale
+		int   channelView = 0;		// LsoChannelView
 	};
+
+	// The C# mirror (WsoNativeLib LsoImageAdjustParam) pins the same literal, so drift on
+	// either side fails one of the two checks.
+	static_assert(sizeof(LsoImageAdjust) == 24, "LsoImageAdjust size must match its C# mirror");
 
 	struct LsoCaptureFrameROIPreset
 	{

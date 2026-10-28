@@ -40,6 +40,7 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="26"/>
                         <RowDefinition Height="26"/>
+                        <RowDefinition Height="22"/>
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="72"/>
@@ -56,7 +57,9 @@
                         <TextBox x:Name="myTbAnteriorExposure" Style="{StaticResource TextBoxS2Style}" Width="54"
                                  ToolTip="Exposure time. Enter applies it." KeyDown="myTbAnteriorValue_KeyDown"/>
                         <Button x:Name="myBtAnteriorApply" Content="Set" Style="{StaticResource ButtonS1Style}" Width="38" Margin="4,0,0,0" Click="myBtAnteriorApply_Click"/>
+                        <Button x:Name="myBtAnteriorApplyAll" Content="Set All" Style="{StaticResource ButtonS1Style}" Width="52" Margin="4,0,0,0" ToolTip="Apply this Gain / Exp to Lower, Left and Right" Click="myBtAnteriorApplyAll_Click"/>
                     </StackPanel>
+                    <TextBlock x:Name="myLbAnteriorResult" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" FontSize="11" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                 </Grid>
             </GroupBox>
         </StackPanel>
@@ -91,11 +94,23 @@
                             <Button x:Name="myBtCapture" Style="{StaticResource ButtonM1Style}" Content="Capture" Margin="8,0,0,0" Click="myBtCapture_Click"/>
                             <Button x:Name="myBtCorneaStart" Style="{StaticResource ButtonM1Style}" Content="Start Cornea" Margin="8,0,0,0" Click="myBtCorneaStart_Click"/>
                             <Button x:Name="myBtImageAdjust" Style="{StaticResource ButtonM1Style}" Content="Image Adjust" Margin="8,0,0,0" Click="myBtImageAdjust_Click"/>
+                            <!-- Draft postprocessing review (a TIFF or the latest capture): debayer, WB, median, 8-bit. -->
+                            <Button x:Name="myBtPostProcess" Style="{StaticResource ButtonM1Style}" Content="Post Process" Margin="8,0,0,0" Click="myBtPostProcess_Click"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
                             <CheckBox x:Name="myCheckAlignGuide" Style="{StaticResource CheckBoxStyle}" Content="Align Guide" VerticalAlignment="Center"
                                       IsChecked="False" Checked="myCheckAlignGuide_CheckedNUnchecked" Unchecked="myCheckAlignGuide_CheckedNUnchecked"/>
                             <Button x:Name="myBtSettings" Style="{StaticResource ButtonM1Style}" Content="Settings" Margin="16,0,0,0" Click="myBtSettings_Click"/>
+                            <Button Content="Image Analysis" Style="{StaticResource ButtonM1Style}" Margin="8,0,0,0" Click="myBtImageAnalysis_Click"/>
+                            <!-- DevKit "LiveCapture": Capture repeated back to back with the Capture preset,
+                                 so a Row 0 offset nudge or a calibration change shows on the next frame. -->
+                            <Button x:Name="myBtLiveCapture" Style="{StaticResource ButtonM1Style}" Content="Live Capture" Margin="8,0,0,0"
+                                    ToolTip="Runs Capture again as soon as the previous one completes, with the selected Mode's Capture preset as it is at that moment. Click again to stop after the current frame."
+                                    Click="myBtLiveCapture_Click"/>
+                            <!-- DevKit "Zoom Area View": magnified live ROI in its own window. -->
+                            <ToggleButton x:Name="myToggleZoomView" Content="Zoom View" Width="96" Height="26" Margin="8,0,0,0" VerticalAlignment="Center"
+                                          ToolTip="Opens the Zoom Area View: drag the ROI label on the preview to move it, or Select Area to draw a new one."
+                                          Click="myToggleZoomView_Click"/>
                         </StackPanel>
                     </StackPanel>
                 </GroupBox>
@@ -120,10 +135,27 @@
                         <Label Grid.Row="0" Grid.Column="0" Content="Preview :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
                         <ComboBox x:Name="myCbPreviewPreset" Grid.Row="0" Grid.Column="1" Style="{StaticResource ComboBoxStyle}" Width="140" IsEditable="True" ToolTip="Preview camera preset. Type a name and Save As to add one." SelectionChanged="myCbPreviewPreset_SelectionChanged"/>
                         <Button Grid.Row="0" Grid.Column="2" Content="Save As" Style="{StaticResource ButtonS1Style}" Width="56" HorizontalAlignment="Left" Margin="4,0,0,0" Click="myBtPreviewPresetSaveAs_Click"/>
+                        <!-- A DevKit folder becomes two new presets (Preview + Color Capture). It acts on the
+                             group, not on the Preview row, so it sits at the group's right edge. -->
+                        <Button x:Name="myBtImportDevKit" Grid.Row="0" Grid.Column="2" Content="Import DevKit&#x2026;" Style="{StaticResource ButtonS1Style}" Width="100" HorizontalAlignment="Right"
+                                ToolTip="Import a DevKit folder (LsoPatternCfg + CameraConfigs) as two new presets: Preview and the Color Capture. Every field, warning and rejection is shown first; nothing is written until Save, and existing presets are never overwritten."
+                                Click="myBtImportDevKit_Click"/>
                         <Label Grid.Row="1" Grid.Column="0" Content="Mode :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
                         <ComboBox x:Name="myCbCaptureImageMode" Grid.Row="1" Grid.Column="1" Style="{StaticResource ComboBoxStyle}" Width="140"
-                                  ToolTip="Capture image mode. Each mode keeps its own Capture preset (WsoDeviceCfg.ini [MODE_PRESET] CapturePreset.&lt;Mode&gt;; Color uses CapturePreset)."
+                                  ToolTip="Capture image mode - only the modes this instrument can image (Color, IR, BlueFaf, GreenFaf). Each mode keeps its own Capture preset (WsoDeviceCfg.ini [MODE_PRESET] CapturePreset.&lt;Mode&gt;; Color uses CapturePreset)."
                                   SelectionChanged="myCbCaptureImageMode_SelectionChanged"/>
+                        <!-- Color illumination (White = fundus_mode 0, RGB = 3) and the read-only
+                             mode summary of the selected mode, in the Mode row's third column. -->
+                        <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="4,0,0,0">
+                            <Label x:Name="myLbColorIllumination" Content="Illum.:" Style="{StaticResource LabelStyle}" VerticalAlignment="Center"/>
+                            <ComboBox x:Name="myCbColorIllumination" Style="{StaticResource ComboBoxStyle}" Width="70" VerticalAlignment="Center"
+                                      ToolTip="Color illumination: White (fundus_mode 0, default) or RGB (fundus_mode 3). Enabled only when Mode is Color."
+                                      SelectionChanged="myCbColorIllumination_SelectionChanged"/>
+                            <!-- Read-only: lamp, filter, frames and post-processing of the selected mode. -->
+                            <Label x:Name="myLbModeSummary" Content="" Style="{StaticResource LabelStyle}"
+                                   VerticalAlignment="Center" Margin="8,0,0,0"
+                                   ToolTip="What the selected mode captures: lamp (intensity; 'board' = the board's current value), filter, frames per capture (AcqFrameSize x SubFrameSize) and the processing applied after the flat-field."/>
+                        </StackPanel>
                         <Label Grid.Row="2" Grid.Column="0" Content="Capture :" Style="{StaticResource LabelStyle}" HorizontalAlignment="Left"/>
                         <ComboBox x:Name="myCbCapturePreset" Grid.Row="2" Grid.Column="1" Style="{StaticResource ComboBoxStyle}" Width="140" IsEditable="True" ToolTip="Capture preset of the selected Mode. Type a name and Save As to add one." SelectionChanged="myCbCapturePreset_SelectionChanged"/>
                         <Button Grid.Row="2" Grid.Column="2" Content="Save As" Style="{StaticResource ButtonS1Style}" Width="56" HorizontalAlignment="Left" Margin="4,0,0,0" Click="myBtCapturePresetSaveAs_Click"/>
@@ -152,9 +184,9 @@
                         <TextBox x:Name="myTbFixationCol" Grid.Row="1" Grid.Column="4" Style="{StaticResource TextBoxS2Style}" HorizontalAlignment="Center" KeyDown="myTbFixationCol_KeyDown"/>
                         <RadioButton x:Name="myRbSideOD" Grid.Row="2" Grid.Column="0" GroupName="groupFixationEyeSide" Content="OD" Style="{StaticResource RadioButtonStyle}" IsChecked="True"/>
                         <RadioButton x:Name="myRbSideOS" Grid.Row="2" Grid.Column="1" GroupName="groupFixationEyeSide" Content="OS" Style="{StaticResource RadioButtonStyle}"/>
-                        <Button x:Name="myBtFixationFundus" Grid.Row="2" Grid.Column="2" Content="Fundus" Style="{StaticResource ButtonS1Style}" Width="50" Click="myBtFixationFundus_Click"/>
-                        <Button x:Name="myBtFixationMarcular" Grid.Row="2" Grid.Column="3" Content="Macular" Style="{StaticResource ButtonS1Style}" Width="56" Click="myBtFixationMarcular_Click"/>
-                        <Button x:Name="myBtFixationDisc" Grid.Row="2" Grid.Column="4" Content="Disc" Style="{StaticResource ButtonS1Style}" Width="50" Click="myBtFixationDisc_Click"/>
+                        <Button x:Name="myBtFixationFundus" Grid.Row="2" Grid.Column="2" Content="Fundus" Style="{StaticResource ButtonS1Style}" Width="50" Click="myBtFixationFundus_Click" ToolTip="LCD centre: row 160, col 120 (both eyes)"/>
+                        <Button x:Name="myBtFixationMarcular" Grid.Row="2" Grid.Column="3" Content="Macular" Style="{StaticResource ButtonS1Style}" Width="56" Click="myBtFixationMarcular_Click" ToolTip="LCD centre: row 160, col 120 (both eyes)"/>
+                        <Button x:Name="myBtFixationDisc" Grid.Row="2" Grid.Column="4" Content="Disc" Style="{StaticResource ButtonS1Style}" Width="50" Click="myBtFixationDisc_Click" ToolTip="Optic-disc preset of the system configuration for the selected eye (OD / OS)"/>
                     </Grid>
                 </GroupBox>
             </Grid>
@@ -344,6 +376,26 @@
                                    ToolTip="Sweep the stored Start / End describes."/>
                         </StackPanel>
 
+                        <!-- DevKit "FOV Slit Calibration": how the board table of the selected mode
+                             preset is built. Calibrated generates it from the galvo-slit calibration
+                             at every install, from the current Lead / Tail / Pattern Size. -->
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                            <Label Content="Trajectory :" Style="{StaticResource LabelStyle}" VerticalAlignment="Center"/>
+                            <ComboBox x:Name="myCbTrajectoryMode" Style="{StaticResource ComboBoxStyle}" Width="170" VerticalAlignment="Center"
+                                      ToolTip="Linear: Start -> End at a constant DAC step (or the preset's CSV). Calibrated FOV Curve: the slit steps evenly over the sensor rows through the fitted DAC(row) of the calibration file; Start/End then follow the fit's ends."
+                                      SelectionChanged="myCbTrajectoryMode_SelectionChanged">
+                                <ComboBoxItem Content="Linear DAC Sweep" IsSelected="True"/>
+                                <ComboBoxItem Content="Calibrated FOV Curve"/>
+                            </ComboBox>
+                            <Button x:Name="myBtFovCalibration" Content="FOV Calibration..." Style="{StaticResource ButtonS1Style}" Width="110" Margin="6,0,0,0"
+                                    ToolTip="Measure the slit row at galvo positions (Alignment mode), fit DAC(row) and use it in the selected mode preset."
+                                    Click="myBtFovCalibration_Click"/>
+                            <Button x:Name="myBtReflectedLightCal" Content="Reflected Light Cal..." Style="{StaticResource ButtonS1Style}" Width="140" Margin="6,0,0,0"
+                                    ToolTip="Measure the White capture reflected-light map across focus positions. Cover the objective with black cloth before starting."
+                                    Click="myBtReflectedLightCal_Click"/>
+                            <Label x:Name="myLbTrajectoryStatus" Content="" Style="{StaticResource LabelStyle}" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+
                         <!-- Illumination and camera gain: what makes the slit visible while aligning.
                              Neither is written to the preset - they are viewing aids. -->
                         <StackPanel x:Name="myPanelAlignLight" Orientation="Horizontal" Margin="0,4,0,0" IsEnabled="False">
@@ -410,6 +462,11 @@
                                      KeyDown="myTbSync_KeyDown" LostFocus="myTbSync_LostFocus"/>
                             <Label x:Name="myLbSyncBlankUs" Content="(- us)" Style="{StaticResource LabelStyle}" Margin="2,0,0,0" VerticalAlignment="Center"
                                    ToolTip="Row 0 offset time = Row0 Ofs x Line Time."/>
+                            <!-- DevKit "Offset Nudge": step the Row 0 offset and recalculate (Auto). -->
+                            <Button Content="-10" Tag="-10" Style="{StaticResource ButtonS1Style}" Width="32" MinWidth="32" Margin="4,0,0,0" ToolTip="Row 0 offset -10 rows" Click="myBtSyncNudge_Click"/>
+                            <Button Content="-1" Tag="-1" Style="{StaticResource ButtonS1Style}" Width="28" MinWidth="28" Margin="2,0,0,0" ToolTip="Row 0 offset -1 row" Click="myBtSyncNudge_Click"/>
+                            <Button Content="+1" Tag="1" Style="{StaticResource ButtonS1Style}" Width="28" MinWidth="28" Margin="2,0,0,0" ToolTip="Row 0 offset +1 row" Click="myBtSyncNudge_Click"/>
+                            <Button Content="+10" Tag="10" Style="{StaticResource ButtonS1Style}" Width="32" MinWidth="32" Margin="2,0,0,0" ToolTip="Row 0 offset +10 rows" Click="myBtSyncNudge_Click"/>
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
@@ -487,7 +544,25 @@
                                     Click="myBtSyncApply_Click"/>
                         </StackPanel>
 
+                        <!-- LSO_TRIG_MODE (0x4007), the same board-global setting the DevKit LED
+                             window exposes as "Flash Trig Mode": 0 Traj.Controller, 1 Camera. -->
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                            <Label Content="Trig mode :" Style="{StaticResource LabelStyle}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            <ComboBox x:Name="myCbLsoTriggerMode" Style="{StaticResource ComboBoxStyle}" Width="170" VerticalAlignment="Center"
+                                      ToolTip="LSO_TRIG_MODE command 0x4007 (board-global, as in the DevKit LED window). Traj.Controller (0): the trajectory controller runs the scan. Camera (1): the camera triggers the scan."
+                                      SelectionChanged="myCbLsoTriggerMode_SelectionChanged">
+                                <ComboBoxItem Content="Traj.Controller (0)" IsSelected="True"/>
+                                <ComboBoxItem Content="Camera (1)"/>
+                            </ComboBox>
+                        </StackPanel>
+
                         <Label x:Name="myLbSyncStatus" Content="" Style="{StaticResource LabelStyle}" Margin="0,2,0,0"/>
+
+                        <!-- DevKit "Quantitative Synchronization & Alignment Metrics", beside the
+                             timing fields it follows: Row 0 centering error, slit overlap, active
+                             sweep and decel margin. Recomputed with every recalculation. -->
+                        <TextBlock x:Name="myTbAlignMetrics" Margin="0,3,0,0" FontSize="11" TextWrapping="Wrap"
+                                   ToolTip="DevKit alignment metrics for the selected mode preset. Updated whenever the scan timing is recalculated."/>
                     </StackPanel>
                 </GroupBox>
 

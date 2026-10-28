@@ -144,6 +144,7 @@
                         <RowDefinition Height="34"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="34"/>
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="152"/>
@@ -186,6 +187,15 @@
                                  KeyDown="myTb_KeyDown"/>
                         <Label x:Name="myLbDeviceLinkThroughputRange" HorizontalAlignment="Center" Padding="0" FontSize="10" Foreground="#FF888888"/>
                     </StackPanel>
+                    <Label Grid.Row="5" Grid.Column="0" Content="White Balance R : " Style="{StaticResource LabelStyle}"/>
+                    <TextBox Grid.Row="5" Grid.Column="1" x:Name="myTbBalanceRatioRed" Style="{StaticResource TextBoxM1Style}" HorizontalAlignment="Center"
+                             ToolTip="BalanceRatio Red written to the camera (DevKit: 1.0, old Toolkit default: 1.58). Empty = leave the camera value. A camera that hides the white-balance nodes (ISP off) ignores it."
+                             KeyDown="myTb_KeyDown"/>
+                    <Label Grid.Row="5" Grid.Column="2" Content="White Balance B : " Style="{StaticResource LabelStyle}"/>
+                    <TextBox Grid.Row="5" Grid.Column="3" x:Name="myTbBalanceRatioBlue" Style="{StaticResource TextBoxM1Style}" HorizontalAlignment="Center"
+                             ToolTip="BalanceRatio Blue written to the camera (DevKit: 1.0, old Toolkit default: 1.84). Empty = leave the camera value."
+                             KeyDown="myTb_KeyDown"/>
+
                     <TextBlock Grid.Row="4" Grid.Column="2" Grid.ColumnSpan="2" x:Name="myTbCapabilityNote" TextWrapping="Wrap"
                                VerticalAlignment="Center" Margin="6,0,6,0" FontSize="11" Foreground="#FF888888"/>
                 </Grid>

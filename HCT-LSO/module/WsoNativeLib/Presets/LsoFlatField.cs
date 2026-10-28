@@ -185,7 +185,8 @@ namespace WsoNativeLib.Presets
         }
 
         // Binary PGM (P5), 8-bit or 16-bit (big-endian, per the format); '#' comments allowed.
-        private static bool TryReadPgm(string path, out int width, out int height, out ushort[] values, out string error)
+        internal static bool TryReadPgm(string path, out int width, out int height, out ushort[] values,
+            out string error, int? expectedMaxValue = null)
         {
             width = height = 0;
             values = Array.Empty<ushort>();
@@ -223,6 +224,11 @@ namespace WsoNativeLib.Presets
             width = header[0];
             height = header[1];
             int maxValue = header[2];
+            if (expectedMaxValue.HasValue && maxValue != expectedMaxValue.Value)
+            {
+                error = $"PGM '{System.IO.Path.GetFileName(path)}' maxval {maxValue} != {expectedMaxValue.Value}.";
+                return false;
+            }
             int bytesPerValue = maxValue < 256 ? 1 : 2;
             pos++; // the single whitespace after maxval
             long needed = (long)width * height * bytesPerValue;
@@ -242,6 +248,72 @@ namespace WsoNativeLib.Presets
 
             error = string.Empty;
             return true;
+        }
+
+        // Do not buffer past the header: set discovery must not read every point's pixels.
+        internal static bool TryReadPgmHeader(string path, out int width, out int height,
+            out string error, int expectedMaxValue)
+        {
+            width = height = 0;
+            try
+            {
+                using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 1);
+                string? NextHeaderToken()
+                {
+                    int value;
+                    while ((value = stream.ReadByte()) >= 0)
+                    {
+                        if (value == '#')
+                        {
+                            while ((value = stream.ReadByte()) >= 0 && value != '\n') { }
+                        }
+                        else if (!char.IsWhiteSpace((char)value)) break;
+                    }
+                    var token = new System.Text.StringBuilder();
+                    while (value >= 0 && !char.IsWhiteSpace((char)value))
+                    {
+                        token.Append((char)value);
+                        value = stream.ReadByte();
+                    }
+                    return value >= 0 && token.Length > 0 ? token.ToString() : null;
+                }
+
+                string name = System.IO.Path.GetFileName(path);
+                if (NextHeaderToken() != "P5")
+                {
+                    error = $"PGM '{name}' is not a binary PGM (P5).";
+                    return false;
+                }
+                var header = new int[3];
+                for (int i = 0; i < header.Length; i++)
+                {
+                    if (!int.TryParse(NextHeaderToken(), out header[i]) || header[i] <= 0)
+                    {
+                        error = $"PGM '{name}' has a broken PGM header.";
+                        return false;
+                    }
+                }
+                width = header[0];
+                height = header[1];
+                if (header[2] != expectedMaxValue)
+                {
+                    error = $"PGM '{name}' maxval {header[2]} != {expectedMaxValue}.";
+                    return false;
+                }
+                if (stream.Length - stream.Position != (long)width * height * 2)
+                {
+                    error = $"PGM '{name}' is truncated or has an unexpected PGM payload length.";
+                    return false;
+                }
+                error = string.Empty;
+                return true;
+            }
+            catch (Exception e) when (e is IOException || e is UnauthorizedAccessException || e is ArgumentException
+                || e is NotSupportedException)
+            {
+                error = $"PGM '{path}' could not be read: {e.Message}";
+                return false;
+            }
         }
 
         private static string? NextToken(byte[] data, ref int pos)

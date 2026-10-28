@@ -106,6 +106,7 @@ namespace WsoNativeLib.Presets
             if (mode == ColorCameraPresetMode.Capture && CaptureImageMode != LsoImageMode.Color)
             {
                 LsoImageModes.ApplySeedOptics(CaptureImageMode, seed);
+                seed.Scan.AcqFrameSize = LsoImageModes.SeedFrameCount(CaptureImageMode);
             }
             return seed;
         }
@@ -137,6 +138,67 @@ namespace WsoNativeLib.Presets
 
             Preview = LoadSelected(ColorCameraPresetMode.Preview);
             Capture = LoadSelected(ColorCameraPresetMode.Capture);
+        }
+
+        // Toolkit, after Load: every other mode this instrument can image gets its seed preset
+        // and, when the INI names none yet, a selection pointing at it - so the Agent's
+        // read-only load finds the mode mapped instead of refusing it as never set up. An
+        // existing selection is the operator's and is never replaced. Kept out of Load so a
+        // plain Load still writes nothing beyond the Preview/Capture pair it always owned.
+        public void SeedAvailableModes()
+        {
+            var seeded = new List<string>();
+            LsoImageMode bound = CaptureImageMode;
+            try
+            {
+                foreach (LsoImageMode mode in LsoImageModes.Available)
+                {
+                    if (mode == LsoImageMode.Color)
+                    {
+                        continue; // "Capture" is seeded and selected by Load itself
+                    }
+
+                    CaptureImageMode = mode;
+                    string name = DefaultName(ColorCameraPresetMode.Capture);
+                    if (!File.Exists(PathOf(name))
+                        && WritePreset(NewSeed(ColorCameraPresetMode.Capture, name), name))
+                    {
+                        seeded.Add(name);
+                    }
+
+                    if (!HasSelection(ColorCameraPresetMode.Capture))
+                    {
+                        WriteSelectedName(ColorCameraPresetMode.Capture, name);
+                    }
+                }
+            }
+            finally
+            {
+                CaptureImageMode = bound;
+            }
+
+            if (seeded.Count > 0)
+            {
+                _issues.Add($"Mode presets {string.Join(", ", seeded)} were created from the built-in defaults "
+                    + "(each mode's filter, lamp and frame count). Tune their intensity and gain before use.");
+            }
+        }
+
+        // An unreadable INI counts as "has a selection": when in doubt, do not overwrite.
+        private bool HasSelection(ColorCameraPresetMode mode)
+        {
+            try
+            {
+                var ini = new IniFileUtil(_configIniPath);
+                string value = ini.ReadString(IniSectionName, SelectionKey(mode), MissingSelectionMarker);
+                return !string.Equals(value, MissingSelectionMarker, StringComparison.Ordinal)
+                    && !string.IsNullOrWhiteSpace(value);
+            }
+            catch (Exception e) when (e is IOException || e is UnauthorizedAccessException || e is ArgumentException)
+            {
+                _issues.Add($"The {mode} preset selection could not be read from '{_configIniPath}': {e.Message}");
+                return true;
+            }
         }
 
         // Read-only consumption for a process that does NOT own these files - the acquisition

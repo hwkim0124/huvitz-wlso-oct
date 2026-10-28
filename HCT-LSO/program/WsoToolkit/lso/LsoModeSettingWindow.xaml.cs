@@ -10,6 +10,7 @@ using WsoNativeLib;
 using WsoNativeLib.Presets;
 using WsoToolkit.utils;
 using static WsoNativeLib.WsoDevice;
+using static WsoNativeLib.WsoLsoDefs;
 using static WsoNativeLib.WsoLsoScan;
 using static WsoToolkit.utils.NumberUtil;
 
@@ -204,6 +205,40 @@ namespace WsoToolkit
                 myLbFlatField.ToolTip = string.IsNullOrWhiteSpace(postProcess.FlatFieldFile)
                     ? "Raw Bayer PGM of a uniform target shot with this preset (e.g. lsotune capture's frame.pgm)."
                     : postProcess.FlatFieldFile;
+
+                myCheckReflectedLight.IsChecked = postProcess.ReflectedLightEnabled;
+                // A switch already stated in the preset stays clickable outside White capture, so it
+                // can still be turned off; captures in those modes run without the removal.
+                bool eligible = _mode == ColorCameraPresetMode.Capture
+                    && _model.ModePresets.CaptureImageMode == LsoImageMode.Color
+                    && Preset.ColorIllumination == ColorIllumination.White;
+                myCheckReflectedLight.IsEnabled = eligible || postProcess.ReflectedLightEnabled;
+                myCheckReflectedLight.ToolTip = eligible
+                    ? "Subtracts this instrument's measured reflected-light map from White captures, per focus position; measured with Reflected Light Cal... in the LSO scan test window."
+                    : postProcess.ReflectedLightEnabled
+                        ? "White Color capture only - captures in this mode run without it"
+                        : "White Color capture only";
+                try
+                {
+                    if (LsoReflectedLightSet.TryLoad(LsoConfigLocation.ReflectedLightDirectory(),
+                            out var set, out string error))
+                    {
+                        myLbReflectedLight.Content = string.Format(CultureInfo.InvariantCulture,
+                            "{0} pts, ROI {1},{2} {3}x{4}, {5:yyyy-MM-dd}", set!.Points.Count,
+                            set.Roi.X, set.Roi.Y, set.Roi.Width, set.Roi.Height, set.Created.ToLocalTime());
+                        myLbReflectedLight.ToolTip = null;
+                    }
+                    else
+                    {
+                        myLbReflectedLight.Content = "(not calibrated)";
+                        myLbReflectedLight.ToolTip = error;
+                    }
+                }
+                catch (Exception error)
+                {
+                    myLbReflectedLight.Content = "(not calibrated)";
+                    myLbReflectedLight.ToolTip = error.Message;
+                }
             }
             finally
             {
@@ -229,6 +264,36 @@ namespace WsoToolkit
             }
 
             Preset.PostProcess.FlatFieldEnabled = on;
+        }
+
+        private void ReflectedLight_Changed(object sender, RoutedEventArgs e)
+        {
+            if (_isUpdating)
+            {
+                return;
+            }
+
+            if (myCheckReflectedLight.IsChecked != true)
+            {
+                Preset.PostProcess.ReflectedLightEnabled = false;
+                return;
+            }
+
+            CameraPanel.CommitToPreset();
+            Preset.PostProcess.ReflectedLightEnabled = true;
+            LsoCamera.GetCameraParameters(out var readBack);
+            if (!LsoFundusModeCapture.TryPrepare(_model.ModePresets.CaptureImageMode,
+                    Preset, _model.ModePresets.Preview, ColorCaptureTriggerMode.HWTrigger,
+                    readBack, DeviceLights.GetLightIntensity, true, out var prepared, out string failure))
+            {
+                Preset.PostProcess.ReflectedLightEnabled = false;
+                MsgBoxUtil.ShowWarning(failure);
+                updatePostProcessControls_();
+            }
+            else if (prepared?.ReflectedLightNote is { Length: > 0 } note)
+            {
+                MsgBoxUtil.ShowWarning(note);
+            }
         }
 
         private void myBtFlatFieldBrowse_Click(object sender, RoutedEventArgs e)
@@ -501,6 +566,7 @@ namespace WsoToolkit
             myTbLightIndexOn.Text = scan.LedOnPosIndex.ToString();
             myTbLightIndexOff.Text = scan.LedOffPosIndex.ToString();
             myLbTrajectory.Content = trajectorySummary_(scan);
+            myCbTrajectoryMode.SelectedIndex = scan.IsCalibratedTrajectory ? 1 : 0;
 
             // Derived, never stored: the full-frame range the stored sweep describes.
             myTbGalvoTotalStart.Text = scan.GalvoStartPos.ToString(CultureInfo.InvariantCulture);
@@ -691,9 +757,39 @@ namespace WsoToolkit
 
         private static string trajectorySummary_(LsoScanProfileModel scan)
         {
+            if (scan.IsCalibratedTrajectory)
+                return "FOV: " + System.IO.Path.GetFileName(scan.CalibrationFile);
             return scan.HasTrajectoryFile
                 ? "CSV: " + System.IO.Path.GetFileName(scan.TrajectoryFile)
                 : "generated (linear sweep)";
+        }
+
+        private void TrajectoryMode_Changed(object sender, SelectionChangedEventArgs e)
+        {
+            if (_isUpdating || !IsLoaded) return;
+            Preset.Scan.TrajectoryMode = myCbTrajectoryMode.SelectedIndex == 1
+                ? LsoTrajectoryMode.CalibratedFov : LsoTrajectoryMode.Linear;
+            myLbTrajectory.Content = trajectorySummary_(Preset.Scan);
+        }
+
+        private void CalibrationBrowse_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new Microsoft.Win32.OpenFileDialog { Filter = "Calibration JSON|*.json" };
+            if (dialog.ShowDialog(this) != true) return;
+            if (!LsoGalvoSlitCalibration.TryLoad(dialog.FileName, out var calibration, out string error)
+                || calibration == null || !calibration.TryFit(out error))
+            {
+                MsgBoxUtil.ShowWarning(error);
+                return;
+            }
+            Preset.Scan.CalibrationFile = dialog.FileName;
+            Preset.Scan.TrajectoryMode = LsoTrajectoryMode.CalibratedFov;
+            if (Preset.Scan.SensorRows <= 0)
+                Preset.Scan.SensorRows = (int)Preset.Camera.RoiMaxHeight;
+            calibration.SweepEnds(Preset.Scan.SensorRows, out short start, out short end);
+            Preset.Scan.GalvoStartPos = start;
+            Preset.Scan.GalvoEndPos = end;
+            updateScanControls_();
         }
 
         // The editor edits the mode's preset object directly and returns true when it changed
@@ -972,7 +1068,8 @@ namespace WsoToolkit
                         : preset.Scan.ExposureTimeUs;
 
                     if (!LsoScanTimingCalculator.TryCalculate(preset.Scan, camDelayUs, exposureUs,
-                        out LsoScanTimingCalculator.Result result, out string reason))
+                        out LsoScanTimingCalculator.Result result, out string reason,
+                        desiredPreMoveDelayUs: preset.Scan.TimingPreMoveDelayUs))
                     {
                         if (!quiet)
                         {

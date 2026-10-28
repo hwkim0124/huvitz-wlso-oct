@@ -36,6 +36,7 @@ namespace WsoToolkit.controls
         public ColorCameraPreview()
         {
             InitializeComponent();
+            myImagePreview.EnableHighDepthSaving();
 
             // Clear the inner preview's fixed size so it fills this control.
             myImagePreview.Width = double.NaN;
@@ -122,10 +123,10 @@ namespace WsoToolkit.controls
         public void UpdateFramerate() => myImagePreview.UpdateFramerate();
 
         public void CallbackLsoScanFrameImage(byte[] data, int width, int height, int channels, float quality, int nPixelFormat, int nBytesPerPixel)
-            => myImagePreview.CallbackLsoScanFrameImage(data, width, height, channels, quality, nPixelFormat, nBytesPerPixel);
+            => myImagePreview.ReceiveCameraFrame(data, width, height, channels, quality, nPixelFormat, nBytesPerPixel);
 
         public void CallbackLsoScanCaptureFrameImage(byte[] data, int width, int height, int frameCount, int totalFrameCount, int channels, float quality, int nPixelFormat, int nBytesPerPixel)
-            => myImagePreview.CallbackLsoScanCaptureFrameImage(data, width, height, frameCount, totalFrameCount, channels, quality, nPixelFormat, nBytesPerPixel);
+            => myImagePreview.ReceiveCameraCapture(data, width, height, frameCount, totalFrameCount, channels, quality, nPixelFormat, nBytesPerPixel);
 
         public bool IsForceGrayLiveDisplay
         {

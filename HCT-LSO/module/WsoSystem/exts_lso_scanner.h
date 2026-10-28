@@ -21,9 +21,9 @@ namespace wso_system
 		// Scan sequence, board-global (the command carries no pattern id): seqMode 0 =
 		// TRIG_FIRST, 1 = GALVANO_FIRST. preMove* are ignored unless GALVANO_FIRST.
 		bool WSOSYSTEM_DLL_API __stdcall setLsoScanSequence(int seqMode, int preMoveOffset, int preMoveDelayUs);
-		bool WSOSYSTEM_DLL_API __stdcall controlLsoScannerCapture(int patternId, int onOff);
+		bool WSOSYSTEM_DLL_API __stdcall controlLsoScannerCapture(int patternId, int onOff, std::uint8_t fundusMode);
 		bool WSOSYSTEM_DLL_API __stdcall setLsoScannerTriggerMode(int onOff);
-		bool WSOSYSTEM_DLL_API __stdcall startLsoScannerGrabbing(int patternId);
+		bool WSOSYSTEM_DLL_API __stdcall startLsoScannerGrabbing(int patternId, std::uint8_t fundusMode);
 		bool WSOSYSTEM_DLL_API __stdcall pauseLsoScannerGrabbing(int patternId);
 	}
 }

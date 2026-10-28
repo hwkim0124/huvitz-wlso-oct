@@ -4,12 +4,14 @@ using System.Globalization;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
 using System.IO;
 using WsoNativeLib;
+using WsoNativeLib.Imaging;
 using WsoNativeLib.Presets;
 using WsoNativeLib.Utils;
 using WsoToolkit.utils;
@@ -144,17 +146,27 @@ namespace WsoToolkit
         public const string IniSectionName = "ImageAdjust";
 
         public int Brightness { get; set; }
+        public int Contrast { get; set; }
+        public float Gamma { get; set; } = 1.0f;
+        public int Sharpness { get; set; }
+        public int Saturation { get; set; }
+        public int ChannelView { get; set; }
         public bool IsRadialCorrection { get; set; }
         public float RadialCorIntensity { get; set; } = 1.0f;
-        public bool IsRemoveReflectedLight { get; set; }
         public double[]? RadialCorrectionCurve { get; set; }
 
         internal void LoadFromIni(IniFileUtil ini)
         {
+            // Brightness moved from a depth-dependent ±127/±32767 window to a normalized
+            // ±100 offset, so a value left over from the old scheme is clamped on use.
             Brightness = ini.ReadInt(IniSectionName, "Brightness", 0);
+            Contrast = ini.ReadInt(IniSectionName, "Contrast", 0);
+            Gamma = ini.ReadFloat(IniSectionName, "Gamma", 1.0f);
+            Sharpness = ini.ReadInt(IniSectionName, "Sharpness", 0);
+            Saturation = ini.ReadInt(IniSectionName, "Saturation", 0);
+            ChannelView = ini.ReadInt(IniSectionName, "ChannelView", 0);
             IsRadialCorrection = ini.ReadInt(IniSectionName, "IsRadialCorrection", 0) != 0;
             RadialCorIntensity = ini.ReadFloat(IniSectionName, "RadialCorIntensity", 1.0f);
-            IsRemoveReflectedLight = ini.ReadInt(IniSectionName, "IsRemoveReflectedLight", 0) != 0;
 
             string curveText = ini.ReadString(IniSectionName, "RadialCorrectionCurve", string.Empty);
             RadialCorrectionCurve = ParseCurve(curveText);
@@ -163,28 +175,44 @@ namespace WsoToolkit
         internal void SaveToIni(IniFileUtil ini)
         {
             ini.WriteInt(IniSectionName, "Brightness", Brightness);
+            ini.WriteInt(IniSectionName, "Contrast", Contrast);
+            ini.WriteFloat(IniSectionName, "Gamma", Gamma);
+            ini.WriteInt(IniSectionName, "Sharpness", Sharpness);
+            ini.WriteInt(IniSectionName, "Saturation", Saturation);
+            ini.WriteInt(IniSectionName, "ChannelView", ChannelView);
             ini.WriteInt(IniSectionName, "IsRadialCorrection", IsRadialCorrection ? 1 : 0);
             ini.WriteFloat(IniSectionName, "RadialCorIntensity", RadialCorIntensity);
-            ini.WriteInt(IniSectionName, "IsRemoveReflectedLight", IsRemoveReflectedLight ? 1 : 0);
             ini.WriteString(IniSectionName, "RadialCorrectionCurve", FormatCurve(RadialCorrectionCurve));
         }
 
         public void ApplyFrom(ImageAdjustParam param)
         {
             Brightness = param.Brightness;
+            Contrast = param.Contrast;
+            Gamma = param.Gamma;
+            Sharpness = param.Sharpness;
+            Saturation = param.Saturation;
+            ChannelView = (int)param.ChannelView;
             IsRadialCorrection = param.IsRadialCorrection;
             RadialCorIntensity = param.RadialCorIntensity;
-            IsRemoveReflectedLight = param.IsRemoveReflectedLight;
             RadialCorrectionCurve = param.RadialCorrectionCurve?.ToArray();
         }
 
+        // nPixelDepth is no longer used: the native adjust normalizes every value, so one
+        // preset serves 8-bit and 16-bit alike. Kept so the call sites stay unchanged.
         public ImageAdjustParam ToParam(int nPixelDepth = 0)
         {
-            var param = new ImageAdjustParam(Brightness, nPixelDepth)
+            var param = new ImageAdjustParam(Brightness)
             {
+                Contrast = Contrast,
+                Gamma = Gamma,
+                Sharpness = Sharpness,
+                Saturation = Saturation,
+                ChannelView = Enum.IsDefined(typeof(LsoChannelView), ChannelView)
+                    ? (LsoChannelView)ChannelView
+                    : LsoChannelView.Rgb,
                 IsRadialCorrection = IsRadialCorrection,
                 RadialCorIntensity = RadialCorIntensity,
-                IsRemoveReflectedLight = IsRemoveReflectedLight,
                 RadialCorrectionCurve = RadialCorrectionCurve?.ToArray(),
             };
             return param;
@@ -442,6 +470,9 @@ namespace WsoToolkit
             // the one-time [COLOR_CAMERA] migration; anything that had to fall back to the
             // built-in DevKit defaults is reported to the operator below.
             _scanTestModel.ModePresets.Load();
+            // Every mode the Mode combo offers gets its preset and selection, so the Agent can
+            // read any of them without the operator opening each mode once first.
+            _scanTestModel.ModePresets.SeedAvailableModes();
             _scanTestModel.LoadConfigFromIniFile();
 
             // The custom pos[] tables live in the native LsoScanner for the process lifetime
@@ -523,72 +554,133 @@ namespace WsoToolkit
             myColorPreview.IsReviewMode = true;
             myColorPreview.AcqFrameCount = (int)colorProfile.AcqFrameSize;
             myColorPreview.SubFrameCount = colorProfile.SubFrameSize;
+            myColorPreview.Image.SetFafContext(_scanTestModel.ModePresets.CaptureImageMode,
+                _scanTestModel.ModePresets.Capture.FafOption);
         }
 
-        public void StartColorCameraOriginal()
+        public bool StartColorCameraOriginal()
         {
-            // The optical path first: the filter wheel is not part of the one-call's ABI, and
+            // New moves are refused by StageJog while capturing; this stops one already in flight.
+            StageJog.StopAll();
+            _captureReflectedLight = null;
+            _captureRecord = null;
+            _reflectedLightSkipped = null;
+            // A stale raw frame must not be paired with the next capture.
+            LsoPostProcessingWindow.ClearRawCapture();
+
+            // Prepared by the shared WsoNativeLib call the Agent uses too: the mode must be one
+            // this instrument can image, the preset must be able to drive a capture, and a
+            // preset that says "corrected" with no usable flat refuses the capture (loaded per
+            // capture, so a flat re-shot between two captures is picked up). Per-frame
+            // delivery, because Capture / Slide / ROI assemble the review image per frame in
+            // the preview control and a Gray mode averages the frames afterwards.
+            if (!LsoFundusModeCapture.TryPrepare(_scanTestModel.ModePresets.CaptureImageMode,
+                    _scanTestModel.ModePresets.Capture, _scanTestModel.ModePresets.Preview,
+                    ColorCaptureTriggerMode.HWTrigger, currentCameraParam_(), DeviceLights.GetLightIntensity,
+                    perFrame: true, out LsoFundusModeCapture? prepared, out string failure)
+                || prepared == null)
+            {
+                MessageBox.Show($"Capture was not started: {failure}");
+                return false;
+            }
+
+            // The optical path next: the filter wheel is not part of the one-call's ABI, and
             // capturing through the wrong filter is worse than refusing to start.
             if (!applyModeBoardSetup_(ColorCameraPresetMode.Capture))
             {
-                return;
+                return false;
             }
 
-            // Loaded per capture so a flat re-shot between two captures is picked up. The
-            // preset saying "corrected" with no usable flat refuses the capture, like any
-            // other preset damage.
-            LsoModePreset capturePreset = _scanTestModel.ModePresets.Capture;
-            if (!LsoFlatField.TryLoadFor(capturePreset, (int)capturePreset.Camera.RoiXWidth,
-                    (int)capturePreset.Camera.RoiYHeight, out LsoFlatField? flat, out string flatError))
+            // Read for every capture: the saved frame records it, so its reflected-light map can be
+            // looked up again when the frame is reprocessed - not only when the preset removes it now.
+            int? focusPosition = DeviceMotors.FetchStepMotorStatus(MotorType.LsoFocus, out var status)
+                ? status.currPos : null;
+            LsoReflectedLightCorrection? correction = null;
+            string reflectedNote = prepared.ReflectedLightNote;
+            if (prepared.ReflectedLight != null)
             {
-                MessageBox.Show($"Capture was not started: {flatError}");
-                return;
+                if (focusPosition is not int focus)
+                {
+                    MessageBox.Show("Capture was not started: reflected light - the LSO focus position could not be read.");
+                    return false;
+                }
+                if (!prepared.ReflectedLight.TryForFocus(focus, out correction, out string reflectedFailure))
+                {
+                    reflectedNote = $"{reflectedFailure}; reflected-light removal skipped.";
+                }
             }
-            _captureFlatField = flat;
-            System.Console.WriteLine(_captureFlatField == null
-                ? "[LSO-FLAT] off"
-                : $"[LSO-FLAT] on, flat='{_captureFlatField.Path}'");
+            if (reflectedNote.Length > 0)
+            {
+                System.Console.WriteLine($"[LSO-REFL] {reflectedNote}");
+            }
+
+            // The Capture slot runs the table this preset names (or linear), whatever an earlier
+            // mode left installed in it.
+            if (!prepared.InstallTrajectory(out string trajectoryFailure))
+            {
+                MessageBox.Show($"Capture was not started: galvo trajectory - {trajectoryFailure}");
+                return false;
+            }
+            if (prepared.TrajectoryNote.Length > 0)
+            {
+                System.Console.WriteLine($"[LSO-TRAJ] {prepared.TrajectoryNote}");
+            }
+
+            _captureFlatField = prepared.FlatField;
+            System.Console.WriteLine($"[LSO-MODE] {prepared.Mode} '{prepared.PresetName}' frames={prepared.TotalFrames} "
+                + (_captureFlatField == null ? "flat=off" : $"flat='{_captureFlatField.Path}'")
+                + (correction == null ? " refl=off" : string.Format(CultureInfo.InvariantCulture,
+                    " refl=focus {0} map {1}..{2} w={3:0.00}", correction.Position,
+                    correction.LowerPosition, correction.UpperPosition, correction.Weight)));
+            lock (_processingLock)
+            {
+                _processingCapture = prepared.Processing.Gray ? prepared : null;
+                _processingFrames = prepared.Processing.Gray ? new List<byte[]>() : null;
+            }
 
             // One call, and nothing else: the fundus one-call owns preset apply, the scan
             // profile upload, illumination, camera arming, the board start, the bounded
-            // acquisition and the teardown. This method only fills the request from the
-            // knob/INI model and shows the failure text.
+            // acquisition and the teardown.
             // The review images are named after the preset they were shot with.
-            myColorPreview.Image.CapturePresetName = _scanTestModel.ModePresets.Capture.Name;
+            myColorPreview.Image.CapturePresetName = prepared.PresetName;
 
-            var request = buildFundusCaptureRequest_();
-            var stage = LsoCamera.StartFundusCapture(ref request,
+            _captureRecord = new LsoCaptureRecord
+            {
+                CapturedAtUtc = DateTime.UtcNow,
+                Preset = prepared.PresetName,
+                ImageMode = prepared.Mode.ToString(),
+                Illumination = _scanTestModel.ModePresets.Capture.ColorIllumination.ToString(),
+                Conditions = LsoFundusModeCapture.ReflectedLightConditions(prepared.Request, 0),
+                FocusPosition = focusPosition,
+                ReflectedLight = new LsoCaptureReflectedLight
+                {
+                    Enabled = _scanTestModel.ModePresets.Capture.PostProcess.ReflectedLightEnabled,
+                    SetCreated = prepared.ReflectedLight?.Created,
+                    Position = correction?.Position,
+                    Lower = correction?.LowerPosition,
+                    Upper = correction?.UpperPosition,
+                    Weight = correction?.Weight,
+                    Skipped = reflectedNote,
+                },
+                FlatField = new LsoCaptureFlatField { File = prepared.FlatField?.Path ?? string.Empty },
+            };
+            _captureReflectedLight = correction;
+            var stage = LsoCamera.StartFundusCapture(ref prepared.Request,
                 _onColorCaptureImageCaptured, _onColorCaptureCompleted);
             refreshLightControls_();
             if (stage != ColorCaptureStage.Ok)
             {
+                _captureReflectedLight = null;
+                _captureRecord = null;
+                lock (_processingLock)
+                {
+                    _processingCapture = null;
+                    _processingFrames = null;
+                }
                 MessageBox.Show($"Capture start failed: {stage} - {LsoCamera.GetLastCaptureError()}");
+                return false;
             }
-        }
-
-        // Capture request: the COLOR slot profile owns the frame count, the camera model
-        // owns the preset, the white LED lights the capture and aiming IR is what the
-        // sequence hands back afterwards (the pre-one-call path left the white LED on).
-        // Intensities are read from the board so the request states the illumination that
-        // will actually run; a LED left at zero is rejected by the callee instead of
-        // producing a dark capture.
-        private LsoFundusCaptureRequest buildFundusCaptureRequest_()
-        {
-            // Assembled by the shared factory, so this screen and the Agent's measurement
-            // screen send the same request built from the same preset.
-            LsoFundusCaptureRequest request = LsoFundusRequestFactory.BuildCaptureRequest(
-                _scanTestModel.ModePresets.Capture,
-                _scanTestModel.ModePresets.Preview,
-                ColorCaptureTriggerMode.HWTrigger,
-                currentCameraParam_(),
-                DeviceLights.GetLightIntensity(_scanTestModel.ModePresets.Capture.Light.Led),
-                DeviceLights.GetLightIntensity(_scanTestModel.ModePresets.Preview.Light.Led));
-
-            // This screen differs from the Agent in exactly one field: Capture / Slide / ROI
-            // assemble the review image per frame in the preview control, so the native
-            // composition path stays unused here.
-            request.subFrameCompose = 0;
-            return request;
+            return true;
         }
 
         // Preview request: the IR slot profile, forced continuous because an aiming view is
@@ -655,7 +747,9 @@ namespace WsoToolkit
 
             if (sweepGalvo)
             {
-                LsoScanner.StartLsoScannerGrabbing(LsoScanCapturePreset.PatternId);
+                LsoScanner.StartLsoScannerGrabbing(LsoScanCapturePreset.PatternId,
+                    LsoImageModes.FundusMode(_scanTestModel.ModePresets.CaptureImageMode,
+                        _scanTestModel.ModePresets.Capture.ColorIllumination));
             }
             LsoCamera.StartLiveMode(_onColorLiveFrameCaptured);
             myColorPreview.StartTimer();
@@ -736,6 +830,12 @@ namespace WsoToolkit
         // owns the IR LED + IR scan pattern + camera setup; mode follows the UI option.
         private void StartRetinaPreview_()
         {
+            if (!installTrajectoryFile_(_scanTestModel.ModePresets.Preview.Scan,
+                    LsoScanPreviewPreset.PatternId, out string trajectoryFailure, out _))
+            {
+                MessageBox.Show($"Preview was not started: {trajectoryFailure}");
+                return;
+            }
             // No scanner call here: the preview one-call uploads the IR slot profile and
             // starts the board itself. Driving it from both sides sent the board an extra
             // off/on pair on every transition, uploaded the trajectory while the galvano was
@@ -802,9 +902,48 @@ namespace WsoToolkit
         private void initCameraPresetControls_()
         {
             _isUpdatingCameraPresets = true;
-            myCbCaptureImageMode.ItemsSource = LsoImageModes.All;
+            myCbCaptureImageMode.ItemsSource = LsoImageModes.Available;
+            initColorIlluminationControl_();
             _isUpdatingCameraPresets = false;
+            myColorPreview.Image.FafOptionChanged = OnFafOptionChanged_;
             refreshCameraPresetControls_();
+        }
+
+        // The review combo is the preset's Blue-FAF option, so a change is written to the
+        // selected Capture preset and takes effect on the next capture (the review also
+        // re-extracts the current frames from their high-depth buffer).
+        private void OnFafOptionChanged_(FafProcessingOption option)
+        {
+            if (_scanTestModel.ModePresets.Capture.FafOption == option)
+            {
+                return;
+            }
+
+            _scanTestModel.ModePresets.Capture.FafOption = option;
+            saveCameraPreset_(ColorCameraPresetMode.Capture);
+        }
+
+        // Lamp, filter, frames and processing of the selected mode, read from its Capture preset
+        // and the mode's fixed rule, so what Capture will shoot is visible before it is pressed.
+        private string modeSummary_()
+        {
+            LsoImageMode mode = _scanTestModel.ModePresets.CaptureImageMode;
+            LsoModePreset capture = _scanTestModel.ModePresets.Capture;
+            LsoModeProcessing processing = LsoImageModes.Processing(mode, capture.FafOption);
+
+            string intensity = capture.Light.Intensity > 0
+                ? capture.Light.Intensity.ToString(CultureInfo.InvariantCulture)
+                : "board";
+            string process = processing.Gray
+                ? (mode == LsoImageMode.BlueFaf
+                        ? (capture.FafOption == FafProcessingOption.GreenPlusRed ? "Gray 0.4R+0.6G" : "Gray G only")
+                        : mode == LsoImageMode.GreenFaf
+                            ? "Gray R only"
+                            : $"Gray R{processing.WeightR}:G{processing.WeightG}:B{processing.WeightB}")
+                    + (capture.Scan.AcqFrameSize > 1 ? " registered mean" : string.Empty)
+                : "RGB";
+            return $"{capture.Light.Led} ({intensity}) | {LsoModeMotorApply.FilterModeName(capture.Motor.LsoFilterMode)}"
+                + $" | {capture.Scan.AcqFrameSize}x{capture.Scan.SubFrameSize} frames | {process}";
         }
 
         private void refreshCameraPresetControls_()
@@ -816,6 +955,10 @@ namespace WsoToolkit
                 IReadOnlyList<string> names = _scanTestModel.ModePresets.EnumeratePresetNames();
                 fillCameraPresetCombo_(myCbPreviewPreset, names, _scanTestModel.ModePresets.Preview.Name);
                 fillCameraPresetCombo_(myCbCapturePreset, names, _scanTestModel.ModePresets.Capture.Name);
+                myLbModeSummary.Content = modeSummary_();
+                refreshColorIlluminationControl_();
+                myColorPreview.Image.SetFafContext(_scanTestModel.ModePresets.CaptureImageMode,
+                    _scanTestModel.ModePresets.Capture.FafOption);
             }
             finally
             {
@@ -1471,39 +1614,16 @@ namespace WsoToolkit
         private string _lastTrajectoryNote = string.Empty;
 
         // Loads the preset's CSV (if any) into the native per-slot override, or clears the
-        // override when the preset has none. Pattern Size is a DERIVED value - the timing
-        // calculator rewrites it from line rate / exposure / galvo delay - so a table whose
-        // row count no longer matches is resampled to the live size (shape kept) and the
-        // operator is told, rather than the apply failing every time the calculator moves N.
+        // override when the preset has none - the same shared call the Agent makes before its
+        // one-calls, so both processes sweep the same table for the same preset.
         private static bool installTrajectoryFile_(LsoScanProfileModel profile, int nPatternId,
             out string issue, out string note)
         {
-            issue = string.Empty;
-            note = string.Empty;
-            if (!profile.HasTrajectoryFile)
+            if (!LsoModeTrajectory.TryLoad(profile, out short[]? table, out issue, out note))
             {
-                return LsoScanner.SetLsoScannerTrajectory(nPatternId, null);
-            }
-
-            short[]? pos = LsoScanProfileModel.LoadTrajectoryFile(profile.TrajectoryFile, out string error);
-            if (pos == null)
-            {
-                issue = $"'{profile.TrajectoryFile}': {error}";
                 return false;
             }
-            if (pos.Length != profile.GalvoPatternSize)
-            {
-                note = $"'{System.IO.Path.GetFileName(profile.TrajectoryFile)}' has {pos.Length} samples; "
-                    + $"resampled to the live Pattern Size {profile.GalvoPatternSize} (shape kept). "
-                    + "Re-export from the Trajectory Editor to make the file match.";
-                pos = LsoScanProfileModel.ResampleTrajectory(pos, profile.GalvoPatternSize);
-            }
-            if (!LsoScanner.SetLsoScannerTrajectory(nPatternId, pos))
-            {
-                issue = "the native scanner did not accept the table.";
-                return false;
-            }
-            return true;
+            return LsoModeTrajectory.Install(nPatternId, table, out issue);
         }
 
         private uint calcAcquisitionFrameCount_(int nPatternId)
@@ -1546,6 +1666,11 @@ namespace WsoToolkit
 
         #region Internal Fixation
 
+        // The LCD grid centre, for both eyes: where the window starts and where Fundus / Macular
+        // go. Only Disc still follows the per-eye preset of the system configuration.
+        private const int FixationCenterRow = 160;
+        private const int FixationCenterCol = 120;
+
         private void initFixation_()
         {
             mySliderFixationRow.Minimum = FIXATION_ROW_MIN;
@@ -1553,17 +1678,20 @@ namespace WsoToolkit
             mySliderFixationCol.Minimum = FIXATION_COL_MIN;
             mySliderFixationCol.Maximum = FIXATION_COL_MAX;
 
-            setPresetInternalFixation_(FixationTarget.FUNDUS);
+            setCenterInternalFixation_();
+        }
+
+        private void setCenterInternalFixation_()
+        {
+            sendFixation_(FixationCenterRow, FixationCenterCol, "center");
+            getCurrentInternalFixation_();
         }
 
         private void getCurrentInternalFixation_()
         {
             if (Fixation.GetCurrentInternalFixation(out int row, out int col))
             {
-                mySliderFixationRow.Value = row;
-                mySliderFixationCol.Value = col;
-                myTbFixationRow.Text = row.ToString();
-                myTbFixationCol.Text = col.ToString();
+                syncFixationUi_(row, col);
             }
         }
 
@@ -1571,15 +1699,14 @@ namespace WsoToolkit
         {
             int row = (int)mySliderFixationRow.Value;
             int col = (int)mySliderFixationCol.Value;
-            Fixation.TurnOnInternalFixation(row, col);
+            sendFixation_(row, col, "slider");
             getCurrentInternalFixation_();
         }
 
         private void setPresetInternalFixation_(FixationTarget target)
         {
             EyeSide side = myRbSideOD.IsChecked == true ? EyeSide.OD : EyeSide.OS;
-            Fixation.TurnOnInternalFixationWithTarget(side, target);
-            getCurrentInternalFixation_();
+            sendFixationPreset_(side, target);
         }
 
         #endregion Internal Fixation
@@ -1707,7 +1834,7 @@ namespace WsoToolkit
 
             byte[] frameData = new byte[totalBytes];
             Marshal.Copy(data, frameData, 0, totalBytes);
-            rememberAlignFrame_(frameData, width, height, nBytesPerPixel);
+            rememberAlignFrame_(frameData, width, height, nBytesPerPixel, nPixelFormat);
 
             int channel = 1;
 
@@ -1732,6 +1859,26 @@ namespace WsoToolkit
         // Flat of the capture in progress (null = not corrected). Set before the one-call starts,
         // read on the native capture thread.
         private volatile LsoFlatField? _captureFlatField;
+        private volatile LsoReflectedLightCorrection? _captureReflectedLight;
+        private volatile LsoCaptureRecord? _captureRecord;
+        private volatile string? _reflectedLightSkipped;
+
+        // The running Gray-mode capture's frames: copied on the native thread, averaged on a
+        // worker once the capture completes (the registration FFTs belong on neither thread).
+        private readonly object _processingLock = new object();
+        private LsoFundusModeCapture? _processingCapture;
+        private List<byte[]>? _processingFrames;
+        private int _processingWidth;
+        private int _processingHeight;
+        private int _processingBytesPerPixel;
+        private int _processingMaxValue = 65535;
+
+        // The accumulator returns sensor units: 12-bit frames stay 0..4095, while 16-bit and
+        // the x257-scaled 8-bit path reach 65535.
+        private static int MaxDepthForFormat(int nPixelFormat)
+        {
+            return nPixelFormat == (int)ColorPixelFormat.BayerRG12Packed ? 4095 : 65535;
+        }
 
         // Color Capture
         private void OnColorCameraCaptureFrameCaptured(IntPtr data, int width, int height, int frameCount, int totalFrameCount, int nFlipMode, int nPixelFormat, int nBytesPerPixel)
@@ -1740,18 +1887,88 @@ namespace WsoToolkit
             byte[] frameData = new byte[totalBytes];
             Marshal.Copy(data, frameData, 0, totalBytes);
 
-            // On the raw Bayer copy, so the review, the stitch and every save see the same
-            // corrected frame.
-            LsoFlatField? flat = _captureFlatField;
-            if (flat != null && !flat.Apply(frameData, width, height, nBytesPerPixel))
+            var sink = _reflectedLightCalSink;
+            if (sink != null)
             {
-                System.Console.WriteLine($"[LSO-FLAT] frame {frameCount} left uncorrected: {width}x{height}x{nBytesPerPixel} "
-                    + $"does not match the flat {flat.Width}x{flat.Height}");
+                sink.Offer(frameData, width, height, nBytesPerPixel, nFlipMode);
+                return;
+            }
+
+            // On the raw Bayer copy, so the review, the stitch and every save see the same
+            // corrected frame. The copy from before the corrections is kept whenever one really ran:
+            // the review saves it as _uncorrected16.tiff, and the post-processing review switches
+            // the reflected-light removal on it instead of subtracting twice.
+            var refl = _captureReflectedLight;
+            LsoFlatField? flat = _captureFlatField;
+            byte[]? uncorrected = refl != null || flat != null ? (byte[])frameData.Clone() : null;
+            int bitDepth = nPixelFormat == (int)ColorPixelFormat.BayerRG12Packed ? 12 : 16;
+            bool reflApplied = false;
+            string reflSkipped = string.Empty;
+            if (refl != null)
+            {
+                string? reason = null;
+                if (nFlipMode != refl.Conditions.FlipMode)
+                {
+                    reason = $"flip {nFlipMode} != map {refl.Conditions.FlipMode}";
+                }
+                else if (!refl.Apply(frameData, width, height, nBytesPerPixel))
+                {
+                    reason = $"{width}x{height}x{nBytesPerPixel} does not match the map {refl.Conditions.Width}x{refl.Conditions.Height}x2";
+                }
+                if (reason != null)
+                {
+                    System.Console.WriteLine($"[LSO-REFL] frame {frameCount} left uncorrected: {reason}");
+                    _reflectedLightSkipped ??= reason;
+                    reflSkipped = reason;
+                }
+                else
+                {
+                    reflApplied = true;
+                    if (totalFrameCount == 1)
+                    {
+                        LsoPostProcessingWindow.RememberRawCapture(uncorrected!, width, height, bitDepth, refl);
+                        System.Console.WriteLine($"[LSO-REFL] uncorrected frame kept for post processing (focus {refl.Position}, map weight {refl.Weight:0.00})");
+                    }
+                }
+            }
+            else if (totalFrameCount == 1)
+            {
+                LsoPostProcessingWindow.ClearRawCapture();
+            }
+            bool flatApplied = false;
+            if (flat != null)
+            {
+                flatApplied = flat.Apply(frameData, width, height, nBytesPerPixel);
+                if (!flatApplied)
+                {
+                    System.Console.WriteLine($"[LSO-FLAT] frame {frameCount} left uncorrected: {width}x{height}x{nBytesPerPixel} "
+                        + $"does not match the flat {flat.Width}x{flat.Height}");
+                }
+            }
+            if (!reflApplied && !flatApplied)
+            {
+                uncorrected = null;
+            }
+            LsoCaptureRecord? frameRecord = _captureRecord?.ForFrame(frameCount + 1, totalFrameCount, nFlipMode, bitDepth,
+                reflApplied, reflSkipped, flatApplied);
+
+            lock (_processingLock)
+            {
+                if (_processingFrames != null)
+                {
+                    _processingFrames.Add(frameData);
+                    _processingWidth = width;
+                    _processingHeight = height;
+                    _processingBytesPerPixel = nBytesPerPixel;
+                    _processingMaxValue = MaxDepthForFormat(nPixelFormat);
+                }
             }
 
             Dispatcher.BeginInvoke(() =>
             {
                 myColorPreview.UpdateFramerate();
+                LsoImageAnalysisWindow.RememberLatest(frameData, width, height, nPixelFormat, nBytesPerPixel);
+                myColorPreview.Image.AttachCaptureContext(frameRecord, uncorrected);
                 myColorPreview.CallbackLsoScanCaptureFrameImage(frameData, width, height, frameCount,
                     totalFrameCount, 1, nFlipMode, nPixelFormat, nBytesPerPixel);
             }, DispatcherPriority.Background);
@@ -1760,8 +1977,16 @@ namespace WsoToolkit
         // Capture one-call completion notice (native worker thread) - marshal before UI state.
         private void OnColorCaptureCompleted(int result, int framesAcquired)
         {
-            Dispatcher.BeginInvoke(() =>
+            var sink = _reflectedLightCalSink;
+            if (sink != null)
             {
+                sink.Stage.TrySetResult(result);
+                return;
+            }
+
+            Dispatcher.BeginInvoke(new Action(async () =>
+            {
+                int liveGeneration = _liveCaptureGeneration;
                 var stage = (ColorCaptureStage)result;
                 System.Console.WriteLine($"Color capture completed: {stage}, frames={framesAcquired}");
                 if (stage != ColorCaptureStage.Ok && stage != ColorCaptureStage.Cancelled)
@@ -1769,7 +1994,76 @@ namespace WsoToolkit
                     MessageBox.Show($"Capture failed: {stage} ({framesAcquired} frames) - {LsoCamera.GetLastCaptureError()}");
                 }
                 refreshLightControls_();
-            }, DispatcherPriority.Background);
+                _captureReflectedLight = null;
+                _captureRecord = null;
+                if (_reflectedLightSkipped is string reason)
+                {
+                    MessageBox.Show($"Reflected light was not removed from this capture: {reason}");
+                    _reflectedLightSkipped = null;
+                }
+                await processCapturedFrames_(stage);
+                postProcessAfterCapture_(stage, framesAcquired);
+                if (liveGeneration == _liveCaptureGeneration)
+                    continueLiveCapture_(stage);
+            }), DispatcherPriority.Background);
+        }
+
+        // Gray modes only: the shared accumulator turns the collected frames into the image the
+        // Agent will store, and the review shows it as the Processed view.
+        private Task processCapturedFrames_(ColorCaptureStage stage)
+        {
+            LsoFundusModeCapture? capture;
+            List<byte[]>? frames;
+            int width;
+            int height;
+            int bytesPerPixel;
+            int maxValue;
+            lock (_processingLock)
+            {
+                capture = _processingCapture;
+                frames = _processingFrames;
+                width = _processingWidth;
+                height = _processingHeight;
+                bytesPerPixel = _processingBytesPerPixel;
+                maxValue = _processingMaxValue;
+                _processingCapture = null;
+                _processingFrames = null;
+            }
+
+            if (capture == null || frames == null || frames.Count == 0 || stage != ColorCaptureStage.Ok)
+            {
+                return Task.CompletedTask;
+            }
+
+            return Task.Run(() =>
+            {
+                try
+                {
+                    using LsoModeImageAccumulator? accumulator = capture.CreateAccumulator();
+                    if (accumulator == null)
+                    {
+                        return;
+                    }
+
+                    foreach (byte[] frame in frames)
+                    {
+                        accumulator.Add(frame, width, height, bytesPerPixel);
+                        System.Console.WriteLine($"[LSO-MODE] {capture.Mode} frame {accumulator.Count}/{frames.Count} "
+                            + $"shift=({accumulator.LastShift.X:0.00}, {accumulator.LastShift.Y:0.00})");
+                    }
+
+                    ushort[] gray = accumulator.Result(out int grayWidth, out int grayHeight);
+                    string label = $"{capture.Mode} mean of {accumulator.Count}";
+                    int displayMax = maxValue;
+                    Dispatcher.BeginInvoke(() => myColorPreview.Image.SetProcessedImage(gray, grayWidth, grayHeight, label, displayMax));
+                    System.Console.WriteLine($"[LSO-MODE] {capture.Mode} display scale 0..{displayMax}");
+                }
+                catch (Exception e)
+                {
+                    System.Console.WriteLine($"[LSO-MODE] {capture.Mode} processing failed: {e}");
+                    Dispatcher.BeginInvoke(() => MessageBox.Show($"{capture.Mode} processing failed: {e.Message}"));
+                }
+            });
         }
 
         // Cornea Cameras

@@ -64,6 +64,21 @@ namespace eye_align
 	// detection and drop its lock.
 	constexpr float MOVE_JUMP_FRACTION = 0.8f;
 
+	// Step 4b: a side-camera pupil within this fraction of the image height from the top
+	// or the bottom edge (outside the middle half) is brought in by one position move to
+	// the predicted target instead of the capped per-frame steps of controlAxis().
+	constexpr float CENTERING_Y_FAR_BAND_FRACTION = 0.25f;
+
+	// Step 4a: the lower-camera pupil enters from the bottom of the image and rises as
+	// Z advances. A pupil already above this fraction of the image height (measured
+	// from the top) while the side camera is locked too means the eye is close enough:
+	// the move on to searchLimitPosZ is skipped and the Y centring starts where Z is.
+	constexpr float SEARCH_LOWER_NEAR_LINE_FRACTION = 0.75f;
+
+	// Step 6: the same for a lower-camera pupil within this fraction of the image width
+	// from the left or the right edge (outside the middle half).
+	constexpr float CENTERING_X_FAR_BAND_FRACTION = 0.25f;
+
 	// When Z arrives at a limit (search limit, minSafePosZ) with no lock on the camera
 	// that should see the pupil, the phase waits this long for one before it cancels:
 	// the tracker needs detectConsecutive frames after the pupil becomes visible.

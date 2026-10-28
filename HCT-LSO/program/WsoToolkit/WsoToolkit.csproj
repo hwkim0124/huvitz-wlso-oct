@@ -16,7 +16,7 @@
   </PropertyGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="call prebuild.bat $(SolutionDir)\externs\dlls $(OutputPath)" />
+    <Exec Command="call prebuild.bat $(SolutionDir)\externs\dlls $(OutputPath) $(SolutionDir)models" />
   </Target>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
@@ -50,8 +50,21 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <!-- PreserveNewest, not Always, for the same reason as the seeded presets below: the app
+         WRITES this file. It carries [MODE_PRESET] (which preset each mode is running, plus the
+         one-shot migration guards), so an Always copy handed every rebuild a file with no
+         selection and no guards - the V1 merge then overwrote the active presets' scan section
+         with the seed values and the DevKit installer created and selected a fresh numbered
+         copy. Updating the seed on an existing install is now a manual delete. -->
     <None Update="WsoDeviceCfg.ini">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <!-- Seeded camera presets, shipped next to the app like WsoDeviceCfg.ini.
+         PreserveNewest, not Always: the app writes these very files when a preset is saved,
+         so a rebuild must not throw an operator's saved preset away - while an updated seed
+         in the repository still wins over an untouched copy. -->
+    <None Update="CameraPresets\*.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 

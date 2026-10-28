@@ -98,30 +98,20 @@ namespace WsoToolkit.controls
 
         private ImageAdjustParam CreateAdjustParamFromDefault(int nPixelDepth = 0)
         {
-            var param = CloneAdjustParam(_defaultAdjustPreset);
-            if (nPixelDepth == 2)
-            {
-                param.BrightnessRangeMin = -32767;
-                param.BrightnessRangeMax = 32767;
-            }
-            else
-            {
-                param.BrightnessRangeMin = -127;
-                param.BrightnessRangeMax = 127;
-            }
-
-            return param;
+            return CloneAdjustParam(_defaultAdjustPreset);
         }
 
         private static ImageAdjustParam CloneAdjustParam(ImageAdjustParam source)
         {
-            return new ImageAdjustParam(source.Brightness, 0)
+            return new ImageAdjustParam(source.Brightness)
             {
-                BrightnessRangeMin = source.BrightnessRangeMin,
-                BrightnessRangeMax = source.BrightnessRangeMax,
+                Contrast = source.Contrast,
+                Gamma = source.Gamma,
+                Sharpness = source.Sharpness,
+                Saturation = source.Saturation,
+                ChannelView = source.ChannelView,
                 IsRadialCorrection = source.IsRadialCorrection,
                 RadialCorIntensity = source.RadialCorIntensity,
-                IsRemoveReflectedLight = source.IsRemoveReflectedLight,
                 RadialCorrectionCurve = source.RadialCorrectionCurve?.ToArray(),
             };
         }
@@ -133,19 +123,32 @@ namespace WsoToolkit.controls
             AdjustPresetChanged?.Invoke(CloneAdjustParam(adjustParam));
         }
 
-        // Review view: one capture, three ways of looking at it. The stitch and its bands
-        // only exist when the scan really ran more than one subframe per acquisition.
+        // Review view: one capture, up to four ways of looking at it. The stitch and its bands
+        // only exist when the scan really ran more than one subframe per acquisition; Processed
+        // only exists for a Gray image mode, once its frames have been averaged.
         public enum ReviewViewMode
         {
             Stitched = 0,
             SubBands = 1,
             FullFrames = 2,
+            Processed = 3,
         }
 
         private ReviewViewMode _reviewView = ReviewViewMode.FullFrames;
         private readonly List<Mat> _stitchedList = new();
         private readonly List<List<Mat>> _bandList = new();
         private readonly List<ImageAdjustParam> _stitchedAdjustParams = new();
+
+        // CV_16UC1, half the frame size: LsoModeImageAccumulator's mean, kept in its own units
+        // so Save writes exactly what the Agent will store.
+        private Mat? _processedMat;
+        private int _processedMaxValue;
+        private string _processedLabel = string.Empty;
+        // The colour pipeline's final 8-bit image (post processing). Already display-ready, so it is
+        // kept as a frozen BitmapSource instead of a Mat.
+        private BitmapSource? _processedColor;
+
+        private bool HasProcessed => _processedMat != null || _processedColor != null;
 
         /// <summary>
         /// How the subframes are cut and blended. Edited from the Stitch settings window;
@@ -208,15 +211,22 @@ namespace WsoToolkit.controls
             }
 
             var brush = System.Windows.Media.Brushes.Yellow;
-            double cx = w / 2;
-            double cy = h / 2;
+
+            // The guide marks the image centre, so under the preview zoom the centre rides on the
+            // image and the tick pitch scales with it, while the strokes stay 1 px. At x1 this is
+            // the viewport centre and the original pitch.
+            System.Windows.Point centre = myZoomSurface.TranslatePoint(
+                new System.Windows.Point(myZoomSurface.ActualWidth / 2, myZoomSurface.ActualHeight / 2), canvas);
+            double zoom = myZoomScale.ScaleX;
+            double cx = centre.X;
+            double cy = centre.Y;
 
             // 주 십자선 (viewport 전체)
             AddGuideLine(brush, cx, 0, cx, h);
             AddGuideLine(brush, 0, cy, w, cy);
 
             // Major tick
-            double unit = 80, size = 7;
+            double unit = 80 * zoom, size = 7;
             for (int i = 1; i < 4; i++)
             {
                 AddGuideLine(brush, cx - unit * i, cy - size, cx - unit * i, cy + size);
@@ -229,7 +239,7 @@ namespace WsoToolkit.controls
             }
 
             // Minor tick
-            unit = 10; size = 3;
+            unit = 10 * zoom; size = 3;
             for (int i = 1; i < 32; i++)
             {
                 AddGuideLine(brush, cx - unit * i, cy - size, cx - unit * i, cy + size);
@@ -338,6 +348,8 @@ namespace WsoToolkit.controls
 
             ClearReviewImages();
             IsReviewMode = false;
+            refreshFafControls_();
+            drawFixationOverlay_();
         }
 
         public void ClearReviewImages()
@@ -345,6 +357,86 @@ namespace WsoToolkit.controls
             _captureImageList.Clear();
             _captureImageAdjustParams.Clear();
             clearStitched_();
+            _processedMat?.Dispose();
+            _processedMat = null;
+            _processedMaxValue = 0;
+            _processedColor = null;
+            _showFafColor = false;
+            refreshFafControls_();
+        }
+
+        // The Gray-mode result of the capture in review. A result that arrives after the view
+        // left review (a new live start) belongs to no capture on screen and is dropped.
+        // maxValue is the sensor's full scale (4095 for 12-bit, 65535 for 16-bit); 0 keeps
+        // the historical min..max stretch for callers that do not state it.
+        public void SetProcessedImage(ushort[] gray16, int width, int height, string label,
+            int maxValue = 0)
+        {
+            if (gray16 == null)
+            {
+                throw new ArgumentNullException(nameof(gray16));
+            }
+
+            if (width <= 0 || height <= 0 || gray16.Length < width * height)
+            {
+                throw new ArgumentException($"The processed image does not hold {width}x{height}.", nameof(gray16));
+            }
+
+            if (!IsReviewMode)
+            {
+                return;
+            }
+
+            var mat = new Mat(height, width, MatType.CV_16UC1);
+            short[] pixels = MemoryMarshal.Cast<ushort, short>(gray16.AsSpan(0, width * height)).ToArray();
+            Marshal.Copy(pixels, 0, mat.Data, pixels.Length);
+
+            _processedMat?.Dispose();
+            _processedMat = null;
+            _processedMaxValue = maxValue;
+            _processedLabel = label;
+            _processedColor = null;
+            _reviewView = ReviewViewMode.Processed;
+            applyReviewView_();
+        }
+
+        // The post-processing pipeline's final 8-bit BGR image, shown as the review's Processed
+        // view straight after a capture. ToBitmapSource reads a 3-channel Mat as Bgr24, so the BGR
+        // image goes in unconverted (an RGB Mat here swaps red and blue).
+        public void SetProcessedColor(Mat bgr8, string label)
+        {
+            if (bgr8 == null || bgr8.Empty()) return;
+            if (!IsReviewMode) return;
+
+            BitmapSource bitmap = OpenCvSharp.WpfExtensions.BitmapSourceConverter.ToBitmapSource(bgr8);
+            bitmap.Freeze();
+
+            _processedMat?.Dispose();
+            _processedMat = null;
+            _processedMaxValue = 0;
+            _processedColor = bitmap;
+            _processedLabel = label;
+            _reviewView = ReviewViewMode.Processed;
+            applyReviewView_();
+        }
+
+        // A stated full scale (the sensor bit depth) is the DevKit's fixed display scale. A
+        // caller that does not state one keeps the historical min..max stretch.
+        private void renderProcessed_(Mat gray16)
+        {
+            using var display = new Mat();
+            if (_processedMaxValue > 0)
+            {
+                double scale = 255.0 / _processedMaxValue;
+                gray16.ConvertTo(display, MatType.CV_8UC1, scale);
+            }
+            else
+            {
+                Cv2.MinMaxLoc(gray16, out double min, out double max);
+                double scale = max > min ? 255.0 / (max - min) : 1.0;
+                gray16.ConvertTo(display, MatType.CV_8UC1, scale, -min * scale);
+            }
+            imageViewport.Source = OpenCvSharp.WpfExtensions.BitmapSourceConverter.ToBitmapSource(display);
         }
 
         // The stitch and its bands are Mats this control cloned itself, so it disposes them.
@@ -434,6 +526,7 @@ namespace WsoToolkit.controls
             // image the operator pressed Capture for.
             _reviewView = HasStitched ? ReviewViewMode.Stitched : ReviewViewMode.FullFrames;
             applyReviewView_();
+            drawFixationOverlay_();
         }
 
         // Frame j of an acquisition holds band j of the field - the galvo walks one band per
@@ -575,6 +668,7 @@ namespace WsoToolkit.controls
             {
                 ReviewViewMode.Stitched => _stitchedList.Count,
                 ReviewViewMode.SubBands => _bandList.Count == 0 ? 0 : _bandList.Count * _bandList[0].Count,
+                ReviewViewMode.Processed => HasProcessed ? 1 : 0,
                 _ => _captureImageList.Count,
             };
         }
@@ -583,11 +677,12 @@ namespace WsoToolkit.controls
         // rebuilt whenever the view changes.
         private void applyReviewView_()
         {
-            myBtReviewViewMode.IsEnabled = HasStitched;
+            myBtReviewViewMode.IsEnabled = HasStitched || HasProcessed;
             myBtReviewViewMode.Content = _reviewView switch
             {
                 ReviewViewMode.Stitched => "View : Stitched",
                 ReviewViewMode.SubBands => "View : Bands",
+                ReviewViewMode.Processed => "View : Processed",
                 _ => "View : Frames",
             };
 
@@ -605,6 +700,8 @@ namespace WsoToolkit.controls
             {
                 mySliderReviewImageIndex.Value = 1;
             }
+
+            refreshFafControls_();
         }
 
         // Stitched = acquisition index, Bands = acquisition x band flattened, Frames = the
@@ -624,6 +721,21 @@ namespace WsoToolkit.controls
 
             switch (_reviewView)
             {
+                case ReviewViewMode.Processed:
+                    if (_processedColor != null)
+                    {
+                        lblImageStatusReview.Content = $"Processed ({_processedLabel})   {_processedColor.PixelWidth} x {_processedColor.PixelHeight}";
+                        imageViewport.Source = _processedColor;
+                        return;
+                    }
+                    if (_processedMat == null)
+                    {
+                        return;
+                    }
+                    lblImageStatusReview.Content = $"Processed ({_processedLabel})   {_processedMat.Width} x {_processedMat.Height}";
+                    renderProcessed_(_processedMat);
+                    return;
+
                 case ReviewViewMode.Stitched:
                     if (index >= _stitchedList.Count)
                     {
@@ -671,6 +783,13 @@ namespace WsoToolkit.controls
             }
 
             lblImageStatusReview.Content = $"{label}   {source.Width} x {source.Height}";
+
+            // A FAF capture opens on its extracted gray image (DevKit FAF View); the color
+            // frame is one press away.
+            if (TryRenderFafView_(index, source, label))
+            {
+                return;
+            }
 
             if (guideBand >= 0)
             {
@@ -819,7 +938,7 @@ namespace WsoToolkit.controls
 
         private void myBtReviewViewMode_Click(object sender, RoutedEventArgs e)
         {
-            if (!HasStitched)
+            if (!HasStitched && !HasProcessed)
             {
                 return;
             }
@@ -828,7 +947,8 @@ namespace WsoToolkit.controls
             {
                 ReviewViewMode.Stitched => ReviewViewMode.SubBands,
                 ReviewViewMode.SubBands => ReviewViewMode.FullFrames,
-                _ => ReviewViewMode.Stitched,
+                ReviewViewMode.FullFrames when HasProcessed => ReviewViewMode.Processed,
+                _ => HasStitched ? ReviewViewMode.Stitched : ReviewViewMode.FullFrames,
             };
 
             applyReviewView_();
@@ -847,6 +967,12 @@ namespace WsoToolkit.controls
 
             string strPreset = CapturePresetName;
             string strStamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            // Taken on the UI thread: the per-frame adjustment the review shows for each frame.
+            var adjustParams = new List<ImageAdjustParam>();
+            for (int i = 0; i < _captureImageList.Count; ++i)
+            {
+                adjustParams.Add(GetAdjustParam(i));
+            }
 
             await Task.Run(() =>
             {
@@ -860,6 +986,8 @@ namespace WsoToolkit.controls
                     using Mat mat = _captureImageList[i].Clone();
                     string strFileName = System.IO.Path.Combine(strFolderPath, $"{strPreset}_{strStamp}_{i + 1}.png");
                     mat.SaveImage(strFileName);
+                    using Mat adjusted = ApplyImageAdjustments(mat, adjustParams[i]);
+                    adjusted.SaveImage(System.IO.Path.Combine(strFolderPath, $"{strPreset}_{strStamp}_{i + 1}_adjusted.png"));
                 }
             });
         }
@@ -972,19 +1100,7 @@ namespace WsoToolkit.controls
         {
             Mat adjustedMat = source.Clone();
 
-            if (adjustParam.IsRemoveReflectedLight)
-            {
-                Mat tempMat = applyRemoveReflectedLight(adjustedMat);
-                adjustedMat.Dispose();
-                adjustedMat = tempMat;
-            }
-
-            if (adjustParam.Brightness != 0)
-            {
-                Mat tempMat = adjustBrightnessWinStyle(adjustedMat, adjustParam.Brightness);
-                adjustedMat.Dispose();
-                adjustedMat = tempMat;
-            }
+            ApplyNativeAdjust(adjustedMat, adjustParam);
 
             if (adjustParam.IsRadialCorrection)
             {
@@ -1007,152 +1123,35 @@ namespace WsoToolkit.controls
             return adjustedMat;
         }
 
-        private Mat adjustBrightnessWinStyle(Mat source, int brightness)
+        private void ApplyNativeAdjust(Mat target, ImageAdjustParam adjustParam)
         {
-            const int BrightnessMin = -127;
-            const int BrightnessMax = 127;
-            int boundedBrightness = Math.Clamp(brightness, BrightnessMin, BrightnessMax);
-            if (boundedBrightness == 0)
-                return source.Clone();
-
-            if (source.Empty())
-                throw new ArgumentException("Source image is empty.");
-
-            bool is16Bit = source.Depth() == MatType.CV_16U;
-            double maxRange = is16Bit ? 65535.0 : 255.0;
-
-            source.MinMaxLoc(out double minVal, out double maxVal);
-
-            double normalizedBrightness = boundedBrightness / 127.0;
-            double center = (minVal + maxVal) / 2.0;
-            double halfRange = (maxVal - minVal) / 2.0;
-
-            double contrastFactor = 1.0 - normalizedBrightness * 1.0;
-            double newHalfRange = halfRange * contrastFactor;
-            double newCenter = center - normalizedBrightness * halfRange;
-
-            double newMin = newCenter - newHalfRange;
-            double newMax = newCenter + newHalfRange;
-
-            if (Math.Abs(newMax - newMin) < 1e-6)
-                newMax = newMin + 1.0;
-
-            Mat result = new Mat();
-            double scale = maxRange / (newMax - newMin);
-            double offset = -newMin * scale;
-
-            source.ConvertTo(result, -1, scale, offset);
-
-            if (is16Bit)
+            if (target.Empty())
             {
-                Cv2.Threshold(result, result, 65535, 65535, ThresholdTypes.Trunc);
-                Cv2.Threshold(result, result, 0, 0, ThresholdTypes.Tozero);
+                return;
             }
 
-            if (boundedBrightness > 10)
+            LsoImageAdjustParam nativeParam = adjustParam.ToNativeParam();
+            if (LsoImageAdjust.IsNeutral(ref nativeParam))
             {
-                Mat denoisedResult = ApplyDenoising(result, boundedBrightness);
-                result.Dispose();
-                return denoisedResult;
+                return;
             }
 
-            return result;
-        }
+            int nStride = (int)target.Step();
 
-        private Mat ApplyDenoising(Mat source, int brightness)
-        {
-            if (source.Empty())
+            // The review cache is built with BayerRG2RGB, so this buffer is RGB - the Agent
+            // passes Bgr for the same call.
+            ImageAdjustResult eResult = LsoImageAdjust.Adjust(
+                target.Data, target.Data,
+                target.Width, target.Height, nStride, nStride,
+                target.Channels(), (int)target.ElemSize1(),
+                LsoChannelOrder.Rgb, ref nativeParam);
+
+            if (eResult != ImageAdjustResult.Ok)
             {
-                return source.Clone();
+                // Runs on a background task, so leave the un-adjusted image rather than throw.
+                System.Diagnostics.Debug.WriteLine(
+                    $"Native image adjust failed ({eResult}): {LsoImageAdjust.GetLastError()}");
             }
-
-            Mat result = new Mat();
-            bool is16Bit = source.Depth() == MatType.CV_16U;
-
-            try
-            {
-                if (is16Bit)
-                {
-                    Mat normalized = new Mat();
-                    Mat processed = new Mat();
-                    source.ConvertTo(normalized, MatType.CV_8UC3, 1.0 / 256.0);
-                    ApplyDenoisingTo8Bit(normalized, processed, brightness);
-                    processed.ConvertTo(result, MatType.CV_16UC3, 256.0);
-                    normalized.Dispose();
-                    processed.Dispose();
-                }
-                else
-                {
-                    ApplyDenoisingTo8Bit(source, result, brightness);
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Denoising error: {ex.Message}");
-                result?.Dispose();
-                return source.Clone();
-            }
-
-            return result;
-        }
-
-        private void ApplyDenoisingTo8Bit(Mat source, Mat result, int brightness)
-        {
-            if (brightness <= 30)
-            {
-                double sigma = 0.8 + (brightness / 100.0) * 0.4;
-                Cv2.GaussianBlur(source, result, new OpenCvSharp.Size(3, 3), sigma);
-            }
-            else
-            {
-                int d = 7;
-                double sigmaColor = 40.0 + (brightness / 100.0) * 40.0;
-                double sigmaSpace = 40.0 + (brightness / 100.0) * 40.0;
-
-                try
-                {
-                    Cv2.BilateralFilter(source, result, d, sigmaColor, sigmaSpace);
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"BilateralFilter error, fallback to Gaussian: {ex.Message}");
-                    double sigma = 1.0 + (brightness / 100.0) * 0.5;
-                    Cv2.GaussianBlur(source, result, new OpenCvSharp.Size(5, 5), sigma);
-                }
-            }
-        }
-
-        private Mat applyRemoveReflectedLight(Mat source)
-        {
-            string strFolderPath = AppDomain.CurrentDomain.BaseDirectory + "_ReflectedLight";
-            if (Directory.Exists(strFolderPath) == false)
-            {
-                Directory.CreateDirectory(strFolderPath);
-            }
-
-            string[] files = Directory.GetFiles(strFolderPath);
-            if (files.Length == 0)
-            {
-                return source.Clone();
-            }
-
-            Mat reflectedMat = Cv2.ImRead(files[0], ImreadModes.Color);
-            if (reflectedMat == null || reflectedMat.Empty())
-            {
-                reflectedMat?.Dispose();
-                return source.Clone();
-            }
-
-            if (source.Width != reflectedMat.Width || source.Height != reflectedMat.Height)
-            {
-                reflectedMat.Dispose();
-                return source.Clone();
-            }
-
-            Mat resultMat = new Mat();
-            Cv2.Subtract(source, reflectedMat, resultMat);
-            reflectedMat.Dispose();
-            return resultMat;
         }
 
         public void OpenImageAdjustment()
@@ -1163,7 +1162,7 @@ namespace WsoToolkit.controls
                 return;
             }
 
-            if (_reviewView == ReviewViewMode.SubBands)
+            if (_reviewView == ReviewViewMode.SubBands || _reviewView == ReviewViewMode.Processed)
             {
                 MessageBox.Show("Image Adjust is available for the stitched image or a full frame.");
                 return;
@@ -1235,11 +1234,15 @@ namespace WsoToolkit.controls
 
             PersistAdjustPreset_(adjustParam);
 
-            stored.IsRemoveReflectedLight = adjustParam.IsRemoveReflectedLight;
-            stored.Brightness = adjustParam.Brightness;
-            stored.IsRadialCorrection = adjustParam.IsRadialCorrection;
-            stored.RadialCorIntensity = adjustParam.RadialCorIntensity;
-            stored.RadialCorrectionCurve = adjustParam.RadialCorrectionCurve;
+            stored = CloneAdjustParam(adjustParam);
+            if (_reviewView == ReviewViewMode.Stitched)
+            {
+                _stitchedAdjustParams[nImageIndex] = stored;
+            }
+            else
+            {
+                _captureImageAdjustParams[nImageIndex] = stored;
+            }
 
             renderReviewMat_(source, stored);
         }
@@ -1287,15 +1290,26 @@ namespace WsoToolkit.controls
 
             Mat source;
             string strStem;
+            ImageAdjustParam? adjust = null;
 
             switch (_reviewView)
             {
+                case ReviewViewMode.Processed:
+                    if (_processedMat == null)
+                    {
+                        return;
+                    }
+                    source = _processedMat;
+                    strStem = "processed";
+                    break;
+
                 case ReviewViewMode.Stitched:
                     if (index >= _stitchedList.Count)
                     {
                         return;
                     }
                     source = _stitchedList[index];
+                    adjust = getStitchedAdjustParam_(index);
                     strStem = $"stitched{index + 1}";
                     break;
 
@@ -1325,6 +1339,7 @@ namespace WsoToolkit.controls
                         return;
                     }
                     source = _captureImageList[index];
+                    adjust = GetAdjustParam(index);
                     strStem = $"{index + 1}";
                     break;
             }
@@ -1349,6 +1364,13 @@ namespace WsoToolkit.controls
                 $"{CapturePresetName}_{DateTime.Now:yyyyMMdd_HHmmss}_{strStem}.png");
             using Mat mat = source.Clone();
             mat.SaveImage(strFileName);
+            // Also the image as Review shows it (Image Adjust applied); bands and the processed
+            // view carry no adjustment of their own.
+            if (adjust != null)
+            {
+                using Mat adjusted = ApplyImageAdjustments(mat, adjust);
+                adjusted.SaveImage(System.IO.Path.ChangeExtension(strFileName, null) + "_adjusted.png");
+            }
         }
 
         #endregion EventHandler - Save

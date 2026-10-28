@@ -166,6 +166,7 @@
     <ClInclude Include="exts_eye_align.h" />
     <ClInclude Include="EyeAlignment.h" />
     <ClInclude Include="exts_fixation.h" />
+    <ClInclude Include="exts_image_adjust.h" />
     <ClInclude Include="exts_lso_camera.h" />
     <ClInclude Include="exts_lso_scanner.h" />
     <ClInclude Include="exts_oct_analysis.h" />
@@ -200,6 +201,7 @@
     <ClCompile Include="exts_eye_align.cpp" />
     <ClCompile Include="EyeAlignment.cpp" />
     <ClCompile Include="exts_fixation.cpp" />
+    <ClCompile Include="exts_image_adjust.cpp" />
     <ClCompile Include="exts_lso_camera.cpp" />
     <ClCompile Include="exts_lso_scanner.cpp" />
     <ClCompile Include="exts_oct_analysis.cpp" />

@@ -3,10 +3,12 @@
 #include "ColorCameraApplySequence.h"
 #include "MainBoard.h"
 #include "Spinnaker.h"
+#include "ColorCameraHighDepth.h"
 
 #include <format>
 #include <chrono> // steady clock
 #include <stdexcept>
+#include <utility>
 
 
 using namespace wso_device;
@@ -886,7 +888,7 @@ void wso_device::ColorCamera::shootSwTrigger()
 
 	auto t4 = steady_clock::now();
 
-	std::memcpy(buffer, impl().rawImage->GetData(), frameSize);
+	wso_device::detail::copyCameraFrame(buffer, impl().rawImage, frameSize);
 
 	auto t5 = steady_clock::now();
 
@@ -1322,7 +1324,7 @@ int wso_device::ColorCamera::acquireCaptureFrames(int* framesAcquired, unsigned 
 			consecutiveTimeouts = 0;
 
 			try {
-				std::memcpy(buffer, impl().rawImage->GetData(), frameSize);
+				wso_device::detail::copyCameraFrame(buffer, impl().rawImage, frameSize);
 				unique_lock<mutex> lock(impl().mutexLock);
 				CallbackRegistry::getInstance()->runColorCameraImageCaptured(buffer, width, height, frameCount, totalFrameCount, getFlipMode(), nPixelFormat, nBytesPerPixel);
 			}
@@ -1930,6 +1932,26 @@ bool wso_device::ColorCamera::applyExtendedInto_(const ColorCameraExtendedParam&
 		// The writable limit node, NOT the read-only DeviceLinkThroughput reading - the two
 		// are easy to confuse and only one of them is a setting.
 		ok &= rowOk_(applyIntNode_(map, "DeviceLinkThroughputLimit", params.deviceLinkThroughput, result));
+		// White balance nodes exist only while the ISP is on (IspEnable 0 hides BalanceWhiteAuto,
+		// a mono format hides the ratios). An absent node cannot be running auto white balance
+		// or scaling a channel, so it is skipped instead of failing the whole apply.
+		const auto wbNodePresent = [&map](const char* name) { return IsAvailable(map.GetNode(name)); };
+		if ((params.balanceRatioRed >= 0.0 || params.balanceRatioBlue >= 0.0) && wbNodePresent("BalanceRatioSelector")) {
+			const int autoStatus = wbNodePresent("BalanceWhiteAuto")
+				? applyEnumNode_(map, "BalanceWhiteAuto", "Off", result) : CAM_FIELD_NOT_REQUESTED;
+			ok &= rowOk_(autoStatus);
+			if (autoStatus == CAM_FIELD_APPLIED || autoStatus == CAM_FIELD_NOT_REQUESTED) {
+				for (const auto& channel : { std::make_pair("Red", params.balanceRatioRed),
+					std::make_pair("Blue", params.balanceRatioBlue) }) {
+					if (channel.second < 0.0) { continue; }
+					const int selectorStatus = applyEnumNode_(map, "BalanceRatioSelector", channel.first, result);
+					ok &= rowOk_(selectorStatus);
+					if (selectorStatus == CAM_FIELD_APPLIED) {
+						ok &= rowOk_(applyFloatNode_(map, "BalanceRatio", channel.second, result, nullptr));
+					}
+				}
+			}
+		}
 
 		// 3) GPIO lines. Each row is selected, its source dropped to Off first (a line whose
 		//    source is driving cannot change mode), then mode/source/inverter. The selector
@@ -2067,6 +2089,17 @@ bool wso_device::ColorCamera::readExtendedSettings(ColorCameraExtendedParam* out
 		out->deviceLinkThroughput = readIntNode_(map, "DeviceLinkThroughputLimit");
 		out->triggerDelayUs = readFloatNode_(map, "TriggerDelay");
 		out->ispEnable = readBoolNode_(map, "IspEnable");
+		char balanceSelector[LSO_CAMERA_NAME_MAX] = {};
+		readEnumNode_(map, "BalanceRatioSelector", balanceSelector);
+		if (stated_(balanceSelector)) {
+			if (applyEnumNode_(map, "BalanceRatioSelector", "Red", nullptr) == CAM_FIELD_APPLIED) {
+				out->balanceRatioRed = readFloatNode_(map, "BalanceRatio");
+			}
+			if (applyEnumNode_(map, "BalanceRatioSelector", "Blue", nullptr) == CAM_FIELD_APPLIED) {
+				out->balanceRatioBlue = readFloatNode_(map, "BalanceRatio");
+			}
+			applyEnumNode_(map, "BalanceRatioSelector", balanceSelector, nullptr);
+		}
 
 		if (!includeLines) {
 			// The caller does not need the GPIO rows, so the selector is left exactly where
@@ -2153,6 +2186,8 @@ bool wso_device::ColorCamera::applyFullSettings(const ColorCameraSettingParam& b
 	sensorPhase.ispEnable = -1;
 	sensorPhase.acquisitionBurstFrameCount = -1;
 	sensorPhase.deviceLinkThroughput = -1;
+	sensorPhase.balanceRatioRed = -1.0;
+	sensorPhase.balanceRatioBlue = -1.0;
 	sensorPhase.triggerMode[0] = '\0';
 	sensorPhase.triggerSource[0] = '\0';
 	sensorPhase.triggerActivation[0] = '\0';
@@ -2800,7 +2835,7 @@ void wso_device::ColorCamera::acquireCameraData(void)
 		impl().rawImage = processor.Convert(impl().rawImage, PixelFormat_BayerGB16);
 		
 		
-		std::memcpy(buffer, impl().rawImage->GetData(), frameSize);
+		wso_device::detail::copyCameraFrame(buffer, impl().rawImage, frameSize);
 
 		impl().getCamera()->EndAcquisition();
 	}
@@ -2851,7 +2886,7 @@ void wso_device::ColorCamera::acquireCameraData(void)
 			frameCount++;
 
 			impl().rawImage = impl().getCamera()->GetNextImage();
-			std::memcpy(buffer, impl().rawImage->GetData(), frameSize);
+			wso_device::detail::copyCameraFrame(buffer, impl().rawImage, frameSize);
 
 			unique_lock<mutex> lock(impl().mutexLock);
 			CallbackRegistry::getInstance()->runColorCameraFrameCaptured(buffer, width, height, frameCount, flipMode, nPixelFormat, nBytesPerPixel);
@@ -2909,7 +2944,7 @@ void wso_device::ColorCamera::acquireCameraTriggeredLiveData(void)
 			}
 
 			try {
-				std::memcpy(buffer, impl().rawImage->GetData(), frameSize);
+				wso_device::detail::copyCameraFrame(buffer, impl().rawImage, frameSize);
 				++frameCount;
 				unique_lock<mutex> lock(impl().mutexLock);
 				CallbackRegistry::getInstance()->runColorCameraFrameCaptured(buffer, width, height, frameCount, flipMode, nPixelFormat, nBytesPerPixel);
@@ -2970,7 +3005,7 @@ void wso_device::ColorCamera::acquireCameraSingleFrameData(void) // Single Frame
 
 		auto t3 = steady_clock::now();
 
-		std::memcpy(buffer, impl().rawImage->GetData(), frameSize);
+		wso_device::detail::copyCameraFrame(buffer, impl().rawImage, frameSize);
 
 		auto t4 = steady_clock::now();
 
@@ -3063,7 +3098,7 @@ void wso_device::ColorCamera::acquireCameraSingleSequencerROIData(void)
 		
 		frameSize = width * height * sizeof(char) * nBytesPerPixel;
 
-		std::memcpy(buffer, impl().rawImage->GetData(), frameSize);
+		wso_device::detail::copyCameraFrame(buffer, impl().rawImage, frameSize);
 
 		unique_lock<mutex> lock(impl().mutexLock);
 		CallbackRegistry::getInstance()->runColorCameraSeqROIFrameCaptured(buffer, width, height, offsetX, offsetY, frameCount, totalFrameCount, getFlipMode(), nPixelFormat, nBytesPerPixel);
@@ -3147,7 +3182,7 @@ void wso_device::ColorCamera::acquireCameraMultiSequencerROIData(void)
 					offsetY = roiList[i][j].offsetY;
 
 					frameSize = width * height * sizeof(char) * nBytesPerPixel;
-					std::memcpy(buffer, impl().rawImage->GetData(), frameSize);
+					wso_device::detail::copyCameraFrame(buffer, impl().rawImage, frameSize);
 
 					CallbackRegistry::getInstance()->runColorCameraSeqROIFrameCaptured(buffer, width, height, offsetX, offsetY, frameCount, totalFrameCount, getFlipMode(), nPixelFormat, nBytesPerPixel);
 
@@ -3276,7 +3311,7 @@ void wso_device::ColorCamera::acquireCameraOffsetROIData(void)
 				impl().rawImage = impl().getCamera()->GetNextImage();
 
 				//auto t4 = steady_clock::now();
-				std::memcpy(buffer, impl().rawImage->GetData(), frameSize);
+				wso_device::detail::copyCameraFrame(buffer, impl().rawImage, frameSize);
 
 
 				//auto t5 = steady_clock::now();
@@ -3433,7 +3468,7 @@ void wso_device::ColorCamera::acquireCaptureCameraOffsetROIData(void)
 			impl().rawImage = impl().getCamera()->GetNextImage(3000);
 
 			//auto t4 = steady_clock::now();
-			std::memcpy(buffer, impl().rawImage->GetData(), frameSize);
+			wso_device::detail::copyCameraFrame(buffer, impl().rawImage, frameSize);
 
 
 			//auto t5 = steady_clock::now();
@@ -3578,7 +3613,7 @@ void wso_device::ColorCamera::acquireCameraRollSwTrigOverlapLive(void)
 
 				//auto t3 = steady_clock::now();
 
-				std::memcpy(buffer, impl().rawImage->GetData(), frameSize);
+				wso_device::detail::copyCameraFrame(buffer, impl().rawImage, frameSize);
 
 				//auto t4 = steady_clock::now();
 
@@ -3693,7 +3728,7 @@ void wso_device::ColorCamera::acquireCameraRollSwTrigOverlapCapture(void)
 
 			impl().rawImage = impl().getCamera()->GetNextImage();
 
-			std::memcpy(buffer, impl().rawImage->GetData(), frameSize);
+			wso_device::detail::copyCameraFrame(buffer, impl().rawImage, frameSize);
 
 			CallbackRegistry::getInstance()->runColorCameraRollSWTrigOverlapFrameCaptured(buffer, nRoiWidth, nRoiHeight, frameCount, totalFrameCount, getFlipMode(), nPixelFormat, nBytesPerPixel);
 
@@ -3757,7 +3792,7 @@ void wso_device::ColorCamera::acquireCameraRollHwTriggerCaptureData(void)
 			impl().rawImage = impl().getCamera()->GetNextImage(3000);
 
 			// ?????????? ??????? ???? ???
-			std::memcpy(buffer, impl().rawImage->GetData(), frameSize);
+			wso_device::detail::copyCameraFrame(buffer, impl().rawImage, frameSize);
 		}
 		catch (const Spinnaker::Exception& e)
 		{
@@ -4097,7 +4132,7 @@ void wso_device::ColorCamera::acquireCameraCaptureData(void)
 		//filename << nIndex << ".jpg";
 		//convertedImage->Save(filename.str().c_str());
 
-		std::memcpy(buffer, impl().rawImage->GetData(), frameSize);
+		wso_device::detail::copyCameraFrame(buffer, impl().rawImage, frameSize);
 		unique_lock<mutex> lock(impl().mutexLock);
 		CallbackRegistry::getInstance()->runColorCameraImageCaptured(buffer, width, height, frameCount, nTotalFrameCount, getFlipMode(), nPixelFormat, nBytesPerPixel);
 	}
@@ -4126,6 +4161,7 @@ int wso_device::ColorCamera::getBytesPerPixel()
 				nRet = 1;
 				break;
 			case PixelFormat_BayerRG16:
+			case PixelFormat_BayerRG12Packed:
 				nRet = 2;
 				break;
 			case PixelFormat_RGB8Packed:
@@ -4181,7 +4217,7 @@ void wso_device::ColorCamera::OnSpinnakerCameraEvent(std::string eventName)
 
 				impl().rawImage = impl().getCamera()->GetNextImage();
 
-				std::memcpy(buffer, impl().rawImage->GetData(), frameSize);
+				wso_device::detail::copyCameraFrame(buffer, impl().rawImage, frameSize);
 
 				//unique_lock<mutex> lock(impl().mutexHandleLock);
 				CallbackRegistry::getInstance()->runColorCameraOffsetROIFrameCaptured(buffer, nRoiWidth, nRoiHeight, 0, 0, frameCount, totalFrameCount, getFlipMode(), nPixelFormat, nBytesPerPixel);

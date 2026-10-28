@@ -1,0 +1,96 @@
+<Window x:Class="WsoToolkit.LsoImageAnalysisWindow"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:oxy="http://oxyplot.org/wpf" Title="Image Analysis" Width="1240" Height="880"
+ MinWidth="900" MinHeight="650" Loaded="Window_Loaded">
+ <DockPanel Margin="8">
+  <WrapPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+   <Button Content="Open PNG / TIFF" Click="Open_Click" Padding="8,4"/>
+   <Button Content="Load latest" Click="Latest_Click" Padding="8,4" Margin="6,0"/>
+   <TextBlock x:Name="SourceLabel" VerticalAlignment="Center"/>
+  </WrapPanel>
+  <TabControl>
+   <TabItem Header="Brightness / Profile / Uniformity">
+    <Grid>
+     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+     <WrapPanel Grid.ColumnSpan="2" Margin="4">
+      <TextBlock Text="Curve " VerticalAlignment="Center"/>
+      <ComboBox x:Name="Curve" Width="110" SelectedIndex="0" SelectionChanged="Changed">
+       <ComboBoxItem Content="Soft-Knee"/><ComboBoxItem Content="Linear"/><ComboBoxItem Content="Gamma"/><ComboBoxItem Content="Auto-Window"/>
+      </ComboBox>
+      <TextBlock Text=" Gain " VerticalAlignment="Center"/>
+      <Slider x:Name="Gain" Width="100" Minimum="1" Maximum="10" Value="1" TickFrequency="0.1" ValueChanged="Gain_Changed"/>
+      <Button Content="Auto" Click="Auto_Click" Margin="4,0"/>
+      <CheckBox x:Name="ApplyAnalysis" Content="Apply to analysis" Checked="Changed" Unchecked="Changed" VerticalAlignment="Center" Margin="6,0"/>
+      <ComboBox x:Name="Direction" Width="100" SelectedIndex="0" SelectionChanged="Changed">
+       <ComboBoxItem Content="Horizontal"/><ComboBoxItem Content="Vertical"/><ComboBoxItem Content="Cross"/><ComboBoxItem Content="Diagonal"/>
+      </ComboBox>
+      <TextBlock Text=" Binning " VerticalAlignment="Center"/>
+      <TextBox x:Name="Thickness" Text="1" Width="38" TextChanged="Changed"/>
+      <ComboBox x:Name="Channel" Width="90" SelectedIndex="0" SelectionChanged="Changed">
+       <ComboBoxItem Content="Luminance"/><ComboBoxItem Content="Green"/><ComboBoxItem Content="Red"/><ComboBoxItem Content="Blue"/>
+      </ComboBox>
+      <CheckBox x:Name="Rec709" Content="Rec.709" IsChecked="True" Checked="Changed" Unchecked="Changed" Margin="6,0" VerticalAlignment="Center"/>
+      <Button Content="Snap to peak" Click="Peak_Click"/>
+     </WrapPanel>
+     <Border Grid.Row="1" Margin="4" Background="#181818" ClipToBounds="True">
+      <Grid x:Name="ImageHost" SizeChanged="Image_SizeChanged" MouseLeftButtonDown="Image_Down" MouseMove="Image_Move" MouseLeftButtonUp="Image_Up">
+       <Image x:Name="Preview" Stretch="Uniform"/>
+       <Canvas x:Name="Overlay" IsHitTestVisible="False"/>
+      </Grid>
+     </Border>
+     <oxy:PlotView x:Name="ProfilePlot" Grid.Row="1" Grid.Column="1" Margin="4"/>
+     <DockPanel Grid.Row="2" Margin="4">
+      <TextBlock x:Name="StatisticsLabel" DockPanel.Dock="Top" TextWrapping="Wrap" Margin="4"/>
+      <oxy:PlotView x:Name="CurvePlot"/>
+     </DockPanel>
+     <DockPanel Grid.Row="2" Grid.Column="1" Margin="4">
+      <WrapPanel DockPanel.Dock="Top">
+       <TextBlock Text="Uniformity blocks " VerticalAlignment="Center"/>
+       <ComboBox x:Name="Block" Width="55" SelectedIndex="0" SelectionChanged="Changed">
+        <ComboBoxItem Content="16"/><ComboBoxItem Content="32"/><ComboBoxItem Content="64"/>
+       </ComboBox>
+       <ComboBox x:Name="Metric" Width="150" SelectedIndex="0" SelectionChanged="Changed" Margin="6,0">
+        <ComboBoxItem Content="Standard deviation"/><ComboBoxItem Content="Mean shading"/><ComboBoxItem Content="CV %"/><ComboBoxItem Content="Center ratio %"/>
+       </ComboBox>
+      </WrapPanel>
+      <oxy:PlotView x:Name="MapPlot"/>
+     </DockPanel>
+    </Grid>
+   </TabItem>
+   <TabItem Header="Resolution / FAF rejection">
+    <DockPanel Margin="4">
+     <WrapPanel DockPanel.Dock="Top">
+      <CheckBox x:Name="AutoUsaf" Content="Auto USAF" IsChecked="True" Checked="Changed" Unchecked="Changed" Margin="4"/>
+      <TextBlock Text="Threshold %" VerticalAlignment="Center"/>
+      <Slider x:Name="UsafThreshold" Width="150" Minimum="1" Maximum="99" Value="50" TickFrequency="0.1" IsSnapToTickEnabled="True" ValueChanged="Gain_Changed"/>
+      <ComboBox x:Name="UsafEdge" SelectedIndex="0" Width="65">
+       <ComboBoxItem Content="E1"/><ComboBoxItem Content="E2"/><ComboBoxItem Content="E3"/>
+       <ComboBoxItem Content="E4"/><ComboBoxItem Content="E5"/><ComboBoxItem Content="E6"/><ComboBoxItem Content="All"/>
+      </ComboBox>
+      <Button Content="-0.1 px" Tag="-0.1" Click="Nudge_Click" Margin="4,0"/>
+      <Button Content="+0.1 px" Tag="0.1" Click="Nudge_Click"/>
+      <Button Content="Reset edges" Click="ResetEdges_Click" Margin="4,0"/>
+      <ComboBox x:Name="FafMode" SelectedIndex="0" Width="130" SelectionChanged="Changed">
+       <ComboBoxItem Content="FAF Off"/><ComboBoxItem Content="B-FAF (G)"/>
+       <ComboBoxItem Content="B-FAF (G+R)"/><ComboBoxItem Content="G-FAF (R)"/>
+      </ComboBox>
+     </WrapPanel>
+     <TextBlock x:Name="ResolutionLabel" DockPanel.Dock="Bottom" TextWrapping="Wrap" Margin="4"/>
+     <TextBlock DockPanel.Dock="Bottom" Text="Drag two endpoints across a USAF group. Drag the dashed threshold in the plot. Channel, binning and analysis gain follow the first tab." Margin="4" TextWrapping="Wrap"/>
+     <Grid>
+      <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+      <Grid x:Name="ResolutionHost" Background="#181818" ClipToBounds="True" SizeChanged="Resolution_SizeChanged"
+       MouseLeftButtonDown="Resolution_Down" MouseMove="Resolution_Move" MouseLeftButtonUp="Resolution_Up">
+       <Image x:Name="ResolutionPreview" Stretch="Uniform"/>
+       <Canvas x:Name="ResolutionOverlay" IsHitTestVisible="False"/>
+      </Grid>
+      <oxy:PlotView x:Name="ResolutionPlot" Grid.Column="1" PreviewMouseLeftButtonDown="Threshold_Down"
+       PreviewMouseMove="Threshold_Move" PreviewMouseLeftButtonUp="Threshold_Up"/>
+     </Grid>
+    </DockPanel>
+   </TabItem>
+  </TabControl>
+ </DockPanel>
+</Window>

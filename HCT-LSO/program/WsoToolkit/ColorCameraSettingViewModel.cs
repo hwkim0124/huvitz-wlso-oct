@@ -82,6 +82,7 @@ namespace WsoToolkit
             { "Mono16", (uint)ColorPixelFormat.Mono16 },
             //{ "RGB8Packed", (uint)ColorPixelFormat.RGB8Packed },
             { "BayerRG8", (uint)ColorPixelFormat.BayerRG8 },
+            { "BayerRG12Packed", (uint)ColorPixelFormat.BayerRG12Packed },
             { "BayerRG16", (uint)ColorPixelFormat.BayerRG16 },
             //{ "BGR8", (uint)ColorPixelFormat.BGR8 },
         };
@@ -142,6 +143,8 @@ namespace WsoToolkit
             _imageFormatInputBoxsList.Add(myTbTriggerDelay);
             _imageFormatInputBoxsList.Add(myTbBurstFrameCount);
             _imageFormatInputBoxsList.Add(myTbDeviceLinkThroughput);
+            _imageFormatInputBoxsList.Add(myTbBalanceRatioRed);
+            _imageFormatInputBoxsList.Add(myTbBalanceRatioBlue);
 
             myComboAcquisitionMode.ItemsSource = _AcqModeList;
 
@@ -274,6 +277,9 @@ namespace WsoToolkit
             fillEnumCombo_(myComboLineSelector, "LineSelector", LineSelectorNames, Preset.LineSelector);
 
             fillTriStateCombo_(myComboIspEnable, Preset.IspEnable);
+
+            myTbBalanceRatioRed.Text = optionalNumberText_(Preset.BalanceRatioRed);
+            myTbBalanceRatioBlue.Text = optionalNumberText_(Preset.BalanceRatioBlue);
 
             ComboBox[] modes = LineModeCombos;
             ComboBox[] sources = LineSourceCombos;
@@ -584,6 +590,8 @@ namespace WsoToolkit
                 Preset.TriggerOverlap = tagOf_(myComboTriggerOverlap);
                 Preset.LineSelector = tagOf_(myComboLineSelector);
                 Preset.IspEnable = triStateOf_(myComboIspEnable);
+                Preset.BalanceRatioRed = readOptionalDouble_("White Balance R", myTbBalanceRatioRed.Text, Preset.BalanceRatioRed);
+                Preset.BalanceRatioBlue = readOptionalDouble_("White Balance B", myTbBalanceRatioBlue.Text, Preset.BalanceRatioBlue);
                 Preset.AcquisitionBurstFrameCount = readOptionalLong_("Acq. Burst Frame Count",
                     myTbBurstFrameCount.Text, Preset.AcquisitionBurstFrameCount);
                 Preset.DeviceLinkThroughput = readOptionalLong_("Device Link Throughput",

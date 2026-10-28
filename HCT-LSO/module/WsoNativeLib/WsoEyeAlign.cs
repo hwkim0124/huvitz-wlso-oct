@@ -152,18 +152,18 @@ namespace WsoNativeLib
             // Same defaults as the in-class initializers of the C++ struct.
             public EyeAlignConfigParam()
             {
-                readyPosZ = -10000;
+                readyPosZ = -12000;
                 swingTiltPos_OD = -1500;
                 swingTiltPos_OS = +1500;
                 eyePosX_OD = +15000;
                 eyePosX_OS = -15000;
-                searchLimitPosZ = -4000;
+                searchLimitPosZ = -5000;
                 minSafePosZ = 0;
-                posToleranceSteps = 20;
-                stepZ = 300;
+                posToleranceSteps = 100;
+                stepZ = 500;
 
-                toleranceYPx = 6.0f;
-                approachTolZPx = 8.0f;
+                toleranceYPx = 24.0f;
+                approachTolZPx = 18.0f;
                 toleranceXPx = 6.0f;
                 toleranceZPx = 8.0f;
                 startDeadbandPx = 10.0f;
@@ -187,9 +187,9 @@ namespace WsoNativeLib
                 backOffOnEnd = 1;
                 irLedIntensity = 3;
 
-                detLeft = new PupilDetectParam { signV = -1 };     // side cameras, see the C++ header
-                detRight = new PupilDetectParam { signV = -1 };
-                detLower = new PupilDetectParam();
+                detLeft = new PupilDetectParam { signH = -1, signV = -1 };     // side cameras, see the C++ header
+                detRight = new PupilDetectParam { signH = +1, signV = -1 };
+                detLower = new PupilDetectParam { signH = +1, signV = +1 };
             }
         }
 

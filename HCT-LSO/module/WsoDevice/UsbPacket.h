@@ -166,6 +166,13 @@ namespace wso_device
 			} ctrl2;
 
 			struct {
+				std::uint8_t patternId;
+				std::uint8_t onOff;
+				std::uint8_t fundusMode;
+				std::uint8_t crc[PACKET_CRC_SIZE];
+			} lsoCapture;
+
+			struct {
 				std::uint8_t c1;
 				std::float_t f1;
 				std::uint8_t crc[PACKET_CRC_SIZE];

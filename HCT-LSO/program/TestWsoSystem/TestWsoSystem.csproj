@@ -15,7 +15,7 @@
   </PropertyGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="call prebuild.bat $(SolutionDir)\externs\dlls $(OutputPath)" />
+    <Exec Command="call prebuild.bat $(SolutionDir)\externs\dlls $(OutputPath) $(SolutionDir)models" />
   </Target>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

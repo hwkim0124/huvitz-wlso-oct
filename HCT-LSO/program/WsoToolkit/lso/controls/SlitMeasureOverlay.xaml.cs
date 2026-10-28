@@ -112,6 +112,19 @@ namespace WsoToolkit.controls
             redraw_();
         }
 
+        /// <summary>Re-places the markers on the image after it moved under them (the preview's
+        /// zoom/pan, or a frame laid out at another size).</summary>
+        public void Refresh()
+        {
+            // A running measurement's hover row is the row under the cursor, which just changed.
+            if (IsMeasuring && IsMouseOver)
+            {
+                _hoverRow = imageRowAt_(Mouse.GetPosition(this).Y);
+            }
+
+            redraw_();
+        }
+
         private void setMeasuring_(bool value)
         {
             if (IsMeasuring == value)
@@ -125,59 +138,50 @@ namespace WsoToolkit.controls
 
         #region Mapping
 
-        // Stretch="Uniform": the image is scaled by the smaller of the two ratios and centered,
-        // so the letterbox band has to come off before a click means anything.
+        // Overlay Y <-> image row goes through the Image element itself. Stretch="Uniform" sizes
+        // the element to the picture, so its local space spans exactly the bitmap, and
+        // TransformToVisual folds in where the element sits (the letterbox) and the preview's
+        // zoom/pan - one mapping for every zoom level, while the markers are drawn here in
+        // viewport space so their strokes stay thin.
         //
-        // Layout works in DIPs (ImageSource.Width/Height) while a row is a PIXEL, and the two
-        // differ whenever the bitmap's DPI is not 96 - so the band is computed in DIPs and the
-        // position inside it is converted with the pixel height.
-        private bool imageBand_(out double top, out double height, out double pixelHeight)
+        // Layout works in DIPs while a row is a PIXEL, and the two differ whenever the bitmap's
+        // DPI is not 96 - so the position is taken in DIPs and converted with the pixel height.
+        private static bool pixelHeightOf_(Image image, out double pixelHeight)
         {
-            top = 0.0;
-            height = 0.0;
             pixelHeight = 0.0;
 
-            if (Viewport?.Source is not ImageSource source)
+            if (image.Source is not ImageSource source || image.ActualHeight <= 0)
             {
                 return false;
             }
 
-            double srcW = source.Width;
-            double srcH = source.Height;
-            double boxW = Viewport.ActualWidth;
-            double boxH = Viewport.ActualHeight;
-            if (srcW <= 0 || srcH <= 0 || boxW <= 0 || boxH <= 0)
-            {
-                return false;
-            }
-
-            double scale = Math.Min(boxW / srcW, boxH / srcH);
-            height = srcH * scale;
-            top = (boxH - height) / 2.0;
-            pixelHeight = source is BitmapSource bitmap ? bitmap.PixelHeight : srcH;
-            return height > 0 && pixelHeight > 0;
+            pixelHeight = source is BitmapSource bitmap ? bitmap.PixelHeight : source.Height;
+            return pixelHeight > 0;
         }
 
         /// <summary>Control Y -> row of the displayed image (not yet a sensor row).</summary>
         private double? imageRowAt_(double y)
         {
-            if (!imageBand_(out double top, out double height, out double pixelHeight))
+            if (Viewport is not Image image || !pixelHeightOf_(image, out double pixelHeight))
             {
                 return null;
             }
 
-            double row = (y - top) / height * pixelHeight;
+            // Rows are horizontal and the zoom is scale + translate only, so X plays no part.
+            double imageY = TransformToVisual(image).Transform(new Point(0.0, y)).Y;
+            double row = imageY / image.ActualHeight * pixelHeight;
             return Math.Clamp(row, 0.0, pixelHeight - 1.0);
         }
 
         private double controlYOf_(double imageRow)
         {
-            if (!imageBand_(out double top, out double height, out double pixelHeight) || pixelHeight <= 0)
+            if (Viewport is not Image image || !pixelHeightOf_(image, out double pixelHeight))
             {
                 return 0.0;
             }
 
-            return top + imageRow / pixelHeight * height;
+            double imageY = imageRow / pixelHeight * image.ActualHeight;
+            return image.TransformToVisual(this).Transform(new Point(0.0, imageY)).Y;
         }
 
         private int sensorRows_(double imageRowSpan)
@@ -264,7 +268,7 @@ namespace WsoToolkit.controls
                 return;
             }
 
-            if (!imageBand_(out _, out _, out _))
+            if (Viewport == null || !pixelHeightOf_(Viewport, out _))
             {
                 return;
             }
@@ -331,6 +335,13 @@ namespace WsoToolkit.controls
 
         private void addLabel_(double y, string text, Brush foreground)
         {
+            // Zoomed in, a marker can lie outside the view; its label goes with it instead of
+            // piling up on the top edge over the banner.
+            if (y < -0.5 || y > ActualHeight + 0.5)
+            {
+                return;
+            }
+
             var label = new Border
             {
                 Background = new SolidColorBrush(Color.FromArgb(190, 0, 40, 60)),

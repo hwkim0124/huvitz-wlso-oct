@@ -13,4 +13,11 @@
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
   </PropertyGroup>
 
+  <!-- Managed OpenCV API only, for the per-mode frame registration (LsoModeImageAccumulator).
+       The native runtime ships with each host: WsoToolkit and HCT.LSO.Agent reference
+       OpenCvSharp4.Windows at this same version, so both resolve one OpenCvSharp.dll. -->
+  <ItemGroup>
+    <PackageReference Include="OpenCvSharp4" Version="4.13.0.20260602" />
+  </ItemGroup>
+
 </Project>

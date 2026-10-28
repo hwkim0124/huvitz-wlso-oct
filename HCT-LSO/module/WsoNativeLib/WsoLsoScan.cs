@@ -101,13 +101,13 @@ namespace WsoNativeLib
         public const int LSO_CAMERA_LINE_COUNT = 4;
         public const int LSO_CAMERA_NAME_MAX = 32;
         public const int LSO_CAMERA_FIELD_MAX = 40;
-        public const uint LSO_CAMERA_CONFIG_VERSION = 1;
+        public const uint LSO_CAMERA_CONFIG_VERSION = 2;
 
         // Native sizeof(), pinned here and asserted by program/TestCameraPreset against
         // Marshal.SizeOf. The same numbers are static_assert-ed in LsoCameraStruct.h, so a
         // field added on one side cannot pass unnoticed on the other.
         public const int NativeSizeOfLineConfig = 68;
-        public const int NativeSizeOfExtendedParam = 696;
+        public const int NativeSizeOfExtendedParam = 712;
         public const int NativeSizeOfFieldResult = 100;
         public const int NativeSizeOfApplyResult = 4016;
 
@@ -149,6 +149,8 @@ namespace WsoNativeLib
 
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = LSO_CAMERA_LINE_COUNT, ArraySubType = UnmanagedType.Struct)]
             public LsoColorCameraLineConfig[] lines;
+            public double balanceRatioRed;           // negative = not stated
+            public double balanceRatioBlue;          // negative = not stated
 
             // A block that states nothing. Writing it changes no node, which is what lets a
             // caller with no A-1 configuration keep the behaviour it had before A-1 existed.
@@ -189,6 +191,8 @@ namespace WsoNativeLib
                     triggerOverlap = string.Empty,
                     lineSelector = string.Empty,
                     lines = lines,
+                    balanceRatioRed = -1.0,
+                    balanceRatioBlue = -1.0,
                 };
             }
         }

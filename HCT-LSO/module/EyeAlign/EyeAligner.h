@@ -21,7 +21,8 @@ namespace eye_align
 	//   1  Z -> readyPosZ          2  X -> eye side        3  swing -> tilt
 	//      (2: the swing goes to zero first when the head stands on the other eye's side)
 	//   4a Z -> searchLimitPosZ: stepZ per frame until the side camera locks, then one
-	//      position move for the rest of the way; no lock at the limit cancels
+	//      position move for the rest of the way (skipped when the lower camera is
+	//      locked too with its pupil above the 3/4 line); no lock at the limit cancels
 	//   4b Y centres the side-camera pupil vertically (toleranceYPx)
 	//   5  Z advances (stepZ per frame) until the lower camera locks, then follows the
 	//      pupil's vertical error (approachTolZPx), forward moves clipped at minSafePosZ

@@ -94,10 +94,28 @@ namespace WsoToolkit
             myCbEditOp.SelectedIndex = 0;
             _updating = false;
 
-            _generated = _scan.GenerateLinearTrajectory();
+            _generated = LsoModeTrajectory.TryGenerate(_scan, out string generateIssue) ?? Array.Empty<short>();
+            if (generateIssue.Length > 0)
+                MsgBoxUtil.ShowWarning(generateIssue);
+            if (_scan.IsCalibratedTrajectory)
+            {
+                rbSourceGenerated.Content = "Generated (calibrated FOV)";
+                if (LsoGalvoSlitCalibration.TryLoad(_scan.CalibrationFile, out var calibration, out _)
+                    && calibration != null)
+                {
+                    var points = calibration.Points.Where(p => p.SensorRow.HasValue)
+                        .GroupBy(p => p.GalvoDac).OrderBy(g => g.Key).ToArray();
+                    if (points.Length >= 2)
+                    {
+                        _calDacAsc = points.Select(g => g.Key).ToArray();
+                        _calRowByDac = points.Select(g => g.Average(p => p.SensorRow!.Value) - _sensorRows / 2.0).ToArray();
+                        myTbSimCal.Text = "mapping: " + Path.GetFileName(_scan.CalibrationFile);
+                    }
+                }
+            }
             showGeometry_();
 
-            if (_scan.HasTrajectoryFile)
+            if (_scan.HasTrajectoryFile && !_scan.IsCalibratedTrajectory)
             {
                 short[]? pos = LsoScanProfileModel.LoadTrajectoryFile(_scan.TrajectoryFile, out string error);
                 if (pos != null)
@@ -623,7 +641,7 @@ namespace WsoToolkit
 
         private string header_(short[] pos)
         {
-            string source = _useCsv ? "csv" : "generated-linear";
+            string source = _useCsv ? "csv" : _scan.IsCalibratedTrajectory ? "generated-calibrated-fov" : "generated-linear";
             return $"Galvo trajectory  mode={_modeName}  source={source}  N={pos.Length}  timeStepUs={_scan.TimeStepUs}  "
                 + $"start={_scan.GalvoStartPos} end={_scan.GalvoEndPos} leadIn={_scan.LeadInSamples} leadOut={_scan.LeadOutSamples}  "
                 + $"exported={DateTime.Now:yyyy-MM-ddTHH:mm}";
@@ -650,6 +668,7 @@ namespace WsoToolkit
             _csv = table;
             _csvPath = _defaultCsvPath;
             _scan.TrajectoryFile = _defaultCsvPath;
+            _scan.TrajectoryMode = LsoTrajectoryMode.Linear;
             DialogResult = true;
         }
 
@@ -1055,9 +1074,8 @@ namespace WsoToolkit
             double lineTime = _scan.LineTimeUs;
             // TRIG_FIRST: row 0 opens at the Row 0 offset time (BlankingTimeUs), the same value
             // the calculator adds to G.Delay for the lead-in (DevKit "Row 0 Offset").
-            double tRow0 = _scan.SequenceMode == LsoScanSequenceMode.GalvanoFirst
-                ? _scan.PreMoveDelayUs + _cameraTrigDelayUs + _scan.BlankingTimeUs
-                : _scan.BlankingTimeUs;
+            double tRow0 = LsoAlignmentMetrics.Row0OpenTimeUs(_scan.SequenceMode,
+                _scan.PreMoveDelayUs, _cameraTrigDelayUs, _scan.BlankingTimeUs);
             // rows whose exposure window contains t
             double expLo = lineTime > 0 ? (t - _exposureUs - tRow0) / lineTime : double.NaN;
             double expHi = lineTime > 0 ? (t - tRow0) / lineTime : double.NaN;
@@ -1163,9 +1181,8 @@ namespace WsoToolkit
                 return;
             }
 
-            double tRow0 = _scan.SequenceMode == LsoScanSequenceMode.GalvanoFirst
-                ? _scan.PreMoveDelayUs + _cameraTrigDelayUs + _scan.BlankingTimeUs
-                : _scan.BlankingTimeUs;
+            double tRow0 = LsoAlignmentMetrics.Row0OpenTimeUs(_scan.SequenceMode,
+                _scan.PreMoveDelayUs, _cameraTrigDelayUs, _scan.BlankingTimeUs);
             double exp = _exposureUs;
             int rows = _sensorRows;
             int slitRows = Math.Max(1, _scan.SlitHeightRows);
@@ -1221,7 +1238,7 @@ namespace WsoToolkit
                 double tCross = crossingTime_(slitRow, r, stepUs);
                 if (!double.IsNaN(tCross))
                 {
-                    double errRows = (tCross - (tRow0 + r * lineTime + exp / 2)) / lineTime;
+                    double errRows = LsoAlignmentMetrics.CenteringErrorRows(tCross, tRow0, r, lineTime, exp);
                     covered++;
                     if (double.IsNaN(errFirst)) errFirst = errRows;
                     errLast = errRows;

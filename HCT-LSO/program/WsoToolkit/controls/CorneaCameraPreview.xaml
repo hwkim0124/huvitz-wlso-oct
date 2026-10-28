@@ -17,6 +17,10 @@
             </Grid.RowDefinitions>
             <Grid Grid.Row="0" Grid.Column="0" Background="LightGray">
                 <Image x:Name="imageViewport" Style="{StaticResource ImageStyle}" Stretch="Uniform"/>
+                <Canvas x:Name="myJogOverlay" IsHitTestVisible="False" ClipToBounds="True"/>
+                <TextBlock x:Name="myJogBadge" Visibility="Collapsed" IsHitTestVisible="False"
+                           HorizontalAlignment="Left" VerticalAlignment="Top" Margin="4" Padding="4,1"
+                           Background="#CC202020" Foreground="White" FontSize="12" TextWrapping="Wrap"/>
             </Grid>
             <Grid Grid.Row="1" Grid.Column="0" Margin="4, 0, 4, 0">
                 <Label x:Name="lblStatus" Content="Cornea Camera" Style="{StaticResource LabelStyle}"/>

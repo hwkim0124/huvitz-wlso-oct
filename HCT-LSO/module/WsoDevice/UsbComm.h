@@ -143,7 +143,7 @@ namespace wso_device
 
 		bool TestCommand(std::uint8_t cmd);
 
-		bool LsoScannerControl(std::uint8_t patternId, std::uint8_t onOff);
+		bool LsoScannerControl(std::uint8_t patternId, std::uint8_t onOff, std::uint8_t fundusMode);
 		bool LsoGalvanoMoveY(std::int16_t ypos);
 		// Board-global, no pattern id: whoever starts a mode last owns the setting.
 		bool LsoScanSequence(std::uint8_t seqMode, std::int16_t preMoveOffset, std::uint16_t preMoveDelayUs);
