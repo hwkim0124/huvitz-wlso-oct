@@ -20,18 +20,26 @@ namespace eye_align
 	// Sequence (AUTO / FULL)
 	//   1  Z -> readyPosZ          2  X -> eye side        3  swing -> tilt
 	//      (2: the swing goes to zero first when the head stands on the other eye's side)
-	//   4a Z -> searchLimitPosZ: stepZ per frame until the side camera locks, then one
-	//      position move for the rest of the way (skipped when the lower camera is
-	//      locked too with its pupil above the 3/4 line); no lock at the limit cancels
-	//   4b Y centres the side-camera pupil vertically (toleranceYPx)
-	//   5  Z advances (stepZ per frame) until the lower camera locks, then follows the
-	//      pupil's vertical error (approachTolZPx), forward moves clipped at minSafePosZ
-	//   6  X centres the lower-camera pupil horizontally (toleranceXPx)
-	//   7  Z centres it vertically (toleranceZPx); X off again -> 6
+	//   4  Z -> searchLimitPosZ: searchStepZ per frame until the side camera locks, which
+	//      goes straight to 5a; no lock at the limit: Z stops, waits 5 s, then cancels
+	//   5a Z advances (approachStepZ per frame) until the side-camera pupil is inside the
+	//      middle half of the image width or the lower-camera pupil is above 3/4 of the
+	//      image height; Z rests without a side lock or at minSafePosZ; searchTimeoutMs
+	//      from the start of 4 without the pupil coming in cancels
+	//   5b Y centres the side-camera pupil vertically (toleranceYPx), Z at rest: centerStepY
+	//      per frame from the outer quarters of the image height, fine steps inside
+	//      the middle half; Y rests without a pupil fix or at an end switch; on target -> 7
+	//   6  X centres the lower-camera pupil horizontally (toleranceXPx): centerStepX per
+	//      frame from the outer quarters of the image width, fine steps inside the middle
+	//      half; rests without a fix or at an end switch; on target -> 7
+	//   7  Z centres it vertically (toleranceZPx): centerStepZ per frame from the outer
+	//      quarters of the image height, fine steps inside the middle half; rests without
+	//      a fix or at a limit; on target with X on target too -> 8, otherwise -> 6
 	//   8  FOCUSED: no motion; X or Z outside its tolerance -> FOCUS_LOST -> 7
-	//   The whole run up to the first FOCUS_ALIGNED is bounded by alignTimeoutMs. An
-	//   automatic cancel (EYE_NOT_FOUND, LOWER_EYE_NOT_FOUND, ALIGN_TIMEOUT, PUPIL_LOST)
-	//   backs Z off to readyPosZ; a user cancel stops at once.
+	//   The whole run up to the first FOCUS_ALIGNED is bounded by alignTimeoutMs. Every
+	//   ending - a user cancel, an automatic cancel (SIDE_EYE_NOT_FOUND, ALIGN_TIMEOUT,
+	//   PUPIL_LOST) or a failure - backs Z off to readyPosZ (backOffOnEnd); a second
+	//   cancel during that retreat stops it where it is.
 	//
 	// Threads
 	//   camera thread  -> onCorneaFrame(): copies the frame into CorneaFrameStore, returns.
@@ -39,7 +47,7 @@ namespace eye_align
 	//                     motors, run the phase machine, enqueue events. The position
 	//                     phases (ready Z, eye-side X, swing tilt) each run one blocking
 	//                     position move; the search and approach phases advance Z by
-	//                     stepZ per frame, and the centring phases move one axis by a
+	//                     searchStepZ / approachStepZ per frame, and the centring phases move one axis by a
 	//                     short blocking position move (error px * stepsPerPx); every
 	//                     move is re-measured on the next frame.
 	//   dispatch thread-> pops events and calls CallbackRegistry::runEyeAlignEventOccurred,
@@ -79,8 +87,10 @@ namespace eye_align
 		// Starts a run. AUTO and MANUAL use eyeSide (OD when unknown); FULL forces OD.
 		// Returns EyeAlignResult::NONE on success, otherwise the refusal reason.
 		EyeAlignResult startAlignment(EyeAlignMode mode, EyeSide eyeSide, EyeAlignEventOccurred callback);
-		// Stops every axis, ends the run with ALIGN_CANCELLED(USER_CANCEL). With wait the
-		// call returns after both threads have finished (the terminal event was delivered).
+		// Stops every axis, backs Z off to readyPosZ (backOffOnEnd, AUTO/FULL) and ends
+		// the run with ALIGN_CANCELLED(USER_CANCEL). Called again during the retreat it
+		// aborts that move too. With wait the call returns after both threads have
+		// finished (the retreat is done and the terminal event was delivered).
 		void cancel(bool wait = true);
 
 		// Freezes the motors while a measurement runs; detection and events continue.
@@ -151,6 +161,9 @@ namespace eye_align
 		bool phaseSearching(void);
 		bool phaseCenteringY(void);
 		bool phaseApproaching(void);
+		// Step 5a end condition: the side-camera pupil inside the middle half of the image
+		// width, or the lower-camera pupil above 3/4 of the image height.
+		bool isPupilInApproachRange(void) const;
 		bool phaseCenteringX(void);
 		bool phaseCenteringZ(void);
 		bool phaseFocused(void);
@@ -159,8 +172,8 @@ namespace eye_align
 		// within posToleranceSteps of it or past it, in the forward direction.
 		bool hasZReached(int limitPos) const;
 		// Z at a limit with no lock on the camera that should see the pupil: waits
-		// SEARCH_LOCK_GRACE_MS from the first call, then returns true (time to cancel).
-		bool hasLockGraceExpired(void);
+		// waitMs from the first call, then returns true (time to cancel).
+		bool hasLockGraceExpired(int waitMs);
 
 		// dwellMs > 0 keeps processPhase() from running the new phase until the dwell
 		// has elapsed; the phase timeout counts from the end of the dwell.
@@ -170,8 +183,8 @@ namespace eye_align
 		void finishRun(void);
 		void backOffToReadyPosition(void);
 
-		// Cornea IR illumination: turns both LEDs on at runConfig.irLedIntensity. Runs at
-		// the start of every run.
+		// Cornea IR illumination: turns both LEDs on (no intensity control). Runs at the
+		// start of every run.
 		void setupCorneaLeds(void);
 
 		// Outcome of one pixel-error control step of an axis.
@@ -188,6 +201,8 @@ namespace eye_align
 		// One blocking relative move (AxisController::moveBy) tracked in movingAxis so
 		// cancel() can abort it; a move into an active end switch is skipped.
 		void stepAxis(class AxisController& axis, int offset);
+		// True when a relative move of offset would go into the axis's active end switch.
+		static bool movesIntoEnd(const class AxisController& axis, int offset);
 		AxisMove controlAxisY(bool sideHasFix);							// Y from errorY (side camera, toleranceYPx)
 		AxisMove controlAxisX(bool lowerHasFix);						// X from errorX (lower camera, toleranceXPx)
 		AxisMove controlAxisZ(bool lowerHasFix, float tolerancePx);		// Z from errorZ (lower camera)

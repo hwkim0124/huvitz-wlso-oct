@@ -14,8 +14,10 @@ namespace wso_system
 		// mode: EyeAlignMode, eyeSide: EyeSide (used by AUTO / MANUAL; FULL forces OD).
 		// Returns an EyeAlignResult code: 0 (NONE) on success, otherwise the refusal reason.
 		int WSOSYSTEM_DLL_API __stdcall startEyeAlignment(int mode, int eyeSide, EyeAlignEventOccurred clbEvent);
-		// Stops every axis and ends the run with ALIGN_CANCELLED(USER_CANCEL). Blocks until
-		// the run's threads have finished; do not call it synchronously from the event handler.
+		// Stops every axis, backs Z off to readyPosZ (backOffOnEnd) and ends the run with
+		// ALIGN_CANCELLED(USER_CANCEL); called again during the retreat it aborts that move.
+		// Blocks until the run's threads have finished (retreat included); do not call it
+		// synchronously from the event handler.
 		bool WSOSYSTEM_DLL_API __stdcall cancelEyeAlignment(void);
 		bool WSOSYSTEM_DLL_API __stdcall holdEyeAlignment(void);
 		bool WSOSYSTEM_DLL_API __stdcall resumeEyeAlignment(void);

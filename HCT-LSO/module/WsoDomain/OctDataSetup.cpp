@@ -53,17 +53,17 @@ double wso_domain::OctDataSetup::getInAirScanAxialResolution(void)
 
 void wso_domain::OctDataSetup::setRetinaScanAxialResolution(double resol)
 {
-	impl().retinaPixResol = ((resol < 0.0 || resol > 10.0) ? RETINA_SCAN_PIXEL_RESOLUTION : resol);
+	impl().retinaPixResol = ((resol < 1.0 || resol > 15.0) ? RETINA_SCAN_PIXEL_RESOLUTION : resol);
 }
 
 void wso_domain::OctDataSetup::setCorneaScanAxialResolution(double resol)
 {
-	impl().corneaPixResol = ((resol < 0.0 || resol > 10.0) ? CORNEA_SCAN_PIXEL_RESOLUTION : resol);
+	impl().corneaPixResol = ((resol < 1.0 || resol > 15.0) ? CORNEA_SCAN_PIXEL_RESOLUTION : resol);
 }
 
 void wso_domain::OctDataSetup::setInAirScanAxialResolution(double resol)
 {
-	impl().inAirPixResol = ((resol < 0.0 || resol > 10.0) ? INAIR_SCAN_PIXEL_RESOLUTION : resol);
+	impl().inAirPixResol = ((resol < 1.0 || resol > 15.0) ? INAIR_SCAN_PIXEL_RESOLUTION : resol);
 }
 
 

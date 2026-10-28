@@ -64,25 +64,36 @@ namespace eye_align
 	// detection and drop its lock.
 	constexpr float MOVE_JUMP_FRACTION = 0.8f;
 
-	// Step 4b: a side-camera pupil within this fraction of the image height from the top
-	// or the bottom edge (outside the middle half) is brought in by one position move to
-	// the predicted target instead of the capped per-frame steps of controlAxis().
+	// Step 5b: a side-camera pupil within this fraction of the image height from the top
+	// or the bottom edge (outside the middle half) is brought in by centerStepY per frame
+	// instead of the capped per-frame steps of controlAxis().
 	constexpr float CENTERING_Y_FAR_BAND_FRACTION = 0.25f;
 
-	// Step 4a: the lower-camera pupil enters from the bottom of the image and rises as
-	// Z advances. A pupil already above this fraction of the image height (measured
-	// from the top) while the side camera is locked too means the eye is close enough:
-	// the move on to searchLimitPosZ is skipped and the Y centring starts where Z is.
-	constexpr float SEARCH_LOWER_NEAR_LINE_FRACTION = 0.75f;
+	// Step 7: the same for a lower-camera pupil within this fraction of the image height
+	// from the top or the bottom edge, brought in by centerStepZ per frame.
+	constexpr float CENTERING_Z_FAR_BAND_FRACTION = 0.25f;
 
 	// Step 6: the same for a lower-camera pupil within this fraction of the image width
-	// from the left or the right edge (outside the middle half).
+	// from the left or the right edge, brought in by centerStepX per frame.
 	constexpr float CENTERING_X_FAR_BAND_FRACTION = 0.25f;
 
-	// When Z arrives at a limit (search limit, minSafePosZ) with no lock on the camera
-	// that should see the pupil, the phase waits this long for one before it cancels:
-	// the tracker needs detectConsecutive frames after the pupil becomes visible.
-	constexpr int SEARCH_LOCK_GRACE_MS = 3000;
+	// Blocking position moves of steps 1..3 fail
+	// the run (PHASE_TIMEOUT) when the axis has not arrived within these limits.
+	constexpr int READY_TIMEOUT_MS = 10000;		// Z to readyPosZ (step 1)
+	constexpr int SWING_TIMEOUT_MS = 10000;		// swing to 0 (step 2) and to the tilt (step 3); its own wait (~10 s) bounds the block
+	constexpr int EYE_X_TIMEOUT_MS = 10000;		// X to the eye side (step 2)
+
+	// Step 4: Z at searchLimitPosZ with no side-camera lock stops and waits this long
+	// for one before the run cancels (SIDE_EYE_NOT_FOUND).
+	constexpr int SEARCH_LIMIT_WAIT_MS = 5000;
+
+	// Step 5a ends when the side-camera pupil lies inside the middle half of the image
+	// width, i.e. farther than this fraction of the width from either side edge ...
+	constexpr float APPROACH_SIDE_BAND_FRACTION = 0.25f;
+
+	// ... or when the lower-camera pupil, entering from the bottom, has climbed above
+	// this fraction of the image height.
+	constexpr float APPROACH_LOWER_LINE_FRACTION = 0.75f;
 
 	// Number of IrCameraId slots (RETINA, CORNEA_LOWER, CORNEA_LEFT, CORNEA_RIGHT).
 	constexpr int IR_CAMERA_COUNT = static_cast<int>(IrCameraId::NUMBER_OF_ITEMS);

@@ -820,7 +820,11 @@ bool wso_config::SysConfigFile::loadSectionOfAlignment(AlignmentSettings* aset, 
 		readInt(elem, "searchLimitPosZ", param.searchLimitPosZ);
 		readInt(elem, "minSafePosZ", param.minSafePosZ);
 		readInt(elem, "posToleranceSteps", param.posToleranceSteps);
-		readInt(elem, "stepZ", param.stepZ);
+		readInt(elem, "searchStepZ", param.searchStepZ);
+		readInt(elem, "approachStepZ", param.approachStepZ);
+		readInt(elem, "centerStepY", param.centerStepY);
+		readInt(elem, "centerStepZ", param.centerStepZ);
+		readInt(elem, "centerStepX", param.centerStepX);
 	}
 
 	if ((elem = group->FirstChildElement("Control")) != nullptr) {
@@ -844,16 +848,9 @@ bool wso_config::SysConfigFile::loadSectionOfAlignment(AlignmentSettings* aset, 
 	}
 
 	if ((elem = group->FirstChildElement("Timeout")) != nullptr) {
-		readInt(elem, "readyMs", param.readyTimeoutMs);
-		readInt(elem, "swingMs", param.swingTimeoutMs);
-		readInt(elem, "eyeXMs", param.eyeXTimeoutMs);
 		readInt(elem, "searchMs", param.searchTimeoutMs);
 		readInt(elem, "alignMs", param.alignTimeoutMs);
 		readInt(elem, "backOffOnEnd", param.backOffOnEnd);
-	}
-
-	if ((elem = group->FirstChildElement("Light")) != nullptr) {
-		readInt(elem, "irLedIntensity", param.irLedIntensity);
 	}
 
 	if (XMLElement* cams = group->FirstChildElement("Camera"); cams != nullptr) {
@@ -889,7 +886,11 @@ bool wso_config::SysConfigFile::saveSectionOfAlignment(const AlignmentSettings* 
 	item->SetAttribute("searchLimitPosZ", param.searchLimitPosZ);
 	item->SetAttribute("minSafePosZ", param.minSafePosZ);
 	item->SetAttribute("posToleranceSteps", param.posToleranceSteps);
-	item->SetAttribute("stepZ", param.stepZ);
+	item->SetAttribute("searchStepZ", param.searchStepZ);
+	item->SetAttribute("approachStepZ", param.approachStepZ);
+	item->SetAttribute("centerStepY", param.centerStepY);
+	item->SetAttribute("centerStepZ", param.centerStepZ);
+	item->SetAttribute("centerStepX", param.centerStepX);
 
 	item = pdoc->NewElement("Control");
 	group->LinkEndChild(item);
@@ -913,16 +914,9 @@ bool wso_config::SysConfigFile::saveSectionOfAlignment(const AlignmentSettings* 
 
 	item = pdoc->NewElement("Timeout");
 	group->LinkEndChild(item);
-	item->SetAttribute("readyMs", param.readyTimeoutMs);
-	item->SetAttribute("swingMs", param.swingTimeoutMs);
-	item->SetAttribute("eyeXMs", param.eyeXTimeoutMs);
 	item->SetAttribute("searchMs", param.searchTimeoutMs);
 	item->SetAttribute("alignMs", param.alignTimeoutMs);
 	item->SetAttribute("backOffOnEnd", param.backOffOnEnd);
-
-	item = pdoc->NewElement("Light");
-	group->LinkEndChild(item);
-	item->SetAttribute("irLedIntensity", param.irLedIntensity);
 
 	XMLElement* cams = pdoc->NewElement("Camera");
 	group->LinkEndChild(cams);

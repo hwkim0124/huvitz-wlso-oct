@@ -43,11 +43,14 @@ namespace WsoToolkit
             editAlignEyeXOD.Text = p.eyePosX_OD.ToString();
             editAlignEyeXOS.Text = p.eyePosX_OS.ToString();
             editAlignPosTol.Text = p.posToleranceSteps.ToString();
-            editAlignStepZ.Text = p.stepZ.ToString();
+            editAlignSearchStepZ.Text = p.searchStepZ.ToString();
+            editAlignApproachStepZ.Text = p.approachStepZ.ToString();
+            editAlignCenterStepY.Text = p.centerStepY.ToString();
+            editAlignCenterStepZ.Text = p.centerStepZ.ToString();
+            editAlignCenterStepX.Text = p.centerStepX.ToString();
             editAlignSwingOD.Text = p.swingTiltPos_OD.ToString();
             editAlignSwingOS.Text = p.swingTiltPos_OS.ToString();
             checkAlignBackOff.IsChecked = p.backOffOnEnd != 0;
-            editAlignIrLed.Text = p.irLedIntensity.ToString();
 
             editAlignTolY.Text = p.toleranceYPx.ToString("F1");
             editAlignTolZApp.Text = p.approachTolZPx.ToString("F1");
@@ -65,9 +68,6 @@ namespace WsoToolkit
             editAlignMaxJump.Text = p.maxJumpPx.ToString("F1");
             editAlignSmooth.Text = p.smoothingAlpha.ToString("F2");
 
-            editAlignToReady.Text = p.readyTimeoutMs.ToString();
-            editAlignToSwing.Text = p.swingTimeoutMs.ToString();
-            editAlignToEyeX.Text = p.eyeXTimeoutMs.ToString();
             editAlignToSearch.Text = p.searchTimeoutMs.ToString();
             editAlignToAlign.Text = p.alignTimeoutMs.ToString();
 
@@ -107,11 +107,14 @@ namespace WsoToolkit
             p.eyePosX_OD = ToInt(editAlignEyeXOD.Text);
             p.eyePosX_OS = ToInt(editAlignEyeXOS.Text);
             p.posToleranceSteps = ToInt(editAlignPosTol.Text);
-            p.stepZ = ToInt(editAlignStepZ.Text);
+            p.searchStepZ = ToInt(editAlignSearchStepZ.Text);
+            p.approachStepZ = ToInt(editAlignApproachStepZ.Text);
+            p.centerStepY = ToInt(editAlignCenterStepY.Text);
+            p.centerStepZ = ToInt(editAlignCenterStepZ.Text);
+            p.centerStepX = ToInt(editAlignCenterStepX.Text);
             p.swingTiltPos_OD = ToInt(editAlignSwingOD.Text);
             p.swingTiltPos_OS = ToInt(editAlignSwingOS.Text);
             p.backOffOnEnd = (checkAlignBackOff.IsChecked ?? false) ? 1 : 0;
-            p.irLedIntensity = ToInt(editAlignIrLed.Text);
 
             p.toleranceYPx = ToFloat(editAlignTolY.Text);
             p.approachTolZPx = ToFloat(editAlignTolZApp.Text);
@@ -129,9 +132,6 @@ namespace WsoToolkit
             p.maxJumpPx = ToFloat(editAlignMaxJump.Text);
             p.smoothingAlpha = ToFloat(editAlignSmooth.Text);
 
-            p.readyTimeoutMs = ToInt(editAlignToReady.Text);
-            p.swingTimeoutMs = ToInt(editAlignToSwing.Text);
-            p.eyeXTimeoutMs = ToInt(editAlignToEyeX.Text);
             p.searchTimeoutMs = ToInt(editAlignToSearch.Text);
             p.alignTimeoutMs = ToInt(editAlignToAlign.Text);
 

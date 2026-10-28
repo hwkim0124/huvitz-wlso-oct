@@ -49,8 +49,8 @@ namespace wso_device
 	//////////////////////////////////////////////////////////////////////////////////////////
 	constexpr std::uint16_t LED_LSO_WHITE_INIT_VALUE = 0;
 	constexpr std::uint16_t LED_RETINA_IR_INIT_VALUE = 0;
-	constexpr std::uint16_t LED_CORNEA_LEFT_IR_INIT_VALUE = 0;
-	constexpr std::uint16_t LED_CORNEA_RIGHT_IR_INIT_VALUE = 0;
+	constexpr std::uint16_t LED_CORNEA_LEFT_IR_INIT_VALUE = 5;	// both cornea IR LEDs are on from start-up at this intensity
+	constexpr std::uint16_t LED_CORNEA_RIGHT_IR_INIT_VALUE = 5;
 	constexpr std::uint16_t LED_CORNEA_LOWER_IR_INIT_VALUE = 0;
 
 	constexpr const char* LED_LSO_WHITE_NAME = "LsoWhiteLed";

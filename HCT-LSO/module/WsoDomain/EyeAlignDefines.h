@@ -22,11 +22,11 @@ namespace wso_domain
 		TO_READY_Z,			// 1   Z -> readyPosZ
 		TO_EYE_X,			// 2   X -> eyePosX_OD | eyePosX_OS
 		SWING_TO_TILT,		// 3   swing -> swingTiltPos_OD | swingTiltPos_OS
-		SEARCHING,			// 4a  Z forward to searchLimitPosZ (or until both cameras see the pupil near), the side camera watched for it
-		CENTERING_Y,		// 4b  Z stopped, Y centres the side-camera pupil vertically
-		APPROACHING,		// 5   Z forward until the lower-camera pupil sits on its vertical target
-		CENTERING_X,		// 6   X centres the lower-camera pupil horizontally
-		CENTERING_Z,		// 7   Z centres the lower-camera pupil vertically
+		SEARCHING,			// 4   Z forward (searchStepZ per frame) until the side camera locks -> 5a; at searchLimitPosZ it stops, waits 5 s, then cancels
+		CENTERING_Y,		// 5b  Z stopped, Y centres the side-camera pupil vertically -> 7
+		APPROACHING,		// 5a  Z forward (approachStepZ per frame) until the side pupil is in the middle half of the width or the lower pupil above 3/4 of the height -> 5b
+		CENTERING_X,		// 6   X centres the lower-camera pupil horizontally -> 7; rests without a fix or at a limit
+		CENTERING_Z,		// 7   Z centres the lower-camera pupil vertically -> 8 (X centred too) | 6; rests without a fix or at a limit
 		FOCUSED,			// 8   lower pupil centred, no motion (MANUAL: centred by the operator)
 		MONITORING,			// MANUAL only: detecting, not yet centred on both images, no motion
 		HELD,				// holdEyeAlignment(): motors stopped, detection and events continue, no motion
@@ -38,11 +38,11 @@ namespace wso_domain
 	enum class EyeAlignResult : int
 	{
 		NONE = 0,
-		// cancel reasons (the head backs off to readyPosZ, except on USER_CANCEL)
+		// cancel reasons (the head backs off to readyPosZ when backOffOnEnd is set)
 		USER_CANCEL,
-		SIDE_EYE_NOT_FOUND,				// side camera: no pupil at the search limit
+		SIDE_EYE_NOT_FOUND,				// steps 4 / 5a: no side pupil at the search limit, or the pupil not in range within searchTimeoutMs of the search start
 		PUPIL_LOST,
-		LOWER_EYE_NOT_FOUND,		// lower camera: no pupil by the time Z is at minSafePosZ
+		LOWER_EYE_NOT_FOUND,		// not raised any more (step 5a cancels with SIDE_EYE_NOT_FOUND); kept for the C# mirror
 		ALIGN_TIMEOUT,				// alignTimeoutMs elapsed before the first FOCUS_ALIGNED
 		// start refusals
 		NOT_INITIALIZED,
@@ -71,15 +71,15 @@ namespace wso_domain
 		READY_POSITION_REACHED,		// step 1 done
 		EYE_SIDE_POSITION_REACHED,	// step 2 done (arg = EyeSide)
 		SWING_AT_TILT,				// step 3 done (arg = EyeSide)
-		SEARCH_STARTED,				// step 4a: Z advancing toward searchLimitPosZ
+		SEARCH_STARTED,				// step 4: Z advancing toward searchLimitPosZ
 		SIDE_EYE_FOUND,					// side pupil seen detectConsecutive frames (arg = IrCameraId)
-		SIDE_EYE_NOT_FOUND,				// search limit reached with no side lock (arg = IrCameraId)
-		Y_CENTERED,					// step 4b done
-		APPROACH_STARTED,			// step 5: Z advancing toward the lower-camera pupil
+		SIDE_EYE_NOT_FOUND,				// step 4: search limit reached with no side lock; step 5a: searchTimeoutMs elapsed (arg = IrCameraId)
+		Y_CENTERED,					// step 5b done
+		APPROACH_STARTED,			// step 5a: Z advancing toward the lower-camera pupil
 		LOWER_EYE_FOUND,			// lower pupil seen detectConsecutive frames (arg = IrCameraId)
-		LOWER_EYE_NOT_FOUND,		// Z at minSafePosZ with no lower lock (arg = IrCameraId)
-		X_CENTERED,					// step 6 done
-		Z_CENTERED,					// step 7 done
+		LOWER_EYE_NOT_FOUND,		// not raised any more; kept for the C# mirror
+		X_CENTERED,					// step 6 done (-> step 7)
+		Z_CENTERED,					// step 7 done (-> FOCUSED when X is centred too, else -> step 6)
 		FOCUS_ALIGNED,				// step 8: entered FOCUSED (raised on every entry)
 		FOCUS_LOST,					// left FOCUSED (raised on every exit)
 		EYE_LOST,					// pupil missing lostFramesToStop frames -> all motors stopped (arg = IrCameraId)
@@ -121,14 +121,18 @@ namespace wso_domain
 		int32_t swingTiltPos_OS = +1500;		// step 3 tilt for the left eye
 		int32_t eyePosX_OD = +15000;			// step 2 X position for the right eye
 		int32_t eyePosX_OS = -15000;			// step 2 X position for the left eye
-		int32_t searchLimitPosZ = 0;	// step 4a always advances Z to here; no side lock there cancels (EYE_NOT_FOUND)
+		int32_t searchLimitPosZ = 0;	// step 4 advances Z up to here; no side lock within 5 s there cancels (SIDE_EYE_NOT_FOUND)
 		int32_t minSafePosZ = 5000;			// Z never goes forward past this (moves are clipped); EYE_TOO_CLOSE once per excursion
 		int32_t posToleranceSteps = 100;		// a position move or a jog toward a target counts as arrived within this band
-		int32_t stepZ = 500;				// steps 4a and 5 advance Z by this many steps per frame while no pupil is locked
+		int32_t searchStepZ = 3000;			// step 4 advances Z by this many steps per frame
+		int32_t approachStepZ = 2000;		// step 5a advances Z by this many steps per frame
+		int32_t centerStepY = 2000;			// step 5b moves Y by this many steps per frame while the side pupil is in the outer quarters of the image height
+		int32_t centerStepZ = 2000;			// step 7 moves Z by this many steps per frame while the lower pupil is in the outer quarters of the image height
+		int32_t centerStepX = 2000;			// step 6 moves X by this many steps per frame while the lower pupil is in the outer quarters of the image width
 
 		// pixel control: one tolerance per centring step
-		float toleranceYPx = 24.0f;			// step 4b: side-camera pupil vertically on target
-		float approachTolZPx = 18.0f;		// step 5: lower-camera pupil vertically on target (ends the approach)
+		float toleranceYPx = 24.0f;			// step 5b: side-camera pupil vertically on target
+		float approachTolZPx = 18.0f;		// not used any more (step 5a ends on the pupil position bands); kept for the C# mirror
 		float toleranceXPx = 6.0f;			// steps 6 and 8: lower-camera pupil horizontally on target
 		float toleranceZPx = 8.0f;			// steps 7 and 8: lower-camera pupil vertically on target
 		float startDeadbandPx = 10.0f;		// MANUAL: |error| above this counts as drifted from the target (keep >= the tolerances)
@@ -140,21 +144,17 @@ namespace wso_domain
 		int32_t detectConsecutive = 3;		// consecutive detections to declare EYE_FOUND / LOWER_EYE_FOUND
 		int32_t lostFramesToStop = 5;		// frames without pupil -> stop all motors (EYE_LOST)
 		int32_t lostFramesToCancel = 300;	// frames without pupil -> ALIGN_CANCELLED(PUPIL_LOST), ~10 s at 30 fps
-		int32_t settleFrames = 2;			// frames centred and stopped -> FOCUSED
+		int32_t settleFrames = 2;			// MANUAL: frames centred on both cameras -> FOCUSED
 		float maxJumpPx = 60.0f;			// tracker rejects a centre jump larger than this
 		float smoothingAlpha = 0.5f;		// EMA weight of the newest detection
 
 		// timeouts (ms)
-		int32_t readyTimeoutMs = 10000;		// position phases (steps 1..3) and the step 4b far move of Y
-		int32_t swingTimeoutMs = 10000;		// swing moves by position; its own wait (~10 s) bounds the block
-		int32_t eyeXTimeoutMs = 10000;		// step 2 X position move and the step 6 far move of X
-		int32_t searchTimeoutMs = 20000;	// step 4a safety net for a stalled Z (fires before alignTimeoutMs with the better diagnosis)
-		int32_t alignTimeoutMs = 30000;		// whole sequence up to the first FOCUS_ALIGNED -> ALIGN_CANCELLED(ALIGN_TIMEOUT); held time excluded; 0 = no limit
+		int32_t searchTimeoutMs = 20000;	// steps 4 + 5a together: counted from the search start (held time excluded), cancels when the pupil has not come in (fires before alignTimeoutMs with the better diagnosis)
+		int32_t alignTimeoutMs = 60000;		// whole sequence up to the first FOCUS_ALIGNED -> ALIGN_CANCELLED(ALIGN_TIMEOUT); held time excluded; 0 = no limit
 
-		int32_t backOffOnEnd = 1;			// on an automatic cancel or a failure jog Z back to readyPosZ (swing left as is)
-		int32_t irLedIntensity = 3;			// intensity of both cornea IR LEDs (0..255), turned on when a run starts
+		int32_t backOffOnEnd = 1;			// at every run end (user cancel, automatic cancel, failure) move Z back to readyPosZ (swing left as is)
 
-		// side cameras: only targetY / signV are used (step 4b). signV = -1: the pupil
+		// side cameras: only targetY / signV are used (step 5b). signV = -1: the pupil
 		// below the target in the side image drives the head UP (Y_DIRECTION_UP).
 		PupilDetectParam detLeft{ -1, -1, -1, -1 };
 		PupilDetectParam detRight{ -1, -1, +1, -1 };

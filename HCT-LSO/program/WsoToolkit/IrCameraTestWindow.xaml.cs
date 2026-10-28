@@ -78,6 +78,11 @@ namespace WsoToolkit
 
             InitializeAlignControls();
             BoardDevice.ConnectOptimizeButtonPressed(_onOptimizeButtonPressed);
+
+            // The cornea cameras run from the moment the window opens; the button then
+            // reads "Stop Camera" so it toggles from the right state.
+            StartCorneaCameraPreview();
+            btnStartCamera.Content = IsCorneaCameraPreviewing() ? "Stop Camera" : "Start Camera";
         }
 
         private void Window_Closed(object sender, EventArgs e)

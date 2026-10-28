@@ -21,8 +21,8 @@ namespace WsoNativeLib
             ToEyeX,
             SwingToTilt,
             Searching,
-            CenteringY,
             Approaching,
+            CenteringY,
             CenteringX,
             CenteringZ,
             Focused,
@@ -118,7 +118,11 @@ namespace WsoNativeLib
             public int searchLimitPosZ;
             public int minSafePosZ;
             public int posToleranceSteps;
-            public int stepZ;
+            public int searchStepZ;
+            public int approachStepZ;
+            public int centerStepY;
+            public int centerStepZ;
+            public int centerStepX;
 
             public float toleranceYPx;
             public float approachTolZPx;
@@ -136,14 +140,10 @@ namespace WsoNativeLib
             public float maxJumpPx;
             public float smoothingAlpha;
 
-            public int readyTimeoutMs;
-            public int swingTimeoutMs;
-            public int eyeXTimeoutMs;
             public int searchTimeoutMs;
             public int alignTimeoutMs;
 
             public int backOffOnEnd;
-            public int irLedIntensity;
 
             public PupilDetectParam detLeft;
             public PupilDetectParam detRight;
@@ -160,7 +160,11 @@ namespace WsoNativeLib
                 searchLimitPosZ = -5000;
                 minSafePosZ = 0;
                 posToleranceSteps = 100;
-                stepZ = 500;
+                searchStepZ = 3000;
+                approachStepZ = 2000;
+                centerStepY = 2000;
+                centerStepZ = 2000;
+                centerStepX = 2000;
 
                 toleranceYPx = 24.0f;
                 approachTolZPx = 18.0f;
@@ -178,14 +182,10 @@ namespace WsoNativeLib
                 maxJumpPx = 60.0f;
                 smoothingAlpha = 0.5f;
 
-                readyTimeoutMs = 10000;
-                swingTimeoutMs = 10000;
-                eyeXTimeoutMs = 10000;
                 searchTimeoutMs = 20000;
                 alignTimeoutMs = 30000;
 
                 backOffOnEnd = 1;
-                irLedIntensity = 3;
 
                 detLeft = new PupilDetectParam { signH = -1, signV = -1 };     // side cameras, see the C++ header
                 detRight = new PupilDetectParam { signH = +1, signV = -1 };

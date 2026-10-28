@@ -54,8 +54,13 @@ CorneaIrLed& wso_device::CorneaIrLed::operator=(const CorneaIrLed& rhs)
 bool wso_device::CorneaIrLed::initializeCorneaIrLed(void)
 {
 	if (LightLed::initializeLightLed()) {
+		// Both cornea IR LEDs stay on from start-up: the profile intensity when it has one,
+		// otherwise the default (LED_CORNEA_*_IR_INIT_VALUE).
 		loadCalibParamFromProfile();
-		turnLightOff();
+		if (getIntensity() == 0) {
+			setIntensity(getInitialValue());
+		}
+		turnLightOn();
 		return true;
 	}
 	return false;

@@ -155,14 +155,12 @@ namespace WsoToolkit
             cmbScanPattern.ItemsSource = new string[] { "Point", "Horizontal Line", "Vertical Line" };
             cmbScanRange.ItemsSource = new string[] { "0.0", "1.0", "2.0", "3.0", "4.0", "5.0", "6.0", "7.0", "8.0", "9.0", "10.0", "11.0", "12.0", "13.0", "14.0", "15.0", "16.0" };
             cmbScanPoints.ItemsSource = new string[] { "512", "1024", "2048" };
-            cmbScanOffsetX.ItemsSource = new string[] { "-4.5", "-3.0", "0.0", "+0.1", "+3.0", "+4.5" };
-            cmbScanOffsetY.ItemsSource = new string[] { "-4.5", "-3.0", "0.0", "+0.1", "+3.0", "+4.5" };
             cmbScanPattern.SelectedIndex = 1;
             cmbScanPoints.SelectedIndex = 1;
             cmbScanRange.SelectedIndex = 6;
-            cmbScanOffsetY.SelectedIndex = 2;
-            cmbScanOffsetX.SelectedIndex = 2;
 
+            editScanOffsetX.Text = "0.0";
+            editScanOffsetY.Text = "0.0";
             editScanScaleX.Text = "1.0";
             editScanScaleY.Text = "1.0";
 

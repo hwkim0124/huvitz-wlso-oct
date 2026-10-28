@@ -176,6 +176,8 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="8"/>
                     </Grid.RowDefinitions>
                     <Label Content="Eye Alignment (steps)" Style="{StaticResource HeaderStyle}" Grid.Row="1" Grid.ColumnSpan="3" Margin="16,0,0,0" HorizontalAlignment="Left"/>
@@ -185,83 +187,80 @@
                     <TextBox x:Name="editAlignSearchZ" Style="{StaticResource TextBoxStyleS1}" Grid.Column="4" Grid.Row="2" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
                     <Label Content="Min Safe Z" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="5"/>
                     <TextBox x:Name="editAlignMinSafeZ" Style="{StaticResource TextBoxStyleS1}" Grid.Column="6" Grid.Row="2" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
-                    <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="7">
-                        <Label Content="Step Z" Style="{StaticResource LabelStyle}"/>
-                        <TextBox x:Name="editAlignStepZ" Style="{StaticResource TextBoxStyleS1}" Width="60" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
-                    </StackPanel>
 
-                    <Label Content="Eye X (OD)" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="1"/>
-                    <TextBox x:Name="editAlignEyeXOD" Style="{StaticResource TextBoxStyleS1}" Grid.Column="2" Grid.Row="3" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
-                    <Label Content="Eye X (OS)" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="3"/>
-                    <TextBox x:Name="editAlignEyeXOS" Style="{StaticResource TextBoxStyleS1}" Grid.Column="4" Grid.Row="3" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
-                    <Label Content="Pos Tol" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="5"/>
-                    <TextBox x:Name="editAlignPosTol" Style="{StaticResource TextBoxStyleS1}" Grid.Column="6" Grid.Row="3" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <Label Content="Motor steps" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="1"/>
+                    <TextBox x:Name="editAlignSearchStepZ" Style="{StaticResource TextBoxStyleS1}" Grid.Column="2" Grid.Row="3" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editAlignApproachStepZ" Style="{StaticResource TextBoxStyleS1}" Grid.Column="3" Grid.Row="3" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editAlignCenterStepX" Style="{StaticResource TextBoxStyleS1}" Grid.Column="4" Grid.Row="3" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editAlignCenterStepY" Style="{StaticResource TextBoxStyleS1}" Grid.Column="5" Grid.Row="3" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editAlignCenterStepZ" Style="{StaticResource TextBoxStyleS1}" Grid.Column="6" Grid.Row="3" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <Label Content="(search Z / approach Z / centre X / centre Y / centre Z)" Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="2" Grid.ColumnSpan="6" HorizontalAlignment="Left"/>
 
-                    <Label Content="Swing (OD)" Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="1"/>
-                    <TextBox x:Name="editAlignSwingOD" Style="{StaticResource TextBoxStyleS1}" Grid.Column="2" Grid.Row="4" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
-                    <Label Content="Swing (OS)" Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="3"/>
-                    <TextBox x:Name="editAlignSwingOS" Style="{StaticResource TextBoxStyleS1}" Grid.Column="4" Grid.Row="4" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
-                    <CheckBox x:Name="checkAlignBackOff" Style="{StaticResource CheckBoxStyle}" Content="Back off Z" Grid.Row="4" Grid.Column="5" Grid.ColumnSpan="2"/>
-                    <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="7">
-                        <Label Content="IR LED" Style="{StaticResource LabelStyle}"/>
-                        <TextBox x:Name="editAlignIrLed" Style="{StaticResource TextBoxStyleS1}" Width="60" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
-                    </StackPanel>
+                    <Label Content="Eye X (OD)" Style="{StaticResource LabelStyle}" Grid.Row="5" Grid.Column="1"/>
+                    <TextBox x:Name="editAlignEyeXOD" Style="{StaticResource TextBoxStyleS1}" Grid.Column="2" Grid.Row="5" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <Label Content="Eye X (OS)" Style="{StaticResource LabelStyle}" Grid.Row="5" Grid.Column="3"/>
+                    <TextBox x:Name="editAlignEyeXOS" Style="{StaticResource TextBoxStyleS1}" Grid.Column="4" Grid.Row="5" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <Label Content="Pos Tol" Style="{StaticResource LabelStyle}" Grid.Row="5" Grid.Column="5"/>
+                    <TextBox x:Name="editAlignPosTol" Style="{StaticResource TextBoxStyleS1}" Grid.Column="6" Grid.Row="5" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
 
-                    <Label Content="Control (px)" Style="{StaticResource HeaderStyle}" Grid.Row="5" Grid.ColumnSpan="3" Margin="16,0,0,0" HorizontalAlignment="Left"/>
-                    <Label Content="Tolerance" Style="{StaticResource LabelStyle}" Grid.Row="6" Grid.Column="1"/>
-                    <TextBox x:Name="editAlignTolY" Style="{StaticResource TextBoxStyleS1}" Grid.Column="2" Grid.Row="6" PreviewTextInput="FloatTextBox_PreviewTextInput"/>
-                    <TextBox x:Name="editAlignTolZApp" Style="{StaticResource TextBoxStyleS1}" Grid.Column="3" Grid.Row="6" PreviewTextInput="FloatTextBox_PreviewTextInput"/>
-                    <TextBox x:Name="editAlignTolX" Style="{StaticResource TextBoxStyleS1}" Grid.Column="4" Grid.Row="6" PreviewTextInput="FloatTextBox_PreviewTextInput"/>
-                    <TextBox x:Name="editAlignTolZ" Style="{StaticResource TextBoxStyleS1}" Grid.Column="5" Grid.Row="6" PreviewTextInput="FloatTextBox_PreviewTextInput"/>
-                    <Label Content="(Y / Z approach / X / Z)" Style="{StaticResource LabelStyle}" Grid.Row="6" Grid.Column="6" Grid.ColumnSpan="2" HorizontalAlignment="Left"/>
+                    <Label Content="Swing (OD)" Style="{StaticResource LabelStyle}" Grid.Row="6" Grid.Column="1"/>
+                    <TextBox x:Name="editAlignSwingOD" Style="{StaticResource TextBoxStyleS1}" Grid.Column="2" Grid.Row="6" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <Label Content="Swing (OS)" Style="{StaticResource LabelStyle}" Grid.Row="6" Grid.Column="3"/>
+                    <TextBox x:Name="editAlignSwingOS" Style="{StaticResource TextBoxStyleS1}" Grid.Column="4" Grid.Row="6" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <CheckBox x:Name="checkAlignBackOff" Style="{StaticResource CheckBoxStyle}" Content="Back off Z" Grid.Row="6" Grid.Column="5" Grid.ColumnSpan="2"/>
 
-                    <Label Content="Frames" Style="{StaticResource LabelStyle}" Grid.Row="7" Grid.Column="1"/>
-                    <TextBox x:Name="editAlignDetectN" Style="{StaticResource TextBoxStyleS1}" Grid.Column="2" Grid.Row="7" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
-                    <TextBox x:Name="editAlignSettleN" Style="{StaticResource TextBoxStyleS1}" Grid.Column="3" Grid.Row="7" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
-                    <TextBox x:Name="editAlignLostStop" Style="{StaticResource TextBoxStyleS1}" Grid.Column="4" Grid.Row="7" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
-                    <TextBox x:Name="editAlignLostCancel" Style="{StaticResource TextBoxStyleS1}" Grid.Column="5" Grid.Row="7" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
-                    <Label Content="(detect/settle/lostStop/lostCancel)" Style="{StaticResource LabelStyle}" Grid.Row="7" Grid.Column="6" Grid.ColumnSpan="2" HorizontalAlignment="Left"/>
+                    <Label Content="Control (px)" Style="{StaticResource HeaderStyle}" Grid.Row="7" Grid.ColumnSpan="3" Margin="16,0,0,0" HorizontalAlignment="Left"/>
+                    <Label Content="Tolerance" Style="{StaticResource LabelStyle}" Grid.Row="8" Grid.Column="1"/>
+                    <TextBox x:Name="editAlignTolY" Style="{StaticResource TextBoxStyleS1}" Grid.Column="2" Grid.Row="8" PreviewTextInput="FloatTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editAlignTolZApp" Style="{StaticResource TextBoxStyleS1}" Grid.Column="3" Grid.Row="8" PreviewTextInput="FloatTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editAlignTolX" Style="{StaticResource TextBoxStyleS1}" Grid.Column="4" Grid.Row="8" PreviewTextInput="FloatTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editAlignTolZ" Style="{StaticResource TextBoxStyleS1}" Grid.Column="5" Grid.Row="8" PreviewTextInput="FloatTextBox_PreviewTextInput"/>
+                    <Label Content="(Y / Z approach / X / Z)" Style="{StaticResource LabelStyle}" Grid.Row="8" Grid.Column="6" Grid.ColumnSpan="2" HorizontalAlignment="Left"/>
 
-                    <Label Content="Filter" Style="{StaticResource LabelStyle}" Grid.Row="8" Grid.Column="1"/>
-                    <TextBox x:Name="editAlignMaxJump" Style="{StaticResource TextBoxStyleS1}" Grid.Column="2" Grid.Row="8" PreviewTextInput="FloatTextBox_PreviewTextInput"/>
-                    <TextBox x:Name="editAlignSmooth" Style="{StaticResource TextBoxStyleS1}" Grid.Column="3" Grid.Row="8" PreviewTextInput="FloatTextBox_PreviewTextInput"/>
-                    <Label Content="(maxJump px / alpha)" Style="{StaticResource LabelStyle}" Grid.Row="8" Grid.Column="4" HorizontalAlignment="Left"/>
-                    <Label Content="Deadband" Style="{StaticResource LabelStyle}" Grid.Row="8" Grid.Column="5"/>
-                    <TextBox x:Name="editAlignStartDb" Style="{StaticResource TextBoxStyleS1}" Grid.Column="6" Grid.Row="8" PreviewTextInput="FloatTextBox_PreviewTextInput"/>
-                    <Label Content="(manual drift px)" Style="{StaticResource LabelStyle}" Grid.Row="8" Grid.Column="7" HorizontalAlignment="Left"/>
+                    <Label Content="Frames" Style="{StaticResource LabelStyle}" Grid.Row="9" Grid.Column="1"/>
+                    <TextBox x:Name="editAlignDetectN" Style="{StaticResource TextBoxStyleS1}" Grid.Column="2" Grid.Row="9" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editAlignSettleN" Style="{StaticResource TextBoxStyleS1}" Grid.Column="3" Grid.Row="9" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editAlignLostStop" Style="{StaticResource TextBoxStyleS1}" Grid.Column="4" Grid.Row="9" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editAlignLostCancel" Style="{StaticResource TextBoxStyleS1}" Grid.Column="5" Grid.Row="9" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <Label Content="(detect/settle/lostStop/lostCancel)" Style="{StaticResource LabelStyle}" Grid.Row="9" Grid.Column="6" Grid.ColumnSpan="2" HorizontalAlignment="Left"/>
 
-                    <Label Content="Steps / px" Style="{StaticResource LabelStyle}" Grid.Row="9" Grid.Column="1"/>
-                    <TextBox x:Name="editAlignStepsPxX" Style="{StaticResource TextBoxStyleS1}" Grid.Column="2" Grid.Row="9" PreviewTextInput="FloatTextBox_PreviewTextInput"/>
-                    <TextBox x:Name="editAlignStepsPxY" Style="{StaticResource TextBoxStyleS1}" Grid.Column="3" Grid.Row="9" PreviewTextInput="FloatTextBox_PreviewTextInput"/>
-                    <TextBox x:Name="editAlignStepsPxZ" Style="{StaticResource TextBoxStyleS1}" Grid.Column="4" Grid.Row="9" PreviewTextInput="FloatTextBox_PreviewTextInput"/>
-                    <Label Content="(X / Y / Z position move ratio)" Style="{StaticResource LabelStyle}" Grid.Row="9" Grid.Column="5" Grid.ColumnSpan="3" HorizontalAlignment="Left"/>
+                    <Label Content="Filter" Style="{StaticResource LabelStyle}" Grid.Row="10" Grid.Column="1"/>
+                    <TextBox x:Name="editAlignMaxJump" Style="{StaticResource TextBoxStyleS1}" Grid.Column="2" Grid.Row="10" PreviewTextInput="FloatTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editAlignSmooth" Style="{StaticResource TextBoxStyleS1}" Grid.Column="3" Grid.Row="10" PreviewTextInput="FloatTextBox_PreviewTextInput"/>
+                    <Label Content="(maxJump px / alpha)" Style="{StaticResource LabelStyle}" Grid.Row="10" Grid.Column="4" HorizontalAlignment="Left"/>
+                    <Label Content="Deadband" Style="{StaticResource LabelStyle}" Grid.Row="10" Grid.Column="5"/>
+                    <TextBox x:Name="editAlignStartDb" Style="{StaticResource TextBoxStyleS1}" Grid.Column="6" Grid.Row="10" PreviewTextInput="FloatTextBox_PreviewTextInput"/>
+                    <Label Content="(manual drift px)" Style="{StaticResource LabelStyle}" Grid.Row="10" Grid.Column="7" HorizontalAlignment="Left"/>
 
-                    <Label Content="Timeout ms" Style="{StaticResource LabelStyle}" Grid.Row="10" Grid.Column="1"/>
-                    <TextBox x:Name="editAlignToReady" Style="{StaticResource TextBoxStyleS1}" Grid.Column="2" Grid.Row="10" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
-                    <TextBox x:Name="editAlignToSwing" Style="{StaticResource TextBoxStyleS1}" Grid.Column="3" Grid.Row="10" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
-                    <TextBox x:Name="editAlignToEyeX" Style="{StaticResource TextBoxStyleS1}" Grid.Column="4" Grid.Row="10" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
-                    <TextBox x:Name="editAlignToSearch" Style="{StaticResource TextBoxStyleS1}" Grid.Column="5" Grid.Row="10" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
-                    <TextBox x:Name="editAlignToAlign" Style="{StaticResource TextBoxStyleS1}" Grid.Column="6" Grid.Row="10" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
-                    <Label Content="(ready/swing/eyeX/search/align)" Style="{StaticResource LabelStyle}" Grid.Row="10" Grid.Column="7" HorizontalAlignment="Left"/>
+                    <Label Content="Steps / px" Style="{StaticResource LabelStyle}" Grid.Row="11" Grid.Column="1"/>
+                    <TextBox x:Name="editAlignStepsPxX" Style="{StaticResource TextBoxStyleS1}" Grid.Column="2" Grid.Row="11" PreviewTextInput="FloatTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editAlignStepsPxY" Style="{StaticResource TextBoxStyleS1}" Grid.Column="3" Grid.Row="11" PreviewTextInput="FloatTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editAlignStepsPxZ" Style="{StaticResource TextBoxStyleS1}" Grid.Column="4" Grid.Row="11" PreviewTextInput="FloatTextBox_PreviewTextInput"/>
+                    <Label Content="(X / Y / Z position move ratio)" Style="{StaticResource LabelStyle}" Grid.Row="11" Grid.Column="5" Grid.ColumnSpan="3" HorizontalAlignment="Left"/>
 
-                    <Label Content="Pupil Target" Style="{StaticResource HeaderStyle}" Grid.Row="11" Grid.ColumnSpan="3" Margin="16,0,0,0" HorizontalAlignment="Left"/>
-                    <Label Content="tX / tY / sH / sV" Style="{StaticResource LabelStyle}" Grid.Row="11" Grid.Column="3" Grid.ColumnSpan="3" HorizontalAlignment="Left"/>
-                    <Label Content="Left" Style="{StaticResource LabelStyle}" Grid.Row="12" Grid.Column="1"/>
-                    <TextBox x:Name="editAlignLeftTX" Style="{StaticResource TextBoxStyleS1}" Grid.Column="2" Grid.Row="12" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
-                    <TextBox x:Name="editAlignLeftTY" Style="{StaticResource TextBoxStyleS1}" Grid.Column="3" Grid.Row="12" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
-                    <TextBox x:Name="editAlignLeftSH" Style="{StaticResource TextBoxStyleS1}" Grid.Column="4" Grid.Row="12" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
-                    <TextBox x:Name="editAlignLeftSV" Style="{StaticResource TextBoxStyleS1}" Grid.Column="5" Grid.Row="12" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
-                    <Label Content="Right" Style="{StaticResource LabelStyle}" Grid.Row="13" Grid.Column="1"/>
-                    <TextBox x:Name="editAlignRightTX" Style="{StaticResource TextBoxStyleS1}" Grid.Column="2" Grid.Row="13" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
-                    <TextBox x:Name="editAlignRightTY" Style="{StaticResource TextBoxStyleS1}" Grid.Column="3" Grid.Row="13" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
-                    <TextBox x:Name="editAlignRightSH" Style="{StaticResource TextBoxStyleS1}" Grid.Column="4" Grid.Row="13" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
-                    <TextBox x:Name="editAlignRightSV" Style="{StaticResource TextBoxStyleS1}" Grid.Column="5" Grid.Row="13" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
-                    <Label Content="Lower" Style="{StaticResource LabelStyle}" Grid.Row="14" Grid.Column="1" Margin="0,0,0,8"/>
-                    <TextBox x:Name="editAlignLowerTX" Style="{StaticResource TextBoxStyleS1}" Grid.Column="2" Grid.Row="14" Margin="0,0,0,8" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
-                    <TextBox x:Name="editAlignLowerTY" Style="{StaticResource TextBoxStyleS1}" Grid.Column="3" Grid.Row="14" Margin="0,0,0,8" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
-                    <TextBox x:Name="editAlignLowerSH" Style="{StaticResource TextBoxStyleS1}" Grid.Column="4" Grid.Row="14" Margin="0,0,0,8" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
-                    <TextBox x:Name="editAlignLowerSV" Style="{StaticResource TextBoxStyleS1}" Grid.Column="5" Grid.Row="14" Margin="0,0,0,8" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
-                    <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="8" Grid.RowSpan="16"/>
+                    <Label Content="Timeout ms" Style="{StaticResource LabelStyle}" Grid.Row="12" Grid.Column="1"/>
+                    <TextBox x:Name="editAlignToSearch" Style="{StaticResource TextBoxStyleS1}" Grid.Column="2" Grid.Row="12" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editAlignToAlign" Style="{StaticResource TextBoxStyleS1}" Grid.Column="3" Grid.Row="12" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <Label Content="(search / align)" Style="{StaticResource LabelStyle}" Grid.Row="12" Grid.Column="4" Grid.ColumnSpan="2" HorizontalAlignment="Left"/>
+
+                    <Label Content="Pupil Target" Style="{StaticResource HeaderStyle}" Grid.Row="13" Grid.ColumnSpan="3" Margin="16,0,0,0" HorizontalAlignment="Left"/>
+                    <Label Content="tX / tY / sH / sV" Style="{StaticResource LabelStyle}" Grid.Row="13" Grid.Column="3" Grid.ColumnSpan="3" HorizontalAlignment="Left"/>
+                    <Label Content="Left" Style="{StaticResource LabelStyle}" Grid.Row="14" Grid.Column="1"/>
+                    <TextBox x:Name="editAlignLeftTX" Style="{StaticResource TextBoxStyleS1}" Grid.Column="2" Grid.Row="14" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editAlignLeftTY" Style="{StaticResource TextBoxStyleS1}" Grid.Column="3" Grid.Row="14" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editAlignLeftSH" Style="{StaticResource TextBoxStyleS1}" Grid.Column="4" Grid.Row="14" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editAlignLeftSV" Style="{StaticResource TextBoxStyleS1}" Grid.Column="5" Grid.Row="14" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <Label Content="Right" Style="{StaticResource LabelStyle}" Grid.Row="15" Grid.Column="1"/>
+                    <TextBox x:Name="editAlignRightTX" Style="{StaticResource TextBoxStyleS1}" Grid.Column="2" Grid.Row="15" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editAlignRightTY" Style="{StaticResource TextBoxStyleS1}" Grid.Column="3" Grid.Row="15" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editAlignRightSH" Style="{StaticResource TextBoxStyleS1}" Grid.Column="4" Grid.Row="15" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editAlignRightSV" Style="{StaticResource TextBoxStyleS1}" Grid.Column="5" Grid.Row="15" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <Label Content="Lower" Style="{StaticResource LabelStyle}" Grid.Row="16" Grid.Column="1" Margin="0,0,0,8"/>
+                    <TextBox x:Name="editAlignLowerTX" Style="{StaticResource TextBoxStyleS1}" Grid.Column="2" Grid.Row="16" Margin="0,0,0,8" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editAlignLowerTY" Style="{StaticResource TextBoxStyleS1}" Grid.Column="3" Grid.Row="16" Margin="0,0,0,8" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editAlignLowerSH" Style="{StaticResource TextBoxStyleS1}" Grid.Column="4" Grid.Row="16" Margin="0,0,0,8" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <TextBox x:Name="editAlignLowerSV" Style="{StaticResource TextBoxStyleS1}" Grid.Column="5" Grid.Row="16" Margin="0,0,0,8" PreviewTextInput="IntegerTextBox_PreviewTextInput"/>
+                    <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="8" Grid.RowSpan="18"/>
                 </Grid>
             </StackPanel>
         </Grid>

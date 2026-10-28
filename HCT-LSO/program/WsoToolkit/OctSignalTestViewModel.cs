@@ -270,8 +270,8 @@ namespace WsoToolkit
             _octInitParam.scanRangeY = index != 2 ? 0.0f : ToFloat(cmbScanRange.SelectedItem.ToString());
             _octInitParam.scanSpeed = radioCameraSpeed1.IsChecked == true ? WsoOctDefs.OctScanSpeed.SLOW : radioCameraSpeed2.IsChecked == true ? WsoOctDefs.OctScanSpeed.NORMAL : WsoOctDefs.OctScanSpeed.FAST;
 
-            _octInitParam.scanOffsetX = ToFloat(cmbScanOffsetX.SelectedItem.ToString());
-            _octInitParam.scanOffsetY = ToFloat(cmbScanOffsetY.SelectedItem.ToString());
+            _octInitParam.scanOffsetX = ToFloat(editScanOffsetX.Text);
+            _octInitParam.scanOffsetY = ToFloat(editScanOffsetY.Text);
             _octInitParam.scanScaleX = ToFloat(editScanScaleX.Text);
             _octInitParam.scanScaleY = ToFloat(editScanScaleY.Text);
 

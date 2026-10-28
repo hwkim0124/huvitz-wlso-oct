@@ -144,6 +144,7 @@ struct EyeAligner::EyeAlignerImpl
 	std::mutex startMutex;
 	std::atomic<bool> running{ false };
 	std::atomic<bool> stopping{ false };
+	std::atomic<bool> skipBackOff{ false };	// a second cancel() (or the destructor): end without the Z retreat
 	std::atomic<bool> holdRequested{ false };
 	std::atomic<bool> held{ false };
 	std::atomic<EyeAlignMode> mode{ EyeAlignMode::MANUAL };
@@ -200,6 +201,7 @@ struct EyeAligner::EyeAlignerImpl
 	Clock::time_point phaseStartTime;
 	Clock::time_point phaseDwellUntil;		// processPhase() idles until this instant
 	Clock::time_point alignDeadline;		// runStartTime + alignTimeoutMs, pushed back by every hold
+	Clock::time_point searchDeadline;		// search start + searchTimeoutMs, pushed back by every hold (steps 4 and 5a)
 	Clock::time_point heldSince;			// start of the current hold
 	Clock::time_point limitReachedAt;		// epoch: the current phase has not yet seen Z at its limit
 	bool focusReached = false;				// first FOCUS_ALIGNED of the run delivered (timeout no longer applies)
@@ -213,7 +215,7 @@ struct EyeAligner::EyeAlignerImpl
 	bool safeZReported = false;		// Z at/past minSafePosZ (EYE_TOO_CLOSE)
 	int settleCount = 0;
 	EyeAlignPhase resumePhase = EyeAlignPhase::CENTERING_Z;
-	bool endRequested = false;
+	std::atomic<bool> endRequested{ false };	// read by cancel() on the caller's thread
 	EyeAlignPhase endPhase = EyeAlignPhase::CANCELED;
 	EyeAlignResult endReason = EyeAlignResult::USER_CANCEL;
 	float errorX = 0.0f, errorY = 0.0f, errorZ = 0.0f;
@@ -232,6 +234,7 @@ EyeAligner::EyeAligner() :
 EyeAligner::~EyeAligner()
 {
 	try {
+		impl().skipBackOff = true;		// the board may be gone: no retreat move at exit
 		cancel(true);
 	}
 	catch (...) {
@@ -448,12 +451,14 @@ EyeAlignResult eye_align::EyeAligner::startAlignment(EyeAlignMode mode, EyeSide 
 		state.eventThreadStop = false;
 	}
 	state.stopping = false;
+	state.skipBackOff = false;
 	state.holdRequested = false;
 	state.held = false;
 	state.runStartTime = state.phaseStartTime = state.phaseDwellUntil = state.heldSince = Clock::now();
 	state.alignDeadline = (state.runConfig.alignTimeoutMs > 0)
 		? state.runStartTime + std::chrono::milliseconds(state.runConfig.alignTimeoutMs)
 		: Clock::time_point::max();
+	state.searchDeadline = Clock::time_point::max();		// armed when the search starts
 	state.frames.setAccepting(true);
 	state.running = true;
 
@@ -468,9 +473,12 @@ void eye_align::EyeAligner::cancel(bool wait)
 {
 	auto& state = impl();
 	if (state.running) {
-		state.stopping = true;
+		if (state.stopping.exchange(true) || state.endRequested) {
+			state.skipBackOff = true;		// cancelled again, or during an automatic ending: no retreat
+		}
 		state.frames.wake();
-		// The worker may be blocked inside a position move; a stop makes it return.
+		// The worker may be blocked inside a position move (a phase move or the
+		// retreat to readyPosZ); a stop makes it return.
 		if (AxisController* axis = state.movingAxis.load(); axis != nullptr) {
 			axis->abortMove();
 		}
@@ -716,9 +724,9 @@ void eye_align::EyeAligner::finishRun(void)
 		}
 		state.result = state.endReason;
 
-		// A user cancel returns promptly; the other endings retreat Z to the ready
-		// position so the head is never left close to the eye.
-		if (!state.manual && state.runConfig.backOffOnEnd != 0 && state.endReason != EyeAlignResult::USER_CANCEL) {
+		// Every ending - a user cancel included - retreats Z to the ready position so
+		// the head is never left close to the eye; a second cancel() aborts the retreat.
+		if (!state.manual && state.runConfig.backOffOnEnd != 0) {
 			backOffToReadyPosition();
 		}
 		stopAllAxes();
@@ -751,15 +759,20 @@ void eye_align::EyeAligner::backOffToReadyPosition(void)
 		return;
 	}
 	// One blocking position move back to readyPosZ (the motor's own wait bounds it).
-	// cancel() during the retreat aborts the move through movingAxis, like any phase move.
+	// The run's cancel() has usually set stopping already, so that flag does not stop
+	// the retreat; a further cancel() sets skipBackOff and aborts the move through
+	// movingAxis, like any phase move.
 	state.axisZ.poll();
-	if (state.stopping || std::abs(state.axisZ.getPosition() - state.runConfig.readyPosZ) <= state.runConfig.posToleranceSteps) {
+	if (state.skipBackOff || std::abs(state.axisZ.getPosition() - state.runConfig.readyPosZ) <= state.runConfig.posToleranceSteps) {
 		return;
 	}
 	state.movingAxis = &state.axisZ;
 	const bool reached = state.axisZ.moveTo(state.runConfig.readyPosZ);
 	state.movingAxis = nullptr;
-	if (!reached || std::abs(state.axisZ.getPosition() - state.runConfig.readyPosZ) > state.runConfig.posToleranceSteps) {
+	if (state.skipBackOff) {
+		LogI() << "EyeAligner: back-off to the ready position aborted at " << state.axisZ.getPosition();
+	}
+	else if (!reached || std::abs(state.axisZ.getPosition() - state.runConfig.readyPosZ) > state.runConfig.posToleranceSteps) {
 		LogW() << "EyeAligner: back-off to the ready position ended at " << state.axisZ.getPosition()
 			<< " (target " << state.runConfig.readyPosZ << ")";
 	}
@@ -975,8 +988,12 @@ bool eye_align::EyeAligner::applyHoldRequest(void)
 	}
 	else if (!state.holdRequested && state.held) {
 		state.held = false;
+		const auto heldFor = Clock::now() - state.heldSince;		// held time does not count
 		if (state.alignDeadline != Clock::time_point::max()) {
-			state.alignDeadline += Clock::now() - state.heldSince;		// held time does not count
+			state.alignDeadline += heldFor;
+		}
+		if (state.searchDeadline != Clock::time_point::max()) {
+			state.searchDeadline += heldFor;
 		}
 		changePhase(state.resumePhase);
 		raiseEvent(EyeAlignEvent::ALIGN_RESUMED);
@@ -987,7 +1004,7 @@ bool eye_align::EyeAligner::applyHoldRequest(void)
 const PupilTracker* eye_align::EyeAligner::watchedTracker(IrCameraId& cameraId) const
 {
 	const auto& state = impl();
-	// The side camera matters until Y is centred, the lower camera from the approach on;
+	// The side camera matters until Y is centred, the lower camera from the X centring on;
 	// each only once it has locked at least once. HELD watches the phase it resumes
 	// into. MANUAL keeps both and reports the one that has been missing longer.
 	const PupilTracker* side = state.sideTracker.everLocked() ? &state.sideTracker : nullptr;
@@ -1006,9 +1023,9 @@ const PupilTracker* eye_align::EyeAligner::watchedTracker(IrCameraId& cameraId) 
 	}
 	switch (phase) {
 	case EyeAlignPhase::SEARCHING:
+	case EyeAlignPhase::APPROACHING:
 	case EyeAlignPhase::CENTERING_Y:
 		return side;
-	case EyeAlignPhase::APPROACHING:
 	case EyeAlignPhase::CENTERING_X:
 	case EyeAlignPhase::CENTERING_Z:
 	case EyeAlignPhase::FOCUSED:
@@ -1134,7 +1151,7 @@ bool eye_align::EyeAligner::phaseToReadyZ(void)
 {
 	auto& state = impl();
 	// Step 1: Z moves by position to the safe ready distance.
-	if (!movePhaseAxisTo(state.axisZ, state.runConfig.readyPosZ, EyeAlignPhase::TO_READY_Z, state.runConfig.readyTimeoutMs)) {
+	if (!movePhaseAxisTo(state.axisZ, state.runConfig.readyPosZ, EyeAlignPhase::TO_READY_Z, READY_TIMEOUT_MS)) {
 		return false;
 	}
 	raiseEvent(EyeAlignEvent::READY_POSITION_REACHED, static_cast<int>(state.eyeSide));
@@ -1155,11 +1172,11 @@ bool eye_align::EyeAligner::phaseToEyeX(void)
 	const bool swingAtZero = std::abs(state.axisSwing.getPosition()) <= state.runConfig.posToleranceSteps;
 	if (onOtherSide && !swingAtZero) {
 		LogI() << "EyeAligner: head on the other eye's side, swing to zero before the X move";
-		if (!movePhaseAxisTo(state.axisSwing, 0, EyeAlignPhase::TO_EYE_X, state.runConfig.swingTimeoutMs)) {
+		if (!movePhaseAxisTo(state.axisSwing, 0, EyeAlignPhase::TO_EYE_X, SWING_TIMEOUT_MS)) {
 			return false;
 		}
 	}
-	if (!movePhaseAxisTo(state.axisX, target, EyeAlignPhase::TO_EYE_X, state.runConfig.eyeXTimeoutMs)) {
+	if (!movePhaseAxisTo(state.axisX, target, EyeAlignPhase::TO_EYE_X, EYE_X_TIMEOUT_MS)) {
 		return false;
 	}
 	raiseEvent(EyeAlignEvent::EYE_SIDE_POSITION_REACHED, static_cast<int>(state.eyeSide));
@@ -1172,11 +1189,13 @@ bool eye_align::EyeAligner::phaseSwingToTilt(void)
 	auto& state = impl();
 	// Step 3: the swing moves by position to the tilt of the selected eye.
 	const int target = (state.eyeSide == EyeSide::OS) ? state.runConfig.swingTiltPos_OS : state.runConfig.swingTiltPos_OD;
-	if (!movePhaseAxisTo(state.axisSwing, target, EyeAlignPhase::SWING_TO_TILT, state.runConfig.swingTimeoutMs)) {
+	if (!movePhaseAxisTo(state.axisSwing, target, EyeAlignPhase::SWING_TO_TILT, SWING_TIMEOUT_MS)) {
 		return false;
 	}
 	raiseEvent(EyeAlignEvent::SWING_AT_TILT, static_cast<int>(state.eyeSide));
 	changePhase(EyeAlignPhase::SEARCHING, PHASE_END_DWELL_MS);
+	// searchTimeoutMs runs from here across the search (4) and the approach (5a).
+	state.searchDeadline = state.phaseStartTime + std::chrono::milliseconds(state.runConfig.searchTimeoutMs);
 	raiseEvent(EyeAlignEvent::SEARCH_STARTED);
 	return true;
 }
@@ -1184,23 +1203,27 @@ bool eye_align::EyeAligner::phaseSwingToTilt(void)
 bool eye_align::EyeAligner::phaseSearching(void)
 {
 	auto& state = impl();
-	// Step 4a: Z advances toward the eye by stepZ per frame (one blocking position move
-	// each) until the side camera locks on the pupil; the rest of the way to
-	// searchLimitPosZ is then covered by one position move and the Y centring takes
-	// over. When the lower camera is locked as well with its pupil already above the
-	// SEARCH_LOWER_NEAR_LINE_FRACTION line, the eye is near and the move on to the
-	// limit is skipped: the Y centring starts where Z stands. Without a side lock Z
-	// steps all the way to the limit, waits SEARCH_LOCK_GRACE_MS for one there, then
-	// cancels. searchTimeoutMs remains the safety net for a Z that never gets there
-	// (it fires before alignTimeoutMs).
-	if (elapsedMilliseconds(state.phaseStartTime) > state.runConfig.searchTimeoutMs) {
+	// Step 4: Z advances toward the eye by searchStepZ per frame (one
+	// blocking position move each) while the side camera is watched. As soon as the
+	// side camera locks on the pupil - on the way or during the wait at the limit -
+	// the approach starts where Z stands. Without a lock Z steps to searchLimitPosZ,
+	// stops there and waits SEARCH_LIMIT_WAIT_MS for one, then cancels
+	// (SIDE_EYE_NOT_FOUND). searchTimeoutMs, counted from the search start and shared
+	// with the approach, remains the safety net for a Z that never gets there (it fires
+	// before alignTimeoutMs).
+	if (state.sideTracker.isLocked()) {
+		changePhase(EyeAlignPhase::APPROACHING);
+		raiseEvent(EyeAlignEvent::APPROACH_STARTED);
+		return true;
+	}
+	if (Clock::now() > state.searchDeadline) {
 		raiseEvent(EyeAlignEvent::SIDE_EYE_NOT_FOUND, static_cast<int>(state.sideCameraId));
 		requestRunEnd(EyeAlignPhase::CANCELED, EyeAlignResult::SIDE_EYE_NOT_FOUND);
 		return false;
-	}	
-	
+	}
 	if (hasZReached(state.runConfig.searchLimitPosZ)) {
-		if (hasLockGraceExpired()) {
+		// Z rests at the limit (no further step is issued) while the wait runs.
+		if (hasLockGraceExpired(SEARCH_LIMIT_WAIT_MS)) {
 			raiseEvent(EyeAlignEvent::SIDE_EYE_NOT_FOUND, static_cast<int>(state.sideCameraId));
 			requestRunEnd(EyeAlignPhase::CANCELED, EyeAlignResult::SIDE_EYE_NOT_FOUND);
 			return false;
@@ -1210,169 +1233,203 @@ bool eye_align::EyeAligner::phaseSearching(void)
 	// The last step lands on the search limit (the end switches are reported by
 	// checkAxisLimits and only skip the step).
 	const int toLimit = std::max(0, state.zForwardSign * (state.runConfig.searchLimitPosZ - state.axisZ.getPosition()));
-	const int step = std::min(std::max(state.runConfig.stepZ, 1), toLimit);
+	const int step = std::min(std::max(state.runConfig.searchStepZ, 1), toLimit);
 	stepAxis(state.axisZ, clipZ(state.zForwardSign * step));
-	return !state.endRequested;
-}
-
-bool eye_align::EyeAligner::phaseCenteringY(void)
-{
-	auto& state = impl();
-	// Step 4b: Z rests at the search limit while Y brings the side-camera pupil onto
-	// its vertical target. The side camera is not used for control after this phase.
-	const bool sideHasFix = state.sideTracker.hasFix();
-	if (sideHasFix && std::fabs(state.errorY) <= state.runConfig.toleranceYPx) {
-		raiseEvent(EyeAlignEvent::Y_CENTERED);
-		state.eyeLostReported = false;		// the lost-pupil rule hands over to the lower camera
-		changePhase(EyeAlignPhase::APPROACHING);
-		raiseEvent(EyeAlignEvent::APPROACH_STARTED);
-		return true;
-	}
-	// A pupil in the outer quarters of the side image (above 1/4 or below 3/4 of the
-	// height) is far from its target: one blocking position move to the predicted
-	// target position (error px * ratio) instead of the capped per-frame steps of
-	// controlAxisY(). That jump exceeds the tracker's maxJumpPx, so the side tracker
-	// restarts and re-locks on the new position; hasFix() stays false until then and
-	// the lost-pupil rule waits with it. A pupil inside the middle half is fine-stepped.
-	const float farBandPx = state.sideFrameHeight * CENTERING_Y_FAR_BAND_FRACTION;
-	const float pupilY = state.sideTracker.centerY();
-	const bool pupilFar = pupilY < farBandPx || pupilY > state.sideFrameHeight - farBandPx;
-	if (sideHasFix && pupilFar && state.axisY.isValid() && !state.held) {
-		state.axisY.poll();		// an absolute target must not build on a stale position
-		const int target = state.axisY.getPosition() + static_cast<int>(std::lround(state.errorY * state.runConfig.stepsPerPxY));
-		if (!movePhaseAxisTo(state.axisY, target, EyeAlignPhase::CENTERING_Y, state.runConfig.readyTimeoutMs)) {
-			return false;
-		}
-		state.sideTracker.reset();
-		return true;
-	}
-	controlAxisY(sideHasFix);
 	return !state.endRequested;
 }
 
 bool eye_align::EyeAligner::phaseApproaching(void)
 {
 	auto& state = impl();
-	// Step 5: Z advances by stepZ per frame until the lower camera locks on the pupil
-	// (it enters from the bottom of the image). From then on Z follows the pupil's
-	// vertical error in either direction - backward when it overshot into the upper
-	// half - until the error is inside approachTolZPx. Forward moves are clipped at
-	// minSafePosZ: a pupil still below its target there goes to the X centring as it
-	// is. No lock by the time Z is at minSafePosZ (plus the lock grace) cancels.
-	// A lock that drops afterwards (lostFramesToStop misses) stops Z; the following
-	// restarts as soon as the tracker locks again (the lost-pupil rule cancels the run
-	// when the pupil stays away). X and Y do not move in this phase.
-	if (!state.lowerTracker.everLocked()) {
-		if (hasZReached(state.runConfig.minSafePosZ)) {
-			if (hasLockGraceExpired()) {
-				raiseEvent(EyeAlignEvent::LOWER_EYE_NOT_FOUND, static_cast<int>(IrCameraId::CORNEA_LOWER));
-				requestRunEnd(EyeAlignPhase::CANCELED, EyeAlignResult::LOWER_EYE_NOT_FOUND);
-				return false;
-			}
-			return true;
-		}
-		stepAxis(state.axisZ, clipZ(state.zForwardSign * std::max(state.runConfig.stepZ, 1)));
-		return !state.endRequested;
+	// Step 5a: Z advances by approachStepZ per frame (one blocking position
+	// move each) until the pupil has come in far enough for the Y centring: the
+	// side-camera pupil inside the middle half of the image width (between 1/4 and 3/4,
+	// APPROACH_SIDE_BAND_FRACTION) or the lower-camera pupil above 3/4 of the image
+	// height (APPROACH_LOWER_LINE_FRACTION; it enters from the bottom). Z stands still
+	// while the side camera has no lock (the lost-pupil rule stops and eventually
+	// cancels) and once it has reached minSafePosZ. searchTimeoutMs, counted from the
+	// search start (step 4) and shared with it, without the pupil coming in cancels
+	// (SIDE_EYE_NOT_FOUND). X and Y do not move in this phase.
+	if (isPupilInApproachRange()) {
+		changePhase(EyeAlignPhase::CENTERING_Y);
+		return true;
 	}
-	if (!state.lowerTracker.isLocked()) {
-		if (state.lowerTracker.justUnlocked()) {
-			state.axisZ.stop();
-		}
-		return true;		// Z waits for the lock to come back
-	}
-	if (state.eyeLostReported) {
-		return true;		// the lost-pupil rule holds every motor until the pupil is back
-	}
-	const AxisMove moved = controlAxisZ(true, state.runConfig.approachTolZPx);
-	if (state.endRequested) {
+	if (Clock::now() > state.searchDeadline) {
+		raiseEvent(EyeAlignEvent::SIDE_EYE_NOT_FOUND, static_cast<int>(IrCameraId::CORNEA_LOWER));
+		requestRunEnd(EyeAlignPhase::CANCELED, EyeAlignResult::SIDE_EYE_NOT_FOUND);
 		return false;
 	}
-	if (moved != AxisMove::MOVED) {
-		changePhase(EyeAlignPhase::CENTERING_X);		// on target, or as close as minSafePosZ allows
+	if (!state.sideTracker.isLocked() || hasZReached(state.runConfig.minSafePosZ)) {
+		return true;		// Z rests: no step is issued (moveBy() blocks, so nothing is in flight)
 	}
-	return true;
+	const int step = std::max(state.runConfig.approachStepZ, 1);
+	stepAxis(state.axisZ, clipZ(state.zForwardSign * step));
+	return !state.endRequested;
 }
 
-bool eye_align::EyeAligner::phaseCenteringX(void)
+
+bool eye_align::EyeAligner::isPupilInApproachRange(void) const
+{
+	const auto& state = impl();
+	// Step 5a end condition, evaluated on the latest detections only (hasFix).
+	if (state.sideTracker.hasFix()) {
+		const float bandPx = state.sideFrameWidth * APPROACH_SIDE_BAND_FRACTION;
+		const float pupilX = state.sideTracker.centerX();
+		if (pupilX > bandPx && pupilX < state.sideFrameWidth - bandPx) {
+			return true;
+		}
+	}
+	if (state.lowerTracker.hasFix()) {
+		const float linePx = state.lowerFrameHeight * APPROACH_LOWER_LINE_FRACTION;
+		if (state.lowerTracker.centerY() < linePx) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool eye_align::EyeAligner::phaseCenteringY(void)
 {
 	auto& state = impl();
-	// Step 6: X brings the lower-camera pupil onto its horizontal target; Z rests.
-	const bool lowerHasFix = state.lowerTracker.hasFix();
-	if (lowerHasFix && std::fabs(state.errorX) <= state.runConfig.toleranceXPx) {
-		raiseEvent(EyeAlignEvent::X_CENTERED);
+	// Step 5b: Z rests where the approach left it while Y brings the side-camera pupil
+	// onto its vertical target (targetY of the side camera, the image centre unless
+	// configured). The side camera is not used for control after this phase.
+	//   - no pupil fix: Y rests (the lost-pupil rule stops and eventually cancels)
+	//   - within toleranceYPx: Y_CENTERED -> step 7 (Z centring; X follows from there)
+	//   - Y at its end switch on the side the move would go: Y rests (END_OF_TOP /
+	//     END_OF_BOTTOM come from checkAxisLimits; the run goes on)
+	//   - pupil in the outer quarters of the image height (above 1/4 or below 3/4):
+	//     one relative move of centerStepY toward the target per frame. That jump may
+	//     exceed the tracker's maxJumpPx, so the side tracker is restarted to re-lock
+	//     on the new position
+	//   - pupil inside the middle half: capped per-frame steps of controlAxisY()
+	if (!state.sideTracker.hasFix()) {
+		return true;
+	}
+	if (std::fabs(state.errorY) <= state.runConfig.toleranceYPx) {
+		raiseEvent(EyeAlignEvent::Y_CENTERED);
+		state.eyeLostReported = false;		// the lost-pupil rule hands over to the lower camera
 		changePhase(EyeAlignPhase::CENTERING_Z);
 		return true;
 	}
-	// A pupil in the outer quarters of the lower image (left of 1/4 or right of 3/4 of
-	// the width) is far from its target: one blocking position move to the predicted
-	// target position (error px * ratio) instead of the capped per-frame steps of
-	// controlAxisX(). That jump exceeds the tracker's maxJumpPx, so the lower tracker
-	// restarts and re-locks on the new position; hasFix() stays false until then and
-	// the lost-pupil rule waits with it. A pupil inside the middle half is fine-stepped.
-	const float farBandPx = state.lowerFrameWidth * CENTERING_X_FAR_BAND_FRACTION;
-	const float pupilX = state.lowerTracker.centerX();
-	const bool pupilFar = pupilX < farBandPx || pupilX > state.lowerFrameWidth - farBandPx;
-	if (lowerHasFix && pupilFar && state.axisX.isValid() && !state.held) {
-		state.axisX.poll();		// an absolute target must not build on a stale position
-		const int target = state.axisX.getPosition() + static_cast<int>(std::lround(state.errorX * state.runConfig.stepsPerPxX));
-		if (!movePhaseAxisTo(state.axisX, target, EyeAlignPhase::CENTERING_X, state.runConfig.eyeXTimeoutMs)) {
-			return false;
-		}
-		state.lowerTracker.reset();
+	const int offset = static_cast<int>(std::lround(state.errorY * state.runConfig.stepsPerPxY));
+	if (!state.axisY.isValid() || state.held || movesIntoEnd(state.axisY, offset)) {
 		return true;
 	}
-	controlAxisX(lowerHasFix);
+	const float farBandPx = state.sideFrameHeight * CENTERING_Y_FAR_BAND_FRACTION;
+	const float pupilY = state.sideTracker.centerY();
+	const bool pupilFar = pupilY < farBandPx || pupilY > state.sideFrameHeight - farBandPx;
+	if (pupilFar) {
+		const int farStep = (offset >= 0 ? +1 : -1) * std::max(state.runConfig.centerStepY, 1);
+		stepAxis(state.axisY, farStep);
+		state.sideTracker.reset();
+		return !state.endRequested;
+	}
+	controlAxisY(true);
 	return !state.endRequested;
 }
 
 bool eye_align::EyeAligner::phaseCenteringZ(void)
 {
 	auto& state = impl();
-	// Step 7: Z brings the lower-camera pupil onto its vertical target; X rests. Once Z
-	// is on target (or cannot go further forward), an X error sends the run back to
-	// step 6; otherwise settleFrames quiet frames make the alignment FOCUSED. With Z
-	// stuck at minSafePosZ and X already centred the phase simply holds: the literal
-	// "back to step 6" would bounce between the two phases every frame to no effect.
-	const bool lowerHasFix = state.lowerTracker.hasFix();
-	const AxisMove moved = controlAxisZ(lowerHasFix, state.runConfig.toleranceZPx);
-	if (state.endRequested) {
-		return false;
-	}
-	if (!lowerHasFix || moved == AxisMove::MOVED) {
-		state.settleCount = 0;
+	// Step 7: Z brings the lower-camera pupil onto its vertical target; X and Y rest.
+	//   - no pupil fix on the lower camera: Z rests (the lost-pupil rule stops and
+	//     eventually cancels)
+	//   - within toleranceZPx: Z_CENTERED; with X on target too -> FOCUSED (step 8),
+	//     otherwise -> step 6 (X centring, which comes back here once X is on target)
+	//   - Z at a limit on the side the move would go (minSafePosZ / readyPosZ through
+	//     clipZ, or an end switch through stepAxis): Z rests; EYE_TOO_CLOSE / END_OF_*
+	//     come from checkAxisLimits and the run goes on
+	//   - pupil in the outer quarters of the image height (above 1/4 or below 3/4):
+	//     one relative move of centerStepZ toward the target per frame, clipped at the
+	//     Z bounds. That jump may exceed the tracker's maxJumpPx, so the lower tracker
+	//     is restarted to re-lock on the new position
+	//   - pupil inside the middle half: capped per-frame steps of controlAxisZ()
+	if (!state.lowerTracker.hasFix()) {
 		return true;
 	}
-	if (std::fabs(state.errorX) > state.runConfig.toleranceXPx) {
-		changePhase(EyeAlignPhase::CENTERING_X);
-		return true;
-	}
-	if (moved == AxisMove::CLIPPED) {
-		state.settleCount = 0;
-		return true;
-	}
-	state.settleCount++;
-	if (state.settleCount >= state.runConfig.settleFrames) {
+	if (std::fabs(state.errorZ) <= state.runConfig.toleranceZPx) {
 		raiseEvent(EyeAlignEvent::Z_CENTERED);
-		changePhase(EyeAlignPhase::FOCUSED);		// step 8
-		state.focusReached = true;				// the alignment timeout no longer applies
-		raiseEvent(EyeAlignEvent::FOCUS_ALIGNED);
+		if (std::fabs(state.errorX) <= state.runConfig.toleranceXPx) {
+			raiseEvent(EyeAlignEvent::X_CENTERED);
+			changePhase(EyeAlignPhase::FOCUSED);		// step 8
+			state.focusReached = true;				// the alignment timeout no longer applies
+			raiseEvent(EyeAlignEvent::FOCUS_ALIGNED);
+		}
+		else {
+			changePhase(EyeAlignPhase::CENTERING_X);
+		}
+		return true;
 	}
-	return true;
+	const float farBandPx = state.lowerFrameHeight * CENTERING_Z_FAR_BAND_FRACTION;
+	const float pupilY = state.lowerTracker.centerY();
+	const bool pupilFar = pupilY < farBandPx || pupilY > state.lowerFrameHeight - farBandPx;
+	if (pupilFar && !state.held) {
+		const int direction = (state.errorZ * state.runConfig.stepsPerPxZ >= 0.0f) ? +1 : -1;
+		const int farStep = clipZ(direction * std::max(state.runConfig.centerStepZ, 1));
+		if (farStep != 0) {
+			stepAxis(state.axisZ, farStep);
+			state.lowerTracker.reset();
+		}
+		return !state.endRequested;
+	}
+	controlAxisZ(true, state.runConfig.toleranceZPx);		// CLIPPED or an end switch leave Z at rest
+	return !state.endRequested;
+}
+
+bool eye_align::EyeAligner::phaseCenteringX(void)
+{
+	auto& state = impl();
+	// Step 6: X brings the lower-camera pupil onto its horizontal target; Y and Z rest.
+	//   - no pupil fix on the lower camera: X rests (the lost-pupil rule stops and
+	//     eventually cancels)
+	//   - within toleranceXPx: X_CENTERED -> step 7 (Z centring)
+	//   - X at its end switch on the side the move would go: X rests (END_OF_LEFT /
+	//     END_OF_RIGHT come from checkAxisLimits; the run goes on)
+	//   - pupil in the outer quarters of the image width (left of 1/4 or right of 3/4):
+	//     one relative move of centerStepX toward the target per frame. That jump may
+	//     exceed the tracker's maxJumpPx, so the lower tracker is restarted to re-lock
+	//     on the new position
+	//   - pupil inside the middle half: capped per-frame steps of controlAxisX() by the
+	//     lower-camera X error
+	if (!state.lowerTracker.hasFix()) {
+		return true;
+	}
+	if (std::fabs(state.errorX) <= state.runConfig.toleranceXPx) {
+		raiseEvent(EyeAlignEvent::X_CENTERED);
+		changePhase(EyeAlignPhase::CENTERING_Z);
+		return true;
+	}
+	const int offset = static_cast<int>(std::lround(state.errorX * state.runConfig.stepsPerPxX));
+	if (movesIntoEnd(state.axisX, offset)) {
+		return true;
+	}
+	const float farBandPx = state.lowerFrameWidth * CENTERING_X_FAR_BAND_FRACTION;
+	const float pupilX = state.lowerTracker.centerX();
+	const bool pupilFar = pupilX < farBandPx || pupilX > state.lowerFrameWidth - farBandPx;
+	if (pupilFar && state.axisX.isValid() && !state.held) {
+		const int farStep = (offset >= 0 ? +1 : -1) * std::max(state.runConfig.centerStepX, 1);
+		stepAxis(state.axisX, farStep);
+		state.lowerTracker.reset();
+		return !state.endRequested;
+	}
+	controlAxisX(true);		// no move while held or without a motor
+	return !state.endRequested;
 }
 
 bool eye_align::EyeAligner::phaseFocused(void)
 {
 	auto& state = impl();
 	// Step 8: no motion. The pupil leaving the X or Z tolerance means the eye moved off
-	// the working position: report FOCUS_LOST and re-centre (back to step 7, which
-	// returns to step 6 when X is off). The lock, not the per-frame fix, is the
+	// the working position: report FOCUS_LOST and re-centre (back to step 7, then step
+	// 6, which returns here once X is on target). The lock, not the per-frame fix, is the
 	// condition: a single dropped frame keeps the last smoothed centre and must not
 	// churn FOCUS_LOST / FOCUS_ALIGNED; a real loss is handled by the lost-pupil rule.
 	if (state.lowerTracker.isLocked() && isLowerCentered()) {
 		return true;
 	}
 	raiseEvent(EyeAlignEvent::FOCUS_LOST);
-	changePhase(EyeAlignPhase::CENTERING_Z);
+	changePhase(EyeAlignPhase::CENTERING_Y);
 	return true;
 }
 
@@ -1464,14 +1521,14 @@ void eye_align::EyeAligner::setupCorneaLeds(void)
 	if (state.board == nullptr) {
 		return;
 	}
-	const int intensity = std::clamp(state.runConfig.irLedIntensity, 0, static_cast<int>(LED_INTENSITY_MAX));
-
+	// No intensity control here: the LEDs keep the intensity set at start-up (or by the
+	// light control panel); a run only makes sure they are on.
 	for (CorneaIrLed* led : { state.board->getCorneaIrLeftLed(), state.board->getCorneaIrRightLed() }) {
-		if (led != nullptr && !led->updateIntensity(intensity)) {
-			LogW() << "EyeAligner: failed to set " << led->getName() << " to " << intensity;
+		if (led != nullptr && !led->turnLightOn()) {
+			LogW() << "EyeAligner: failed to turn on " << led->getName();
 		}
 	}
-	LogI() << "EyeAligner: both cornea IR LEDs on at " << intensity;
+	LogI() << "EyeAligner: both cornea IR LEDs on";
 }
 
 EyeAligner::AxisMove eye_align::EyeAligner::controlAxis(AxisController& axis, float error, bool hasFix, float tolerancePx, float stepsPerPx)
@@ -1513,15 +1570,22 @@ void eye_align::EyeAligner::stepAxis(AxisController& axis, int offset)
 	// A move into an active end switch is skipped: the limit was (or will be)
 	// reported by checkAxisLimits, and a rejected command would otherwise end the
 	// run through checkAxisFaults.
-	const int direction = (offset > 0) ? POSITIVE_STEP_DIRECTION : (1 - POSITIVE_STEP_DIRECTION);
-	const bool intoEnd = (direction == 0) ? axis.isAtMinimumEnd() : axis.isAtMaximumEnd();
-	if (intoEnd) {
+	if (movesIntoEnd(axis, offset)) {
 		return;
 	}
 	state.movingAxis = &axis;
 	axis.moveBy(offset);
 	state.movingAxis = nullptr;
 	return;
+}
+
+bool eye_align::EyeAligner::movesIntoEnd(const AxisController& axis, int offset)
+{
+	if (offset == 0 || !axis.isValid()) {
+		return false;
+	}
+	const int direction = (offset > 0) ? POSITIVE_STEP_DIRECTION : (1 - POSITIVE_STEP_DIRECTION);
+	return (direction == 0) ? axis.isAtMinimumEnd() : axis.isAtMaximumEnd();
 }
 
 EyeAligner::AxisMove eye_align::EyeAligner::controlAxisY(bool sideHasFix)
@@ -1567,14 +1631,14 @@ bool eye_align::EyeAligner::hasZReached(int limitPos) const
 	return state.zForwardSign * (limitPos - state.axisZ.getPosition()) <= state.runConfig.posToleranceSteps;
 }
 
-bool eye_align::EyeAligner::hasLockGraceExpired(void)
+bool eye_align::EyeAligner::hasLockGraceExpired(int waitMs)
 {
 	auto& state = impl();
 	if (state.limitReachedAt == Clock::time_point()) {
 		state.limitReachedAt = Clock::now();		// first frame at the limit: start waiting
 		return false;
 	}
-	return elapsedMilliseconds(state.limitReachedAt) >= SEARCH_LOCK_GRACE_MS;
+	return elapsedMilliseconds(state.limitReachedAt) >= waitMs;
 }
 
 bool eye_align::EyeAligner::isLowerCentered(void) const

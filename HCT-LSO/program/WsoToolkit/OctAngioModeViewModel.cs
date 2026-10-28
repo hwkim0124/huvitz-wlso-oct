@@ -16,14 +16,10 @@ namespace WsoToolkit
 
     public partial class OctAngioModeWindow
     {
-        WsoCallback.CorneaCameraFrameCaptured _onCorneaLeftFrameCaptured;
-        WsoCallback.CorneaCameraFrameCaptured _onCorneaRightFrameCaptured;
         WsoCallback.CorneaCameraFrameCaptured _onCorneaLowerFrameCaptured;
 
         // Frame coalescing: keep at most one frame in flight so the dispatcher queue
         // cannot back up under a fast frame stream.
-        private volatile bool _corneaLeftPending = false;
-        private volatile bool _corneaRightPending = false;
         private volatile bool _corneaLowerPending = false;
 
         WsoCallback.JoystickButtonPressed _onJoystickButtonPressed;
@@ -138,23 +134,17 @@ namespace WsoToolkit
         /// 
         public void StartCorneaCameraPreview()
         {
-            corneaPreview1.CameraType = CameraType.IrCorneaLeft;
-            corneaPreview2.CameraType = CameraType.IrCorneaRight;
+            // Left and right cameras feed the stereo preview (upper half of the left frame
+            // over the lower half of the right frame); the lower camera keeps its own preview.
             corneaPreview3.CameraType = CameraType.IrCorneaLower;
-
-            corneaPreview1.Callback = _onCorneaLeftFrameCaptured;
-            corneaPreview2.Callback = _onCorneaRightFrameCaptured;
             corneaPreview3.Callback = _onCorneaLowerFrameCaptured;
-
-            corneaPreview1.IsStageControlEnabled = true;
-            corneaPreview2.IsStageControlEnabled = true;
             corneaPreview3.IsStageControlEnabled = true;
-
-            corneaPreview1.IsOverlayFocusGuide = true;
-            corneaPreview2.IsOverlayFocusGuide = true;
             corneaPreview3.IsOverlayFocusGuide = true;
 
-            CorneaCamera.StartPreview(_onCorneaLeftFrameCaptured, _onCorneaRightFrameCaptured, _onCorneaLowerFrameCaptured);
+            stereoCorneaPreview.IsStageControlEnabled = true;
+            stereoCorneaPreview.IsOverlayFocusGuide = true;
+
+            CorneaCamera.StartPreview(stereoCorneaPreview.LeftCallback, stereoCorneaPreview.RightCallback, _onCorneaLowerFrameCaptured);
         }
 
         public void CloseCorneaCameraPreview()
@@ -930,42 +920,12 @@ namespace WsoToolkit
             }, DispatcherPriority.Normal);
         }
 
-        private void OnCorneaCameraLeftFrameCaptured(nint data, int width, int height)
+        private void OnCorneaCameraLowerFrameCaptured(nint data, int width, int height)
         {
             if (data == 0) return;
 
             // Count the true capture rate before the coalescing gate, so the preview's
             // FPS reflects the camera rate rather than the throttled update rate.
-            corneaPreview1.MarkFrameCaptured();
-            if (_corneaLeftPending) return;
-
-            _corneaLeftPending = true;
-            // Update GUI preview control asynchronously.
-            Dispatcher.BeginInvoke(() => {
-                corneaPreview1.CallbackCorneaCameraFrame(data, width, height);
-                _corneaLeftPending = false;
-            }, DispatcherPriority.Background);
-        }
-
-        private void OnCorneaCameraRightFrameCaptured(nint data, int width, int height)
-        {
-            if (data == 0) return;
-
-            corneaPreview2.MarkFrameCaptured();
-            if (_corneaRightPending) return;
-
-            _corneaRightPending = true;
-            // Update GUI preview control asynchronously.
-            Dispatcher.BeginInvoke(() => {
-                corneaPreview2.CallbackCorneaCameraFrame(data, width, height);
-                _corneaRightPending = false;
-            }, DispatcherPriority.Background);
-        }
-
-        private void OnCorneaCameraLowerFrameCaptured(nint data, int width, int height)
-        {
-            if (data == 0) return;
-
             corneaPreview3.MarkFrameCaptured();
             if (_corneaLowerPending) return;
 

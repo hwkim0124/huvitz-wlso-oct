@@ -185,8 +185,8 @@
                     <CheckBox x:Name="checkFullRangeDomain" Content="Full Range" Style="{StaticResource CheckBoxStyle}" Margin="12, 0, 0, 0"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="6" Grid.ColumnSpan="2">
-                    <ComboBox x:Name="cmbScanOffsetX" Style="{StaticResource ComboBoxStyle}" Width="60"/>
-                    <ComboBox x:Name="cmbScanOffsetY" Style="{StaticResource ComboBoxStyle}" Width="60" Margin="4,0,0,0"/>
+                    <TextBox x:Name="editScanOffsetX" Style="{StaticResource TextBoxS1Style}" Width="60"/>
+                    <TextBox x:Name="editScanOffsetY" Style="{StaticResource TextBoxS1Style}" Width="60" Margin="4,0,0,0"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="6" Grid.ColumnSpan="2">
                     <TextBox x:Name="editScanScaleX" Style="{StaticResource TextBoxS1Style}" Width="60"/>
