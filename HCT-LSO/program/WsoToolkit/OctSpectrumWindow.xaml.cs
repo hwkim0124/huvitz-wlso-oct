@@ -30,8 +30,7 @@ namespace WsoToolkit
         {
             InitializeComponent();
 
-            _onCorneaLeftFrameCaptured = new WsoCallback.CorneaCameraFrameCaptured(this.OnCorneaLeftFrameCaptured);
-            _onCorneaRightFrameCaptured = new WsoCallback.CorneaCameraFrameCaptured(this.OnCorneaRightFrameCaptured);
+            // The left and right cornea frames go to the stereo preview's own callbacks.
             _onRetinaCameraFrameCaptured = new WsoCallback.RetinaCameraFrameCaptured(this.OnRetinaCameraFrameCaptured);
 
             _onJoystickButtonPressed = new WsoCallback.JoystickButtonPressed(this.OnJoystickButtonPressed);

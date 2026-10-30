@@ -16,8 +16,6 @@ namespace WsoToolkit
 
     public partial class OctSignalTestWindow
     {
-        WsoCallback.CorneaCameraFrameCaptured _onCorneaLeftFrameCaptured;
-        WsoCallback.CorneaCameraFrameCaptured _onCorneaRightFrameCaptured;
         WsoCallback.RetinaCameraFrameCaptured _onRetinaCameraFrameCaptured;
         WsoCallback.JoystickButtonPressed _onJoystickButtonPressed;
         WsoCallback.OptimizeButtonPressed _onOptimizeButtonPressed;
@@ -47,8 +45,6 @@ namespace WsoToolkit
         private volatile bool _intensityPending = false;
         private volatile bool _octPreviewPending = false;
         private volatile bool _octSpectrumPending = false;
-        private volatile bool _corenaLeftPending = false;
-        private volatile bool _corneaRightPending = false;
         private volatile bool _retinaPending = false;
         private float[] _intensityColumn = Array.Empty<float>();
         private byte[] _octPreviewBuffer = Array.Empty<byte>();
@@ -229,15 +225,12 @@ namespace WsoToolkit
         /// 
         public void StartCorneaCameraPreview()
         {
-            corneaPreview1.CameraType = CameraType.IrCorneaLeft;
-            corneaPreview2.CameraType = CameraType.IrCorneaRight;
+            // Left and right cameras feed the stereo preview (upper half of the left frame
+            // over the lower half of the right frame). The lower camera is not shown here.
             retinaPreview.CameraType = CameraType.IrRetina;
-
-            corneaPreview1.Callback = _onCorneaLeftFrameCaptured;
-            corneaPreview2.Callback = _onCorneaRightFrameCaptured;
             retinaPreview.Callback = _onRetinaCameraFrameCaptured;
 
-            CorneaCamera.StartPreview(_onCorneaLeftFrameCaptured, _onCorneaRightFrameCaptured, null);
+            CorneaCamera.StartPreview(stereoCorneaPreview.LeftCallback, stereoCorneaPreview.RightCallback, null);
             RetinaCamera.StartPreview(_onRetinaCameraFrameCaptured);
         }
 
@@ -612,42 +605,12 @@ namespace WsoToolkit
             }, DispatcherPriority.Normal);
         }
 
-        private void OnCorneaLeftFrameCaptured(nint data, int width, int height)
+        private void OnRetinaCameraFrameCaptured(IntPtr data, int width, int height)
         {
             if (data == 0) return;
 
             // Count the true capture rate before the coalescing gate, so the preview's
             // FPS reflects the camera rate rather than the throttled update rate.
-            corneaPreview1.MarkFrameCaptured();
-            if (_corenaLeftPending) return;
-
-            _corenaLeftPending = true;
-            Dispatcher.BeginInvoke(() =>
-            {
-                corneaPreview1.CallbackCorneaCameraFrame(data, width, height);
-                _corenaLeftPending = false;
-            }, DispatcherPriority.Background);
-        }
-
-        private void OnCorneaRightFrameCaptured(IntPtr data, int width, int height)
-        {
-            if (data == 0) return;
-
-            corneaPreview2.MarkFrameCaptured();
-            if (_corneaRightPending) return;
-
-            _corneaRightPending = true;
-            // Update GUI preview control asynchronously.
-            Dispatcher.BeginInvoke(() => {
-                corneaPreview2.CallbackCorneaCameraFrame(data, width, height);
-                _corneaRightPending = false;
-            }, DispatcherPriority.Background);
-        }
-
-        private void OnRetinaCameraFrameCaptured(IntPtr data, int width, int height)
-        {
-            if (data == 0) return;
-
             retinaPreview.MarkFrameCaptured();
             if (_retinaPending) return;
 

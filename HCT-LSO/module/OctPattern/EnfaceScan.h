@@ -23,7 +23,7 @@ namespace oct_pattern
 		virtual bool buildPattern(void);
 
 	protected:
-		void buildEnfaceCube(bool isVert);
+		bool buildEnfaceCube(bool isVert);
 
 	private:
 		struct EnfaceScanImpl;

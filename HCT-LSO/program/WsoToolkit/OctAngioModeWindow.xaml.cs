@@ -447,6 +447,17 @@ namespace WsoToolkit
             }
         }
 
+        private void CheckEnfaceEnable_Click(object sender, RoutedEventArgs e)
+        {
+            ReflectEnfaceControlsEnabled();
+        }
+
+        private void CheckEnfaceGrid_Click(object sender, RoutedEventArgs e)
+        {
+            octScanEnfacePreivew.IsOverlayGrid = checkEnfaceGrid.IsChecked == true;
+            octScanEnfacePreivew.RedrawOverlay();
+        }
+
         private void CheckFitToHeight_Click(object sender, RoutedEventArgs e)
         {
             octScanImagePreview.IsStretchToHeight = checkFitToHeight.IsChecked == true;

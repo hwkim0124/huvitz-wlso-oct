@@ -262,6 +262,11 @@ unique_ptr<oct_result::ProtocolResult> wso_system::OctArchive::fetchProtocolResu
 void wso_system::OctArchive::onOctEnfaceImageProcessed(unsigned char* bits, int width, int height)
 {
 	LogD() << "Oct enface image processed" << ", w: " << width << ", h: " << height;
+
+	// Live preview artefact only: hand it to the managed side, nothing is archived.
+	if (auto* p = CallbackRegistry::getInstance(); p) {
+		p->runOctEnfaceImageCaptured(bits, width, height);
+	}
 }
 
 void wso_system::OctArchive::onOctPreviewImageProcessed(unsigned char* bits, int width, int height, float qindex, float sn_ratio, int ref_point, int image_index)

@@ -238,8 +238,8 @@
                             <ComboBox x:Name="cmbEnfaceLines" Style="{StaticResource ComboBoxStyleS1}" Grid.Row="2" Grid.Column="2"/>
                             <ComboBox x:Name="cmbEnfaceRangeX" Style="{StaticResource ComboBoxStyleS1}" Grid.Row="3" Grid.Column="2"/>
                             <ComboBox x:Name="cmbEnfaceRangeY" Style="{StaticResource ComboBoxStyleS1}" Grid.Row="4" Grid.Column="2"/>
-                            <CheckBox x:Name="checkEnfaceEnable" Content="Enable" Style="{StaticResource CheckBoxStyle}" Grid.Row="1" Grid.Column="3"/>
-                            <CheckBox x:Name="checkEnfaceGrid" Content="Grid Lines" Style="{StaticResource CheckBoxStyle}" Grid.Row="2" Grid.Column="3"/>
+                            <CheckBox x:Name="checkEnfaceEnable" Content="Enable" Style="{StaticResource CheckBoxStyle}" Grid.Row="1" Grid.Column="3" Click="CheckEnfaceEnable_Click"/>
+                            <CheckBox x:Name="checkEnfaceGrid" Content="Grid Lines" Style="{StaticResource CheckBoxStyle}" Grid.Row="2" Grid.Column="3" Click="CheckEnfaceGrid_Click"/>
 
                             <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="5" Grid.RowSpan="9"/>
                         </Grid>

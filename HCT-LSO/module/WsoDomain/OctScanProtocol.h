@@ -136,6 +136,9 @@ namespace wso_domain
 			auto& enface = this->enface;
 			enface.rangeX = param.enfaceRangeX;
 			enface.rangeY = param.enfaceRangeY;
+			// The USB3 line camera's image height is the A-scan count per B-scan. Changing it
+			// between interleaved preview and enface frames restarts the camera acquisition and
+			// loses the first triggers of the frame, so the enface keeps the scan pattern's count.
 			enface.numAscan = param.enfacePoints;
 			enface.numBscan = param.enfaceLines;
 

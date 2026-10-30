@@ -392,6 +392,7 @@ bool wso_device::StepMotor::controlStop(void)
 	lock_guard<mutex> lock(impl().mutexMoveStop);
 	if (usbComm.StepMotorStop(getMotorId())) {
 		impl().isStopped = true;
+		updateStatus();
 		return true;
 	}
 	LogD() << "StepMotor::controlStop() failed, name: " << getName();
@@ -424,6 +425,7 @@ bool wso_device::StepMotor::stopInVelocityMode(void)
 	lock_guard<mutex> lock(impl().mutexMoveStop);
 	if (usbComm.MotorStopVelocity(getMotorId())) {
 		impl().isStopped = true;
+		updateStatus();
 		return true;
 	}
 	LogD() << "StepMotor::stopInVelocityMode() failed, name: " << getName();

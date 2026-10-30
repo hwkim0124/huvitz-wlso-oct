@@ -1,6 +1,7 @@
 ﻿using OpenCvSharp;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -36,6 +37,12 @@ namespace WsoToolkit.controls
         public bool IsOverlayLength { get; set; } = false;
         public bool IsOverlayCenter { get; set; } = true;
         public bool IsContrastEnhanced { get; set; } = true;
+        public bool IsOverlayGrid { get; set; } = false;
+        public bool IsFlipVertical { get; set; } = false;
+
+        // Scan range (mm) of the enface pattern while previewing; analysis mode uses the protocol's range.
+        float _enfaceRangeX = 6.0f;
+        float _enfaceRangeY = 6.0f;
 
         private WsoOctScan.OctProtocolDescript? _protocol = null;
         public WsoOctScan.OctProtocolDescript? ProtocolDescriptor
@@ -87,6 +94,22 @@ namespace WsoToolkit.controls
             _drawPoints.Clear();
         }
 
+        public void SetEnfaceScanRange(float rangeX, float rangeY)
+        {
+            _enfaceRangeX = rangeX;
+            _enfaceRangeY = rangeY;
+        }
+
+        private float GetDisplayRangeX()
+        {
+            return IsPreviewMode ? _enfaceRangeX : (_protocol?.scanRangeX ?? 0.0f);
+        }
+
+        private float GetDisplayRangeY()
+        {
+            return IsPreviewMode ? _enfaceRangeY : (_protocol?.scanRangeY ?? 0.0f);
+        }
+
         public void SetChartCenterLocation(float x, float y)
         {
             if (_stratum != null)
@@ -101,34 +124,69 @@ namespace WsoToolkit.controls
         private void UpdateEnfaceStatus()
         {
             string s = $"Enface size: {_imageWidth} x {_imageHeight}";
+            if (IsPreviewMode)
+            {
+                s = $"Enface {_imageWidth} x {_imageHeight}, {GetDisplayRangeX():0.0} x {GetDisplayRangeY():0.0} mm";
+            }
             lblStatus.Content = s;
             return;
         }
 
         public void CallbackOctScanEnfaceImageCaptured(nint data, int width, int height)
         {
-            if (data == 0) return;
+            if (data == 0 || width <= 0 || height <= 0) return;
 
             // Stride for 8-bit grayscale. 
             nint step = width * sizeof(byte);
 
             using (Mat rawFrame = Mat.FromPixelData(height, width, MatType.CV_8UC1, data, step))
             {
-                _imageWidth = width;
-                _imageHeight = height;
-                _imageMat = rawFrame.Clone();
-
-                if (IsContrastEnhanced)
-                {
-                    Cv2.CreateCLAHE(ClipLimit, new OpenCvSharp.Size(TileGridSize, TileGridSize)).Apply(_imageMat, _imageMat);
-                }
-
-                _viewportWidth = imageBorder.ActualWidth > 0 ? (int)imageBorder.ActualWidth : _viewportWidth;
-                _viewportHeight = imageBorder.ActualHeight > 0 ? (int)imageBorder.ActualHeight : _viewportHeight;
-
-                UpdateEnfaceStatus();
-                UpdateFrameImage();
+                ApplyEnfaceImage(rawFrame, width, height);
             }
+        }
+
+        public void CallbackOctScanEnfaceImageCaptured(byte[] data, int width, int height)
+        {
+            // 8-bit grayscale enface (CV_8UC1), so 1 byte/pixel.
+            if (data == null || width <= 0 || height <= 0 || data.Length < width * height) return;
+            nint step = width * sizeof(byte);
+
+            // Pin the managed buffer so OpenCV can wrap it without copying; the pin lasts
+            // only for the clone inside ApplyEnfaceImage, which snapshots the pixels.
+            GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
+            try
+            {
+                using (Mat rawFrame = Mat.FromPixelData(height, width, MatType.CV_8UC1, handle.AddrOfPinnedObject(), step))
+                {
+                    ApplyEnfaceImage(rawFrame, width, height);
+                }
+            }
+            finally
+            {
+                handle.Free();
+            }
+        }
+
+        private void ApplyEnfaceImage(Mat rawFrame, int width, int height)
+        {
+            _imageWidth = width;
+            _imageHeight = height;
+            _imageMat = rawFrame.Clone();
+
+            if (IsFlipVertical)
+            {
+                Cv2.Flip(_imageMat, _imageMat, FlipMode.X);
+            }
+            if (IsContrastEnhanced)
+            {
+                Cv2.CreateCLAHE(ClipLimit, new OpenCvSharp.Size(TileGridSize, TileGridSize)).Apply(_imageMat, _imageMat);
+            }
+
+            _viewportWidth = imageBorder.ActualWidth > 0 ? (int)imageBorder.ActualWidth : _viewportWidth;
+            _viewportHeight = imageBorder.ActualHeight > 0 ? (int)imageBorder.ActualHeight : _viewportHeight;
+
+            UpdateEnfaceStatus();
+            UpdateFrameImage();
         }
 
         public void UpdateFrameImage()
@@ -148,6 +206,7 @@ namespace WsoToolkit.controls
 
             RenderOverlayLineSelect(ref _frameMat);
             RenderOverlayChartCenter(ref _frameMat);
+            RenderOverlayGridLines(ref _frameMat);
             UpdateImageView();
         }
 
@@ -161,6 +220,11 @@ namespace WsoToolkit.controls
             // Update the XAML Image element
             imageViewport.Source = source;
             // imageViewport.Source = _frameMat.ToWriteableBitmap();// OpenCvSharp.WpfExtensions.BitmapSourceConverter.ToBitmapSource(_frameMat);
+        }
+
+        public void RedrawOverlay()
+        {
+            RedrawFrameImage();
         }
 
         private void RedrawFrameImage()
@@ -205,8 +269,8 @@ namespace WsoToolkit.controls
                     _drawPoints.Add(new(pos.X, pos.Y));
                     if (_drawPoints.Count >= 2)
                     {
-                        var dx = ((float)Math.Abs(_drawPoints[1].X - _drawPoints[0].X) / _frameMat.Width) * _protocol?.scanRangeX ?? 0.0f;
-                        var dy = ((float)Math.Abs(_drawPoints[1].Y - _drawPoints[0].Y) / _frameMat.Height) * _protocol?.scanRangeY ?? 0.0f;   // in millimeters
+                        var dx = ((float)Math.Abs(_drawPoints[1].X - _drawPoints[0].X) / _frameMat.Width) * GetDisplayRangeX();
+                        var dy = ((float)Math.Abs(_drawPoints[1].Y - _drawPoints[0].Y) / _frameMat.Height) * GetDisplayRangeY();   // in millimeters
                         var dist = Math.Sqrt(dx * dx + dy * dy);
 
                         Cv2.Line(_frameMat, _drawPoints[0], _drawPoints[1], Scalar.Orange, 1, LineTypes.AntiAlias);
@@ -279,6 +343,46 @@ namespace WsoToolkit.controls
                     var pos_y = (int)(Math.Round(org_y + chart_y * size_y));
                     Cv2.DrawMarker(frame, new OpenCvSharp.Point(pos_x, pos_y), new Scalar(0, 255, 0), OpenCvSharp.MarkerTypes.Cross, 10, 2, OpenCvSharp.LineTypes.AntiAlias);
                 }
+            }
+        }
+
+        private void RenderOverlayGridLines(ref Mat frame)
+        {
+            if (!IsOverlayGrid || frame.Empty())
+            {
+                return;
+            }
+            var range_x = GetDisplayRangeX();
+            var range_y = GetDisplayRangeY();
+            if ((range_x * range_y) <= 0.0f)
+            {
+                return;
+            }
+
+            // Center crosshair with tick marks every 1 mm; the frame center is (0, 0) mm.
+            const int tick = 5;
+            var color = new Scalar(0, 255, 0);
+            var size_x = frame.Width / range_x;
+            var size_y = frame.Height / range_y;
+            var org_x = frame.Width / 2;
+            var org_y = frame.Height / 2;
+
+            Cv2.Line(frame, new OpenCvSharp.Point(0, org_y), new OpenCvSharp.Point(frame.Width, org_y), color, 1);
+            Cv2.Line(frame, new OpenCvSharp.Point(org_x, 0), new OpenCvSharp.Point(org_x, frame.Height), color, 1);
+
+            var count_x = (int)(range_x / 2);
+            for (int i = 1; i <= count_x; i++)
+            {
+                var dx = (int)Math.Round(i * size_x);
+                Cv2.Line(frame, new OpenCvSharp.Point(org_x - dx, org_y - tick), new OpenCvSharp.Point(org_x - dx, org_y + tick), color, 1);
+                Cv2.Line(frame, new OpenCvSharp.Point(org_x + dx, org_y - tick), new OpenCvSharp.Point(org_x + dx, org_y + tick), color, 1);
+            }
+            var count_y = (int)(range_y / 2);
+            for (int i = 1; i <= count_y; i++)
+            {
+                var dy = (int)Math.Round(i * size_y);
+                Cv2.Line(frame, new OpenCvSharp.Point(org_x - tick, org_y - dy), new OpenCvSharp.Point(org_x + tick, org_y - dy), color, 1);
+                Cv2.Line(frame, new OpenCvSharp.Point(org_x - tick, org_y + dy), new OpenCvSharp.Point(org_x + tick, org_y + dy), color, 1);
             }
         }
 

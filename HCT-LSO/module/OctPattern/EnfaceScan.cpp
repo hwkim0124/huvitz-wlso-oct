@@ -48,21 +48,18 @@ bool oct_pattern::EnfaceScan::buildPattern(void)
 	case VERT_RASTER:
 	case VERT_CUBE:
 	case VERT_ANGIO:
-		buildEnfaceCube(true);
-		break;
+		return buildEnfaceCube(true);
 
 	case RASTER:
 	case CUBE:
 	case ANGIO:
 	default:
-		buildEnfaceCube(false);
-		break;
+		return buildEnfaceCube(false);
 	}
-	return true;
 }
 
 
-void oct_pattern::EnfaceScan::buildEnfaceCube(bool isVert)
+bool oct_pattern::EnfaceScan::buildEnfaceCube(bool isVert)
 {
 	float radiusX = (getScanRangeX() / 2.0f) * getScanScaleX();
 	float radiusY = (getScanRangeY() / 2.0f) * getScanScaleY();
@@ -80,12 +77,14 @@ void oct_pattern::EnfaceScan::buildEnfaceCube(bool isVert)
 	int numPoints = getNumberOfScanPoints();
 	int numLines = getNumberOfScanLines();
 
-	int numFrames = getNumberOfFramesFromPoints(numPoints, numLines, true);
+	int numFrames = getNumberOfFramesFromPoints(numPoints, numLines, 1, true);
 	int maxFrames = (useFastRasters() ? (PATTERN_FRAMES_ENFACE_MAX/2) : PATTERN_FRAMES_ENFACE_MAX);
 	if (numFrames <= 0 || numFrames > maxFrames) {
-		return;
+		LogE() << "Enface pattern exceeds trace-profile budget, points: " << numPoints
+			<< ", lines: " << numLines << ", frames: " << numFrames << ", max: " << maxFrames;
+		return false;
 	}
-	int frameSize = getFrameCapacityFromPoints(numPoints, numLines, true);
+	int frameSize = getFrameCapacityFromPoints(numPoints, numLines, 1, true);
 
 	float yInterval = (yClose - yStart) / (numLines - 1);
 	float xInterval = (xClose - xStart) / (numLines - 1);
@@ -147,7 +146,7 @@ void oct_pattern::EnfaceScan::buildEnfaceCube(bool isVert)
 		PatternFrame* pFrame = getPatternFrame(frameIdx);
 		pFrame->addLineTrace(line);
 	}
-	return;
+	return true;
 }
 
 

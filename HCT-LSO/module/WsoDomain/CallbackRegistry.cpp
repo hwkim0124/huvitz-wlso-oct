@@ -506,7 +506,7 @@ void wso_domain::CallbackRegistry::runOctPreviewImageCaptured(uint8_t* bits, int
 void wso_domain::CallbackRegistry::runOctEnfaceImageCaptured(unsigned char* bits, int width, int height)
 {
 	lock_guard<mutex> lock(singleMutex_);
-	if (impl().octPreviewImageCaptured) {
+	if (impl().octEnfaceImageCaptured) {
 		if (auto func = *impl().octEnfaceImageCaptured; func) {
 			func(bits, width, height);
 		}

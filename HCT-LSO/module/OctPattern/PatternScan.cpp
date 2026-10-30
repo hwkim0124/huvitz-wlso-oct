@@ -337,14 +337,17 @@ int oct_pattern::PatternScan::getFrameCapacityFromPoints(int numPoints, int numL
 	int frameSize;
 	if (enface)
 	{
+		// Lines per raster command; each frame takes one galvo trace-profile slot, and the
+		// enface has PATTERN_FRAMES_ENFACE_MAX of them (see EnfaceScan::buildEnfaceCube).
+		// Values match the non-enface cube sizes that have been exercised on hardware.
 		if (numPoints >= (int)OctAscanSize::ASCAN_1024) {
-			frameSize = 4; // 8;
+			frameSize = 4;
 		}
 		else if (numPoints >= (int)OctAscanSize::ASCAN_512) {
-			frameSize = 8;  16; // 8;
+			frameSize = 8;
 		}
 		else {
-			frameSize = 8;  16; // 32;// 64; // 16;
+			frameSize = 16;
 		}
 	}
 	else

@@ -64,6 +64,9 @@ namespace WsoToolkit
             checkOverlayLength.IsChecked = false;
             checkFullDepthEnface.IsChecked = false;
             checkFitToHeight.IsChecked = true;
+            checkEnfaceEnable.IsChecked = false;
+            checkEnfaceGrid.IsChecked = false;
+            ReflectEnfacePatternOptions();
 
             editScanOffsetX.Text = "0";
             editScanOffsetY.Text = "0";
@@ -174,6 +177,8 @@ namespace WsoToolkit
 
             octScanImagePreview.SetAsPreviewMode();
             octScanEnfacePreivew.SetAsPreviewMode();
+            octScanEnfacePreivew.SetEnfaceScanRange(_octInitParam.enfaceRangeX, _octInitParam.enfaceRangeY);
+            octScanEnfacePreivew.IsOverlayGrid = checkEnfaceGrid.IsChecked == true;
 
             // Resume playing cornea camera paused by capture. 
             StartCorneaCameraPreview();
@@ -386,6 +391,12 @@ namespace WsoToolkit
             _octInitParam.scanOffsetY = ToFloat(editScanOffsetY.Text);
             _octInitParam.scanScaleX = ToFloat(editScanScaleX.Text);
             _octInitParam.scanScaleY = ToFloat(editScanScaleY.Text);
+
+            _octInitParam.enfacePoints = ToInt(cmbEnfacePoints.SelectedItem?.ToString() ?? "384");
+            _octInitParam.enfaceLines = ToInt(cmbEnfaceLines.SelectedItem?.ToString() ?? "128");
+            _octInitParam.enfaceRangeX = ToFloat(cmbEnfaceRangeX.SelectedItem?.ToString() ?? "6.0");
+            _octInitParam.enfaceRangeY = ToFloat(cmbEnfaceRangeY.SelectedItem?.ToString() ?? "6.0");
+            _octInitParam.isPhasingEnface = checkEnfaceEnable.IsChecked == true;
 
             _octInitParam.isFirstScanOnSide = false; // true;
         }
@@ -735,6 +746,44 @@ namespace WsoToolkit
             }
         }
 
+        private void ReflectEnfacePatternOptions()
+        {
+            cmbEnfacePoints.Items.Clear();
+            cmbEnfaceLines.Items.Clear();
+            cmbEnfaceRangeX.Items.Clear();
+            cmbEnfaceRangeY.Items.Clear();
+
+            foreach (var points in new[] { 1024, 512, 384 })
+            {
+                cmbEnfacePoints.Items.Add(points);
+            }
+            foreach (var lines in new[] { 64, 128, 192, 256 })
+            {
+                cmbEnfaceLines.Items.Add(lines);
+            }
+            for (int mm = 1; mm <= 16; mm++)
+            {
+                cmbEnfaceRangeX.Items.Add($"{mm:0.0}");
+                cmbEnfaceRangeY.Items.Add($"{mm:0.0}");
+            }
+
+            cmbEnfacePoints.SelectedIndex = 2;     // 384 points
+            cmbEnfaceLines.SelectedIndex = 1;      // 128 lines
+            cmbEnfaceRangeX.SelectedIndex = 5;     // 6.0 mm
+            cmbEnfaceRangeY.SelectedIndex = 5;     // 6.0 mm
+
+            ReflectEnfaceControlsEnabled();
+        }
+
+        private void ReflectEnfaceControlsEnabled()
+        {
+            bool enabled = checkEnfaceEnable.IsChecked == true;
+            cmbEnfacePoints.IsEnabled = enabled;
+            cmbEnfaceLines.IsEnabled = enabled;
+            cmbEnfaceRangeX.IsEnabled = enabled;
+            cmbEnfaceRangeY.IsEnabled = enabled;
+        }
+
         private void ReflectScanPointsSelected()
         {
             cmbScanPoints.Items.Clear();
@@ -883,12 +932,25 @@ namespace WsoToolkit
 
         private void OnOctScanEnfaceImageCaptured(nint data, int width, int height)
         {
-            if (data == 0) return;
+            if (data == 0 || width <= 0 || height <= 0) return;
+
+            // Copy the native enface image here, while the source pointer is valid. Native may
+            // hand out a pointer to a buffer local to its processing routine that is gone once
+            // this callback returns. 8-bit grayscale (CV_8UC1), so 1 byte/pixel.
+            int length = width * height;
+            byte[] buff = new byte[length];
+
+            unsafe
+            {
+                byte* pRawData = (byte*)data.ToPointer();
+                ReadOnlySpan<byte> nativeSpan = new ReadOnlySpan<byte>(pRawData, length);
+                nativeSpan.CopyTo(buff);
+            }
 
             // Update GUI preview control asynchronously.
             Dispatcher.BeginInvoke(() =>
             {
-                octScanEnfacePreivew.CallbackOctScanEnfaceImageCaptured(data, width, height);
+                octScanEnfacePreivew.CallbackOctScanEnfaceImageCaptured(buff, width, height);
             }, DispatcherPriority.Normal);
         }
 
