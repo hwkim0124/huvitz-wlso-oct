@@ -5,20 +5,20 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:WsoToolkit.controls"
              mc:Ignorable="d" 
-             Width="1032" Height="552">
+             Width="1024" Height="530">
     <Grid Background="White">
-        <Grid Margin="4">
+        <Grid Margin="0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
-                <RowDefinition Height="32"/>
+                <RowDefinition Height="28"/>
             </Grid.RowDefinitions>
             <Grid x:Name="imageBorder" Grid.Row="0" Grid.Column="0" Background="LightGray">
                 <Image x:Name="imageViewport" Style="{StaticResource ImageStyle}" Stretch="None"/>
             </Grid>
-            <StackPanel Grid.Row="1" Orientation="Vertical" Margin="8, 4, 8, 4">
+            <StackPanel Grid.Row="1" Orientation="Vertical" Margin="8, 0, 8, 0">
                 <Label x:Name="lblStatus" Content="OCT Preview" Style="{StaticResource LabelStyle}"/>
             </StackPanel>
         </Grid>

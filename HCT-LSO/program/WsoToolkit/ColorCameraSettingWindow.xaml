@@ -45,7 +45,7 @@
                         <Label Content="Exposure Time (us) : " Style="{StaticResource LabelStyle}"/>
                     </Grid>
                     <Grid Grid.Row="0" Grid.Column="3">
-                        <TextBox x:Name="myTbExposureTime" Style="{StaticResource TextBoxM1Style}" HorizontalAlignment="Center" KeyDown="myTb_KeyDown"/>
+                        <TextBox x:Name="myTbExposureTime" Style="{StaticResource TextBoxStyleL1}" HorizontalAlignment="Center" KeyDown="myTb_KeyDown"/>
                     </Grid>
                     <Grid Grid.Row="1" Grid.Column="0">
                         <Label Content="ROI Y Height : " Style="{StaticResource LabelStyle}"/>
@@ -70,7 +70,7 @@
                         <Label Content="Acquisition Frame Count :" Style="{StaticResource LabelStyle}"/>
                     </Grid>
                     <Grid Grid.Row="2" Grid.Column="3">
-                        <TextBox x:Name="myTbAcquisitionFrmaeCount" Style="{StaticResource TextBoxM1Style}" HorizontalAlignment="Center" KeyDown="myTb_KeyDown"/>
+                        <TextBox x:Name="myTbAcquisitionFrmaeCount" Style="{StaticResource TextBoxStyleL1}" HorizontalAlignment="Center" KeyDown="myTb_KeyDown"/>
                     </Grid>
                     <Grid Grid.Row="3" Grid.Column="0">
                         <Label Content="ROI Y Offset : " Style="{StaticResource LabelStyle}"/>
@@ -113,7 +113,7 @@
                         <Label Content="Gain (dB) : " Style="{StaticResource LabelStyle}"/>
                     </Grid>
                     <Grid Grid.Row="6" Grid.Column="3">
-                        <TextBox x:Name="myTbGain" Style="{StaticResource TextBoxM1Style}" HorizontalAlignment="Center" KeyDown="myTb_KeyDown"/>
+                        <TextBox x:Name="myTbGain" Style="{StaticResource TextBoxStyleL1}" HorizontalAlignment="Center" KeyDown="myTb_KeyDown"/>
                     </Grid>
                     <Grid Grid.Row="7" Grid.Column="0">
                         <Label Content="Trigger Delay (us) : " Style="{StaticResource LabelStyle}"/>
@@ -174,7 +174,7 @@
                     <ComboBox Grid.Row="3" Grid.Column="1" x:Name="myComboBinningVerticalMode" Style="{StaticResource CameraComboBoxStyle}" HorizontalAlignment="Center" SelectionChanged="myCombo_SelectionChanged"/>
                     <Label Grid.Row="3" Grid.Column="2" Content="Acq. Burst Frame Count : " Style="{StaticResource LabelStyle}"/>
                     <StackPanel Grid.Row="3" Grid.Column="3" Orientation="Vertical" VerticalAlignment="Center">
-                        <TextBox x:Name="myTbBurstFrameCount" Style="{StaticResource TextBoxM1Style}" HorizontalAlignment="Center"
+                        <TextBox x:Name="myTbBurstFrameCount" Style="{StaticResource TextBoxStyleL1}" HorizontalAlignment="Center"
                                  ToolTip="Frames per FrameBurstStart trigger. Above 1 does not match one frame per FrameStart trigger, so a start reports it. Empty = leave the device value."
                                  KeyDown="myTb_KeyDown"/>
                         <Label x:Name="myLbBurstFrameCountRange" HorizontalAlignment="Center" Padding="0" FontSize="10" Foreground="#FF888888"/>
@@ -182,17 +182,17 @@
 
                     <Label Grid.Row="4" Grid.Column="0" Content="Device Link Throughput : " Style="{StaticResource LabelStyle}"/>
                     <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center">
-                        <TextBox x:Name="myTbDeviceLinkThroughput" Style="{StaticResource TextBoxM1Style}" HorizontalAlignment="Center"
+                        <TextBox x:Name="myTbDeviceLinkThroughput" Style="{StaticResource TextBoxStyleL1}" HorizontalAlignment="Center"
                                  ToolTip="DeviceLinkThroughputLimit in bytes per second (the writable limit node, not the read-only reading). Empty = leave the device value."
                                  KeyDown="myTb_KeyDown"/>
                         <Label x:Name="myLbDeviceLinkThroughputRange" HorizontalAlignment="Center" Padding="0" FontSize="10" Foreground="#FF888888"/>
                     </StackPanel>
                     <Label Grid.Row="5" Grid.Column="0" Content="White Balance R : " Style="{StaticResource LabelStyle}"/>
-                    <TextBox Grid.Row="5" Grid.Column="1" x:Name="myTbBalanceRatioRed" Style="{StaticResource TextBoxM1Style}" HorizontalAlignment="Center"
+                    <TextBox Grid.Row="5" Grid.Column="1" x:Name="myTbBalanceRatioRed" Style="{StaticResource TextBoxStyleL1}" HorizontalAlignment="Center"
                              ToolTip="BalanceRatio Red written to the camera (DevKit: 1.0, old Toolkit default: 1.58). Empty = leave the camera value. A camera that hides the white-balance nodes (ISP off) ignores it."
                              KeyDown="myTb_KeyDown"/>
                     <Label Grid.Row="5" Grid.Column="2" Content="White Balance B : " Style="{StaticResource LabelStyle}"/>
-                    <TextBox Grid.Row="5" Grid.Column="3" x:Name="myTbBalanceRatioBlue" Style="{StaticResource TextBoxM1Style}" HorizontalAlignment="Center"
+                    <TextBox Grid.Row="5" Grid.Column="3" x:Name="myTbBalanceRatioBlue" Style="{StaticResource TextBoxStyleL1}" HorizontalAlignment="Center"
                              ToolTip="BalanceRatio Blue written to the camera (DevKit: 1.0, old Toolkit default: 1.84). Empty = leave the camera value."
                              KeyDown="myTb_KeyDown"/>
 

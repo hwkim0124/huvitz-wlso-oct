@@ -17,7 +17,6 @@ namespace WsoToolkit
 
     public partial class OctScanModeWindow
     {
-        WsoCallback.CorneaCameraFrameCaptured _onCorneaLowerFrameCaptured;
         WsoCallback.JoystickButtonPressed _onJoystickButtonPressed;
         WsoCallback.OptimizeButtonPressed _onOptimizeButtonPressed;
 
@@ -29,10 +28,6 @@ namespace WsoToolkit
         WsoCallback.OctAutoFocusOptimized _onAutoFocusOptimized;
         WsoCallback.OctAutoPolarOptimized _onAutoPolarOptimized;
         WsoCallback.OctAutoReferOptimized _onAutoReferOptimized;
-
-        // Frame coalescing: keep at most one frame in flight so the dispatcher queue
-        // cannot back up under a fast frame stream.
-        private volatile bool _corneaLowerPending = false;
 
 
         LightControlWindow? _lightControlWindow = null;
@@ -135,16 +130,11 @@ namespace WsoToolkit
         public void StartCorneaCameraPreview()
         {
             // Left and right cameras feed the stereo preview (upper half of the left frame
-            // over the lower half of the right frame); the lower camera keeps its own preview.
-            corneaPreview3.CameraType = CameraType.IrCorneaLower;
-            corneaPreview3.Callback = _onCorneaLowerFrameCaptured;
-            corneaPreview3.IsStageControlEnabled = true;
-            corneaPreview3.IsOverlayFocusGuide = true;
-
+            // over the lower half of the right frame). The lower camera is not shown here.
             stereoCorneaPreview.IsStageControlEnabled = true;
             stereoCorneaPreview.IsOverlayFocusGuide = true;
 
-            CorneaCamera.StartPreview(stereoCorneaPreview.LeftCallback, stereoCorneaPreview.RightCallback, _onCorneaLowerFrameCaptured);
+            CorneaCamera.StartPreview(stereoCorneaPreview.LeftCallback, stereoCorneaPreview.RightCallback, null);
         }
 
         public void CloseCorneaCameraPreview()
@@ -952,23 +942,6 @@ namespace WsoToolkit
                 }
                 Mouse.OverrideCursor = null;
             }, DispatcherPriority.Normal);
-        }
-
-        private void OnCorneaCameraLowerFrameCaptured(nint data, int width, int height)
-        {
-            if (data == 0) return;
-
-            // Count the true capture rate before the coalescing gate, so the preview's
-            // FPS reflects the camera rate rather than the throttled update rate.
-            corneaPreview3.MarkFrameCaptured();
-            if (_corneaLowerPending) return;
-
-            _corneaLowerPending = true;
-            // Update GUI preview control asynchronously.
-            Dispatcher.BeginInvoke(() => {
-                corneaPreview3.CallbackCorneaCameraFrame(data, width, height);
-                _corneaLowerPending = false;
-            }, DispatcherPriority.Background);
         }
 
         private void OnOctAutoFocusOptimized(bool result, float quality, float diopter)

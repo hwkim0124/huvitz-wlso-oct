@@ -8,16 +8,16 @@
     <Grid Background="White">
         <Grid Margin="4">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="224"/>
+                <ColumnDefinition Width="212"/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
-                <RowDefinition Height="224"/>
-                <RowDefinition Height="32"/>
+                <RowDefinition Height="212"/>
+                <RowDefinition Height="24"/>
             </Grid.RowDefinitions>
             <Grid Grid.Row="0" Grid.Column="0">
-                <Canvas x:Name="canvasChart" Width="224" Height="224" Loaded="CanvasChart_Loaded"/>
+                <Canvas x:Name="canvasChart" Width="212" Height="212" Loaded="CanvasChart_Loaded"/>
             </Grid>
-            <StackPanel Grid.Row="1" Orientation="Vertical" Margin="8,4,8,4">
+            <StackPanel Grid.Row="1" Orientation="Vertical" Margin="8,0,8,0">
                 <Label x:Name="lblStatus" Content="Section Chart" Height="Auto" Style="{StaticResource LabelStyle}"/>
             </StackPanel>
         </Grid>

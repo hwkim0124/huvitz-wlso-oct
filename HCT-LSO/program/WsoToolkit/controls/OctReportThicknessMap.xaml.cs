@@ -73,8 +73,8 @@ namespace WsoToolkit.controls
                 return;
             }
 
-            int frameWidth = 320; // (int)imageViewport.ActualWidth;
-            int frameHeight = 320; // (int)imageViewport.ActualHeight;
+            int frameWidth = 256; // (int)imageViewport.ActualWidth;
+            int frameHeight = 256; // (int)imageViewport.ActualHeight;
 
             Cv2.Normalize(_imageMat, _imageMat, 0.0, 1.0, NormTypes.MinMax);
 

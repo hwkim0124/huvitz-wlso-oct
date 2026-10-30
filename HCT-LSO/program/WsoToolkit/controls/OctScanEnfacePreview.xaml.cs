@@ -23,8 +23,8 @@ namespace WsoToolkit.controls
         Mat _frameMat = new();
         int _imageWidth = 0;
         int _imageHeight = 0;
-        int _viewportWidth = 320;
-        int _viewportHeight = 320;
+        int _viewportWidth = 256;
+        int _viewportHeight = 256;
 
         List<OpenCvSharp.Point> _drawPoints = new();
 

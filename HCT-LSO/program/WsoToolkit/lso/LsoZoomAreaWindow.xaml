@@ -11,7 +11,7 @@
     <DockPanel>
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="8,6,8,6">
             <Label Content="Zoom :" Style="{StaticResource LabelStyle}"/>
-            <ComboBox x:Name="myCbZoom" Style="{StaticResource ComboBoxM1Style}" Width="104" SelectionChanged="myCbZoom_SelectionChanged">
+            <ComboBox x:Name="myCbZoom" Style="{StaticResource ComboBoxStyleL1}" Width="104" SelectionChanged="myCbZoom_SelectionChanged">
                 <ComboBoxItem Content="Fit (Auto)" Tag="0" IsSelected="True"/>
                 <ComboBoxItem Content="1x" Tag="1"/>
                 <ComboBoxItem Content="2x" Tag="2"/>
@@ -26,7 +26,7 @@
                 <ComboBoxItem Content="60x" Tag="60"/>
             </ComboBox>
             <Label Content="Filter :" Style="{StaticResource LabelStyle}" Margin="8,0,0,0"/>
-            <ComboBox x:Name="myCbFilter" Style="{StaticResource ComboBoxM1Style}" Width="120" SelectionChanged="myCbFilter_SelectionChanged">
+            <ComboBox x:Name="myCbFilter" Style="{StaticResource ComboBoxStyleL1}" Width="120" SelectionChanged="myCbFilter_SelectionChanged">
                 <ComboBoxItem Content="Nearest (Pixels)" IsSelected="True"/>
                 <ComboBoxItem Content="Bilinear (Smooth)"/>
             </ComboBox>

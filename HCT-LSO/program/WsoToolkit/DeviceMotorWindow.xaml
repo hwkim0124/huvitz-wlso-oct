@@ -38,7 +38,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <Label x:Name="label" Content="OCT Focus" Style="{StaticResource HeaderStyleS1}"/>
+                <Label x:Name="label" Content="OCT Focus" Style="{StaticResource HeaderStyle}"/>
                 <StackPanel Grid.Row="1" Orientation="Horizontal">
                     <Slider x:Name="sliderOctFocus" Style="{StaticResource SliderStyle}" HorizontalAlignment="Left" Width="200" Margin="8,0,0,0" Thumb.DragStarted="SliderOctFocus_DragStarted" Thumb.DragCompleted="SliderOctFocus_DragCompleted" ValueChanged="SliderOctFocus_ValueChanged"/>
                     <TextBox x:Name="editOctFocusPos"  Style="{StaticResource TextBoxStyleS1}" Margin="4,0,0,0" KeyDown="EditOctFocusPos_KeyDown"/>
@@ -58,7 +58,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <Label x:Name="label2" Content="OCT Reference" Style="{StaticResource HeaderStyleS1}"/>
+                <Label x:Name="label2" Content="OCT Reference" Style="{StaticResource HeaderStyle}"/>
                 <StackPanel Grid.Row="1" Orientation="Horizontal">
                     <Slider x:Name="sliderOctRefer" Style="{StaticResource SliderStyle}" Thumb.DragStarted="SliderOctRefer_DragStarted" ValueChanged="SliderOctRefer_ValueChanged" Thumb.DragCompleted="SliderOctRefer_DragCompleted" HorizontalAlignment="Left" Width="200" Margin="8,0,0,0"/>
                     <TextBox x:Name="editOctReferPos" Style="{StaticResource TextBoxStyleS1}" Margin="4,0,0,0" KeyDown="EditOctReferPos_KeyDown"/>
@@ -79,7 +79,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <Label x:Name="label3" Content="OCT Polarization" Style="{StaticResource HeaderStyleS1}"/>
+                <Label x:Name="label3" Content="OCT Polarization" Style="{StaticResource HeaderStyle}"/>
                 <StackPanel Grid.Row="1" Orientation="Horizontal">
                     <Slider x:Name="sliderOctPolar" Style="{StaticResource SliderStyle}" ValueChanged="sliderOctPolar_ValueChanged" Thumb.DragStarted="sliderOctPolar_DragStarted" Thumb.DragCompleted="SliderOctPolar_DragCompleted" HorizontalAlignment="Left" Width="200" Margin="8,0,0,0"/>
                     <TextBox x:Name="editOctPolarPos" Style="{StaticResource TextBoxStyleS1}" Margin="4,0,0,0" KeyDown="EditOctPolarPos_KeyDown"/>
@@ -99,7 +99,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <Label x:Name="label7" Content="Return Mirror" Style="{StaticResource HeaderStyleS1}"/>
+                <Label x:Name="label7" Content="Return Mirror" Style="{StaticResource HeaderStyle}"/>
                 <StackPanel Grid.Row="1" Orientation="Horizontal">
                     <Slider x:Name="sliderRetMirror" Style="{StaticResource SliderStyle}" ValueChanged="SliderRetMirror_ValueChanged" Thumb.DragStarted="SliderRetMirror_DragStarted" Thumb.DragCompleted="SliderRetMirror_DragCompleted" HorizontalAlignment="Left" Width="200" Margin="8,0,0,0"/>
                     <TextBox x:Name="editRetMirrorPos" Style="{StaticResource TextBoxStyleS1}" Margin="4,0,0,0" KeyDown="EditRetMirrorPos_KeyDown"/>
@@ -118,7 +118,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <Label x:Name="label4" Content="LSO Focus" Style="{StaticResource HeaderStyleS1}"/>
+                <Label x:Name="label4" Content="LSO Focus" Style="{StaticResource HeaderStyle}"/>
                 <StackPanel Grid.Row="1" Orientation="Horizontal">
                     <Slider x:Name="sliderLsoFocus" Style="{StaticResource SliderStyle}" ValueChanged="SliderLsoFocus_ValueChanged" Thumb.DragStarted="SliderLsoFocus_DragStarted" Thumb.DragCompleted="SliderLsoFocus_DragCompleted" HorizontalAlignment="Left" Width="200" Margin="8,0,0,0"/>
                     <TextBox x:Name="editLsoFocusPos" Style="{StaticResource TextBoxStyleS1}" Margin="4,0,0,0" KeyDown="EditLsoFocusPos_KeyDown"/>
@@ -138,7 +138,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <Label x:Name="label61" Content="OCT Refer ND" Style="{StaticResource HeaderStyleS1}"/>
+                <Label x:Name="label61" Content="OCT Refer ND" Style="{StaticResource HeaderStyle}"/>
                 <StackPanel Grid.Row="1" Orientation="Horizontal">
                     <Slider x:Name="sliderOctRefNd" ValueChanged="sliderOctRefNd_ValueChanged" Thumb.DragStarted="sliderOctRefNd_DragStarted" Thumb.DragCompleted="SliderOctRefNd_DragCompleted" Style="{StaticResource SliderStyle}" HorizontalAlignment="Left" Width="200" Margin="8,0,0,0"/>
                     <TextBox x:Name="editOctRefNdPos" Style="{StaticResource TextBoxStyleS1}" Margin="4,0,0,0" KeyDown="EditOctRefNdPos_KeyDown"/>
@@ -157,7 +157,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <Label x:Name="label6" Content="OCT Anterior Lens" Style="{StaticResource HeaderStyleS1}"/>
+                <Label x:Name="label6" Content="OCT Anterior Lens" Style="{StaticResource HeaderStyle}"/>
                 <StackPanel Grid.Row="1" Orientation="Horizontal">
                     <Slider x:Name="sliderOctAntLens" ValueChanged="sliderOctAntLens_ValueChanged" Thumb.DragStarted="sliderOctAntLens_DragStarted" Thumb.DragCompleted="SliderOctAntLens_DragCompleted" Style="{StaticResource SliderStyle}" HorizontalAlignment="Left" Width="200" Margin="8,0,0,0"/>
                     <TextBox x:Name="editOctAntLensPos" Style="{StaticResource TextBoxStyleS1}" Margin="4,0,0,0" KeyDown="EditOctAntLensPos_KeyDown"/>
@@ -176,7 +176,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <Label x:Name="label701" Content="LSO Filter" Style="{StaticResource HeaderStyleS1}"/>
+                <Label x:Name="label701" Content="LSO Filter" Style="{StaticResource HeaderStyle}"/>
                 <StackPanel Grid.Row="1" Orientation="Horizontal">
                     <Slider x:Name="sliderLsoFilter" ValueChanged="sliderLsoFilter_ValueChanged" Thumb.DragStarted="sliderLsoFilter_DragStarted" Thumb.DragCompleted="SliderLsoFilter_DragCompleted" Style="{StaticResource SliderStyle}" HorizontalAlignment="Left" Width="200" Margin="8,0,0,0"/>
                     <TextBox x:Name="editLsoFilterPos" Style="{StaticResource TextBoxStyleS1}" Margin="4,0,0,0" KeyDown="EditLsoFilterPos_KeyDown"/>
@@ -197,7 +197,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <Label x:Name="label601" Content="X Stage" Style="{StaticResource HeaderStyleS1}"/>
+                <Label x:Name="label601" Content="X Stage" Style="{StaticResource HeaderStyle}"/>
                 <StackPanel Grid.Row="1" Orientation="Horizontal">
                     <Slider x:Name="sliderXstage" Style="{StaticResource SliderStyle}" HorizontalAlignment="Left" Width="200" Margin="8,0,0,0" ValueChanged="SliderXstage_ValueChanged" Thumb.DragStarted="SliderXstage_DragStarted" Thumb.DragCompleted="SliderXstage_DragCompleted"/>
                     <TextBox x:Name="editXstagePos" Style="{StaticResource TextBoxStyleS1}" Margin="4,0,0,0"/>
@@ -217,7 +217,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <Label x:Name="label602" Content="Y Stage" Style="{StaticResource HeaderStyleS1}"/>
+                <Label x:Name="label602" Content="Y Stage" Style="{StaticResource HeaderStyle}"/>
                 <StackPanel Grid.Row="1" Orientation="Horizontal">
                     <Slider x:Name="sliderYstage" Style="{StaticResource SliderStyle}" HorizontalAlignment="Left" Width="200" Margin="8,0,0,0" ValueChanged="SliderYstage_ValueChanged" Thumb.DragStarted="SliderYstage_DragStarted" Thumb.DragCompleted="SliderYstage_DragCompleted"/>
                     <TextBox x:Name="editYstagePos" Style="{StaticResource TextBoxStyleS1}" Margin="4,0,0,0"/>
@@ -237,7 +237,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <Label x:Name="label603" Content="Z Stage" Style="{StaticResource HeaderStyleS1}"/>
+                <Label x:Name="label603" Content="Z Stage" Style="{StaticResource HeaderStyle}"/>
                 <StackPanel Grid.Row="1" Orientation="Horizontal">
                     <Slider x:Name="sliderZstage" Style="{StaticResource SliderStyle}" HorizontalAlignment="Left" Width="200" Margin="8,0,0,0" ValueChanged="SliderZstage_ValueChanged" Thumb.DragStarted="SliderZstage_DragStarted" Thumb.DragCompleted="SliderZstage_DragCompleted"/>
                     <TextBox x:Name="editZstagePos" Style="{StaticResource TextBoxStyleS1}" Margin="4,0,0,0"/>
@@ -257,7 +257,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <Label x:Name="label321" Content="Swing" Style="{StaticResource HeaderStyleS1}"/>
+                <Label x:Name="label321" Content="Swing" Style="{StaticResource HeaderStyle}"/>
                 <StackPanel Grid.Row="1" Orientation="Horizontal">
                     <Slider x:Name="sliderSwing" Style="{StaticResource SliderStyle}" HorizontalAlignment="Left" Width="200" Margin="8,0,0,0" ValueChanged="SliderSwing_ValueChanged" Thumb.DragStarted="SliderSwing_DragStarted" Thumb.DragCompleted="SliderSwing_DragCompleted"/>
                     <TextBox x:Name="editSwingPos" Style="{StaticResource TextBoxStyleS1}" Margin="4,0,0,0"/>
@@ -277,7 +277,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <Label x:Name="label331" Content="Chinrest" Style="{StaticResource HeaderStyleS1}"/>
+                <Label x:Name="label331" Content="Chinrest" Style="{StaticResource HeaderStyle}"/>
                 <StackPanel Grid.Row="1" Orientation="Horizontal" FlowDirection="RightToLeft" Margin="0,4,0,16">
                     <Button x:Name="btnChinrestStop" Content="Chinrest Stop" Style="{StaticResource ButtonStyleM1}" Margin="12,0,16,0" Click="BtnChinrestStop_Click"/>
                     <Button x:Name="btnChinrestDown" Content="Move Down" Style="{StaticResource ButtonStyleM1}" Margin="0,0,4,0" Click="BtnChinrestDown_Click"/>
@@ -293,7 +293,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <Label x:Name="label401" Content="PI Status" Style="{StaticResource HeaderStyleS1}"/>
+                <Label x:Name="label401" Content="PI Status" Style="{StaticResource HeaderStyle}"/>
                 <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="16,0,16,0">
                     <Label x:Name="label402" Content="Od/Os" Style="{StaticResource LabelStyle}" Width="72"/>
                     <TextBox x:Name="editOdOs" Style="{StaticResource TextBoxStyleS1}" Width="48"/>
