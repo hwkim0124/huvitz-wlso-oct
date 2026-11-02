@@ -85,6 +85,18 @@ namespace WsoNativeLib
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool moveStepMotorByPositionOffsetOverride(int type, int offset);
+
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool moveStepMotorInVelocityMode(int type, int direction);
+
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool stopStepMotorInVelocityMode(int type);
+
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
         private static extern bool setStepMotorCurrentPositionAsOrigin(int type, int mode = 0);
 
         [DllImport(LibraryName)]
@@ -300,6 +312,27 @@ namespace WsoNativeLib
         public static void StopStepMotor(MotorType type)
         {
             stopStepMotor((int)type);
+        }
+
+        // Override move: the board reads the current position, then current + offset is
+        // sent without waiting for arrival. Each call supersedes the target in flight, so
+        // a caller may issue it repeatedly (e.g. every 50 ms while a button is held).
+        // Does not take part in the per-motor move registry; stop with StopStepMotor().
+        public static bool MoveStepMotorByPositionOffsetOverride(MotorType type, int offset)
+        {
+            return moveStepMotorByPositionOffsetOverride((int)type, offset);
+        }
+
+        // Velocity (jog) move on any step motor; direction 1 = positive step direction, 0 = negative.
+        // Runs until StopStepMotorInVelocityMode() or an end switch.
+        public static bool MoveStepMotorInVelocityMode(MotorType type, int direction)
+        {
+            return moveStepMotorInVelocityMode((int)type, direction);
+        }
+
+        public static bool StopStepMotorInVelocityMode(MotorType type)
+        {
+            return stopStepMotorInVelocityMode((int)type);
         }
 
         public static bool SetStepMotorCurrentPositionAsOrigin(MotorType type, int mode = 0)

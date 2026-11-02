@@ -29,6 +29,16 @@ namespace wso_system
 		bool WSOSYSTEM_DLL_API __stdcall isStepMotorAtCenter(MotorType type);
 		void WSOSYSTEM_DLL_API __stdcall stopStepMotor(MotorType type);
 
+		// Override move (asynchronous): reads the current position from the board, then sends
+		// current + offset without waiting for the motor to arrive. Repeated calls supersede
+		// the target in flight. Stop with stopStepMotor().
+		bool WSOSYSTEM_DLL_API __stdcall moveStepMotorByPositionOffsetOverride(MotorType type, int offset);
+
+		// Velocity (jog) move: runs until stopStepMotorInVelocityMode() or an end switch.
+		// direction: 1 = positive step direction, 0 = negative.
+		bool WSOSYSTEM_DLL_API __stdcall moveStepMotorInVelocityMode(MotorType type, int direction);
+		bool WSOSYSTEM_DLL_API __stdcall stopStepMotorInVelocityMode(MotorType type);
+
 		bool WSOSYSTEM_DLL_API __stdcall setStepMotorCurrentPositionAsOrigin(MotorType type, int mode);
 
 		int WSOSYSTEM_DLL_API __stdcall getStepMotorPosition(MotorType type);

@@ -138,6 +138,35 @@ void WSOSYSTEM_DLL_API __stdcall wso_system::stopStepMotor(MotorType type)
 	return;
 }
 
+bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStepMotorByPositionOffsetOverride(MotorType type, int offset)
+{
+	if (auto* motor = Hardware::getInstance()->getStepMotor(type); motor) {
+		// An asynchronous override move is not polled, so the cached position is stale
+		// while the motor is still running: refresh it before computing the target.
+		if (!motor->updateStatus()) {
+			return false;
+		}
+		return motor->controlMoveOverride(motor->getPosition() + offset, true);
+	}
+	return false;
+}
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::moveStepMotorInVelocityMode(MotorType type, int direction)
+{
+	if (auto* motor = Hardware::getInstance()->getStepMotor(type); motor) {
+		return motor->moveInVelocityMode((direction != 0) ? 1 : 0);
+	}
+	return false;
+}
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::stopStepMotorInVelocityMode(MotorType type)
+{
+	if (auto* motor = Hardware::getInstance()->getStepMotor(type); motor) {
+		return motor->stopInVelocityMode();
+	}
+	return false;
+}
+
 bool WSOSYSTEM_DLL_API __stdcall wso_system::setStepMotorCurrentPositionAsOrigin(MotorType type, int mode)
 {
 	if (auto* motor = Hardware::getInstance()->getStepMotor(type); motor) {

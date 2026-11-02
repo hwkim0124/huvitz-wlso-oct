@@ -9,7 +9,7 @@
         mc:Ignorable="d"
         SizeToContent="WidthAndHeight"
        Title="Ir Camera Test" Height="Auto" Width="Auto" ResizeMode="NoResize" Initialized="Window_Initialized" Loaded="Window_Loaded" Closed="Window_Closed" Closing="Window_Closing">
-    <Grid Margin="8,8,8,8">
+    <Grid Margin="4,4,4,4">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
@@ -20,29 +20,30 @@
         </Grid.ColumnDefinitions>
 
         <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Vertical">
-            <controls:CorneaCameraPreview x:Name="corneaPreview1" Width="640" Height="512"/>
-            <controls:CorneaCameraPreview x:Name="corneaPreview2" Width="640" Height="512"/>
+            <controls:CorneaCameraPreview x:Name="corneaPreview1" Width="480" Height="388"/>
+            <controls:CorneaCameraPreview x:Name="corneaPreview2" Width="480" Height="388"/>
         </StackPanel>
 
         <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Vertical">
-            <controls:CorneaCameraPreview x:Name="corneaPreview3" Width="640" Height="512"/>
+            <controls:CorneaCameraPreview x:Name="corneaPreview3" Width="480" Height="388"/>
 
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="24,16,0,4">
-                <Button x:Name="btnStartCamera" Content="Start Camera" Style="{StaticResource ButtonStyle}" Margin="0" Click="BtnStartCamera_Click"/>
-                <Button x:Name="btnSelectFolder" Content="Folder..." Style="{StaticResource ButtonStyle}" Margin="4,0,0,0" ToolTip=".\cornea" Click="BtnSelectFolder_Click"/>
-                <TextBox x:Name="txtFileName" Width="180" Margin="4,0,0,0"/>
-                <Button x:Name="btnSaveFrame" Content="Save Frame" Style="{StaticResource ButtonStyle}" Margin="4,0,0,0" Click="BtnSaveFrame_Click"/>
-                <Button x:Name="btnClose" Content="Close" Style="{StaticResource ButtonStyle}" Margin="4,0,0,0" Click="BtnClose_Click"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="24,4,0,4">
+                <Button x:Name="btnShowFocusM" Content="FocusM..." Style="{StaticResource ButtonStyleM1}" Margin="0" Click="BtnShowFocusM_Click"/>
+                <Button x:Name="btnShowStageM" Content="StageM..." Style="{StaticResource ButtonStyleM1}" Margin="4,0,0,0" Click="BtnShowStageM_Click"/>
+                <Button x:Name="btnShowLights" Content="Lights..." Style="{StaticResource ButtonStyleM1}" Margin="4,0,0,0" Click="BtnShowLights_Click"/>
+                <Button x:Name="btnShowConfig" Content="Config..." Style="{StaticResource ButtonStyleM1}" Margin="4,0,0,0" Click="BtnShowConfig_Click"/>
+                
+                <Button x:Name="btnStartCamera" Content="Start Camera" Style="{StaticResource ButtonStyleM1}" Margin="4,0,0,0" Click="BtnStartCamera_Click"/>
+                <Button x:Name="btnClose" Content="Close" Style="{StaticResource ButtonStyleM1}" Margin="4,0,0,0" Click="BtnClose_Click"/>
             </StackPanel>
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="24,0,0,4">
-                <Button x:Name="btnShowFocusM" Content="FocusM..." Style="{StaticResource ButtonStyle}" Margin="0" Click="BtnShowFocusM_Click"/>
-                <Button x:Name="btnShowStageM" Content="StageM..." Style="{StaticResource ButtonStyle}" Margin="4,0,0,0" Click="BtnShowStageM_Click"/>
-                <Button x:Name="btnShowLights" Content="Lights..." Style="{StaticResource ButtonStyle}" Margin="4,0,0,0" Click="BtnShowLights_Click"/>
-                <Button x:Name="btnShowConfig" Content="Config..." Style="{StaticResource ButtonStyle}" Margin="4,0,0,0" Click="BtnShowConfig_Click"/>
+                <Button x:Name="btnSelectFolder" Content="Folder..." Style="{StaticResource ButtonStyleM1}" Margin="0,0,0,0" ToolTip=".\cornea" Click="BtnSelectFolder_Click"/>
+                <TextBox x:Name="txtFileName" Width="180" Margin="4,0,0,0"/>
+                <Button x:Name="btnSaveFrame" Content="Save Frame" Style="{StaticResource ButtonStyleM1}" Margin="4,0,0,0" Click="BtnSaveFrame_Click"/>
             </StackPanel>
 
-            <Grid Margin="0,16,8,0">
+            <Grid Margin="0,4,4,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="16"/>
                     <ColumnDefinition Width="70"/>
@@ -69,10 +70,10 @@
                 <CheckBox x:Name="checkCorneaAlign" Content="Align Line" Style="{StaticResource CheckBoxStyle}" Grid.Row="2" Grid.Column="4" Click="CheckCorneaAlign_Click"/>
                 <CheckBox x:Name="checkCorneaFocus" Content="Focus Line" Style="{StaticResource CheckBoxStyle}" Grid.Row="2" Grid.Column="5" Click="CheckCorneaFocus_Click"/>
                 <Label x:Name="label103" Content="A-gain" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="1"/>
-                <TextBox x:Name="editCorneaAgain" Style="{StaticResource TextBoxStyle}" Width="60" Grid.Row="3" Grid.Column="2" KeyDown="EditCorneaAgain_KeyDown"/>
+                <TextBox x:Name="editCorneaAgain" Style="{StaticResource TextBoxStyleT1}" Grid.Row="3" Grid.Column="2" KeyDown="EditCorneaAgain_KeyDown"/>
                 <Label x:Name="label104" Content="[1~31]" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="3"/>
                 <Label x:Name="label105" Content="D-gain" Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="1"/>
-                <TextBox x:Name="editCorneaDgain" Style="{StaticResource TextBoxStyle}" Width="60" Grid.Row="4" Grid.Column="2" KeyDown="EditCorneaDgain_KeyDown"/>
+                <TextBox x:Name="editCorneaDgain" Style="{StaticResource TextBoxStyleT1}" Grid.Row="4" Grid.Column="2" KeyDown="EditCorneaDgain_KeyDown"/>
                 <Label x:Name="label106" Content="[1~15]" Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="3"/>
                 <Label x:Name="label107" Content="Output Mode" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="4"/>
                 <ComboBox x:Name="cmbOutputMode" Style="{StaticResource ComboBoxStyle}" Grid.Row="3" Grid.Column="5" Grid.ColumnSpan="1" Width="90" SelectionChanged="CmbOutputMode_SelectionChanged"/>
@@ -87,26 +88,28 @@
                 <CheckBox x:Name="checkRollingBar" Content="Rolling Bar" Style="{StaticResource CheckBoxStyle}" Grid.Row="5" Grid.Column="5" Click="CheckRollingBar_Click"/>
                 <CheckBox x:Name="checkTransparent" Content="Transparent" Style="{StaticResource CheckBoxStyle}" Grid.Row="5" Grid.Column="6" Grid.ColumnSpan="2" Click="CheckTransparent_Click"/>
                 <Label x:Name="label112" Content="Exposure" Style="{StaticResource LabelStyle}" Grid.Row="5" Grid.Column="1"/>
-                <TextBox x:Name="editCorneaExposure" Style="{StaticResource TextBoxStyle}" Width="60" Grid.Row="5" Grid.Column="2" KeyDown="EditCorneaExposure_KeyDown"/>
+                <TextBox x:Name="editCorneaExposure" Style="{StaticResource TextBoxStyleT1}" Grid.Row="5" Grid.Column="2" KeyDown="EditCorneaExposure_KeyDown"/>
                 <Label x:Name="label113" Content="[1~300]" Style="{StaticResource LabelStyle}" Grid.Row="5" Grid.Column="3"/>
                 <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="9" Grid.RowSpan="9"/>
             </Grid>
 
             <!-- Eye alignment (EyeAlign module). Ctrl+click on a preview injects a pupil
                  position while the detector is still a stub; Ctrl+right click clears it. -->
-            <Grid Margin="0,8,8,0">
+            <Grid Margin="0,4,4,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="16"/>
                     <ColumnDefinition Width="60"/>
                     <ColumnDefinition Width="110"/>
                     <ColumnDefinition Width="110"/>
-                    <ColumnDefinition Width="100"/>
-                    <ColumnDefinition Width="100"/>
-                    <ColumnDefinition Width="120"/>
+                    <ColumnDefinition Width="90"/>
+                    <ColumnDefinition Width="90"/>
+                    <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="16"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="8"/>
+                    <RowDefinition Height="0"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -120,11 +123,23 @@
                 <ComboBox x:Name="cmbAlignEyeSide" Style="{StaticResource ComboBoxStyle}" Grid.Row="2" Grid.Column="3" Width="100"/>
                 <Button x:Name="btnAlignStart" Content="Start Align" Style="{StaticResource ButtonStyleM1}" Grid.Row="2" Grid.Column="4" Click="BtnAlignStart_Click"/>
                 <Button x:Name="btnAlignHold" Content="Hold" Style="{StaticResource ButtonStyleM1}" Grid.Row="2" Grid.Column="5" Click="BtnAlignHold_Click"/>
-                <CheckBox x:Name="checkPupilOverlay" Content="Pupil Mark" Style="{StaticResource CheckBoxStyle}" Grid.Row="3" Grid.Column="2" Click="CheckPupilOverlay_Click"/>
+                <CheckBox x:Name="checkPupilOverlay" Content="Pupil Mark" Style="{StaticResource CheckBoxStyle}" Height="28" Grid.Row="3" Grid.Column="2" Click="CheckPupilOverlay_Click"/>
                 <Button x:Name="btnClearOverride" Content="Clear Override" Style="{StaticResource ButtonStyleM1}" Grid.Row="3" Grid.Column="4" Click="BtnClearOverride_Click"/>
                 <Button x:Name="btnClearEvents" Content="Clear Events" Style="{StaticResource ButtonStyleM1}" Grid.Row="3" Grid.Column="5" Click="BtnClearEvents_Click"/>
-                <ListBox x:Name="listAlignEvents" Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="6" Height="140" Margin="0,4,0,0" FontFamily="Consolas" FontSize="11"/>
-                <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="8" Grid.RowSpan="6"/>
+                <ListBox x:Name="listAlignEvents" Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="6" Height="140" Margin="0,4,0,0" FontFamily="Consolas" FontSize="11"/>
+                <Label Content="M steps" Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="1"/>
+                <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="2" Grid.ColumnSpan="6"  HorizontalAlignment="Left" Margin="0,0,0,4">
+                    <TextBox x:Name="editOffsetX" Style="{StaticResource TextBoxStyleT1}" Margin="0,0,2,0" ToolTip="X step (signed motor positions)"/>
+                    <TextBox x:Name="editOffsetY" Style="{StaticResource TextBoxStyleT1}" Margin="0,0,2,0" ToolTip="Y step (signed motor positions)"/>
+                    <TextBox x:Name="editOffsetZ" Style="{StaticResource TextBoxStyleT1}" Margin="0,0,2,0" ToolTip="Z step (signed motor positions)"/>
+                    <Button x:Name="btnMoveX" Content="Move X" Style="{StaticResource ButtonStyleS1}" Margin="0,0,2,0" Tag="X" Focusable="False" IsTabStop="False" ToolTip="Hold to move X by the step entered on the left" PreviewMouseLeftButtonDown="BtnMove_PreviewMouseLeftButtonDown" PreviewMouseLeftButtonUp="BtnMove_PreviewMouseLeftButtonUp" LostMouseCapture="BtnMove_LostMouseCapture"/>
+                    <Button x:Name="btnMoveY" Content="Move Y" Style="{StaticResource ButtonStyleS1}" Margin="0,0,2,0" Tag="Y" Focusable="False" IsTabStop="False" ToolTip="Hold to move Y by the step entered on the left" PreviewMouseLeftButtonDown="BtnMove_PreviewMouseLeftButtonDown" PreviewMouseLeftButtonUp="BtnMove_PreviewMouseLeftButtonUp" LostMouseCapture="BtnMove_LostMouseCapture"/>
+                    <Button x:Name="btnMoveZ" Content="Move Z" Style="{StaticResource ButtonStyleS1}" Margin="0,0,2,0" Tag="Z" Focusable="False" IsTabStop="False" ToolTip="Hold to move Z by the step entered on the left" PreviewMouseLeftButtonDown="BtnMove_PreviewMouseLeftButtonDown" PreviewMouseLeftButtonUp="BtnMove_PreviewMouseLeftButtonUp" LostMouseCapture="BtnMove_LostMouseCapture"/>
+                    <Button x:Name="btnStopAll" Content="Stop All" Style="{StaticResource ButtonStyleS1}" Margin="0,0,2,0" Focusable="False" IsTabStop="False" Click="BtnStopAll_Click"/>
+                </StackPanel>
+                <CheckBox x:Name="checkOverride" Content="Override" Style="{StaticResource CheckBoxStyle}" Grid.Row="5" Grid.Column="2" ToolTip="While held: override move to current + step every 50 ms. Unchecked: one synchronous move per press"/>
+                <CheckBox x:Name="checkJogging" Content="Jogging" Style="{StaticResource CheckBoxStyle}" Grid.Row="5" Grid.Column="3" ToolTip="While held: velocity move; the sign of the step gives the direction (positive = 1, otherwise 0)"/>
+                <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="8" Grid.RowSpan="8"/>
             </Grid>
         </StackPanel>
     </Grid>

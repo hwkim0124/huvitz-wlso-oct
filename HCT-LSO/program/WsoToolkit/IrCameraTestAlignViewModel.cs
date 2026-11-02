@@ -1,8 +1,12 @@
 ﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Threading;
 using WsoNativeLib;
+using WsoToolkit.utils;
 
 namespace WsoToolkit
 {
@@ -25,6 +29,11 @@ namespace WsoToolkit
 
         const int MaxAlignEventLines = 300;
 
+        // Manual stage move buttons: one press at a time, UI thread only.
+        private const string MoveHoldOwner = "IrCamMove";
+        private const int OverrideMoveIntervalMs = 50;
+        private Button? _moveButton;
+
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////
         /// Controls
@@ -42,6 +51,8 @@ namespace WsoToolkit
 
             btnAlignHold.IsEnabled = false;
             lblAlignStatus.Content = "Idle";
+
+            InitializeMoveControls();
         }
 
         private EyeAlignMode GetAlignModeSelected()
@@ -284,6 +295,201 @@ namespace WsoToolkit
         private void BtnClearEvents_Click(object sender, RoutedEventArgs e)
         {
             listAlignEvents.Items.Clear();
+        }
+
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// Manual stage move (Move X / Y / Z, held buttons)
+        ///
+        /// Unchecked: one synchronous offset move per press. Override: while held, an override move to
+        /// current + step is sent every OverrideMoveIntervalMs, each superseding the one in flight.
+        /// Jogging: while held, a velocity move whose direction is the sign of the step.
+        /// Held moves register with StageJog so STOP ALL and the hold watchdog stop them too.
+        private void InitializeMoveControls()
+        {
+            editOffsetX.Text = "2000";
+            editOffsetY.Text = "2000";
+            editOffsetZ.Text = "1500";
+            checkOverride.IsChecked = false;
+            checkJogging.IsChecked = false;
+        }
+
+        private (JogAxis Axis, TextBox Edit) MoveAxisOf(Button button)
+        {
+            if (ReferenceEquals(button, btnMoveX)) return (JogAxis.X, editOffsetX);
+            if (ReferenceEquals(button, btnMoveY)) return (JogAxis.Y, editOffsetY);
+            if (ReferenceEquals(button, btnMoveZ)) return (JogAxis.Z, editOffsetZ);
+            throw new ArgumentOutOfRangeException(nameof(button));
+        }
+
+        private void BtnMove_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            var button = (Button)sender;
+            if (_moveButton != null)
+            {
+                e.Handled = true;
+                return;
+            }
+
+            var (axis, edit) = MoveAxisOf(button);
+            MotorType type = StageJog.ToMotor(axis);
+            string? refusal = null;
+            if (!int.TryParse(edit.Text.Trim(), out int offset) || offset == 0)
+            {
+                refusal = "step must be a non-zero integer";
+            }
+            else if (EyeAlign.IsAligning() && GetAlignModeSelected() != EyeAlignMode.Manual)
+            {
+                refusal = "auto alignment running";
+            }
+            else if (!StageJog.IsAxisFree(axis, out string busy))
+            {
+                refusal = busy;
+            }
+            if (refusal != null)
+            {
+                AppendAlignEvent($"move {axis} refused: {refusal}");
+                e.Handled = true;
+                return;
+            }
+
+            bool jogging = checkJogging.IsChecked == true;
+            bool overriding = checkOverride.IsChecked == true;
+            if (!jogging && !overriding)
+            {
+                // One bounded move per press; the native call waits for arrival on a worker thread.
+                bool ok = DeviceMotors.MoveStepMotorByPositionOffsetAsync(type, offset);
+                AppendAlignEvent(ok ? $"move {axis} {offset:+0;-0} sent (sync)" : $"move {axis} {offset:+0;-0} rejected");
+                return;
+            }
+
+            if (!button.CaptureMouse())
+            {
+                AppendAlignEvent($"move {axis} refused: no mouse capture");
+                e.Handled = true;
+                return;
+            }
+            _moveButton = button;
+
+            HoldStartResult result;
+            string what;
+            if (jogging)
+            {
+                int direction = offset > 0 ? 1 : 0;
+                what = $"jog {axis} dir {direction}";
+                result = StageJog.StartVelocityHold(
+                    MoveHoldOwner,
+                    () => DeviceMotors.StopStepMotorInVelocityMode(type),
+                    () => DeviceMotors.MoveStepMotorInVelocityMode(type, direction),
+                    () => DeviceMotors.StopStepMotorInVelocityMode(type),
+                    axis);
+            }
+            else
+            {
+                what = $"override {axis} {offset:+0;-0}";
+                var cts = new CancellationTokenSource();
+                result = StageJog.StartVelocityHold(
+                    MoveHoldOwner,
+                    () => { cts.Cancel(); DeviceMotors.StopStepMotor(type); },
+                    () => { _ = RunOverrideMoveLoopAsync(type, axis, offset, cts.Token); return true; },
+                    () => { cts.Cancel(); DeviceMotors.StopStepMotor(type); return true; },
+                    axis);
+            }
+
+            switch (result)
+            {
+                case HoldStartResult.Started:
+                    AppendAlignEvent($"{what} (release to stop)");
+                    return;
+                case HoldStartResult.Busy:
+                    _moveButton = null;
+                    button.ReleaseMouseCapture();
+                    AppendAlignEvent($"{what} refused: busy");
+                    break;
+                case HoldStartResult.Rejected:
+                    EndMovePress();
+                    AppendAlignEvent($"{what} rejected");
+                    break;
+                default:
+                    // A STOP ALL or watchdog removed the hold before the move went out; it was stopped again.
+                    _moveButton = null;
+                    if (button.IsMouseCaptured)
+                    {
+                        button.ReleaseMouseCapture();
+                    }
+                    AppendAlignEvent(result == HoldStartResult.RacedStopped
+                        ? $"{what} stopped by STOP ALL"
+                        : $"{what} STOP FAILED - press Stop All");
+                    break;
+            }
+            e.Handled = true;
+        }
+
+        // Sequential override moves OverrideMoveIntervalMs apart until cancelled, then a stop so the
+        // last target is not run to completion. Continuations run on the UI thread; the native call
+        // (a status read plus the move command) does not.
+        private async Task RunOverrideMoveLoopAsync(MotorType type, JogAxis axis, int offset, CancellationToken token)
+        {
+            int sent = 0;
+            try
+            {
+                while (!token.IsCancellationRequested)
+                {
+                    bool ok = await Task.Run(() => DeviceMotors.MoveStepMotorByPositionOffsetOverride(type, offset));
+                    if (!ok)
+                    {
+                        AppendAlignEvent($"override {axis} rejected after {sent} sent");
+                        break;
+                    }
+                    sent++;
+                    await Task.Delay(OverrideMoveIntervalMs, token);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            finally
+            {
+                DeviceMotors.StopStepMotor(type);
+            }
+            AppendAlignEvent($"override {axis} ended: {sent} sent");
+        }
+
+        private void BtnMove_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            EndMovePress();
+        }
+
+        private void BtnMove_LostMouseCapture(object sender, MouseEventArgs e)
+        {
+            EndMovePress();
+        }
+
+        // Idempotent: ReleaseMouseCapture re-enters through LostMouseCapture with _moveButton already null.
+        private void EndMovePress()
+        {
+            Button? button = _moveButton;
+            _moveButton = null;
+            if (button == null)
+            {
+                return;
+            }
+
+            if (button.IsMouseCaptured)
+            {
+                button.ReleaseMouseCapture();
+            }
+            // Runs the hold's stop (velocity stop, or cancel of the override loop plus a stop).
+            StageJog.EndVelocityHold(MoveHoldOwner);
+        }
+
+        private void BtnStopAll_Click(object sender, RoutedEventArgs e)
+        {
+            EndMovePress();
+            var failed = StageJog.StopAll();
+            AppendAlignEvent(failed.Count == 0
+                ? "--- stop all sent"
+                : $"--- stop all sent, returned false: {string.Join(", ", failed)} - press Stop All again");
         }
     }
 }

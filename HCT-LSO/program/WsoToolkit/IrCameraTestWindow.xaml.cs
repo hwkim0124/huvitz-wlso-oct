@@ -92,7 +92,9 @@ namespace WsoToolkit
             _focusMotorWindow?.Close();
             _stageMotorWindow?.Close();
 
-            // Stop the aligner and drop the button hook before the camera preview goes away.
+            // Stop a held manual move and the aligner, and drop the button hook, before the
+            // camera preview goes away.
+            EndMovePress();
             EyeAlign.CancelAlignment();
             EyeAlign.ClearAllPupilDetectOverrides();
             BoardDevice.ReleaseOptimizeButtonPressed();
