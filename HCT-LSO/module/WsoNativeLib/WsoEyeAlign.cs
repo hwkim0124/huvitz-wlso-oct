@@ -91,23 +91,6 @@ namespace WsoNativeLib
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct PupilDetectParam
-        {
-            public int targetX;
-            public int targetY;
-            public int signH;
-            public int signV;
-
-            public PupilDetectParam()
-            {
-                targetX = -1;
-                targetY = -1;
-                signH = +1;
-                signV = +1;
-            }
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
         public struct EyeAlignConfigParam
         {
             public int readyPosZ;
@@ -125,7 +108,6 @@ namespace WsoNativeLib
             public int centerStepX;
 
             public float toleranceYPx;
-            public float approachTolZPx;
             public float toleranceXPx;
             public float toleranceZPx;
             public float startDeadbandPx;
@@ -145,10 +127,6 @@ namespace WsoNativeLib
 
             public int backOffOnEnd;
 
-            public PupilDetectParam detLeft;
-            public PupilDetectParam detRight;
-            public PupilDetectParam detLower;
-
             // Same defaults as the in-class initializers of the C++ struct.
             public EyeAlignConfigParam()
             {
@@ -167,13 +145,12 @@ namespace WsoNativeLib
                 centerStepX = 2000;
 
                 toleranceYPx = 24.0f;
-                approachTolZPx = 18.0f;
                 toleranceXPx = 6.0f;
                 toleranceZPx = 8.0f;
                 startDeadbandPx = 10.0f;
-                stepsPerPxX = 1.0f;
-                stepsPerPxY = 1.0f;
-                stepsPerPxZ = 1.0f;
+                stepsPerPxX = 50.0f;
+                stepsPerPxY = 150.0f;
+                stepsPerPxZ = 30.0f;
 
                 detectConsecutive = 3;
                 lostFramesToStop = 5;
@@ -186,10 +163,6 @@ namespace WsoNativeLib
                 alignTimeoutMs = 30000;
 
                 backOffOnEnd = 1;
-
-                detLeft = new PupilDetectParam { signH = -1, signV = -1 };     // side cameras, see the C++ header
-                detRight = new PupilDetectParam { signH = +1, signV = -1 };
-                detLower = new PupilDetectParam { signH = +1, signV = +1 };
             }
         }
 

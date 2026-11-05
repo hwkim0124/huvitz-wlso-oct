@@ -41,7 +41,6 @@ struct StepMotor::StepMotorImpl
 	int piHitPosError;
 
 	int limitRange[2];
-	int limitStatus[2];
 
 	thread worker;
 	// Held only while sending a move/stop command and publishing isStopped.
@@ -51,7 +50,7 @@ struct StepMotor::StepMotorImpl
 	StepMotorImpl()
 		: asyncMode(false), isStopped(true),
 		smPosMin(0), smPosMax(0), curPos(0), maxSpeed(0), minSpeed(0), accStep(0), 
-		targetPos(0), type(StepMotorType::UNKNOWN), piStatus(0), limitRange{ 0 }, limitStatus{ false },
+		targetPos(0), type(StepMotorType::UNKNOWN), piStatus(0), limitRange{ 0 }, 
 		motorWait(0), piHitRefPos(0), piHitMargin(0), piHitLastPos(0), piHitPosError(0)
 	{
 	}
@@ -97,8 +96,6 @@ struct StepMotor::StepMotorImpl
 			piHitLastPos = other.piHitLastPos;
 			piHitPosError = other.piHitPosError;
 
-			limitStatus[0] = other.limitStatus[0];
-			limitStatus[1] = other.limitStatus[1];
 			limitRange[0] = other.limitRange[0];
 			limitRange[1] = other.limitRange[1];
 
@@ -496,14 +493,7 @@ bool wso_device::StepMotor::updateStatus(void)
 
 				impl().motorWait = info->MotorWait;
 				impl().piStatus = info->PI_status;
-				// Stage motors (X/Y/Z/swing) report their end switches through PI_status
-				// (bit0: low PI hit, bit1: high PI hit, see wso_hbs.h StepMotorInfo_st).
-				// Mirror them into limitStatus so isAtMin/MaxPosition() and the early
-				// exit in waitForUpdate() reflect the hardware.
-				if (isStageMotor()) {
-					impl().limitStatus[0] = ((info->PI_status & 0x01) != 0) ? 1 : 0;
-					impl().limitStatus[1] = ((info->PI_status & 0x02) != 0) ? 1 : 0;
-				}
+				
 				impl().piHitRefPos = info->sm_pi_hit_ref_pos;
 				impl().piHitMargin = info->sm_pi_hit_margin;
 				impl().piHitLastPos = info->sm_last_pi_hit_pos;
@@ -543,8 +533,6 @@ bool wso_device::StepMotor::fetchStatus(StepMotorStatus* status)
 
 		status->limitRange[0] = impl().limitRange[0];
 		status->limitRange[1] = impl().limitRange[1];
-		status->limitStatus[0] = impl().limitStatus[0];
-		status->limitStatus[1] = impl().limitStatus[1];
 
 		status->sliderPageSize = getSliderStepSize();
 		status->sliderStepSize = getSliderStepSize();
@@ -730,17 +718,10 @@ int wso_device::StepMotor::getSliderStepSize(void) const
 
 bool wso_device::StepMotor::isAtMinPosition(void) const
 {
-	if (isStageMotor()) {
-		if (impl().limitStatus[0]) {
-			return true;
-		}
-	}
-	else {
-		auto mpos = getPosition();
-		auto rmin = getRangeMin();
-		if (mpos <= (rmin + MOTOR_END_OF_RANGE_OFFSET)) {
-			return true;
-		}
+	auto mpos = getPosition();
+	auto rmin = getRangeMin();
+	if (mpos <= (rmin + MOTOR_END_OF_RANGE_OFFSET)) {
+		return true;
 	}
 	return false;
 }
@@ -748,17 +729,10 @@ bool wso_device::StepMotor::isAtMinPosition(void) const
 
 bool wso_device::StepMotor::isAtMaxPosition(void) const
 {
-	if (isStageMotor()) {
-		if (impl().limitStatus[1]) {
-			return true;
-		}
-	}
-	else {
-		auto mpos = getPosition();
-		auto rmax = getRangeMax();
-		if (mpos >= (rmax - MOTOR_END_OF_RANGE_OFFSET)) {
-			return true;
-		}
+	auto mpos = getPosition();
+	auto rmax = getRangeMax();
+	if (mpos >= (rmax - MOTOR_END_OF_RANGE_OFFSET)) {
+		return true;
 	}
 	return false;
 }

@@ -62,7 +62,17 @@ namespace eye_align
 	// A pixel-error position move is capped so one frame shifts the pupil by at most this
 	// fraction of maxJumpPx: a larger jump would make the tracker reject the next
 	// detection and drop its lock.
-	constexpr float MOVE_JUMP_FRACTION = 0.8f;
+	constexpr float MOVE_JUMP_FRACTION = 1.0f; // 0.8f;
+
+	// Pupil target geometry, the same for every cornea camera (not configurable). The
+	// desired pupil centre is the image centre (-1 = centre of the frame) and the signed
+	// pixel error is image error * sign: a positive mapped error moves the axis in
+	// POSITIVE_STEP_DIRECTION. Side cameras use the vertical error (Y), the lower camera
+	// the horizontal (X) and the vertical (Z) error.
+	constexpr int PUPIL_TARGET_X = -1;
+	constexpr int PUPIL_TARGET_Y = -1;
+	constexpr int PUPIL_SIGN_H = -1;		// horizontal image error -> motor direction sign
+	constexpr int PUPIL_SIGN_V = +1;		// vertical image error -> motor direction sign
 
 	// Step 5b: a side-camera pupil within this fraction of the image height from the top
 	// or the bottom edge (outside the middle half) is brought in by centerStepY per frame
@@ -87,12 +97,8 @@ namespace eye_align
 	// for one before the run cancels (SIDE_EYE_NOT_FOUND).
 	constexpr int SEARCH_LIMIT_WAIT_MS = 5000;
 
-	// Step 5a ends when the side-camera pupil lies inside the middle half of the image
-	// width, i.e. farther than this fraction of the width from either side edge ...
-	constexpr float APPROACH_SIDE_BAND_FRACTION = 0.25f;
-
-	// ... or when the lower-camera pupil, entering from the bottom, has climbed above
-	// this fraction of the image height.
+	// Step 5: Z stops advancing once the lower-camera pupil, entering from the bottom,
+	// has climbed above this fraction of the image height.
 	constexpr float APPROACH_LOWER_LINE_FRACTION = 0.75f;
 
 	// Number of IrCameraId slots (RETINA, CORNEA_LOWER, CORNEA_LEFT, CORNEA_RIGHT).

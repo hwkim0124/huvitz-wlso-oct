@@ -22,23 +22,20 @@ namespace eye_align
 	//      (2: the swing goes to zero first when the head stands on the other eye's side)
 	//   4  Z -> searchLimitPosZ: searchStepZ per frame until the side camera locks, which
 	//      goes straight to 5a; no lock at the limit: Z stops, waits 5 s, then cancels
-	//   5a Z advances (approachStepZ per frame) until the side-camera pupil is inside the
-	//      middle half of the image width or the lower-camera pupil is above 3/4 of the
-	//      image height; Z rests without a side lock or at minSafePosZ; searchTimeoutMs
-	//      from the start of 4 without the pupil coming in cancels
-	//   5b Y centres the side-camera pupil vertically (toleranceYPx), Z at rest: centerStepY
-	//      per frame from the outer quarters of the image height, fine steps inside
-	//      the middle half; Y rests without a pupil fix or at an end switch; on target -> 7
-	//   6  X centres the lower-camera pupil horizontally (toleranceXPx): centerStepX per
-	//      frame from the outer quarters of the image width, fine steps inside the middle
-	//      half; rests without a fix or at an end switch; on target -> 7
-	//   7  Z centres it vertically (toleranceZPx): centerStepZ per frame from the outer
-	//      quarters of the image height, fine steps inside the middle half; rests without
-	//      a fix or at a limit; on target with X on target too -> 8, otherwise -> 6
-	//   8  FOCUSED: no motion; X or Z outside its tolerance -> FOCUS_LOST -> 7
+	//   5  Z advances (approachStepZ per frame) while Y centres the side-camera pupil
+	//      vertically (toleranceYPx); Z rests without a side lock, at minSafePosZ, or
+	//      once the lower-camera pupil is above APPROACH_LOWER_LINE_FRACTION of the
+	//      height; Y centred and lower pupil above the line -> 7; searchTimeoutMs from
+	//      the start of 4 without that cancels
+	//   6  X centres the lower-camera pupil horizontally (toleranceXPx); rests without
+	//      a lower lock; on target -> 8 when Z is on target too, otherwise -> 7
+	//   7  Z centres it vertically (toleranceZPx); rests without a lower lock or at
+	//      minSafePosZ; on target -> 6
+	//   8  FOCUSED: no motion; lower lock lost or X / Z outside tolerance -> FOCUS_LOST
+	//      -> CENTERING_Y (Y centres the side-camera pupil, rests without a side lock) -> 7
 	//   The whole run up to the first FOCUS_ALIGNED is bounded by alignTimeoutMs. Every
-	//   ending - a user cancel, an automatic cancel (SIDE_EYE_NOT_FOUND, ALIGN_TIMEOUT,
-	//   PUPIL_LOST) or a failure - backs Z off to readyPosZ (backOffOnEnd); a second
+	//   ending - a user cancel, an automatic cancel (SIDE_EYE_NOT_FOUND, LOWER_EYE_NOT_FOUND,
+	//   ALIGN_TIMEOUT, PUPIL_LOST) or a failure - backs Z off to readyPosZ (backOffOnEnd); a second
 	//   cancel during that retreat stops it where it is.
 	//
 	// Threads
@@ -161,9 +158,8 @@ namespace eye_align
 		bool phaseSearching(void);
 		bool phaseCenteringY(void);
 		bool phaseApproaching(void);
-		// Step 5a end condition: the side-camera pupil inside the middle half of the image
-		// width, or the lower-camera pupil above 3/4 of the image height.
-		bool isPupilInApproachRange(void) const;
+		// Lower tracker locked and its pupil above APPROACH_LOWER_LINE_FRACTION of the height.
+		bool isLowerPupilAboveLine(void) const;
 		bool phaseCenteringX(void);
 		bool phaseCenteringZ(void);
 		bool phaseFocused(void);

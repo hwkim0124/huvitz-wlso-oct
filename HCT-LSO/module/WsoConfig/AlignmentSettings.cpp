@@ -57,26 +57,6 @@ void wso_config::AlignmentSettings::setParam(const EyeAlignConfigParam& param)
 	impl().param = param;
 }
 
-PupilDetectParam wso_config::AlignmentSettings::getDetectParam(CameraType type) const
-{
-	switch (type) {
-	case CameraType::IR_CORNEA_LEFT:  return impl().param.detLeft;
-	case CameraType::IR_CORNEA_RIGHT: return impl().param.detRight;
-	case CameraType::IR_CORNEA_LOWER: return impl().param.detLower;
-	default: return PupilDetectParam();
-	}
-}
-
-void wso_config::AlignmentSettings::setDetectParam(CameraType type, const PupilDetectParam& param)
-{
-	switch (type) {
-	case CameraType::IR_CORNEA_LEFT:  impl().param.detLeft = param; break;
-	case CameraType::IR_CORNEA_RIGHT: impl().param.detRight = param; break;
-	case CameraType::IR_CORNEA_LOWER: impl().param.detLower = param; break;
-	default: break;
-	}
-}
-
 PupilModelConfig wso_config::AlignmentSettings::getModelConfig(void) const
 {
 	return impl().model;

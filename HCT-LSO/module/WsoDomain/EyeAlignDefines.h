@@ -22,11 +22,11 @@ namespace wso_domain
 		TO_READY_Z,			// 1   Z -> readyPosZ
 		TO_EYE_X,			// 2   X -> eyePosX_OD | eyePosX_OS
 		SWING_TO_TILT,		// 3   swing -> swingTiltPos_OD | swingTiltPos_OS
-		SEARCHING,			// 4   Z forward (searchStepZ per frame) until the side camera locks -> 5a; at searchLimitPosZ it stops, waits 5 s, then cancels
-		CENTERING_Y,		// 5b  Z stopped, Y centres the side-camera pupil vertically -> 7
-		APPROACHING,		// 5a  Z forward (approachStepZ per frame) until the side pupil is in the middle half of the width or the lower pupil above 3/4 of the height -> 5b
-		CENTERING_X,		// 6   X centres the lower-camera pupil horizontally -> 7; rests without a fix or at a limit
-		CENTERING_Z,		// 7   Z centres the lower-camera pupil vertically -> 8 (X centred too) | 6; rests without a fix or at a limit
+		SEARCHING,			// 4   Z forward (searchStepZ per frame) until the side camera locks -> 5; at searchLimitPosZ it stops, waits 5 s, then cancels
+		CENTERING_Y,		// re-entered from FOCUSED: Y centres the side-camera pupil vertically -> 7; rests without a side lock
+		APPROACHING,		// 5   Z forward (approachStepZ per frame) while Y centres the side pupil; Z stops without a side lock, at minSafePosZ or with the lower pupil above the line; Y centred and lower pupil above the line -> 7
+		CENTERING_X,		// 6   X centres the lower-camera pupil horizontally -> 8 (Z centred too) | 7; rests without a lower lock
+		CENTERING_Z,		// 7   Z centres the lower-camera pupil vertically -> 6; rests without a lower lock or at minSafePosZ
 		FOCUSED,			// 8   lower pupil centred, no motion (MANUAL: centred by the operator)
 		MONITORING,			// MANUAL only: detecting, not yet centred on both images, no motion
 		HELD,				// holdEyeAlignment(): motors stopped, detection and events continue, no motion
@@ -40,9 +40,9 @@ namespace wso_domain
 		NONE = 0,
 		// cancel reasons (the head backs off to readyPosZ when backOffOnEnd is set)
 		USER_CANCEL,
-		SIDE_EYE_NOT_FOUND,				// steps 4 / 5a: no side pupil at the search limit, or the pupil not in range within searchTimeoutMs of the search start
+		SIDE_EYE_NOT_FOUND,				// step 4: no side lock at the search limit, or searchTimeoutMs elapsed before one
 		PUPIL_LOST,
-		LOWER_EYE_NOT_FOUND,		// not raised any more (step 5a cancels with SIDE_EYE_NOT_FOUND); kept for the C# mirror
+		LOWER_EYE_NOT_FOUND,		// step 5: searchTimeoutMs elapsed before the lower pupil came above the line with Y centred
 		ALIGN_TIMEOUT,				// alignTimeoutMs elapsed before the first FOCUS_ALIGNED
 		// start refusals
 		NOT_INITIALIZED,
@@ -73,13 +73,13 @@ namespace wso_domain
 		SWING_AT_TILT,				// step 3 done (arg = EyeSide)
 		SEARCH_STARTED,				// step 4: Z advancing toward searchLimitPosZ
 		SIDE_EYE_FOUND,					// side pupil seen detectConsecutive frames (arg = IrCameraId)
-		SIDE_EYE_NOT_FOUND,				// step 4: search limit reached with no side lock; step 5a: searchTimeoutMs elapsed (arg = IrCameraId)
-		Y_CENTERED,					// step 5b done
-		APPROACH_STARTED,			// step 5a: Z advancing toward the lower-camera pupil
+		SIDE_EYE_NOT_FOUND,				// step 4: search limit reached with no side lock, or searchTimeoutMs elapsed (arg = IrCameraId)
+		Y_CENTERED,					// step 5 done (-> step 7)
+		APPROACH_STARTED,			// step 5: Z advancing toward the lower-camera pupil
 		LOWER_EYE_FOUND,			// lower pupil seen detectConsecutive frames (arg = IrCameraId)
-		LOWER_EYE_NOT_FOUND,		// not raised any more; kept for the C# mirror
-		X_CENTERED,					// step 6 done (-> step 7)
-		Z_CENTERED,					// step 7 done (-> FOCUSED when X is centred too, else -> step 6)
+		LOWER_EYE_NOT_FOUND,		// step 5: searchTimeoutMs elapsed before the hand-off to step 7 (arg = IrCameraId)
+		X_CENTERED,					// step 6 done (-> FOCUSED when Z is centred too, else -> step 7)
+		Z_CENTERED,					// step 7 done (-> step 6)
 		FOCUS_ALIGNED,				// step 8: entered FOCUSED (raised on every entry)
 		FOCUS_LOST,					// left FOCUSED (raised on every exit)
 		EYE_LOST,					// pupil missing lostFramesToStop frames -> all motors stopped (arg = IrCameraId)
@@ -102,17 +102,8 @@ namespace wso_domain
 		ALIGN_TIMEOUT				// alignTimeoutMs elapsed before the first FOCUS_ALIGNED (arg = EyeAlignPhase)
 	};
 
-	// Per-camera geometry of the pupil target. Deliberately holds no detection tuning:
-	// the pupil-centre network settings (model path, presence threshold) live in the
-	// native-only PupilModelConfig (EyeAlignModelConfig.h).
-	struct PupilDetectParam
-	{
-		int32_t targetX = -1;		// desired pupil centre in the image, -1 = image centre
-		int32_t targetY = -1;
-		int32_t signH = +1;			// horizontal image error -> motor direction sign (+1 / -1)
-		int32_t signV = +1;			// vertical image error -> motor direction sign (+1 / -1)
-	};
-
+	// The pupil target geometry (target point, image-error -> motor sign mapping) is not
+	// configurable: see the PUPIL_TARGET_* / PUPIL_SIGN_* constants in EyeAlign/EyeAlign2.h.
 	struct EyeAlignConfigParam
 	{
 		// positions (motor steps); Z counts up toward the eye
@@ -131,39 +122,31 @@ namespace wso_domain
 		int32_t centerStepX = 2000;			// step 6 moves X by this many steps per frame while the lower pupil is in the outer quarters of the image width
 
 		// pixel control: one tolerance per centring step
-		float toleranceYPx = 24.0f;			// step 5b: side-camera pupil vertically on target
-		float approachTolZPx = 18.0f;		// not used any more (step 5a ends on the pupil position bands); kept for the C# mirror
+		float toleranceYPx = 24.0f;			// step 5: side-camera pupil vertically on target
 		float toleranceXPx = 6.0f;			// steps 6 and 8: lower-camera pupil horizontally on target
 		float toleranceZPx = 8.0f;			// steps 7 and 8: lower-camera pupil vertically on target
 		float startDeadbandPx = 10.0f;		// MANUAL: |error| above this counts as drifted from the target (keep >= the tolerances)
-		float stepsPerPxX = 10.0f;			// X/Y/Z move by position: offset steps = error px * ratio, at most
-		float stepsPerPxY = 20.0f;			// maxJumpPx * 0.8 px worth of steps per frame so the tracker keeps its lock
-		float stepsPerPxZ = 10.0f;
+		float stepsPerPxX = 50.0f;			// X/Y/Z move by position: offset steps = error px * ratio, at most
+		float stepsPerPxY = 150.0f;			// maxJumpPx * 0.8 px worth of steps per frame so the tracker keeps its lock
+		float stepsPerPxZ = 30.0f;
 
 		// frame counting (the control loop runs once per camera frame)
 		int32_t detectConsecutive = 3;		// consecutive detections to declare EYE_FOUND / LOWER_EYE_FOUND
 		int32_t lostFramesToStop = 5;		// frames without pupil -> stop all motors (EYE_LOST)
 		int32_t lostFramesToCancel = 300;	// frames without pupil -> ALIGN_CANCELLED(PUPIL_LOST), ~10 s at 30 fps
 		int32_t settleFrames = 2;			// MANUAL: frames centred on both cameras -> FOCUSED
-		float maxJumpPx = 60.0f;			// tracker rejects a centre jump larger than this
+		float maxJumpPx = 240.0f;			// tracker rejects a centre jump larger than this
 		float smoothingAlpha = 0.5f;		// EMA weight of the newest detection
 
 		// timeouts (ms)
-		int32_t searchTimeoutMs = 20000;	// steps 4 + 5a together: counted from the search start (held time excluded), cancels when the pupil has not come in (fires before alignTimeoutMs with the better diagnosis)
+		int32_t searchTimeoutMs = 20000;	// steps 4 + 5 together, counted from the search start (held time excluded): cancels with SIDE_EYE_NOT_FOUND in step 4, LOWER_EYE_NOT_FOUND in step 5
 		int32_t alignTimeoutMs = 60000;		// whole sequence up to the first FOCUS_ALIGNED -> ALIGN_CANCELLED(ALIGN_TIMEOUT); held time excluded; 0 = no limit
 
 		int32_t backOffOnEnd = 1;			// at every run end (user cancel, automatic cancel, failure) move Z back to readyPosZ (swing left as is)
-
-		// side cameras: only targetY / signV are used (step 5b). signV = -1: the pupil
-		// below the target in the side image drives the head UP (Y_DIRECTION_UP).
-		PupilDetectParam detLeft{ -1, -1, -1, -1 };
-		PupilDetectParam detRight{ -1, -1, +1, -1 };
-		PupilDetectParam detLower{ -1, -1, +1, +1 };			// lower camera: targetX / signH drive X, targetY / signV drive Z
 	};
 	// Mirrored by WsoNativeLib/EyeAlignDefines.cs; the C# side checks Marshal.SizeOf at
 	// run time (getEyeAlignConfigStructSize). Update both when the layout changes.
-	static_assert(sizeof(PupilDetectParam) == 16, "PupilDetectParam layout changed; update the C# mirror");
-	static_assert(sizeof(EyeAlignConfigParam) == 30 * 4 + 3 * sizeof(PupilDetectParam), "EyeAlignConfigParam layout changed; update the C# mirror");
+	static_assert(sizeof(EyeAlignConfigParam) == 29 * 4, "EyeAlignConfigParam layout changed; update the C# mirror");
 
 	struct PupilDetectResult
 	{

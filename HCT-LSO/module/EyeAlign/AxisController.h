@@ -31,8 +31,9 @@ namespace eye_align
 		// Starts a velocity-mode jog in direction (0/1). No-op when already jogging that way;
 		// a reversal stops first. Returns false when the board rejected the command.
 		bool jog(int direction);
-		// Stops a running jog. Idempotent, always safe to call.
-		bool stop(void);
+		// Stops a running jog. Idempotent, always safe to call. Does not touch a position
+		// move in flight: abortMove() does that.
+		bool stopJogging(void);
 		// Refreshes position and end-switch flags from the board (one USB transaction).
 		bool poll(void);
 

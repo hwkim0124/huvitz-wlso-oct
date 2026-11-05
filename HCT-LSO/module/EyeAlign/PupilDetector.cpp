@@ -9,12 +9,12 @@ using namespace eye_align;
 
 
 PupilDetector::PupilDetector() :
-	cameraId_(IrCameraId::CORNEA_LOWER), param_()
+	cameraId_(IrCameraId::CORNEA_LOWER)
 {}
 
 
-PupilDetector::PupilDetector(IrCameraId cameraId, const PupilDetectParam& param) :
-	cameraId_(cameraId), param_(param)
+PupilDetector::PupilDetector(IrCameraId cameraId) :
+	cameraId_(cameraId)
 {}
 
 
@@ -32,16 +32,6 @@ IrCameraId eye_align::PupilDetector::getCameraId(void) const
 	return cameraId_;
 }
 
-void eye_align::PupilDetector::setParam(const PupilDetectParam& param)
-{
-	param_ = param;
-}
-
-const PupilDetectParam& eye_align::PupilDetector::getParam(void) const
-{
-	return param_;
-}
-
 void eye_align::PupilDetector::setModel(std::shared_ptr<PupilCenterModel> model)
 {
 	model_ = std::move(model);
@@ -52,14 +42,14 @@ std::shared_ptr<PupilCenterModel> eye_align::PupilDetector::getModel(void) const
 	return model_;
 }
 
-float eye_align::PupilDetector::getTargetX(int width) const
+float eye_align::PupilDetector::getTargetX(int width)
 {
-	return (param_.targetX < 0) ? (width * 0.5f) : static_cast<float>(param_.targetX);
+	return (PUPIL_TARGET_X < 0) ? (width * 0.5f) : static_cast<float>(PUPIL_TARGET_X);
 }
 
-float eye_align::PupilDetector::getTargetY(int height) const
+float eye_align::PupilDetector::getTargetY(int height)
 {
-	return (param_.targetY < 0) ? (height * 0.5f) : static_cast<float>(param_.targetY);
+	return (PUPIL_TARGET_Y < 0) ? (height * 0.5f) : static_cast<float>(PUPIL_TARGET_Y);
 }
 
 PupilDetectResult eye_align::PupilDetector::detect(const std::uint8_t* gray, int width, int height, int stride, int frameSequence) const

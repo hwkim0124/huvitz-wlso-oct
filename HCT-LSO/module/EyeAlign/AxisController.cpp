@@ -52,7 +52,7 @@ bool eye_align::AxisController::jog(int direction)
 		return true;
 	}
 	if (jogging_) {
-		if (!stop()) {
+		if (!stopJogging()) {
 			return false;
 		}
 	}
@@ -68,7 +68,7 @@ bool eye_align::AxisController::jog(int direction)
 	return ok;
 }
 
-bool eye_align::AxisController::stop(void)
+bool eye_align::AxisController::stopJogging(void)
 {
 	if (motor_ == nullptr || !jogging_) {
 		return true;
@@ -106,7 +106,7 @@ bool eye_align::AxisController::jogToward(int target, int tolerance)
 
 	const int delta = target - position_;
 	if (std::abs(delta) <= tolerance) {
-		stop();
+		stopJogging();
 		return true;
 	}
 	const int direction = (delta > 0) ? POSITIVE_STEP_DIRECTION : (1 - POSITIVE_STEP_DIRECTION);
@@ -119,7 +119,7 @@ bool eye_align::AxisController::moveTo(int target)
 	if (motor_ == nullptr) {
 		return false;
 	}
-	if (jogging_ && !stop()) {
+	if (jogging_ && !stopJogging()) {
 		return false;
 	}
 	const bool ok = motor_->moveToPosition(target, false);
@@ -139,7 +139,7 @@ bool eye_align::AxisController::moveBy(int offset)
 	if (motor_ == nullptr) {
 		return false;
 	}
-	if (jogging_ && !stop()) {
+	if (jogging_ && !stopJogging()) {
 		return false;
 	}
 	const bool ok = motor_->moveByStepOffset(offset, true);

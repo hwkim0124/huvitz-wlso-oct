@@ -804,13 +804,6 @@ bool wso_config::SysConfigFile::loadSectionOfAlignment(AlignmentSettings* aset, 
 	auto readFloat = [&](XMLElement* e, const char* name, float& out) {
 		if (checkXMLResult(e->QueryFloatAttribute(name, &fValue))) out = fValue;
 	};
-	auto readDetect = [&](XMLElement* e, PupilDetectParam& det) {
-		readInt(e, "targetX", det.targetX);
-		readInt(e, "targetY", det.targetY);
-		readInt(e, "signH", det.signH);
-		readInt(e, "signV", det.signV);
-	};
-
 	if ((elem = group->FirstChildElement("Position")) != nullptr) {
 		readInt(elem, "readyPosZ", param.readyPosZ);
 		readInt(elem, "swingTiltPosOD", param.swingTiltPos_OD);
@@ -829,7 +822,6 @@ bool wso_config::SysConfigFile::loadSectionOfAlignment(AlignmentSettings* aset, 
 
 	if ((elem = group->FirstChildElement("Control")) != nullptr) {
 		readFloat(elem, "toleranceYPx", param.toleranceYPx);
-		readFloat(elem, "approachTolZPx", param.approachTolZPx);
 		readFloat(elem, "toleranceXPx", param.toleranceXPx);
 		readFloat(elem, "toleranceZPx", param.toleranceZPx);
 		readFloat(elem, "startDeadbandPx", param.startDeadbandPx);
@@ -851,12 +843,6 @@ bool wso_config::SysConfigFile::loadSectionOfAlignment(AlignmentSettings* aset, 
 		readInt(elem, "searchMs", param.searchTimeoutMs);
 		readInt(elem, "alignMs", param.alignTimeoutMs);
 		readInt(elem, "backOffOnEnd", param.backOffOnEnd);
-	}
-
-	if (XMLElement* cams = group->FirstChildElement("Camera"); cams != nullptr) {
-		if ((elem = cams->FirstChildElement("Left")) != nullptr)  readDetect(elem, param.detLeft);
-		if ((elem = cams->FirstChildElement("Right")) != nullptr) readDetect(elem, param.detRight);
-		if ((elem = cams->FirstChildElement("Lower")) != nullptr) readDetect(elem, param.detLower);
 	}
 
 	if ((elem = group->FirstChildElement("Detector")) != nullptr) {
@@ -895,7 +881,6 @@ bool wso_config::SysConfigFile::saveSectionOfAlignment(const AlignmentSettings* 
 	item = pdoc->NewElement("Control");
 	group->LinkEndChild(item);
 	item->SetAttribute("toleranceYPx", param.toleranceYPx);
-	item->SetAttribute("approachTolZPx", param.approachTolZPx);
 	item->SetAttribute("toleranceXPx", param.toleranceXPx);
 	item->SetAttribute("toleranceZPx", param.toleranceZPx);
 	item->SetAttribute("startDeadbandPx", param.startDeadbandPx);
@@ -917,21 +902,6 @@ bool wso_config::SysConfigFile::saveSectionOfAlignment(const AlignmentSettings* 
 	item->SetAttribute("searchMs", param.searchTimeoutMs);
 	item->SetAttribute("alignMs", param.alignTimeoutMs);
 	item->SetAttribute("backOffOnEnd", param.backOffOnEnd);
-
-	XMLElement* cams = pdoc->NewElement("Camera");
-	group->LinkEndChild(cams);
-
-	auto writeDetect = [&](const char* name, const PupilDetectParam& det) {
-		XMLElement* e = pdoc->NewElement(name);
-		cams->LinkEndChild(e);
-		e->SetAttribute("targetX", det.targetX);
-		e->SetAttribute("targetY", det.targetY);
-		e->SetAttribute("signH", det.signH);
-		e->SetAttribute("signV", det.signV);
-	};
-	writeDetect("Left", param.detLeft);
-	writeDetect("Right", param.detRight);
-	writeDetect("Lower", param.detLower);
 
 	const PupilModelConfig model = aset->getModelConfig();
 	item = pdoc->NewElement("Detector");

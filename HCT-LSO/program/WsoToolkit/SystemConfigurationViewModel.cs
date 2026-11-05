@@ -53,7 +53,6 @@ namespace WsoToolkit
             checkAlignBackOff.IsChecked = p.backOffOnEnd != 0;
 
             editAlignTolY.Text = p.toleranceYPx.ToString("F1");
-            editAlignTolZApp.Text = p.approachTolZPx.ToString("F1");
             editAlignTolX.Text = p.toleranceXPx.ToString("F1");
             editAlignTolZ.Text = p.toleranceZPx.ToString("F1");
             editAlignStartDb.Text = p.startDeadbandPx.ToString("F1");
@@ -70,32 +69,6 @@ namespace WsoToolkit
 
             editAlignToSearch.Text = p.searchTimeoutMs.ToString();
             editAlignToAlign.Text = p.alignTimeoutMs.ToString();
-
-            ReflectPupilTarget(p.detLeft, editAlignLeftTX, editAlignLeftTY, editAlignLeftSH, editAlignLeftSV);
-            ReflectPupilTarget(p.detRight, editAlignRightTX, editAlignRightTY, editAlignRightSH, editAlignRightSV);
-            ReflectPupilTarget(p.detLower, editAlignLowerTX, editAlignLowerTY, editAlignLowerSH, editAlignLowerSV);
-        }
-
-        private static void ReflectPupilTarget(WsoEyeAlign.PupilDetectParam det,
-            System.Windows.Controls.TextBox tx, System.Windows.Controls.TextBox ty,
-            System.Windows.Controls.TextBox sh, System.Windows.Controls.TextBox sv)
-        {
-            tx.Text = det.targetX.ToString();
-            ty.Text = det.targetY.ToString();
-            sh.Text = det.signH.ToString();
-            sv.Text = det.signV.ToString();
-        }
-
-        private static WsoEyeAlign.PupilDetectParam UploadPupilTarget(
-            System.Windows.Controls.TextBox tx, System.Windows.Controls.TextBox ty,
-            System.Windows.Controls.TextBox sh, System.Windows.Controls.TextBox sv)
-        {
-            var det = new WsoEyeAlign.PupilDetectParam();
-            det.targetX = ToInt(tx.Text);
-            det.targetY = ToInt(ty.Text);
-            det.signH = ToInt(sh.Text) < 0 ? -1 : +1;
-            det.signV = ToInt(sv.Text) < 0 ? -1 : +1;
-            return det;
         }
 
         private void UploadEyeAlignSettings()
@@ -117,7 +90,6 @@ namespace WsoToolkit
             p.backOffOnEnd = (checkAlignBackOff.IsChecked ?? false) ? 1 : 0;
 
             p.toleranceYPx = ToFloat(editAlignTolY.Text);
-            p.approachTolZPx = ToFloat(editAlignTolZApp.Text);
             p.toleranceXPx = ToFloat(editAlignTolX.Text);
             p.toleranceZPx = ToFloat(editAlignTolZ.Text);
             p.startDeadbandPx = ToFloat(editAlignStartDb.Text);
@@ -134,10 +106,6 @@ namespace WsoToolkit
 
             p.searchTimeoutMs = ToInt(editAlignToSearch.Text);
             p.alignTimeoutMs = ToInt(editAlignToAlign.Text);
-
-            p.detLeft = UploadPupilTarget(editAlignLeftTX, editAlignLeftTY, editAlignLeftSH, editAlignLeftSV);
-            p.detRight = UploadPupilTarget(editAlignRightTX, editAlignRightTY, editAlignRightSH, editAlignRightSV);
-            p.detLower = UploadPupilTarget(editAlignLowerTX, editAlignLowerTY, editAlignLowerSH, editAlignLowerSV);
 
             Configuration.SubmitEyeAlignConfig(in p);
         }

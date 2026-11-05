@@ -819,7 +819,7 @@ bool wso_device::MainBoard::isOdOsStatusFlagSet(void)
 	if (getHbsDataProfile()->loadGpioStatus()) {
 		auto* gpio = getHbsDataProfile()->getHbsGpioStatus();
 		auto status = gpio->PIstatus;
-		if (status & (0x01 << 15)) {
+		if (status & (0x01 << 4)) {
 			return true;
 		}
 	}

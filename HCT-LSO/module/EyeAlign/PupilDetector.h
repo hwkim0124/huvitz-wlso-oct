@@ -14,36 +14,32 @@ namespace eye_align
 	// scaled back to image pixels and the network's presence probability becomes the
 	// score; "found" is presence >= the configured threshold (0.9 by default). The model has no radius
 	// output, so radius stays 0. Without a model attached detect() reports "not found".
-	// Detection tuning (model path, threshold) lives in PupilModelConfig; PupilDetectParam
-	// only carries the target point and the error-sign mapping.
+	// Detection tuning (model path, threshold) lives in PupilModelConfig; the target point
+	// is the PUPIL_TARGET_X / PUPIL_TARGET_Y constant (EyeAlign2.h).
 	class EYEALIGN_DLL_API PupilDetector
 	{
 	public:
 		PupilDetector();
-		explicit PupilDetector(IrCameraId cameraId, const PupilDetectParam& param = PupilDetectParam());
+		explicit PupilDetector(IrCameraId cameraId);
 		virtual ~PupilDetector();
 
 	public:
 		void setCameraId(IrCameraId cameraId);
 		IrCameraId getCameraId(void) const;
 
-		void setParam(const PupilDetectParam& param);
-		const PupilDetectParam& getParam(void) const;
-
 		// The shared inference model. nullptr detaches (detect() then reports "not found").
 		void setModel(std::shared_ptr<PupilCenterModel> model);
 		std::shared_ptr<PupilCenterModel> getModel(void) const;
 
-		// Desired pupil centre for a frame of the given size (-1 in the param = centre).
-		float getTargetX(int width) const;
-		float getTargetY(int height) const;
+		// Desired pupil centre for a frame of the given size (PUPIL_TARGET_* = -1 -> centre).
+		static float getTargetX(int width);
+		static float getTargetY(int height);
 
 		// gray: width*height 8-bit pixels, row stride in bytes (0 = width). Never throws.
 		PupilDetectResult detect(const std::uint8_t* gray, int width, int height, int stride = 0, int frameSequence = 0) const;
 
 	private:
 		IrCameraId cameraId_;
-		PupilDetectParam param_;
 		std::shared_ptr<PupilCenterModel> model_;
 	};
 }
