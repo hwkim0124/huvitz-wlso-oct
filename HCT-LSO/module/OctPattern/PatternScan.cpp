@@ -341,10 +341,10 @@ int oct_pattern::PatternScan::getFrameCapacityFromPoints(int numPoints, int numL
 		// enface has PATTERN_FRAMES_ENFACE_MAX of them (see EnfaceScan::buildEnfaceCube).
 		// Values match the non-enface cube sizes that have been exercised on hardware.
 		if (numPoints >= (int)OctAscanSize::ASCAN_1024) {
-			frameSize = 4;
+			frameSize = 8; // 4;
 		}
 		else if (numPoints >= (int)OctAscanSize::ASCAN_512) {
-			frameSize = 8;
+			frameSize = 16; //  8;
 		}
 		else {
 			frameSize = 16;

@@ -621,6 +621,7 @@ bool oct_grab::OctoPlus::setImageParameters(int imageHeight, int numOfBuffer)
 		getImpl().numOfBuffer = numOfBuffer;
 		LogD() << "Usb cmos camera updated, height: " << getImpl().imageHeight << ", buffers: " << getImpl().numOfBuffer;
 		USB3_FlushBuffers(getImpl().hCamera);
+		LogD() << "USB3_FlushBuffers returned";
 	}
 	return true;
 }

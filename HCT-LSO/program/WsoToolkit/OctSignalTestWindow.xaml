@@ -48,6 +48,12 @@
                 <CheckBox x:Name="checkKLinearResample" Content="K-Linear Resampling" Style="{StaticResource CheckBoxStyle}" Grid.Row="3" Grid.Column="3" Click="CheckKLinearResample_Click"/>
                 <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="4" Grid.RowSpan="5"/>
             </Grid>
+
+            <!-- LSO aiming preview (Preview preset). Fixed height: under SizeToContent a stretched
+                 preview would be measured unbounded and grow the window to the camera frame size. -->
+            <Button x:Name="btnLsoPreview" Content="Start Preview
+                    " Style="{StaticResource ButtonS1Style}" HorizontalAlignment="Left" Margin="4,4,0,0" Click="BtnLsoPreview_Click" Width="74"/>
+            <controls:ColorCameraPreview x:Name="lsoPreview" Width="344" Height="254" Margin="0,4,0,0"/>
         </StackPanel>
         <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Vertical">
             <controls:OctSignalIntensityGraph x:Name="octIntensityGraph" Width="960" Height="480"/>

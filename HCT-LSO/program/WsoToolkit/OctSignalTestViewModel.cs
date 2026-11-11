@@ -271,6 +271,7 @@ namespace WsoToolkit
             _octInitParam.isFirstScanOnSide = false;
             _octInitParam.isNotImageGrabbing = checkNotGrabbing.IsChecked == true;
             _octInitParam.isFullRangeDomain = checkFullRangeDomain.IsChecked == true;
+            _octInitParam.isNotFocusAlign = true;
 
             var multi = ToInt(cmbZeroPadding.SelectedItem.ToString());
             var isZeroPadding = multi > 1;

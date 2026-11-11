@@ -469,7 +469,11 @@ namespace WsoToolkit
             // Camera presets (one XML file per preset). Seeds what is missing and performs
             // the one-time [COLOR_CAMERA] migration; anything that had to fall back to the
             // built-in DevKit defaults is reported to the operator below.
-            _scanTestModel.ModePresets.Load();
+            string? previewSeeded = LsoPreviewPresetSeed.Load(_scanTestModel.ModePresets, LsoScanTestModel.DefaultConfigIniPath);
+            if (previewSeeded != null)
+            {
+                _startupCameraIssues.Add(previewSeeded);
+            }
             // Every mode the Mode combo offers gets its preset and selection, so the Agent can
             // read any of them without the operator opening each mode once first.
             _scanTestModel.ModePresets.SeedAvailableModes();

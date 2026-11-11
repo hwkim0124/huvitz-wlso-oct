@@ -73,6 +73,7 @@ namespace WsoToolkit
             BoardDevice.ConnectJoystickButtonPressed(_onJoystickButtonPressed);
             BoardDevice.ConnectOptimizeButtonPressed(_onOptimizeButtonPressed);
             StartCorneaCameraPreview();
+            initLsoPreview_();
             _isWindowLoaded = true;
 
             _timer.Interval = TimeSpan.FromMilliseconds(100);
@@ -100,6 +101,7 @@ namespace WsoToolkit
             BoardDevice.ReleaseOptimizeButtonPressed();
 
             CancelOctScanning(false);
+            releaseLsoPreview_();
             CloseCorneaCameraPreview();
 
             Thread.Sleep(500);

@@ -399,6 +399,7 @@ namespace WsoToolkit
             _octInitParam.isPhasingEnface = checkEnfaceEnable.IsChecked == true;
 
             _octInitParam.isFirstScanOnSide = false; // true;
+            _octInitParam.isNotFocusAlign = true;
         }
 
         private bool GetScanPatternSelected(out WsoOctScan.OctScanPattern pattern)
@@ -753,7 +754,7 @@ namespace WsoToolkit
             cmbEnfaceRangeX.Items.Clear();
             cmbEnfaceRangeY.Items.Clear();
 
-            foreach (var points in new[] { 1024, 512, 384 })
+            foreach (var points in new[] { 1024, 512, 384, 256 })
             {
                 cmbEnfacePoints.Items.Add(points);
             }
@@ -767,7 +768,7 @@ namespace WsoToolkit
                 cmbEnfaceRangeY.Items.Add($"{mm:0.0}");
             }
 
-            cmbEnfacePoints.SelectedIndex = 2;     // 384 points
+            cmbEnfacePoints.SelectedIndex = 1;     // 512 points
             cmbEnfaceLines.SelectedIndex = 1;      // 128 lines
             cmbEnfaceRangeX.SelectedIndex = 5;     // 6.0 mm
             cmbEnfaceRangeY.SelectedIndex = 5;     // 6.0 mm
