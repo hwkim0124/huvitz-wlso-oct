@@ -41,7 +41,11 @@ namespace WsoToolkit
         WsoOctScan.OctMacularSummaryDescriptor _macularSummary = new();
         WsoOctScan.OctOpticDiscSummaryDescriptor _optdiscSummary = new();
 
+        WsoOctCalib.OctFullRangeParam _fullRangeParam = new();
+
         bool _isResultAnalyzed = false;
+        // A full range result is never analyzed; it is loaded as a data source only, for browsing and export.
+        bool _isResultSourced = false;
         int _sourceId = 0;
         int _reportId = 0;
 
@@ -67,6 +71,9 @@ namespace WsoToolkit
             checkEnfaceEnable.IsChecked = false;
             checkEnfaceGrid.IsChecked = false;
             ReflectEnfacePatternOptions();
+
+            checkFullRangeDomain.IsChecked = false;
+            ReflectFullRangeOptions();
 
             editScanOffsetX.Text = "0";
             editScanOffsetY.Text = "0";
@@ -116,7 +123,9 @@ namespace WsoToolkit
         {
             EnableButtonsAtScanning(false);
 
-            btnAnalyzeResult.IsEnabled = true;
+            // The layer segmentation behind the analysis is built for the conventional image,
+            // so a full range result can be browsed and exported but not analyzed.
+            btnAnalyzeResult.IsEnabled = !IsFullRangeResult();
             btnImportResult.IsEnabled = true;
             btnExportResult.IsEnabled = true;
         }
@@ -154,6 +163,11 @@ namespace WsoToolkit
             octScanImagePreview.IsOptimizing = false;
 
             RetreiveProtocolInitParam();
+            if (_octInitParam.isFullRangeDomain && !SubmitFullRangeParam())
+            {
+                Mouse.OverrideCursor = null;
+                return;
+            }
             if (!OctScanning.SetupScanProtocol(_octInitParam))
             {
                 Mouse.OverrideCursor = null;
@@ -163,7 +177,15 @@ namespace WsoToolkit
             if (!OctScanning.StartPreview(_onOctPreviewCaptured, _onOctEnfaceCaptured))
             {
                 Mouse.OverrideCursor = null;
-                ShowError("Failed to start scan preview!");
+                if (_octInitParam.isFullRangeDomain)
+                {
+                    // The phase ramp is checked against the scan line when the scan starts.
+                    ShowError("Failed to start scan preview!\nFull range: check that Phase Base + Phase Inc x (A-Points + paddings) stays within -32768 to 32767.");
+                }
+                else
+                {
+                    ShowError("Failed to start scan preview!");
+                }
                 return;
             }
 
@@ -183,6 +205,7 @@ namespace WsoToolkit
             // Resume playing cornea camera paused by capture. 
             StartCorneaCameraPreview();
             _isResultAnalyzed = false;
+            _isResultSourced = false;
         }
 
         private void CancelOctScanPreview()
@@ -372,7 +395,8 @@ namespace WsoToolkit
             _octInitParam.diopter = ToFloat(editDiopter.Text);
 
             var name = cmbScanPattern.SelectedItem.ToString();
-            var code = Array.Find(_scanPatterns, item => item.patternName == name).patternCode;
+            var pattern = Array.Find(_scanPatterns, item => item.patternName == name);
+            var code = pattern.patternCode;
             _octInitParam.patternCode = code;
             _octInitParam.previewType = WsoOctDefs.OctPatternType.MULTI_LINE;
 
@@ -400,6 +424,121 @@ namespace WsoToolkit
 
             _octInitParam.isFirstScanOnSide = false; // true;
             _octInitParam.isNotFocusAlign = true;
+            // Angio patterns are always processed conventionally.
+            _octInitParam.isFullRangeDomain = checkFullRangeDomain.IsChecked == true && !pattern.IsAngioScan();
+        }
+
+        // Full range scanning options.
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////
+        private void ReflectFullRangeOptions()
+        {
+            // Start from the parameters the native side holds, so the boxes show what a scan would use.
+            var param = new WsoOctCalib.OctFullRangeParam();
+            OctScanner.ObtainOctFullRangeParam(ref param);
+            _fullRangeParam = param;
+
+            editPhaseBase.Text = param.phaseBase.ToString();
+            editPhaseInc.Text = param.phaseInc.ToString();
+            editPhaseEndWait.Text = param.endPhaseWaitTimeUs.ToString();
+            editPhaseSlew.Text = param.phaseOriginSlewTimeUs.ToString();
+            editFullRangeCutoff.Text = param.lateralCutoffPercent.ToString("0.###");
+            checkFullRangeFlip.IsChecked = param.flipSideband != 0;
+
+            ReflectFullRangeControlsEnabled();
+        }
+
+        private void ReflectFullRangeControlsEnabled()
+        {
+            bool enabled = checkFullRangeDomain.IsChecked == true;
+            checkFullRangeFlip.IsEnabled = enabled;
+            editPhaseBase.IsEnabled = enabled;
+            editPhaseInc.IsEnabled = enabled;
+            editPhaseEndWait.IsEnabled = enabled;
+            editPhaseSlew.IsEnabled = enabled;
+            editFullRangeCutoff.IsEnabled = enabled;
+        }
+
+        // Reads the full range options from the GUI controls and hands them to the WSO library,
+        // where they take effect with the scan protocol about to start.
+        private bool SubmitFullRangeParam()
+        {
+            var param = _fullRangeParam;
+
+            if (!int.TryParse(editPhaseBase.Text, out param.phaseBase) || param.phaseBase < short.MinValue || param.phaseBase > short.MaxValue)
+            {
+                ShowError("Full range: Phase Base must be an integer from -32768 to 32767.");
+                return false;
+            }
+            if (!int.TryParse(editPhaseInc.Text, out param.phaseInc) || param.phaseInc == 0 || param.phaseInc < short.MinValue || param.phaseInc > short.MaxValue)
+            {
+                ShowError("Full range: Phase Inc must be a non-zero integer from -32768 to 32767.");
+                return false;
+            }
+            if (!int.TryParse(editPhaseEndWait.Text, out param.endPhaseWaitTimeUs) || param.endPhaseWaitTimeUs < 0)
+            {
+                ShowError("Full range: Wait must be an integer of 0 or more microseconds.");
+                return false;
+            }
+            if (!int.TryParse(editPhaseSlew.Text, out param.phaseOriginSlewTimeUs) || param.phaseOriginSlewTimeUs < 0 || param.phaseOriginSlewTimeUs > ushort.MaxValue)
+            {
+                ShowError("Full range: Slew must be an integer from 0 to 65535 microseconds.");
+                return false;
+            }
+            // Written so that a NaN is rejected as well.
+            if (!float.TryParse(editFullRangeCutoff.Text, out param.lateralCutoffPercent) || !(param.lateralCutoffPercent >= 0.0f && param.lateralCutoffPercent < 50.0f))
+            {
+                ShowError("Full range: Lateral HPF must be a number from 0 to below 50 percent.");
+                return false;
+            }
+            param.flipSideband = checkFullRangeFlip.IsChecked == true ? 1 : 0;
+
+            if (!OctScanner.SubmitOctFullRangeParam(param))
+            {
+                ShowError("Failed to set full range parameters!");
+                return false;
+            }
+            _fullRangeParam = param;
+            return true;
+        }
+
+        private bool IsFullRangeResult()
+        {
+            return _octInitParam.isFullRangeDomain;
+        }
+
+        // Turns the full range capture held by the scan archive into a data source, which is what
+        // export works on. The analysis that normally does this is not available for full range.
+        private bool PrepareFullRangeResultSource()
+        {
+            if (_isResultSourced)
+            {
+                return true;
+            }
+            if (!OctAnalysis.IsProtocolResultReady() || !OctAnalysis.ProcessProtocolResult(false, true, ref _sourceId))
+            {
+                return false;
+            }
+
+            // The archive has handed the result over, so the images are browsed from the source now.
+            _isResultSourced = true;
+            return true;
+        }
+
+        // Shows a full range result imported as a data source: browsing and export, no analysis.
+        private void ReflectFullRangeResultImported(WsoOctScan.OctProtocolInitParam param)
+        {
+            _octInitParam = param;
+            _octProtocol.copyFromInitParam(param);
+            _isResultAnalyzed = false;
+            _isResultSourced = true;
+
+            // Nothing of a previous analysis applies to this result.
+            octScanImagePreview.ClearOverlayStatus();
+            ReflectPatternImageSelected(true);
+            ReflectProtocolSummary();
+            ReflectReportSummary();
+            ReflectReportSectionChart(true);
+            EnableButtonsAtCaptured();
         }
 
         private bool GetScanPatternSelected(out WsoOctScan.OctScanPattern pattern)
@@ -474,7 +613,7 @@ namespace WsoToolkit
             editPatternImageNumber.IsEnabled = false;
 
             int size;
-            if (_isResultAnalyzed)
+            if (_isResultAnalyzed || _isResultSourced)
             {
                 size = OctAnalysis.GetPatternContentCount(_sourceId);
             }
@@ -523,6 +662,11 @@ namespace WsoToolkit
                         }
                     }
                 }
+            }
+            else if (_isResultSourced)
+            {
+                // Loaded as a data source without analysis: the images only, no layers.
+                flag = OctAnalysis.GetPatternImage(_sourceId, index, ref image);
             }
             else
             {

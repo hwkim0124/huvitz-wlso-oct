@@ -517,6 +517,55 @@ bool oct_scan::ScanFunc::uploadTraceProfile(oct_pattern::LineTrace & line)
 }
 
 
+bool oct_scan::ScanFunc::applyFullRangePhaseControl(const PatternPlan & pattern)
+{
+	if (!ChainSetup::useFullRangeDomain()) {
+		return true;
+	}
+
+	// The board holds a single phase ramp, so it is laid out over the B-scan line of the
+	// preview. The preview lines share their point count and paddings.
+	PatternFrame* frame = pattern.getPreviewScan().getPatternFrame(0);
+	LineTrace* line = (frame != nullptr ? frame->getLineTraceFirst() : nullptr);
+	if (line == nullptr) {
+		LogE() << "Invalid preview trace for full range phase control!";
+		return false;
+	}
+	return applyFullRangePhaseControl(*line);
+}
+
+
+bool oct_scan::ScanFunc::applyFullRangePhaseControl(oct_pattern::LineTrace & line)
+{
+	if (!ChainSetup::useFullRangeDomain()) {
+		return true;
+	}
+	if (!isInitialized()) {
+		return false;
+	}
+
+	OctFullRangeParam param;
+	if (auto* p = OctScanOptions::getInstance(); p) {
+		param = p->getFullRangeParam();
+	}
+
+	if (!getGalvanometer()->setPhaseControl(line.getTraceId(), param)) {
+		LogE() << "Full range phase control failed!, traceId: " << line.getTraceId();
+		return false;
+	}
+	return true;
+}
+
+
+bool oct_scan::ScanFunc::clearFullRangePhaseControl(void)
+{
+	if (!isInitialized()) {
+		return false;
+	}
+	return getGalvanometer()->clearPhaseControl();
+}
+
+
 bool oct_scan::ScanFunc::updatePatternBuffers(const PatternPlan & pattern, bool measure, bool reset)
 {
 	if (reset) {

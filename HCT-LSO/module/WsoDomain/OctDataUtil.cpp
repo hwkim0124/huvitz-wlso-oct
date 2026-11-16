@@ -61,6 +61,7 @@ std::string wso_domain::OctDataUtil::serializeToJson(const OctScanProtocol& prot
 	j["not_image_grabbing"] = proto.isNotImageGrabbing;
 	j["fast_raster_scan"] = proto.isFastRasterScan;
 	j["preview_pattern"] = proto.isPreviewPattern;
+	j["full_range_domain"] = proto.isFullRangeDomain;
 
 	auto jstr = j.dump(4);
 	return jstr;
@@ -115,6 +116,8 @@ bool wso_domain::OctDataUtil::populateFromJson(const std::string& jstr, OctScanP
 	proto.isNotImageGrabbing = j["not_image_grabbing"];
 	proto.isFastRasterScan = j["fast_raster_scan"];
 	proto.isPreviewPattern = j["preview_pattern"];
+	// Absent in snapshots saved before full range scanning existed.
+	proto.isFullRangeDomain = j.value("full_range_domain", false);
     return true;
 }
 

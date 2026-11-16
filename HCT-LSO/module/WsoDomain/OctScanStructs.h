@@ -3,6 +3,7 @@
 #include "PatientDefines.h"
 #include "OctScanDefines.h"
 
+#include <cstdint>
 #include <string>
 #include <sstream>
 #include <map>
@@ -461,4 +462,32 @@ namespace wso_domain
 		double retinaCoeffs[OCT_DISPERSION_PHASE_SHIFT_COEFFS_SIZE] = { 0.0, };
 		double corneaCoeffs[OCT_DISPERSION_PHASE_SHIFT_COEFFS_SIZE] = { 0.0, };
 	};
+
+
+	// Full range (complex-conjugate resolved) scanning. The reference phase galvo is ramped one
+	// DAC step per camera trigger, which puts a phase carrier across the A-lines of a B-scan;
+	// a one-sided filter along the lateral axis then separates the image from its mirror twin.
+	// Enabled per scan by OctProtocolInitParam::isFullRangeDomain.
+	struct OctFullRangeParam
+	{
+		int phaseBase = OCT_FULL_RANGE_PHASE_BASE;					// Phase DAC code at the start of the ramp (int16).
+		int phaseInc = OCT_FULL_RANGE_PHASE_INC;					// Phase DAC codes per trigger (int16), sets the carrier.
+		int endPhaseWaitTimeUs = 0;									// Hold time at the end of the ramp.
+		int phaseOriginSlewTimeUs = OCT_FULL_RANGE_PHASE_SLEW_US;	// Time to slew back to the base code (uint16).
+		int trigDelayCount = 1;										// Phase trigger delay, 1 count: 10 ns.
+		float lateralCutoffPercent = OCT_FULL_RANGE_LATERAL_CUTOFF;	// Lowest lateral frequencies removed, % of A-lines.
+		int flipSideband = 0;										// 1: keep the negative lateral band (mirrors the image).
+
+		bool isValid(void) const {
+			return (phaseBase >= INT16_MIN && phaseBase <= INT16_MAX) &&
+				(phaseInc >= INT16_MIN && phaseInc <= INT16_MAX && phaseInc != 0) &&
+				(endPhaseWaitTimeUs >= 0) &&
+				(phaseOriginSlewTimeUs >= 0 && phaseOriginSlewTimeUs <= UINT16_MAX) &&
+				(trigDelayCount >= 0) &&
+				(lateralCutoffPercent >= 0.0f && lateralCutoffPercent < OCT_FULL_RANGE_LATERAL_CUTOFF_MAX);
+		}
+	};
+	// Mirrored by WsoNativeLib/WsoOctCalib.cs; the C# side checks Marshal.SizeOf at run time
+	// (getOctFullRangeParamStructSize). Update both when the layout changes.
+	static_assert(sizeof(OctFullRangeParam) == 7 * 4, "OctFullRangeParam layout changed; update the C# mirror");
 }

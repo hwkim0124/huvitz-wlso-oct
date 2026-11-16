@@ -256,6 +256,30 @@ bool WSOSYSTEM_DLL_API __stdcall wso_system::submitOctDispersionParam(const OctD
     return false;
 }
 
+bool WSOSYSTEM_DLL_API __stdcall wso_system::obtainOctFullRangeParam(OctFullRangeParam* param)
+{
+    if (auto* p = OctScanOptions::getInstance(); p && param) {
+        *param = p->getFullRangeParam();
+        return true;
+    }
+    return false;
+}
+
+bool WSOSYSTEM_DLL_API __stdcall wso_system::submitOctFullRangeParam(const OctFullRangeParam* param)
+{
+    if (auto* p = OctScanOptions::getInstance(); p && param) {
+        // Rejected as a whole when a value is out of range. The parameters are applied to
+        // the phase ramp and the sideband filter when scanning initialized.
+        return p->setFullRangeParam(*param);
+    }
+    return false;
+}
+
+int WSOSYSTEM_DLL_API __stdcall wso_system::getOctFullRangeParamStructSize(void)
+{
+    return static_cast<int>(sizeof(OctFullRangeParam));
+}
+
 bool WSOSYSTEM_DLL_API __stdcall wso_system::isOctFFTZeroPaddingEnabled(bool isset, bool enable, int multi)
 {
     if (isset) {

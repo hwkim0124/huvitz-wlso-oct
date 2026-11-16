@@ -42,6 +42,7 @@ namespace sig_chain
 		void clearPreviewImages(void);
 		void clearMeasureImages(void);
 		void clearEnfaceImages(void);
+		void resizeImageBuffers(void);
 
 		FrameImage* getFrameImageToPreviewResult(void);
 		FrameImage* getFrameImageToMeasureResult(void);

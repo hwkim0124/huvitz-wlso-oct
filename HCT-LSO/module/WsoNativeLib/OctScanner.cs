@@ -140,6 +140,19 @@ namespace WsoNativeLib
         [return: MarshalAs(UnmanagedType.I1)]
         private static extern bool isOctKLinearResamplingEnabled([MarshalAs(UnmanagedType.I1)] bool isset, [MarshalAs(UnmanagedType.I1)] bool enable);
 
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool obtainOctFullRangeParam(ref OctFullRangeParam param);
+
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool submitOctFullRangeParam(in OctFullRangeParam param);
+
+        [DllImport(LibraryName)]
+        private static extern int getOctFullRangeParamStructSize();
+
+
+        private static bool _structSizesVerified = false;
 
         // Public methods
         /////////////////////////////////////////////////////////////////////////////////////////////
@@ -307,6 +320,43 @@ namespace WsoNativeLib
         public static bool IsKLinearResamplingEnabled(bool isset = false, bool enable = false)
         {
             return isOctKLinearResamplingEnabled(isset, enable);
+        }
+
+        /// <summary>
+        /// Asserts that the C# mirror of the native full range struct has the native size. Called
+        /// once before the struct first crosses the boundary; throws on a mismatch so a layout
+        /// drift is caught instead of corrupting memory.
+        /// </summary>
+        public static void VerifyStructSizes()
+        {
+            if (_structSizesVerified)
+            {
+                return;
+            }
+            int nativeSize = getOctFullRangeParamStructSize();
+            int managedSize = Marshal.SizeOf<OctFullRangeParam>();
+            if (nativeSize != managedSize)
+            {
+                throw new InvalidOperationException($"OctFullRangeParam size mismatch: native {nativeSize}, managed {managedSize}");
+            }
+            _structSizesVerified = true;
+        }
+
+        /// <summary>Reads the full range scanning parameters currently held by the native side.</summary>
+        public static bool ObtainOctFullRangeParam(ref OctFullRangeParam param)
+        {
+            VerifyStructSizes();
+            return obtainOctFullRangeParam(ref param);
+        }
+
+        /// <summary>
+        /// Sets the full range scanning parameters, which take effect when the next scan protocol
+        /// with isFullRangeDomain starts. Returns false, changing nothing, if a value is out of range.
+        /// </summary>
+        public static bool SubmitOctFullRangeParam(in OctFullRangeParam param)
+        {
+            VerifyStructSizes();
+            return submitOctFullRangeParam(in param);
         }
     }
 }

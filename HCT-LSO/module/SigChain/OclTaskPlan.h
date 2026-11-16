@@ -48,6 +48,9 @@ namespace sig_chain
 		bool useIntensityDataCallback(bool isset = false, bool flag = true);
 		bool useAdaptiveGrayscale(bool isset = false, bool flag = true);
 		bool useKLinearResampling(bool isset = false, bool flag = true);
+		// Full range B-scan: the image covers every depth bin of the complex FFT. To be set
+		// before the task plan is realized, since it changes the image layout and FFT plans.
+		bool useFullRangeDomain(bool isset = false, bool flag = true);
 
 		int getZeroPaddingSize(void);
 		float logOfImageSignal(bool isset = false, float value = 0.0f);
@@ -63,6 +66,8 @@ namespace sig_chain
 		clfftPlanHandle& clfftPlanFwd(void) const;
 		clfftPlanHandle& clfftPlanBwd(void) const;
 		clfftPlanHandle& clfftPlanZero(void) const;
+		clfftPlanHandle& clfftPlanLateralFwd(void) const;
+		clfftPlanHandle& clfftPlanLateralBwd(void) const;
 #endif
 
 		size_t inputLineSize(void) const ;
@@ -70,6 +75,11 @@ namespace sig_chain
 		size_t outputLineSize(void) const ;
 		size_t outputLineSizePadded(void) const;
 		size_t outputLinesNum(void) const;
+
+		// Depth rows of the transposed FFT output that hold image data, and the first of them
+		// shown in the image. They differ from outputLinesNum() only on a full range plan.
+		size_t depthLinesNum(void) const;
+		size_t imageRowOffset(void) const;
 
 		size_t inputBufferSize(void) const;
 		size_t outputBufferSize(void) const;
@@ -121,6 +131,8 @@ namespace sig_chain
 		bool createClFFTSetupPlan(cl_context& context, cl_command_queue& queue);
 		bool createClFFTZerosPlan(cl_context& context, cl_command_queue& queue);
 		bool createClFFTPhasePlan(cl_context& context, cl_command_queue& queue);
+		bool createClFFTFullRangePlan(cl_context& context, cl_command_queue& queue);
+		void updateGrayScaleImageLayout(void);
 
 		void releaseInputOutputBuffers(void);
 		void releaseZeroPaddingBuffers(void);
@@ -134,6 +146,7 @@ namespace sig_chain
 		void releaseClFFTSetupPlan(void);
 		void releaseClFFTZerosPlan(void);
 		void releaseClFFTPhasePlan(void);
+		void releaseClFFTFullRangePlan(void);
 
 	private:
 		struct OclTaskPlanImpl;

@@ -60,6 +60,10 @@ struct OclContext::OclContextImpl
 	cl_program clProjectionProgram;
 	cl_kernel clProjectionKernel;
 
+	cl_program clFullRangeProgram;
+	cl_kernel clFullRangeMaskKernel;
+	cl_kernel clFullRangePhaseKernel;
+
 
 	std::vector<OclTaskPlan> taskPlans;
 
@@ -96,6 +100,10 @@ struct OclContext::OclContextImpl
 
 		clProjectionProgram = NULL;
 		clProjectionKernel = NULL;
+
+		clFullRangeProgram = NULL;
+		clFullRangeMaskKernel = NULL;
+		clFullRangePhaseKernel = NULL;
 	}
 };
 
@@ -230,7 +238,7 @@ bool sig_chain::OclContext::executeContext(OclTaskPlan* plan, const std::uint16_
 		return false;
 	}
 
-	if (!performPhaseShiftTransform(plan)) {
+	if (!performComplexSpectrumTransform(plan)) {
 		return false;
 	}
 
@@ -325,7 +333,7 @@ bool sig_chain::OclContext::performPhaseShiftOptimization(OclTaskPlan * plan)
 					return false;
 				}
 
-				if (!performPhaseShiftTransform(plan)) {
+				if (!performComplexSpectrumTransform(plan)) {
 					return false;
 				}
 
@@ -929,6 +937,98 @@ bool sig_chain::OclContext::performPhaseShiftTransform(OclTaskPlan * plan)
 }
 
 
+bool sig_chain::OclContext::performComplexSpectrumTransform(OclTaskPlan * plan)
+{
+	if (plan->useFullRangeDomain()) {
+		return performFullRangeTransform(plan);
+	}
+	return performPhaseShiftTransform(plan);
+}
+
+
+bool sig_chain::OclContext::performFullRangeTransform(OclTaskPlan * plan)
+{
+#ifndef _NCLFFT
+	try {
+		unsigned int numRows = (unsigned int)plan->inputLinesNum();
+		unsigned int numCols = (unsigned int)plan->inputLineSize();
+
+		OctFullRangeParam param;
+		if (auto* p = OctScanOptions::getInstance(); p) {
+			param = p->getFullRangeParam();
+		}
+
+		// The lowest lateral frequencies hold what does not follow the phase carrier: the
+		// reference spectrum, fixed pattern noise and the autocorrelation terms.
+		unsigned int cutBins = (unsigned int)(numRows * param.lateralCutoffPercent / 100.0f);
+		cutBins = max(cutBins, (unsigned int)OCT_FULL_RANGE_LATERAL_CUTOFF_BINS_MIN);
+		unsigned int flip = (param.flipSideband != 0 ? 1 : 0);
+		unsigned int dispersion = (plan->useDispersionCompensation() ? 1 : 0);
+
+		// Forward FFT across the A-lines, for every spectrum sample of the resampled B-scan.
+		cl_mem inputBuffers[2] = { *plan->resampleBuffers(0), *plan->phaseInputBuffers(0) };
+		cl_mem outputBuffers[2] = { *plan->phaseOutputBuffers(0), *plan->phaseOutputBuffers(1) };
+
+		OPENCL_V_THROW(clfftEnqueueTransform(
+			plan->clfftPlanLateralFwd(),
+			CLFFT_FORWARD, 1,
+			&getImpl().clQueue, 0, NULL, NULL,
+			inputBuffers, outputBuffers, NULL),
+			"clfftEnqueueTransform failed");
+
+		OPENCL_V_THROW(clFinish(getImpl().clQueue), "clFinish failed");
+
+		// Keep one lateral band. The image and its mirror twin carry opposite carrier signs,
+		// so they sit on opposite halves of the lateral spectrum.
+		const size_t globalWorkSize[2] = { numCols, numRows };
+
+		OPENCL_V_THROW(::clSetKernelArg(getImpl().clFullRangeMaskKernel, 0, sizeof(cl_mem), plan->phaseOutputBuffers(0)), "clKernel failed");
+		OPENCL_V_THROW(::clSetKernelArg(getImpl().clFullRangeMaskKernel, 1, sizeof(cl_mem), plan->phaseOutputBuffers(1)), "clKernel failed");
+		OPENCL_V_THROW(::clSetKernelArg(getImpl().clFullRangeMaskKernel, 2, sizeof(cl_uint), &numRows), "clKernel failed");
+		OPENCL_V_THROW(::clSetKernelArg(getImpl().clFullRangeMaskKernel, 3, sizeof(cl_uint), &numCols), "clKernel failed");
+		OPENCL_V_THROW(::clSetKernelArg(getImpl().clFullRangeMaskKernel, 4, sizeof(cl_uint), &cutBins), "clKernel failed");
+		OPENCL_V_THROW(::clSetKernelArg(getImpl().clFullRangeMaskKernel, 5, sizeof(cl_uint), &flip), "clKernel failed");
+
+		OPENCL_V_THROW(clEnqueueNDRangeKernel(getImpl().clQueue, getImpl().clFullRangeMaskKernel, 2,
+			NULL, globalWorkSize, NULL, 0, NULL, NULL),
+			"Full range sideband mask failed");
+		OPENCL_V_THROW(clFinish(getImpl().clQueue), "clFinish failed");
+
+		// Back to the A-line domain, now as complex spectra.
+		OPENCL_V_THROW(clfftEnqueueTransform(
+			plan->clfftPlanLateralBwd(),
+			CLFFT_BACKWARD, 1,
+			&getImpl().clQueue, 0, NULL, NULL,
+			outputBuffers, outputBuffers, NULL),
+			"clfftEnqueueTransform failed");
+
+		OPENCL_V_THROW(clFinish(getImpl().clQueue), "clFinish failed");
+
+		// Dispersion correction and the half-length shift of the depth FFT.
+		OPENCL_V_THROW(::clSetKernelArg(getImpl().clFullRangePhaseKernel, 0, sizeof(cl_mem), plan->phaseOutputBuffers(0)), "clKernel failed");
+		OPENCL_V_THROW(::clSetKernelArg(getImpl().clFullRangePhaseKernel, 1, sizeof(cl_mem), plan->phaseOutputBuffers(1)), "clKernel failed");
+		OPENCL_V_THROW(::clSetKernelArg(getImpl().clFullRangePhaseKernel, 2, sizeof(cl_mem), plan->phaseShiftBuffers(0)), "clKernel failed");
+		OPENCL_V_THROW(::clSetKernelArg(getImpl().clFullRangePhaseKernel, 3, sizeof(cl_uint), &numRows), "clKernel failed");
+		OPENCL_V_THROW(::clSetKernelArg(getImpl().clFullRangePhaseKernel, 4, sizeof(cl_uint), &numCols), "clKernel failed");
+		OPENCL_V_THROW(::clSetKernelArg(getImpl().clFullRangePhaseKernel, 5, sizeof(cl_uint), &dispersion), "clKernel failed");
+
+		OPENCL_V_THROW(clEnqueueNDRangeKernel(getImpl().clQueue, getImpl().clFullRangePhaseKernel, 2,
+			NULL, globalWorkSize, NULL, 0, NULL, NULL),
+			"Full range phase shift failed");
+		OPENCL_V_THROW(clFinish(getImpl().clQueue), "clFinish failed");
+
+		if (getImpl().isDebugMode) {
+			LogD() << "Full range transformed: " << StopWatch::getElapsedMillis() << " ms";
+		}
+	}
+	catch (std::exception) {
+		return false;
+	}
+#endif
+	return true;
+}
+
+
 bool sig_chain::OclContext::performZeroPaddingInput(OclTaskPlan * plan)
 {
 	try {
@@ -1014,8 +1114,10 @@ bool sig_chain::OclContext::performInverseTransform(OclTaskPlan * plan)
 			OPENCL_V_THROW(clFinish(getImpl().clQueue), "clFinish failed");
 
 		}
-		else if (plan->useDispersionCompensation())
+		else if (plan->useDispersionCompensation() || plan->useFullRangeDomain())
 		{
+			// Complex spectra in the phase output buffers: the analytic signal of each A-line,
+			// or the lateral sideband of the B-scan on a full range plan.
 			// StopWatch::start();
 			// LogD() << "FFT transform";
 
@@ -1191,10 +1293,10 @@ bool sig_chain::OclContext::performFixedNoiseReduction(OclTaskPlan * plan)
 		// StopWatch::start();
 		// LogD() << "Fixed noise reduction";
 
-		unsigned int numRows = (unsigned int)plan->outputLinesNum();
+		unsigned int numRows = (unsigned int)plan->depthLinesNum();
 		unsigned int numCols = (unsigned int)plan->outputLineSize();
 		unsigned int lineSize = (unsigned int)plan->outputLineSizePadded();
-		unsigned int rowOffset = ChainSetup::getFFTImageRowOffset();
+		unsigned int rowOffset = (unsigned int)plan->imageRowOffset();
 
 		OPENCL_V_THROW(::clSetKernelArg(getImpl().clReductionRealKernel, 0, sizeof(cl_mem), plan->outputBuffers()), "clKernel failed");
 		OPENCL_V_THROW(::clSetKernelArg(getImpl().clReductionRealKernel, 1, sizeof(cl_uint), &numRows), "clKernel failed");
@@ -1241,7 +1343,7 @@ bool sig_chain::OclContext::performMagnitudeOfComplex(OclTaskPlan * plan)
 		unsigned int numRows = (unsigned int)plan->grayScaleImageHeight();
 		unsigned int numCols = (unsigned int)plan->grayScaleImageWidth();
 		unsigned int lineSize = (unsigned int)plan->outputLineSizePadded();
-		unsigned int rowOffset = ChainSetup::getFFTImageRowOffset();
+		unsigned int rowOffset = (unsigned int)plan->imageRowOffset();
 
 		if (plan->useIntensityDataCallback())
 		{
@@ -1254,7 +1356,7 @@ bool sig_chain::OclContext::performMagnitudeOfComplex(OclTaskPlan * plan)
 			OPENCL_V_THROW(::clSetKernelArg(getImpl().clMagnitudeKernel2, 5, sizeof(cl_uint), &rowOffset), "clKernel failed");
 			OPENCL_V_THROW(::clSetKernelArg(getImpl().clMagnitudeKernel2, 6, sizeof(cl_uint), &lineSize), "clKernel failed");
 
-			unsigned int numRows2 = (unsigned int)plan->outputLinesNum();
+			unsigned int numRows2 = (unsigned int)plan->depthLinesNum();
 			unsigned int numCols2 = (unsigned int)plan->outputLineSize();
 
 			const size_t globalWorkSize[2] = { numCols2, numRows2 };
@@ -1361,7 +1463,7 @@ bool sig_chain::OclContext::performMagnitudeHistogram(OclTaskPlan * plan)
 	try {
 		unsigned int numRows = (unsigned int)plan->grayScaleImageHeight(); //getImpl().outputLinesNum;
 		unsigned int numCols = (unsigned int)plan->grayScaleImageWidth(); // getImpl().outputLineSize;
-		unsigned int rowOffset = ChainSetup::getFFTImageRowOffset();
+		unsigned int rowOffset = (unsigned int)plan->imageRowOffset();
 		unsigned int lineSize = (unsigned int)plan->outputLineSizePadded();
 
 		unsigned int columnStep = (numCols / MAGNITUDE_SCAN_LINES_NUM);
@@ -1540,9 +1642,9 @@ bool sig_chain::OclContext::performAdaptiveGrayScale(OclTaskPlan * plan, std::ui
 	try {
 		unsigned int numRows = (unsigned int)plan->grayScaleImageHeight(); //getImpl().outputLinesNum;
 		unsigned int numCols = (unsigned int)plan->grayScaleImageWidth(); // getImpl().outputLineSize;
-		unsigned int rowOffset = ChainSetup::getFFTImageRowOffset();
+		unsigned int rowOffset = (unsigned int)plan->imageRowOffset();
 		unsigned int lineSize = (unsigned int)plan->outputLineSizePadded();
-		unsigned int linesNum = (unsigned int)plan->outputLinesNum();
+		unsigned int linesNum = (unsigned int)plan->depthLinesNum();
 
 		float sigLog = plan->logOfImageSignal();
 		float bgdLog = plan->logOfImageBackground();
@@ -1642,9 +1744,9 @@ bool sig_chain::OclContext::performIntensityAmplitude(OclTaskPlan * plan, float 
 	try {
 		unsigned int numRows = (unsigned int)plan->grayScaleImageHeight(); //getImpl().outputLinesNum;
 		unsigned int numCols = (unsigned int)plan->grayScaleImageWidth(); // getImpl().outputLineSize;
-		unsigned int rowOffset = ChainSetup::getFFTImageRowOffset();
+		unsigned int rowOffset = (unsigned int)plan->imageRowOffset();
 		unsigned int lineSize = (unsigned int)plan->outputLineSizePadded();
-		unsigned int linesNum = (unsigned int)plan->outputLinesNum();
+		unsigned int linesNum = (unsigned int)plan->depthLinesNum();
 
 		OPENCL_V_THROW(::clSetKernelArg(getImpl().clAmplitudeOutputKernel, 0, sizeof(cl_mem), plan->outputBuffers(2)), "clKernel failed");
 		OPENCL_V_THROW(::clSetKernelArg(getImpl().clAmplitudeOutputKernel, 1, sizeof(cl_mem), plan->amplitudeBuffers(0)), "clKernel failed");
@@ -1776,6 +1878,9 @@ bool sig_chain::OclContext::initializeKernels(void)
 	if (!createAxialProjectionKernel()) {
 		return false;
 	}
+	if (!createFullRangeKernel()) {
+		return false;
+	}
 	return true;
 }
 
@@ -1790,6 +1895,7 @@ void sig_chain::OclContext::releaseKernels(void)
 	releaseAdaptiveGrayScaleKernel();
 	releaseIntensityAmplitudeKernel();
 	releaseAxialProjectionKernel();
+	releaseFullRangeKernel();
 	releaseCommandQueue();
 	return;
 }
@@ -2062,6 +2168,33 @@ bool sig_chain::OclContext::createAxialProjectionKernel(void)
 }
 
 
+bool sig_chain::OclContext::createFullRangeKernel(void)
+{
+#ifndef _NCLFFT
+	if (!isInitiated()) {
+		return false;
+	}
+
+	try {
+		createOpenCLProgram(getImpl().clFullRangeProgram,
+			getImpl().clContext, getImpl().clDeviceIds[0],
+			OclKernel::getFullRangeSource());
+
+		createOpenCLKernel(getImpl().clFullRangeProgram,
+			getImpl().clFullRangeMaskKernel, "fullRangeSidebandMask");
+
+		createOpenCLKernel(getImpl().clFullRangeProgram,
+			getImpl().clFullRangePhaseKernel, "fullRangePhaseShift");
+	}
+	catch (std::exception) {
+		releaseFullRangeKernel();
+		return false;
+	}
+#endif
+	return true;
+}
+
+
 void sig_chain::OclContext::releaseCommandQueue(void)
 {
 #ifndef _NCLFFT
@@ -2157,6 +2290,17 @@ void sig_chain::OclContext::releaseAxialProjectionKernel(void)
 #ifndef _NCLFFT
 	releaseOpenCLKernel(getImpl().clProjectionKernel);
 	releaseOpenCLProgram(getImpl().clProjectionProgram);
+	return;
+#endif
+}
+
+
+void sig_chain::OclContext::releaseFullRangeKernel(void)
+{
+#ifndef _NCLFFT
+	releaseOpenCLKernel(getImpl().clFullRangeMaskKernel);
+	releaseOpenCLKernel(getImpl().clFullRangePhaseKernel);
+	releaseOpenCLProgram(getImpl().clFullRangeProgram);
 	return;
 #endif
 }

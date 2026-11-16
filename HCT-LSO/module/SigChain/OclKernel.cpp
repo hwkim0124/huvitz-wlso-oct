@@ -792,3 +792,76 @@ const char * sig_chain::OclKernel::getAxialProjectionSource(void)
 	return p;
 
 }
+
+
+// Full range (complex-conjugate resolved) B-scan. The reference phase ramp puts a carrier
+// across the A-lines, so the image and its mirror twin fall on opposite halves of the lateral
+// spectrum. Both kernels work in place on the row major [A-line][spectrum sample] buffers.
+const char * sig_chain::OclKernel::getFullRangeSource(void)
+{
+	const char *p =
+		"// Applied between the forward and backward lateral FFTs, where a row is a lateral	\n" \
+		"// frequency bin: keeps one band, doubled as for an analytic signal, and drops the	\n" \
+		"// lowest bins, which hold the terms that do not follow the carrier.				\n" \
+		"__kernel void fullRangeSidebandMask(											\n" \
+		"						__global float* reals,									\n" \
+		"						__global float* imags,									\n" \
+		"						const uint numRows,										\n" \
+		"						const uint numCols,										\n" \
+		"						const uint cutBins,										\n" \
+		"						const uint flip)										\n" \
+		"{																				\n" \
+		"	const int x = get_global_id(0);												\n" \
+		"	const int y = get_global_id(1);												\n" \
+		"	const int idx = y * numCols + x;											\n" \
+		"	// 'half' is a type name in OpenCL C, hence the name of this one.			\n" \
+		"	const int nyquist = numRows / 2;											\n" \
+		"	// The negative band mirrors the positive one around the Nyquist bin.		\n" \
+		"	const int bin = (flip != 0 ? (int)numRows - y : y);							\n" \
+		"																				\n" \
+		"	if (bin >= (int)cutBins && bin < nyquist) {									\n" \
+		"		reals[idx] *= 2.0f;														\n" \
+		"		imags[idx] *= 2.0f;														\n" \
+		"	}																			\n" \
+		"	else {																		\n" \
+		"		reals[idx] = 0.0f;														\n" \
+		"		imags[idx] = 0.0f;														\n" \
+		"	}																			\n" \
+		"	return;																		\n" \
+		"}																				\n" \
+		"																				\n" \
+		"// Applied to the complex spectra before the depth FFT. Alternating the sign	\n" \
+		"// along the spectrum shifts that FFT by half its length, which puts the zero	\n" \
+		"// delay on the center depth row with the negative depths above it.			\n" \
+		"__kernel void fullRangePhaseShift(												\n" \
+		"						__global float* reals,									\n" \
+		"						__global float* imags,									\n" \
+		"						__global float* shifts,									\n" \
+		"						const uint numRows,										\n" \
+		"						const uint numCols,										\n" \
+		"						const uint dispersion)									\n" \
+		"{																				\n" \
+		"	const int x = get_global_id(0);												\n" \
+		"	const int y = get_global_id(1);												\n" \
+		"	const int idx = y * numCols + x;											\n" \
+		"	const float sign = ((x & 1) == 0 ? 1.0f : -1.0f);							\n" \
+		"	float re = reals[idx];														\n" \
+		"	float im = imags[idx];														\n" \
+		"																				\n" \
+		"	if (dispersion != 0) {														\n" \
+		"		// Rotate by the negated shift, the same sense as hilbertPhaseShift.	\n" \
+		"		const float c = cos(shifts[x]);											\n" \
+		"		const float s = sin(shifts[x]);											\n" \
+		"		const float re2 = re * c + im * s;										\n" \
+		"		const float im2 = im * c - re * s;										\n" \
+		"		re = re2;																\n" \
+		"		im = im2;																\n" \
+		"	}																			\n" \
+		"																				\n" \
+		"	reals[idx] = sign * re;														\n" \
+		"	imags[idx] = sign * im;														\n" \
+		"	return;																		\n" \
+		"}																				\n";
+
+	return p;
+}

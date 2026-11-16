@@ -143,6 +143,10 @@ namespace WsoNativeLib
         [return: MarshalAs(UnmanagedType.I1)]
         private static extern bool getOctReportProtocolInitParam(int reportId, ref OctProtocolInitParam param);
 
+        [DllImport(LibraryName)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool getOctResultProtocolInitParam(int sourceId, ref OctProtocolInitParam param);
+
 
         // Public methods
         /////////////////////////////////////////////////////////////////////////////////////////////
@@ -344,6 +348,14 @@ namespace WsoNativeLib
         public static bool GetProtocolInitParam(int reportId, ref OctProtocolInitParam param)
         {
             return getOctReportProtocolInitParam(reportId, ref param);
+        }
+
+        /// <summary>
+        /// Protocol parameters of a data source, available before it has been analyzed into a report.
+        /// </summary>
+        public static bool GetResultProtocolInitParam(int sourceId, ref OctProtocolInitParam param)
+        {
+            return getOctResultProtocolInitParam(sourceId, ref param);
         }
     }
 }

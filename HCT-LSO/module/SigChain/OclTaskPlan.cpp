@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "OclTaskPlan.h"
 #include "OclKernel.h"
+#include "ChainSetup.h"
 
 
 using namespace sig_chain;
@@ -15,6 +16,8 @@ struct OclTaskPlan::OclTaskPlanImpl
 	clfftPlanHandle clfftPlanFwd = 0;
 	clfftPlanHandle clfftPlanBwd = 0;
 	clfftPlanHandle clfftPlanZero = 0;
+	clfftPlanHandle clfftPlanLateralFwd = 0;
+	clfftPlanHandle clfftPlanLateralBwd = 0;
 #endif
 
 	size_t inputLineSize;
@@ -82,6 +85,7 @@ struct OclTaskPlan::OclTaskPlanImpl
 	bool useIntensityCallback;
 	bool useGrayscale;
 	bool useResampling;
+	bool useFullRange = false;
 
 	int sizeOfZeroPadding;
 	int referencePoint;
@@ -163,11 +167,26 @@ void sig_chain::OclTaskPlan::initializeTaskPlan(int dataLen, int batchSize)
 	d_ptr->numInputZeroBuffers = 2;
 	d_ptr->numOutputZeroBuffers = 2;
 
-	d_ptr->grayScaleImageWidth = outputLinesNum;
-	d_ptr->grayScaleImageHeight = (isTaskPlanForMeasure() ? FFT_IMAGE_ROW_SIZE_FOR_MEASURE : (isTaskPlanForEnface() ? FFT_IMAGE_ROW_SIZE_FOR_ENFACE : FFT_IMAGE_ROW_SIZE_FOR_PREVIEW));
-	d_ptr->grayScaleImageSize = (d_ptr->grayScaleImageWidth * d_ptr->grayScaleImageHeight);
+	updateGrayScaleImageLayout();
 
 	getImpl().initiated = true;
+	return;
+}
+
+
+void sig_chain::OclTaskPlan::updateGrayScaleImageLayout(void)
+{
+	// One image column per A-line. A full range image shows every depth bin of the complex
+	// FFT, which has as many bins as the spectrum has samples; otherwise a fixed window of
+	// the positive depths is shown.
+	d_ptr->grayScaleImageWidth = d_ptr->outputLineSize;
+	if (useFullRangeDomain()) {
+		d_ptr->grayScaleImageHeight = d_ptr->inputLineSize;
+	}
+	else {
+		d_ptr->grayScaleImageHeight = (isTaskPlanForMeasure() ? FFT_IMAGE_ROW_SIZE_FOR_MEASURE : (isTaskPlanForEnface() ? FFT_IMAGE_ROW_SIZE_FOR_ENFACE : FFT_IMAGE_ROW_SIZE_FOR_PREVIEW));
+	}
+	d_ptr->grayScaleImageSize = (d_ptr->grayScaleImageWidth * d_ptr->grayScaleImageHeight);
 	return;
 }
 
@@ -226,6 +245,13 @@ bool sig_chain::OclTaskPlan::realizeTaskPlan(cl_context & context, cl_command_qu
 		return false;
 	}
 
+	if (useFullRangeDomain()) {
+		if (!createClFFTFullRangePlan(context, queue)) {
+			LogD() << "Failed to create full range lateral FFT plans!, lines: " << d_ptr->inputLinesNum;
+			return false;
+		}
+	}
+
 	if (!createMagnitudeHistogramBuffers(context)) {
 		return false;
 	}
@@ -262,6 +288,7 @@ void sig_chain::OclTaskPlan::releaseTaskPlan(void)
 
 	releaseClFFTSetupPlan();
 	releaseClFFTPhasePlan();
+	releaseClFFTFullRangePlan();
 
 	//if (useZeroPadding()) {
 		releaseClFFTZerosPlan();
@@ -378,6 +405,16 @@ bool sig_chain::OclTaskPlan::useKLinearResampling(bool isset, bool flag)
 }
 
 
+bool sig_chain::OclTaskPlan::useFullRangeDomain(bool isset, bool flag)
+{
+	if (isset) {
+		getImpl().useFullRange = flag;
+		updateGrayScaleImageLayout();
+	}
+	return getImpl().useFullRange;
+}
+
+
 int sig_chain::OclTaskPlan::getZeroPaddingSize(void)
 {
 	return getImpl().sizeOfZeroPadding;
@@ -463,6 +500,18 @@ clfftPlanHandle & sig_chain::OclTaskPlan::clfftPlanZero(void) const
 {
 	return getImpl().clfftPlanZero;
 }
+
+
+clfftPlanHandle & sig_chain::OclTaskPlan::clfftPlanLateralFwd(void) const
+{
+	return getImpl().clfftPlanLateralFwd;
+}
+
+
+clfftPlanHandle & sig_chain::OclTaskPlan::clfftPlanLateralBwd(void) const
+{
+	return getImpl().clfftPlanLateralBwd;
+}
 #endif
 
 OclTaskPlan::OclTaskPlanImpl & sig_chain::OclTaskPlan::getImpl(void) const
@@ -516,6 +565,20 @@ size_t sig_chain::OclTaskPlan::grayScaleImageWidth(void) const
 size_t sig_chain::OclTaskPlan::grayScaleImageHeight(void) const
 {
 	return d_ptr->grayScaleImageHeight;
+}
+
+
+size_t sig_chain::OclTaskPlan::depthLinesNum(void) const
+{
+	// The complex depth FFT of a full range plan fills one output row per spectrum sample;
+	// otherwise only the non-negative half of the depth bins is meaningful.
+	return (d_ptr->useFullRange ? d_ptr->inputLineSize : d_ptr->outputLinesNum);
+}
+
+
+size_t sig_chain::OclTaskPlan::imageRowOffset(void) const
+{
+	return (d_ptr->useFullRange ? FFT_IMAGE_ROW_OFFSET_FOR_FULL_RANGE : ChainSetup::getFFTImageRowOffset());
 }
 
 
@@ -979,6 +1042,61 @@ bool sig_chain::OclTaskPlan::createClFFTPhasePlan(cl_context & context, cl_comma
 }
 
 
+bool sig_chain::OclTaskPlan::createClFFTFullRangePlan(cl_context & context, cl_command_queue & queue)
+{
+#ifndef _NCLFFT
+	try
+	{
+		// Transform across the A-lines: one transform per spectrum sample, as long as the
+		// number of A-lines. The buffers stay row major as [A-line][spectrum sample], so the
+		// elements of a transform are a whole line apart and the transforms are adjacent.
+		size_t lateralSize = d_ptr->inputLinesNum;
+		size_t batchSize = d_ptr->inputLineSize;
+
+		clfftDim fftDim = CLFFT_1D;
+		size_t lengths[1] = { lateralSize };
+
+		size_t strides[4] = { batchSize, 1, 1, 1 };
+		size_t distance = 1;
+
+		// Forward direction, from the real spectra with a zero imaginary part.
+		OPENCL_V_THROW(clfftCreateDefaultPlan(&getImpl().clfftPlanLateralFwd, context, fftDim, lengths), "clfftCreateDefaultPlan failed");
+
+		OPENCL_V_THROW(clfftSetResultLocation(getImpl().clfftPlanLateralFwd, CLFFT_OUTOFPLACE), "clfftSetResultLocation failed");
+		OPENCL_V_THROW(clfftSetLayout(getImpl().clfftPlanLateralFwd, CLFFT_COMPLEX_PLANAR, CLFFT_COMPLEX_PLANAR), "clfftSetLayout failed");
+		OPENCL_V_THROW(clfftSetPlanBatchSize(getImpl().clfftPlanLateralFwd, batchSize), "clfftSetPlanBatchSize failed");
+		OPENCL_V_THROW(clfftSetPlanPrecision(getImpl().clfftPlanLateralFwd, CLFFT_SINGLE), "clfftSetPlanPrecision failed");
+
+		OPENCL_V_THROW(clfftSetPlanInStride(getImpl().clfftPlanLateralFwd, fftDim, strides), "clfftSetPlanInStride failed");
+		OPENCL_V_THROW(clfftSetPlanOutStride(getImpl().clfftPlanLateralFwd, fftDim, strides), "clfftSetPlanOutStride failed");
+		OPENCL_V_THROW(clfftSetPlanDistance(getImpl().clfftPlanLateralFwd, distance, distance), "clfftSetPlanDistance failed");
+
+		OPENCL_V_THROW(clfftBakePlan(getImpl().clfftPlanLateralFwd, 1, &queue, NULL, NULL), "clfftBakePlan failed");
+
+		// Backward direction, in place on the masked lateral spectra. The backward transform
+		// is scaled by the reciprocal of its length by default.
+		OPENCL_V_THROW(clfftCreateDefaultPlan(&getImpl().clfftPlanLateralBwd, context, fftDim, lengths), "clfftCreateDefaultPlan failed");
+
+		OPENCL_V_THROW(clfftSetResultLocation(getImpl().clfftPlanLateralBwd, CLFFT_INPLACE), "clfftSetResultLocation failed");
+		OPENCL_V_THROW(clfftSetLayout(getImpl().clfftPlanLateralBwd, CLFFT_COMPLEX_PLANAR, CLFFT_COMPLEX_PLANAR), "clfftSetLayout failed");
+		OPENCL_V_THROW(clfftSetPlanBatchSize(getImpl().clfftPlanLateralBwd, batchSize), "clfftSetPlanBatchSize failed");
+		OPENCL_V_THROW(clfftSetPlanPrecision(getImpl().clfftPlanLateralBwd, CLFFT_SINGLE), "clfftSetPlanPrecision failed");
+
+		OPENCL_V_THROW(clfftSetPlanInStride(getImpl().clfftPlanLateralBwd, fftDim, strides), "clfftSetPlanInStride failed");
+		OPENCL_V_THROW(clfftSetPlanOutStride(getImpl().clfftPlanLateralBwd, fftDim, strides), "clfftSetPlanOutStride failed");
+		OPENCL_V_THROW(clfftSetPlanDistance(getImpl().clfftPlanLateralBwd, distance, distance), "clfftSetPlanDistance failed");
+
+		OPENCL_V_THROW(clfftBakePlan(getImpl().clfftPlanLateralBwd, 1, &queue, NULL, NULL), "clfftBakePlan failed");
+	}
+	catch (std::exception) {
+		releaseClFFTFullRangePlan();
+		return false;
+	}
+#endif
+	return true;
+}
+
+
 void sig_chain::OclTaskPlan::releaseInputOutputBuffers(void)
 {
 #ifndef _NCLFFT
@@ -1102,6 +1220,26 @@ void sig_chain::OclTaskPlan::releaseClFFTPhasePlan(void)
 		if (getImpl().clfftPlanBwd > 0) {
 			OPENCL_V_THROW(clfftDestroyPlan(&getImpl().clfftPlanBwd), "clfftDestroyPlan failed");
 			getImpl().clfftPlanBwd = 0;
+		}
+	}
+	catch (std::exception) {
+	}
+	return;
+#endif
+}
+
+
+void sig_chain::OclTaskPlan::releaseClFFTFullRangePlan(void)
+{
+#ifndef _NCLFFT
+	try {
+		if (getImpl().clfftPlanLateralFwd > 0) {
+			OPENCL_V_THROW(clfftDestroyPlan(&getImpl().clfftPlanLateralFwd), "clfftDestroyPlan failed");
+			getImpl().clfftPlanLateralFwd = 0;
+		}
+		if (getImpl().clfftPlanLateralBwd > 0) {
+			OPENCL_V_THROW(clfftDestroyPlan(&getImpl().clfftPlanLateralBwd), "clfftDestroyPlan failed");
+			getImpl().clfftPlanLateralBwd = 0;
 		}
 	}
 	catch (std::exception) {

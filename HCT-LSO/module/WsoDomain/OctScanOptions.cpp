@@ -26,6 +26,10 @@ struct OctScanOptions::OctScanOptionsImpl
 	float retinaPatternRangeOffsetX[3];
 	float retinaPatternRangeOffsetY[3];
 
+	// Written from the GUI thread and read by the scan start-up; guarded since it is a struct.
+	mutable std::mutex fullRangeMutex;
+	OctFullRangeParam fullRangeParam;
+
 	OctScanOptionsImpl()
 	{
 		for (int i = 0; i < 3; i++) {
@@ -151,6 +155,22 @@ void wso_domain::OctScanOptions::setRetinaPatternRangeOffset(int speed, float x_
 {
 	impl().retinaPatternRangeOffsetX[speed] = x_offset;
 	impl().retinaPatternRangeOffsetY[speed] = y_offset;
+}
+
+OctFullRangeParam wso_domain::OctScanOptions::getFullRangeParam(void) const
+{
+	std::lock_guard<std::mutex> lock(impl().fullRangeMutex);
+	return impl().fullRangeParam;
+}
+
+bool wso_domain::OctScanOptions::setFullRangeParam(const OctFullRangeParam& param)
+{
+	if (!param.isValid()) {
+		return false;
+	}
+	std::lock_guard<std::mutex> lock(impl().fullRangeMutex);
+	impl().fullRangeParam = param;
+	return true;
 }
 
 OctScanOptions::OctScanOptionsImpl& wso_domain::OctScanOptions::impl(void) const

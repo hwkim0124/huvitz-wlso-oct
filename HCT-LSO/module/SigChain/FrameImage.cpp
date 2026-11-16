@@ -13,6 +13,8 @@ struct FrameImage::FrameImageImpl
 {
 	unique_ptr<unsigned char[]> buffer;
 	unique_ptr<float[]> intensity;
+	size_t bufferSize = FRAME_IMAGE_BUFFER_SIZE;
+	size_t intensitySize = FFT_OUTPUT_BUFFER_SIZE;
 
 	uint8_t lateralBuffer[FRAME_DATA_LINES_MAX];
 
@@ -33,7 +35,7 @@ struct FrameImage::FrameImageImpl
 					buffer(nullptr), intensity(nullptr), 
 					lateralBuffer{0}
 	{
-		buffer = make_unique<unsigned char[]>(FRAME_IMAGE_BUFFER_SIZE);
+		buffer = make_unique<unsigned char[]>(bufferSize);
 		// intensity = nullptr;
 	}
 };
@@ -63,9 +65,27 @@ unsigned char * sig_chain::FrameImage::getBuffer(void) const
 float * sig_chain::FrameImage::getIntensity(void) const
 {
 	if (getImpl().intensity == nullptr) {
-		getImpl().intensity = make_unique<float[]>(FFT_OUTPUT_BUFFER_SIZE);
+		getImpl().intensity = make_unique<float[]>(getImpl().intensitySize);
 	}
 	return &getImpl().intensity[0];
+}
+
+
+void sig_chain::FrameImage::setCapacity(size_t imageSize, size_t intensitySize)
+{
+	if (imageSize != getImpl().bufferSize) {
+		getImpl().buffer = make_unique<unsigned char[]>(imageSize);
+		getImpl().bufferSize = imageSize;
+	}
+
+	// The intensity buffer is only allocated once it has been asked for.
+	if (intensitySize != getImpl().intensitySize) {
+		getImpl().intensitySize = intensitySize;
+		if (getImpl().intensity != nullptr) {
+			getImpl().intensity = make_unique<float[]>(intensitySize);
+		}
+	}
+	return;
 }
 
 

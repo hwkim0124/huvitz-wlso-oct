@@ -36,9 +36,13 @@ struct Galvanometer::GalvanometerImpl
 
 	vector<TraceProfile> traceProfiles;
 
+	// Set while the board runs the reference phase ramp, so that scans which never use
+	// full range send no phase commands at all.
+	std::atomic<bool> phaseControlEnabled;
+
 	GalvanometerImpl() : board(nullptr), initiated(false),
 		scaleX(1.0), scaleY(1.0), offsetX(0), offsetY(0),
-		timeStep(0.0f), timeDelay(0)
+		timeStep(0.0f), timeDelay(0), phaseControlEnabled(false)
 	{
 		traceProfiles = vector<TraceProfile>(TRAJECT_NUMBER_OF_PROFILES);
 
@@ -464,6 +468,104 @@ bool wso_device::Galvanometer::setTracePositionsY(int traceId, short* posYs, sho
 	}
 	LogD() << "Galvanometer::setTracePositionsY() failed!";
 	return false;
+}
+
+
+bool wso_device::Galvanometer::setPhaseControl(int traceId, const OctFullRangeParam& param)
+{
+	if (!isInitiated()) {
+		return false;
+	}
+
+	TraceProfile* profile = getTraceProfile(traceId);
+	if (profile == nullptr || !param.isValid()) {
+		LogD() << "Galvanometer::setPhaseControl() invalid arguments!, traceId: " << traceId;
+		return false;
+	}
+
+	// The board steps the phase DAC once per position sample over the whole trajectory,
+	// fore paddings included, so the ramp is described in sample indices of the trace
+	// rather than in camera triggers.
+	TrajectoryProfileParam traj;
+	profile->getTrajectoryProfileParam(traj);
+
+	const int interval = (traj.cam_trig_itv > 0 ? traj.cam_trig_itv : 1);
+	const int endIndex = traj.sample_size - 1;
+
+	// The ramp runs a few samples past the last camera trigger, but never past the end of
+	// the trajectory: a short line has fewer post padding samples than that margin.
+	const int lastTrigger = traj.trig_st_index + (traj.cam_trig_cnt - 1) * interval;
+	const int rampEnd = lastTrigger + OCT_FULL_RANGE_PHASE_INC_COUNT_MARGIN;
+	const int incCount = (rampEnd < endIndex ? rampEnd : endIndex);
+	const int lastPhase = param.phaseBase + param.phaseInc * incCount;
+
+	if (traj.cam_trig_cnt <= 0 || endIndex <= 1 || incCount > UINT16_MAX) {
+		LogD() << "Galvanometer::setPhaseControl() invalid trace profile!, traceId: " << traceId << ", samples: " << traj.sample_size << ", triggers: " << traj.cam_trig_cnt;
+		return false;
+	}
+	if (lastPhase < INT16_MIN || lastPhase > INT16_MAX) {
+		LogD() << "Galvanometer::setPhaseControl() phase ramp out of DAC range!, base: " << param.phaseBase << ", inc: " << param.phaseInc << ", count: " << incCount << ", last: " << lastPhase;
+		return false;
+	}
+
+	HbsOctPhaseControl ctrl{};
+	ctrl.Base_phase = static_cast<std::int16_t>(param.phaseBase);
+	ctrl.Phase_inc = static_cast<std::int16_t>(param.phaseInc);
+	ctrl.start_phase_trig_index = 1;
+	ctrl.end_phase_trig_index = static_cast<std::uint16_t>(endIndex);
+	ctrl.trig_delay_cnt = static_cast<std::uint32_t>(param.trigDelayCount);
+	ctrl.end_phase_wait_time_us = static_cast<std::uint32_t>(param.endPhaseWaitTimeUs);
+	ctrl.phase_origin_slew_time_us = static_cast<std::uint16_t>(param.phaseOriginSlewTimeUs);
+	ctrl.phase_inc_count = static_cast<std::uint16_t>(incCount);
+
+	MainBoard* board = getMainBoard();
+	UsbComm& usbComm = board->getUsbComm();
+
+	if (auto* hbs = board->getHbsDataProfile(); !usbComm.writeOctPhaseControl(&ctrl, hbs->getHbsTableDescriptor())) {
+		LogD() << "Galvanometer::setPhaseControl() failed to write phase control table!";
+		return false;
+	}
+	if (!usbComm.OctReferencePhaseControl(1)) {
+		LogD() << "Galvanometer::setPhaseControl() failed to enable phase control!";
+		return false;
+	}
+
+	impl().phaseControlEnabled = true;
+	LogD() << "Phase control enabled, trace-id: " << traceId << ", base: " << param.phaseBase << ", inc: " << param.phaseInc
+		<< ", inc-count: " << incCount << ", last-trigger: " << lastTrigger << ", end-index: " << endIndex << ", last-phase: " << lastPhase
+		<< ", end-wait: " << param.endPhaseWaitTimeUs << ", slew: " << param.phaseOriginSlewTimeUs;
+	return true;
+}
+
+
+bool wso_device::Galvanometer::clearPhaseControl(void)
+{
+	if (!isInitiated()) {
+		return false;
+	}
+	if (!isPhaseControlEnabled()) {
+		return true;
+	}
+
+	// Stop the ramp first, then park the phase galvo at its neutral code.
+	UsbComm& usbComm = getMainBoard()->getUsbComm();
+	bool res = usbComm.OctReferencePhaseControl(0);
+	res = usbComm.OctSetReferencePhase(0) && res;
+
+	impl().phaseControlEnabled = false;
+	if (!res) {
+		LogD() << "Galvanometer::clearPhaseControl() failed!";
+	}
+	else {
+		LogD() << "Phase control disabled";
+	}
+	return res;
+}
+
+
+bool wso_device::Galvanometer::isPhaseControlEnabled(void) const
+{
+	return impl().phaseControlEnabled;
 }
 
 

@@ -24,6 +24,9 @@ struct OclSystem2::OclSystem2Impl
 
 	OclContext context;
 
+	// Whether the existing task plans were built for full range processing.
+	bool fullRangePlans = false;
+
 
 	OclSystem2Impl() : initiated(false)
 	{
@@ -93,6 +96,14 @@ bool sig_chain::OclSystem2::initializeTransform(void)
 		}
 	}
 
+	// A task plan is looked up by its data layout only, while full range changes its image
+	// layout and FFT plans, so plans built for the other mode can not be reused.
+	bool fullRange = ChainSetup::useFullRangeDomain();
+	if (getImpl().fullRangePlans != fullRange) {
+		getContext().releaseTaskPlans();
+		getImpl().fullRangePlans = fullRange;
+	}
+
 	if (!prepareDefaultParameters()) {
 		return false;
 	}
@@ -144,11 +155,16 @@ bool sig_chain::OclSystem2::prepareTransformForPreview(int dataWidth, int dataHe
 	}
 
 	// Apply transform configurations.
+	// The zero padded FFT only keeps the shallow positive depths, so it is left out of a
+	// full range plan.
+	bool fullRange = ChainSetup::useFullRangeDomain();
+
 	plan->useSpectrumDataCallback(true, ChainSetup::useSpectrumDataCallback());
 	plan->useBackgroundSubtraction(true, ChainSetup::useBackgroundSubtraction());
 	plan->useResampleDataCallback(true, ChainSetup::useResampledDataCallback());
 	plan->useDispersionCompensation(true, ChainSetup::useDispersionCompensation());
-	plan->useZeroPadding(true, ChainSetup::useFFTZeroPadding(), ChainSetup::getMultipleOfZeroPaddingSize());
+	plan->useZeroPadding(true, ChainSetup::useFFTZeroPadding() && !fullRange, ChainSetup::getMultipleOfZeroPaddingSize());
+	plan->useFullRangeDomain(true, fullRange);
 	plan->useFixedNoiseReduction(true, ChainSetup::useFixedNoiseReduction());
 	plan->useIntensityDataCallback(true, ChainSetup::useIntensityDataCallback());
 	plan->useAdaptiveGrayscale(true, ChainSetup::useAdaptiveGrayscale());
@@ -184,6 +200,9 @@ bool sig_chain::OclSystem2::prepareTransformForEnface(int dataWidth, int dataHei
 	plan->useResampleDataCallback(true, false);
 	plan->useDispersionCompensation(true, ChainSetup::useDispersionCompensation());
 	plan->useZeroPadding(true, false);
+	// The enface frames are always processed conventionally: the phase ramp on the board
+	// is laid out over the B-scan line, not over the enface raster lines.
+	plan->useFullRangeDomain(true, false);
 	plan->useFixedNoiseReduction(true, ChainSetup::useFixedNoiseReduction());
 	plan->useIntensityDataCallback(true, false);
 	plan->useAdaptiveGrayscale(true, false);
@@ -219,6 +238,7 @@ bool sig_chain::OclSystem2::prepareTransformForMeasure(int dataWidth, int dataHe
 	plan->useResampleDataCallback(true, false);
 	plan->useDispersionCompensation(true, ChainSetup::useDispersionCompensation());
 	plan->useZeroPadding(true, false);
+	plan->useFullRangeDomain(true, ChainSetup::useFullRangeDomain());
 	plan->useFixedNoiseReduction(true, ChainSetup::useFixedNoiseReduction());
 	plan->useIntensityDataCallback(true, false);
 	plan->useAdaptiveGrayscale(true, ChainSetup::useAdaptiveGrayscale());

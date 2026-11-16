@@ -81,6 +81,9 @@ namespace sig_chain
 		static bool useACALinePatternPreview(bool isSet = false, bool flag = false);
 		static bool useFFTWindowing(bool isSet = false, bool flag = false);
 		static bool useKLinearResampling(bool isSet = false, bool flag = false);
+		// Full range (complex-conjugate resolved) processing for the preview and measure B-scans.
+		// Set per scan protocol, together with the reference phase ramp on the board.
+		static bool useFullRangeDomain(bool isSet = false, bool flag = false);
 
 		static bool useSpectrumDataCallback(bool isset = false, bool flag = false);
 		static bool useResampledDataCallback(bool isset = false, bool flag = false);

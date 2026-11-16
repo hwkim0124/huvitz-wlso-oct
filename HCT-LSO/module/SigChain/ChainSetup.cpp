@@ -44,6 +44,7 @@ struct ChainSetup::ChainSetupImpl
 	bool useACALinePatternPreview;
 	bool useFFTWindowing;
 	bool useKLinearResampling;
+	bool useFullRangeDomain = false;
 
 	bool useSpectrumDataCallback;
 	bool useResampledDataCallback;
@@ -477,8 +478,10 @@ float * sig_chain::ChainSetup::getResampleFrameData(void)
 
 float * sig_chain::ChainSetup::getMagnitudeFrameData(void)
 {
+	// Holds the transposed FFT magnitudes read back for the intensity callback: one padded
+	// line per depth bin, and a full range B-scan has as many depth bins as spectrum samples.
 	if (getImpl().magnitudeFrameData.empty()) {
-		getImpl().magnitudeFrameData = vector<float>(FRAME_DATA_BUFFER_SIZE, 0.0f);
+		getImpl().magnitudeFrameData = vector<float>(FFT_MAGNITUDE_BUFFER_SIZE, 0.0f);
 	}
 	return &getImpl().magnitudeFrameData[0];
 }
@@ -596,6 +599,14 @@ bool sig_chain::ChainSetup::useKLinearResampling(bool isSet, bool flag)
 		getImpl().useKLinearResampling = flag;
 	}
 	return getImpl().useKLinearResampling;
+}
+
+bool sig_chain::ChainSetup::useFullRangeDomain(bool isSet, bool flag)
+{
+	if (isSet) {
+		getImpl().useFullRangeDomain = flag;
+	}
+	return getImpl().useFullRangeDomain;
 }
 
 bool sig_chain::ChainSetup::useSpectrumDataCallback(bool isset, bool flag)

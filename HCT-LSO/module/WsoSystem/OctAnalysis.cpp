@@ -130,6 +130,13 @@ bool wso_system::OctAnalysis::exportProtocolResult(const std::wstring& dir_path,
 bool wso_system::OctAnalysis::performSegmentation(oct_report::ProtocolSource* data)
 {
 	if (data != nullptr) {
+		// A full range B-scan covers both depth halves with the zero delay on its center row,
+		// while the layer segmentation is built for the conventional single-sided image.
+		if (data->getScanProtocol().isFullRangeDomain) {
+			LogD() << "Segmentation is not available for a full range scan result";
+			return false;
+		}
+
 		StopWatch::start();
 		auto desc = data->getScanPattern();
 		if (desc.isCorneaScan()) {

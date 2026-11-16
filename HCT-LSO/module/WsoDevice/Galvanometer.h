@@ -65,6 +65,12 @@ namespace wso_device
 		bool setTracePositionsX(int traceId, short* posXs, short count);
 		bool setTracePositionsY(int traceId, short* posYs, short count);
 
+		// Reference phase ramp for full range scanning. The ramp indices are derived from the
+		// trace profile, so the trace must have been set with setTraceProfile() beforehand.
+		bool setPhaseControl(int traceId, const OctFullRangeParam& param);
+		bool clearPhaseControl(void);
+		bool isPhaseControlEnabled(void) const;
+
 		bool buildTracePositionsX(EyeSide eyeSide, short forePadd, short numPoints, short postPadd, float start, float close, bool cornea, bool circle, short* buffer, short* count);
 		bool buildTracePositionsY(EyeSide eyeSide, short forePadd, short numPoints, short postPadd, float start, float close, bool cornea, bool circle, short* buffer, short* count);
 

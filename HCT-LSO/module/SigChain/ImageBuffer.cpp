@@ -710,7 +710,31 @@ void sig_chain::ImageBuffer::startCallbackThread(bool reset)
 	if (reset || isStopped()) {
 		stopRunning();
 		clearImageBuffers();
+		resizeImageBuffers();
 		startRunning();
+	}
+	return;
+}
+
+
+void sig_chain::ImageBuffer::resizeImageBuffers(void)
+{
+	if (isStopped() != true) {
+		return;
+	}
+
+	// A full range B-scan images every depth bin, so it does not fit the default image and
+	// intensity buffers. They are sized for the scan about to start and shrink back with the
+	// next conventional one. The enface frames are always processed conventionally.
+	const bool fullRange = ChainSetup::useFullRangeDomain();
+	const size_t imageSize = (fullRange ? FFT_IMAGE_BUFFER_SIZE_FOR_FULL_RANGE : FRAME_IMAGE_BUFFER_SIZE);
+	const size_t intensitySize = (fullRange ? FFT_IMAGE_BUFFER_SIZE_FOR_FULL_RANGE : FFT_OUTPUT_BUFFER_SIZE);
+
+	for (auto& image : getImpl().previews) {
+		image.setCapacity(imageSize, intensitySize);
+	}
+	for (auto& image : getImpl().measures) {
+		image.setCapacity(imageSize, intensitySize);
 	}
 	return;
 }

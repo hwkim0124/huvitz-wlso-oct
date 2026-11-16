@@ -32,6 +32,11 @@ namespace sig_chain
 		uint8_t* getLateralBuffer(void) const;
 		float* getIntensity(void) const;
 
+		// Sets how many pixels the image buffer and how many samples the intensity buffer
+		// hold, reallocating them when that changes. Not to be called while the image is in
+		// use by the processing or callback threads; the contents are not preserved.
+		void setCapacity(size_t imageSize, size_t intensitySize);
+
 		void setDimension(int width, int height);
 		int getWidth(void) const;
 		int getHeight(void) const;

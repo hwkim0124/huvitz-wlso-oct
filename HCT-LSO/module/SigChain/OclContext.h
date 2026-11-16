@@ -55,6 +55,11 @@ namespace sig_chain
 		static bool performBackgroundSubtraction(OclTaskPlan* plan, const std::uint16_t* input);
 		static bool performResamplingInput(OclTaskPlan* plan);
 		static bool performPhaseShiftTransform(OclTaskPlan* plan);
+		// Turns the resampled real spectra into the complex spectra the depth FFT consumes:
+		// the full range lateral sideband on a full range plan, the per A-line analytic
+		// signal with dispersion correction otherwise.
+		static bool performComplexSpectrumTransform(OclTaskPlan* plan);
+		static bool performFullRangeTransform(OclTaskPlan* plan);
 		static bool performZeroPaddingInput(OclTaskPlan* plan);
 		static bool performInverseTransform(OclTaskPlan* plan);
 		static bool performZeroPaddingOutput(OclTaskPlan* plan);
@@ -77,6 +82,7 @@ namespace sig_chain
 		static bool createAdaptiveGrayScaleKernel(void);
 		static bool createIntensityAmplitudeKernel(void);
 		static bool createAxialProjectionKernel(void);
+		static bool createFullRangeKernel(void);
 
 		static void releaseCommandQueue(void);
 		static void releaseBackgroundSubtractionKernel(void);
@@ -87,6 +93,7 @@ namespace sig_chain
 		static void releaseAdaptiveGrayScaleKernel(void);
 		static void releaseIntensityAmplitudeKernel(void);
 		static void releaseAxialProjectionKernel(void);
+		static void releaseFullRangeKernel(void);
 
 	private:
 		struct OclContextImpl;

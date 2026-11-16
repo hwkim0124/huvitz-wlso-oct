@@ -101,6 +101,15 @@ namespace sig_chain
 	constexpr int FFT_IMAGE_HEIGHT_MAX = FFT_IMAGE_ROW_SIZE_FOR_MEASURE;
 	constexpr int FFT_IMAGE_BUFFER_SIZE = (FFT_IMAGE_WIDTH_MAX * FFT_IMAGE_HEIGHT_MAX);
 
+	// Full range B-scan: every depth bin of the complex FFT is imaged, negative depths on top
+	// and the zero delay on the center row, so the image is as tall as the spectrum is long.
+	constexpr int FFT_IMAGE_ROW_SIZE_FOR_FULL_RANGE = FRAME_DATA_LINE_SIZE;
+	constexpr int FFT_IMAGE_ROW_OFFSET_FOR_FULL_RANGE = 0;
+	constexpr int FFT_IMAGE_BUFFER_SIZE_FOR_FULL_RANGE = (FFT_IMAGE_WIDTH_MAX * FFT_IMAGE_ROW_SIZE_FOR_FULL_RANGE);
+
+	// Transposed FFT output read back to the host: one padded line per depth bin.
+	constexpr int FFT_MAGNITUDE_BUFFER_SIZE = (FRAME_DATA_LINE_SIZE * FFT_OUTPUT_LINES_NUM);
+
 
 	// Magnitude Histogram for adaptive gray scaling. 
 	///////////////////////////////////////////////////////////////////////////////////////////

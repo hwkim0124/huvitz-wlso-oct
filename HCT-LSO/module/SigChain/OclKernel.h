@@ -29,5 +29,6 @@ namespace sig_chain
 		static const char* getAdaptiveGrayScaleSource2(void);
 		static const char* getIntensityAmplitudeSource(void);
 		static const char* getAxialProjectionSource(void);
+		static const char* getFullRangeSource(void);
 	};
 }

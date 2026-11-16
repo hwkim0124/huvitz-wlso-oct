@@ -743,6 +743,12 @@ bool oct_scan::ScanGrab::processGrabMeasure(void)
 			return false;
 		}
 
+		// The measure trace may run at another time step than the preview, which moves its
+		// trigger start index, so the full range phase ramp is laid out again over it.
+		if (!ScanFunc::applyFullRangePhaseControl(*trace)) {
+			return false;
+		}
+
 //	retrace:
 		int index = getIndexOfMeasureImageNext(false);
 		getUsb3Grabber()->setStartMeasureBuffer(buffStart);

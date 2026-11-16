@@ -1,6 +1,7 @@
 #pragma once
 
 #include "WsoDomain2.h"
+#include "OctScanStructs.h"
 
 namespace wso_domain
 {
@@ -34,6 +35,10 @@ namespace wso_domain
 		void setRetinaPatternRangeScale(int speed, int index, float x_scale, float y_scale);
 		void setCorneaPatternRangeOffset(int index, float x_offset, float y_offset);
 		void setRetinaPatternRangeOffset(int index, float x_offset, float y_offset);
+
+		// Full range scanning parameters, applied when a scan protocol starts.
+		OctFullRangeParam getFullRangeParam(void) const;
+		bool setFullRangeParam(const OctFullRangeParam& param);
 
 	private:
 		struct OctScanOptionsImpl;

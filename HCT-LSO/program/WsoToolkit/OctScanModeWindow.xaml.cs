@@ -268,7 +268,18 @@ namespace WsoToolkit
                         _openedExamPath = path;
                         octScanImagePreview.SetAsAnalysisMode();
                         octScanEnfacePreivew.SetAsAnalysisMode();
-                        btnAnalyzeResult.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+
+                        // A full range result is shown as imported; the analysis is not available for it.
+                        var param = new WsoOctScan.OctProtocolInitParam();
+                        if (OctAnalysis.GetResultProtocolInitParam(_sourceId, ref param) && param.isFullRangeDomain)
+                        {
+                            ReflectFullRangeResultImported(param);
+                        }
+                        else
+                        {
+                            _isResultSourced = false;
+                            btnAnalyzeResult.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                        }
                     }
                     else
                     {
@@ -282,7 +293,21 @@ namespace WsoToolkit
         private void BtnExportResult_Click(object sender, RoutedEventArgs e)
         {
             Mouse.OverrideCursor = Cursors.Wait;
-            if (_isResultAnalyzed)
+
+            // A full range result is exported without analysis, straight from its data source.
+            bool isSourceReady = _isResultAnalyzed;
+            if (!isSourceReady && IsFullRangeResult())
+            {
+                isSourceReady = PrepareFullRangeResultSource();
+                if (!isSourceReady)
+                {
+                    ShowError("Failed to process protocol result!");
+                    Mouse.OverrideCursor = null;
+                    return;
+                }
+            }
+
+            if (isSourceReady)
             {
                 string out_path;
                 if (OctAnalysis.ExportProtocolResult(_sourceId, _exportRootPath, out out_path))
@@ -424,6 +449,11 @@ namespace WsoToolkit
         private void CheckEnfaceEnable_Click(object sender, RoutedEventArgs e)
         {
             ReflectEnfaceControlsEnabled();
+        }
+
+        private void CheckFullRangeDomain_Click(object sender, RoutedEventArgs e)
+        {
+            ReflectFullRangeControlsEnabled();
         }
 
         private void CheckEnfaceGrid_Click(object sender, RoutedEventArgs e)

@@ -54,6 +54,17 @@ namespace wso_domain
 	constexpr int OCT_DISPERSION_PHASE_SHIFT_COEFFS_SIZE = 3;
 
 
+	// Full Range Scanning (reference phase ramp and lateral sideband filter)
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////
+	constexpr int OCT_FULL_RANGE_PHASE_BASE = -32767;
+	constexpr int OCT_FULL_RANGE_PHASE_INC = 4;
+	constexpr int OCT_FULL_RANGE_PHASE_SLEW_US = 5000;
+	constexpr int OCT_FULL_RANGE_PHASE_INC_COUNT_MARGIN = 4;
+	constexpr float OCT_FULL_RANGE_LATERAL_CUTOFF = 3.125f;
+	constexpr float OCT_FULL_RANGE_LATERAL_CUTOFF_MAX = 50.0f;
+	constexpr int OCT_FULL_RANGE_LATERAL_CUTOFF_BINS_MIN = 2;
+
+
 	// Trigger Step by Scan speed. 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
 	constexpr float TRIGGER_TIME_STEP_AT_SLOWER_SPEED = 66.6f; // 78.0

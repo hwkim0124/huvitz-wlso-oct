@@ -165,6 +165,8 @@ bool wso_system::OctScanning::startScan(OctPreviewImageCaptured clb_preview, Oct
 	}
 
 	if (!beginScanProtocol()) {
+		// A full range phase ramp started on the way is not left running.
+		ScanFunc::clearFullRangePhaseControl();
 		return false;
 	}
 	return true;
@@ -187,6 +189,10 @@ bool wso_system::OctScanning::closeScan(bool measure, OctScanProtocolCompleted c
 	}
 
 	closePreviewScan(measure);
+
+	// Grabbing has finished by now, the measure frames included, so the reference phase
+	// ramp of a full range scan can be stopped.
+	ScanFunc::clearFullRangePhaseControl();
 	setScanDevicesReleased();
 
 	// if (!measure) {
@@ -365,6 +371,13 @@ bool wso_system::OctScanning::beginScanProtocol(void)
 	auto& measure = proto->getMeasure();
 	ScanFunc::prepareChainSetup(measure, false);
 
+	// Full range scanning pairs the reference phase ramp on the board with the lateral
+	// sideband filter of the signal chain, so both follow this one flag. Angio patterns
+	// keep the conventional chain, as their processing assumes its image layout.
+	bool fullRange = proto->isFullRangeDomain && !measure.isAngioPattern();
+	proto->isFullRangeDomain = fullRange;
+	ChainSetup::useFullRangeDomain(true, fullRange);
+
 	// Additinonally, angio setup initialized here. 
 	if (ChainSetup::isAngioPattern() || ChainSetup::isScanAmplitudesStored()) {
 		AngioSetup::setAngiogramLayout(
@@ -387,6 +400,19 @@ bool wso_system::OctScanning::beginScanProtocol(void)
 	if (!ScanFunc::uploadPatternProfiles(*plan, false)) {
 		return false;
 	}
+
+	// The phase ramp is laid out over the trace profile just uploaded. A scan that does not
+	// run in full range stops a ramp left over from the previous one.
+	if (fullRange) {
+		if (!ScanFunc::applyFullRangePhaseControl(*plan)) {
+			LogE() << "Failed to start full range phase control!";
+			return false;
+		}
+	}
+	else {
+		ScanFunc::clearFullRangePhaseControl();
+	}
+
 	if (!ScanFunc::updatePatternBuffers(*plan, false, true)) {
 		return false;
 	}

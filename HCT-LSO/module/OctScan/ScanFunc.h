@@ -49,6 +49,13 @@ namespace oct_scan
 		static bool uploadEnfaceProfiles(const oct_pattern::PatternPlan& pattern);
 		static bool uploadTraceProfile(oct_pattern::LineTrace& line);
 
+		// Reference phase ramp for full range scanning. Both apply functions do nothing unless
+		// the chain setup runs in full range, and must follow the upload of the trace profile
+		// they refer to since the ramp is laid out over that profile.
+		static bool applyFullRangePhaseControl(const oct_pattern::PatternPlan& pattern);
+		static bool applyFullRangePhaseControl(oct_pattern::LineTrace& line);
+		static bool clearFullRangePhaseControl(void);
+
 		static bool updatePatternBuffers(const oct_pattern::PatternPlan& pattern, bool measure, bool reset=true);
 		static bool updatePreviewBuffers(const oct_pattern::PatternPlan& pattern);
 		static bool updateMeasureBuffers(const oct_pattern::PatternPlan& pattern);
