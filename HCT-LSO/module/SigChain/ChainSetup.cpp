@@ -467,23 +467,25 @@ void sig_chain::ChainSetup::setBackgroundSpectrum(const unsigned short * data)
 }
 
 
-float * sig_chain::ChainSetup::getResampleFrameData(void)
+float * sig_chain::ChainSetup::getResampleFrameData(size_t size)
 {
-	if (getImpl().resampleFrameData.empty()) {
-		getImpl().resampleFrameData = vector<float>(FRAME_DATA_BUFFER_SIZE, 0.0f);
+	// Holds the resampled spectra read back for the resampled data callback: one line per
+	// A-line of the frame.
+	if (getImpl().resampleFrameData.size() < size) {
+		getImpl().resampleFrameData.resize(size, 0.0f);
 	}
-	return &getImpl().resampleFrameData[0];
+	return getImpl().resampleFrameData.data();
 }
 
 
-float * sig_chain::ChainSetup::getMagnitudeFrameData(void)
+float * sig_chain::ChainSetup::getMagnitudeFrameData(size_t size)
 {
 	// Holds the transposed FFT magnitudes read back for the intensity callback: one padded
 	// line per depth bin, and a full range B-scan has as many depth bins as spectrum samples.
-	if (getImpl().magnitudeFrameData.empty()) {
-		getImpl().magnitudeFrameData = vector<float>(FFT_MAGNITUDE_BUFFER_SIZE, 0.0f);
+	if (getImpl().magnitudeFrameData.size() < size) {
+		getImpl().magnitudeFrameData.resize(size, 0.0f);
 	}
-	return &getImpl().magnitudeFrameData[0];
+	return getImpl().magnitudeFrameData.data();
 }
 
 double* sig_chain::ChainSetup::getDetectorWavelengths(void)

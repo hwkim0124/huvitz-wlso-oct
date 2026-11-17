@@ -31,6 +31,10 @@ struct ImageBuffer::ImageBufferImpl
 	int measureHeight;
 	int measureDepth;
 
+	int previewLines = FRAME_IMAGE_LINES_MIN;
+	int measureLines = FRAME_IMAGE_LINES_MIN;
+	int enfaceLines = FRAME_IMAGE_LINES_MIN;
+
 	atomic<int> outputType;
 
 	mutex mutexBuffer;
@@ -705,6 +709,15 @@ void sig_chain::ImageBuffer::setMeasureResultLayout(int width, int height)
 }
 
 
+void sig_chain::ImageBuffer::setImageLines(int previewLines, int measureLines, int enfaceLines)
+{
+	getImpl().previewLines = previewLines;
+	getImpl().measureLines = measureLines;
+	getImpl().enfaceLines = enfaceLines;
+	return;
+}
+
+
 void sig_chain::ImageBuffer::startCallbackThread(bool reset)
 {
 	if (reset || isStopped()) {
@@ -723,18 +736,29 @@ void sig_chain::ImageBuffer::resizeImageBuffers(void)
 		return;
 	}
 
-	// A full range B-scan images every depth bin, so it does not fit the default image and
-	// intensity buffers. They are sized for the scan about to start and shrink back with the
-	// next conventional one. The enface frames are always processed conventionally.
+	// An image has a column per A-line of its frame and, on a full range scan, a row per
+	// depth bin, so the buffers are sized for the scan about to start. They grow with a wider
+	// or a full range scan and shrink back with the next one that is neither. The enface
+	// frames are always processed conventionally.
 	const bool fullRange = ChainSetup::useFullRangeDomain();
-	const size_t imageSize = (fullRange ? FFT_IMAGE_BUFFER_SIZE_FOR_FULL_RANGE : FRAME_IMAGE_BUFFER_SIZE);
-	const size_t intensitySize = (fullRange ? FFT_IMAGE_BUFFER_SIZE_FOR_FULL_RANGE : FFT_OUTPUT_BUFFER_SIZE);
+	const size_t imageRows = (fullRange ? FFT_IMAGE_ROW_SIZE_FOR_FULL_RANGE : FFT_IMAGE_HEIGHT_MAX);
+	const size_t intensityRows = (fullRange ? FFT_IMAGE_ROW_SIZE_FOR_FULL_RANGE : FFT_OUTPUT_LINES_NUM);
+
+	const auto columns = [](int lines) {
+		return (size_t)(lines > FRAME_IMAGE_LINES_MIN ? lines : FRAME_IMAGE_LINES_MIN);
+	};
+	const size_t previewColumns = columns(getImpl().previewLines);
+	const size_t measureColumns = columns(getImpl().measureLines);
+	const size_t enfaceColumns = columns(getImpl().enfaceLines);
 
 	for (auto& image : getImpl().previews) {
-		image.setCapacity(imageSize, intensitySize);
+		image.setCapacity(previewColumns * imageRows, previewColumns * intensityRows);
 	}
 	for (auto& image : getImpl().measures) {
-		image.setCapacity(imageSize, intensitySize);
+		image.setCapacity(measureColumns * imageRows, measureColumns * intensityRows);
+	}
+	for (auto& image : getImpl().enfaces) {
+		image.setCapacity(enfaceColumns * FFT_IMAGE_HEIGHT_MAX, enfaceColumns * FFT_OUTPUT_LINES_NUM);
 	}
 	return;
 }

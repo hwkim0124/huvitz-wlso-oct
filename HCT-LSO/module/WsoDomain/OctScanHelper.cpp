@@ -288,7 +288,7 @@ int wso_domain::OctScanHelper::getPatternAscanList(vector<int>& list, OctPattern
 		case OctPatternCode::FUNDUS_LINE:
 		case OctPatternCode::DISC_CIRCLE:
 		case OctPatternCode::CORNEA_LINE:
-			list = { 1024, 512 };
+			list = { 4096, 2048, 1024, 512 };
 			break;
 		case OctPatternCode::MACULAR_CROSS:
 		case OctPatternCode::MACULAR_RASTER:
@@ -386,7 +386,10 @@ int wso_domain::OctScanHelper::getPatternOverlapList(vector<int>& list, OctPatte
 		case OctPatternCode::CORNEA_POINT:
 		case OctPatternCode::CORNEA_LINE:
 		case OctPatternCode::CALIBRATION_POINT:
-			if (ascans > 512) {
+			if (ascans > 1024) {
+				list = { 1, 5, 10 };
+			}
+			else if (ascans > 512) {
 				list = { 1, 5, 10, 15 };
 			}
 			else {
@@ -436,12 +439,12 @@ int wso_domain::OctScanHelper::getPatternRangeList(vector<float>& xlist, vector<
 
 	switch (code) {
 		case OctPatternCode::MACULAR_LINE:
-			xlist = { 4.5f, 6.0f, 9.0f, 12.0f, 16.5f };
-			ylist = { 4.5f, 6.0f, 9.0f, 12.0f };
+			xlist = { 3.0f, 4.5f, 6.0f, 9.0f, 12.0f, 16.5f };
+			ylist = { 3.0f, 4.5f, 6.0f, 9.0f, 12.0f };
 			break;
 		case OctPatternCode::CORNEA_LINE:
-			xlist = { 4.5f, 6.0f, 8.0f, 9.0f, 12.0f, 16.5f };
-			ylist = { 4.5f, 6.0f, 8.0f, 9.0f, 12.0f };
+			xlist = { 3.0f, 4.5f, 6.0f, 8.0f, 9.0f, 12.0f, 16.5f };
+			ylist = { 3.0f, 4.5f, 6.0f, 8.0f, 9.0f, 12.0f };
 			break;
 		case OctPatternCode::FUNDUS_LINE:
 			xlist = { 9.0f, 13.0f };

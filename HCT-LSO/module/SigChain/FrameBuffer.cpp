@@ -385,6 +385,15 @@ void sig_chain::FrameBuffer::resetFrameBufferListToPreview(void)
 	int frameHeight = getFrameBufferHeight(true);
 	int frameDepth = getFrameBufferDepth(true);
 
+	// A preview that scans with the A-scan count of the pattern has frames of thousands of
+	// lines. The ring keeps fewer of those, as its usual depth would take gigabytes.
+	if (frameHeight > PATTERN_PREVIEW_ASCAN_POINTS && frameDepth > FRAME_DATA_PREVIEW_DEPTH_FOR_TALL_FRAMES) {
+		frameDepth = FRAME_DATA_PREVIEW_DEPTH_FOR_TALL_FRAMES;
+		if (frameDepth < getImpl().previewDataDepth) {
+			frameDepth = getImpl().previewDataDepth;
+		}
+	}
+
 	if (frameWidth != getImpl().frameWidth 
 		|| frameHeight != getImpl().frameHeight
 		|| frameDepth != getImpl().frameDepth)
@@ -601,6 +610,8 @@ FrameBuffer::FrameBufferImpl & sig_chain::FrameBuffer::getImpl(void) const
 
 void sig_chain::FrameBuffer::startImageBuffer(bool reset)
 {
+	// A frame holds a spectrum per A-line, so its height is the width of its image.
+	getImpl().imageBuffer.setImageLines(d_ptr->previewDataHeight, d_ptr->measureDataHeight, d_ptr->enfaceDataHeight);
 	getImpl().imageBuffer.startCallbackThread(reset);
 	return;
 }

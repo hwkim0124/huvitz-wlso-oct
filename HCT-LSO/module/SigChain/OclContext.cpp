@@ -801,7 +801,7 @@ bool sig_chain::OclContext::performResamplingInput(OclTaskPlan * plan)
 
 		if (plan->useResampleDataCallback())
 		{
-			float* output = ChainSetup::getResampleFrameData();
+			float* output = ChainSetup::getResampleFrameData(plan->resampleBufferSize() / sizeof(float));
 			uint32_t width = numCols;
 			uint32_t height = numRows;
 
@@ -1373,9 +1373,9 @@ bool sig_chain::OclContext::performMagnitudeOfComplex(OclTaskPlan * plan)
 			// int byteOffset = FFT_IMAGE_ROW_OFFSET * getImpl().outputLineSizePadded * sizeof(float);
 			// int byteReads = FFT_IMAGE_ROW_SIZE * getImpl().outputLineSizePadded * sizeof(float);
 			size_t byteOffset = 0; // 512 * getImpl().outputLineSizePadded * sizeof(float);
-			size_t byteCount = numRows2 * lineSize * sizeof(float);
+			size_t byteCount = (size_t)numRows2 * lineSize * sizeof(float);
 
-			float* output = ChainSetup::getMagnitudeFrameData();
+			float* output = ChainSetup::getMagnitudeFrameData((size_t)numRows2 * lineSize);
 			uint32_t width = (uint32_t)numCols2; // getImpl().outputLineSizePadded;
 			uint32_t height = (uint32_t)numRows2;
 

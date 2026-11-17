@@ -16,10 +16,12 @@ struct LineTrace::LineTraceImpl
 	int numPostPaddings;
 	int numRepeats;
 
-	int16_t  galvPosX1[8192];
-	int16_t  galvPosY1[8192];
-	int16_t  galvPosX2[8192];
-	int16_t  galvPosY2[8192];
+	// Galvano positions along the trace, paddings included, forward (1) and reversed (2).
+	// They are as long as the trace needs, which is up to TRAJECT_SAMPLE_SIZE_MAX samples.
+	std::vector<int16_t> galvPosX1;
+	std::vector<int16_t> galvPosY1;
+	std::vector<int16_t> galvPosX2;
+	std::vector<int16_t> galvPosY2;
 
 	int countOfPosX;
 	int countOfPosY;
@@ -30,7 +32,6 @@ struct LineTrace::LineTraceImpl
 	LineTraceImpl() : traceId(0), type(LineTraceType::Line),
 		numScanPoints(0), numRepeats(1),
 		numForePaddings(TRIGGER_FORE_PADDING_POINTS), numPostPaddings(TRIGGER_POST_PADDING_POINTS),
-		galvPosX1{ 0 }, galvPosY1{ 0 }, galvPosX2{ 0 }, galvPosY2{ 0 },
 		countOfPosX(0), countOfPosY(0), speed(OctScanSpeed::FASTER), hidden(false), lineHD(false)
 	{
 	}
@@ -317,7 +318,7 @@ short * oct_pattern::LineTrace::getGalvanoPositionsX(bool reversed) const
 	if (reversed) {
 		getImpl().galvPosX2;
 	}
-	return getImpl().galvPosX1;
+	return getImpl().galvPosX1.data();
 }
 
 
@@ -326,7 +327,7 @@ short * oct_pattern::LineTrace::getGalvanoPositionsY(bool reversed) const
 	if (reversed) {
 		getImpl().galvPosY2;
 	}
-	return getImpl().galvPosY1;
+	return getImpl().galvPosY1.data();
 }
 
 
@@ -337,10 +338,12 @@ void oct_pattern::LineTrace::setGalvanoPositionsX(short * posXs, short count)
 		memcpy(getImpl().galvPosXs, posXs, sizeof(short)*count);
 	}
 	*/
-	for (int i = 0; i < count; i++) {
-		d_ptr->galvPosX1[i] = posXs[i];
-		d_ptr->galvPosX2[i] = posXs[count - i - 1];
+	if (count < 0) {
+		count = 0;
 	}
+
+	d_ptr->galvPosX1.assign(posXs, posXs + count);
+	d_ptr->galvPosX2.assign(d_ptr->galvPosX1.rbegin(), d_ptr->galvPosX1.rend());
 
 	getImpl().countOfPosX = count;
 	return;
@@ -354,10 +357,12 @@ void oct_pattern::LineTrace::setGalvanoPositionsY(short * posYs, short count)
 		memcpy(getImpl().galvPosYs, posYs, sizeof(short)*count);
 	}
 	*/
-	for (int i = 0; i < count; i++) {
-		d_ptr->galvPosY1[i] = posYs[i];
-		d_ptr->galvPosY2[i] = posYs[count - i - 1];
+	if (count < 0) {
+		count = 0;
 	}
+
+	d_ptr->galvPosY1.assign(posYs, posYs + count);
+	d_ptr->galvPosY2.assign(d_ptr->galvPosY1.rbegin(), d_ptr->galvPosY1.rend());
 
 	getImpl().countOfPosY = count;
 	return;

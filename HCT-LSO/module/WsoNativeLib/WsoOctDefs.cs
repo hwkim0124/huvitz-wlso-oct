@@ -12,7 +12,10 @@ namespace WsoNativeLib
     {
         // Constant Definitions 
         ////////////////////////////////////////////////////////////////////////////////////////////
-        public const int SEGM_IMAGE_WIDTH_MAX = 2048;
+        // One value per image column, so as wide as the widest B-scan. Mirror of
+        // OCT_SEGM_IMAGE_WIDTH_MAX (WsoDomain/OctScanSegm.h); OctAnalysis.VerifyStructSizes()
+        // checks the structs sized by it against the native ones.
+        public const int SEGM_IMAGE_WIDTH_MAX = 8192;
         public const int OCT_SPECTROMETER_COEFFS_SIZE = 4;
         public const int OCT_DISPERSION_PHASE_SHIFT_COEFFS_SIZE = 3;
 

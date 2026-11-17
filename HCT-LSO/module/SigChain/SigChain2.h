@@ -45,11 +45,16 @@ namespace sig_chain
 	///////////////////////////////////////////////////////////////////////////////////////////////
 	constexpr int FRAME_DATA_LINE_SIZE = LINE_CAMERA_CCD_PIXELS;
 	constexpr int FRAME_DATA_LINES_MAX = BSCAN_LATERAL_SIZE_MAX;
-	constexpr int FRAME_DATA_BUFFER_SIZE = (FRAME_DATA_LINE_SIZE * FRAME_DATA_LINES_MAX);
 
 	constexpr int FRAME_DATA_PREVIEW_WIDTH = FRAME_DATA_LINE_SIZE;
 	constexpr int FRAME_DATA_PREVIEW_HEIGHT = 512;
 	constexpr int FRAME_DATA_PREVIEW_DEPTH = 1;
+
+	// Preview frames wait in a ring of whole frames until the GPU has taken them. The ring is
+	// as deep as the enface pattern has lines (64 or more), which is too much memory once a
+	// preview frame is taller than the regular preview. It then gets this many frames, enough
+	// for the most a capture delivers at once: each preview line scanned five times over.
+	constexpr int FRAME_DATA_PREVIEW_DEPTH_FOR_TALL_FRAMES = 32;
 
 	constexpr int FRAME_DATA_ENFACE_WIDTH = FRAME_DATA_LINE_SIZE;
 	constexpr int FRAME_DATA_ENFACE_HEIGHT = 256;
@@ -87,7 +92,6 @@ namespace sig_chain
 
 	constexpr int FFT_OUTPUT_LINE_SIZE_MAX = FRAME_DATA_LINES_MAX;
 	constexpr int FFT_OUTPUT_LINES_NUM = (FRAME_DATA_LINE_SIZE / 2 + 1);
-	constexpr int FFT_OUTPUT_BUFFER_SIZE = (FFT_OUTPUT_LINES_NUM * FFT_OUTPUT_LINE_SIZE_MAX);
 
 	constexpr int FFT_IMAGE_ROW_SIZE_FOR_ENFACE = 768;
 	constexpr int FFT_IMAGE_ROW_SIZE_FOR_PREVIEW = 768; // 512;
@@ -99,16 +103,11 @@ namespace sig_chain
 
 	constexpr int FFT_IMAGE_WIDTH_MAX = BSCAN_LATERAL_SIZE_MAX;
 	constexpr int FFT_IMAGE_HEIGHT_MAX = FFT_IMAGE_ROW_SIZE_FOR_MEASURE;
-	constexpr int FFT_IMAGE_BUFFER_SIZE = (FFT_IMAGE_WIDTH_MAX * FFT_IMAGE_HEIGHT_MAX);
 
 	// Full range B-scan: every depth bin of the complex FFT is imaged, negative depths on top
 	// and the zero delay on the center row, so the image is as tall as the spectrum is long.
 	constexpr int FFT_IMAGE_ROW_SIZE_FOR_FULL_RANGE = FRAME_DATA_LINE_SIZE;
 	constexpr int FFT_IMAGE_ROW_OFFSET_FOR_FULL_RANGE = 0;
-	constexpr int FFT_IMAGE_BUFFER_SIZE_FOR_FULL_RANGE = (FFT_IMAGE_WIDTH_MAX * FFT_IMAGE_ROW_SIZE_FOR_FULL_RANGE);
-
-	// Transposed FFT output read back to the host: one padded line per depth bin.
-	constexpr int FFT_MAGNITUDE_BUFFER_SIZE = (FRAME_DATA_LINE_SIZE * FFT_OUTPUT_LINES_NUM);
 
 
 	// Magnitude Histogram for adaptive gray scaling. 
@@ -166,7 +165,12 @@ namespace sig_chain
 
 	// Frame Image Buffer configuration.
 	//////////////////////////////////////////////////////////////////////////////////////////
-	constexpr int FRAME_IMAGE_BUFFER_SIZE = FFT_IMAGE_BUFFER_SIZE;
+	// A frame image holds one B-scan with a column per A-line, so its buffers are sized for
+	// the scan at hand (ImageBuffer::setImageLines) rather than for the widest B-scan. They
+	// are never smaller than for this many A-lines, which is what every image used to have.
+	constexpr int FRAME_IMAGE_LINES_MIN = 1024;
+	constexpr int FRAME_IMAGE_BUFFER_SIZE = (FRAME_IMAGE_LINES_MIN * FFT_IMAGE_HEIGHT_MAX);
+	constexpr int FRAME_IMAGE_INTENSITY_SIZE = (FRAME_IMAGE_LINES_MIN * FFT_OUTPUT_LINES_NUM);
 
 	constexpr int IMAGE_BUFFER_LIST_SIZE_FOR_PREVIEW = 10; // 8;
 	constexpr int IMAGE_BUFFER_LIST_SIZE_FOR_MEASURE = 64; // 32; // 8;

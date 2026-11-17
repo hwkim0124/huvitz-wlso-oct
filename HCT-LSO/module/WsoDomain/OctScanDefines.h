@@ -12,7 +12,9 @@ namespace wso_domain
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
 	constexpr int LINE_CAMERA_CCD_PIXELS = 2048;
 	constexpr unsigned short LINE_CAMERA_PIXEL_VALUE_MAX = 4096;
-	constexpr int BSCAN_LATERAL_SIZE_MAX = 1024; // 2048;
+	// The most A-scans a B-scan can have. Buffers that hold a B-scan are sized for the scan
+	// at hand, not for this limit.
+	constexpr int BSCAN_LATERAL_SIZE_MAX = 8192;
 
 
 	// Default Pattern preview, enface settings. 
@@ -194,6 +196,9 @@ namespace wso_domain
 		ASCAN_384 = 384,
 		ASCAN_512 = 512,
 		ASCAN_1024 = 1024,
+		ASCAN_2048 = 2048,
+		ASCAN_4096 = 4096,
+		ASCAN_8192 = 8192,
 	};
 
 	enum class OctBscanSize : int {

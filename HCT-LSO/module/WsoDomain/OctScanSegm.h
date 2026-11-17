@@ -1,9 +1,23 @@
 #pragma once
 
+#include "OctScanDefines.h"
+
 
 namespace wso_domain
 {
-	const int OCT_SEGM_IMAGE_WIDTH_MAX = 2048;
+	// One value per image column, so as wide as the widest B-scan.
+	// Mirrored by WsoNativeLib/WsoOctSegm.cs (SEGM_IMAGE_WIDTH_MAX); the C# side checks
+	// Marshal.SizeOf at run time (getOctBsegmStructSize). Update both when the layout changes.
+	const int OCT_SEGM_IMAGE_WIDTH_MAX = BSCAN_LATERAL_SIZE_MAX;
+
+	// Which struct getOctBsegmStructSize() is being asked about.
+	enum class OctBsegmStructId : int {
+		RETINA_DESCRIPTOR = 0,
+		CORNEA_DESCRIPTOR = 1,
+		LAYER_POINTS = 2,
+		RETINA_TRAITS = 3,
+		CORNEA_TRAITS = 4,
+	};
 
 
 	struct OctRetinaBsegmDescriptor

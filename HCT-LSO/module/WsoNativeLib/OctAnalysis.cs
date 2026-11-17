@@ -96,6 +96,11 @@ namespace WsoNativeLib
         [return: MarshalAs(UnmanagedType.I1)]
         private static extern bool getOctCorneaBsegmTraits(int sourceId, int imageIdx, ref OctCorneaBsegmTraits traits);
 
+        // which: 0 retina descriptor, 1 cornea descriptor, 2 layer points, 3 retina traits,
+        // 4 cornea traits (OctBsegmStructId in WsoDomain/OctScanSegm.h).
+        [DllImport(LibraryName)]
+        private static extern int getOctBsegmStructSize(int which);
+
 
         [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
@@ -240,8 +245,42 @@ namespace WsoNativeLib
             return getOctPreviewContentImage(sourceId, image_idx, ref image);
         }
 
+        private static bool _structSizesVerified = false;
+
+        /// <summary>
+        /// Asserts that the C# mirrors of the native B-scan segmentation structs have the native
+        /// sizes. Called once before one of them first crosses the boundary; throws on a mismatch
+        /// so a layout drift is caught instead of corrupting memory.
+        /// </summary>
+        public static void VerifyStructSizes()
+        {
+            if (_structSizesVerified)
+            {
+                return;
+            }
+
+            (string name, int which, int managedSize)[] mirrors =
+            {
+                (nameof(OctRetinaBsegmDescriptor), 0, Marshal.SizeOf<OctRetinaBsegmDescriptor>()),
+                (nameof(OctCorneaBsegmDescriptor), 1, Marshal.SizeOf<OctCorneaBsegmDescriptor>()),
+                (nameof(OctBsegmLayerPoints), 2, Marshal.SizeOf<OctBsegmLayerPoints>()),
+                (nameof(OctRetinaBsegmTraits), 3, Marshal.SizeOf<OctRetinaBsegmTraits>()),
+                (nameof(OctCorneaBsegmTraits), 4, Marshal.SizeOf<OctCorneaBsegmTraits>()),
+            };
+            foreach (var (name, which, managedSize) in mirrors)
+            {
+                int nativeSize = getOctBsegmStructSize(which);
+                if (nativeSize != managedSize)
+                {
+                    throw new InvalidOperationException($"{name} size mismatch: native {nativeSize}, managed {managedSize}");
+                }
+            }
+            _structSizesVerified = true;
+        }
+
         public static bool GetRetinaBsegmDescriptor(int sourceId, int image_idx, out OctRetinaBsegmDescriptor desc)
         {
+            VerifyStructSizes();
             desc = new OctRetinaBsegmDescriptor();
             desc.InitializeObject();
             if (getOctRetinaBsegmDescriptor(sourceId, image_idx, ref desc))
@@ -253,6 +292,7 @@ namespace WsoNativeLib
 
         public static bool GetCorneaBsegmDescriptor(int sourceId, int image_idx, out OctCorneaBsegmDescriptor desc)
         {
+            VerifyStructSizes();
             desc = new OctCorneaBsegmDescriptor();
             desc.InitializeObject();
             if (getOctCorneaBsegmDescriptor(sourceId, image_idx, ref desc))
@@ -264,6 +304,7 @@ namespace WsoNativeLib
 
         public static bool GetBsegmLayerPoints(int sourceId, int image_idx, OcularLayerType type, out OctBsegmLayerPoints layer)
         {
+            VerifyStructSizes();
             layer = new OctBsegmLayerPoints();
             layer.InitializeObject();
             if (getOctBsegmLayerPoints(sourceId, image_idx, type, ref layer))
@@ -275,6 +316,7 @@ namespace WsoNativeLib
 
         public static bool GetRetinaBsegmTraits(int sourceId, int image_idx, out OctRetinaBsegmTraits traits)
         {
+            VerifyStructSizes();
             traits = new OctRetinaBsegmTraits();
             traits.InitializeObject();
             if (getOctRetinaBsegmTraits(sourceId, image_idx, ref traits))
@@ -286,6 +328,7 @@ namespace WsoNativeLib
 
         public static bool GetCorneaBsegmTraits(int sourceId, int image_idx, out OctCorneaBsegmTraits traits)
         {
+            VerifyStructSizes();
             traits = new OctCorneaBsegmTraits();
             traits.InitializeObject();
             if (getOctCorneaBsegmTraits(sourceId, image_idx, ref traits))

@@ -32,6 +32,10 @@ namespace sig_chain
 		void setEnfaceResultLayout(int width, int height);
 		void setMeasureResultLayout(int width, int height);
 
+		// Number of A-lines in the frames about to be processed. The image buffers are sized
+		// for them when the callback thread starts.
+		void setImageLines(int previewLines, int measureLines, int enfaceLines);
+
 		void startCallbackThread(bool reset);
 		void closeCallbackThread(void);
 		bool isBusying(void);

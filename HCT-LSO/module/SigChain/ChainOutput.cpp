@@ -181,6 +181,16 @@ void sig_chain::ChainOutput::setLateralLineOfEnface(uint8_t * buffer, int lineId
 {
 	unique_lock<mutex> lock(getImpl().mutexAccess);
 
+	// The enface is a row (or, vertically, a column) per scan line. A pattern with more
+	// points than the buffer holds, such as a line of thousands of A-scans, has no enface.
+	if (lineIdx < 0 || lineSize <= 0 || numLines <= 0) {
+		return;
+	}
+	const size_t lastIndex = (vertical ? (size_t)(lineSize - 1) * numLines + lineIdx : (size_t)lineIdx * lineSize + (lineSize - 1));
+	if (lastIndex >= sizeof(d_ptr->enfaceBuffer)) {
+		return;
+	}
+
 	if (!vertical) {
 		uint8_t* dst = d_ptr->enfaceBuffer + lineIdx * lineSize;
 		int buffSize = lineSize * sizeof(uint8_t);

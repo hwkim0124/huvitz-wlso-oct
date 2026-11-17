@@ -31,8 +31,14 @@ namespace oct_grab
 
 	// Constants Definition
 	//////////////////////////////////////////////////////////////////////////
-	constexpr int GRABBER_BUFFER_X_SIZE = 2048;
-	constexpr int GRABBER_BUFFER_Y_SIZE_MAX = 2048;
+	constexpr int GRABBER_BUFFER_X_SIZE = LINE_CAMERA_CCD_PIXELS;
+	constexpr int GRABBER_BUFFER_Y_SIZE_MAX = BSCAN_LATERAL_SIZE_MAX;
+
+	// Frame buffers the line camera driver keeps, each as large as a frame. Frames taller
+	// than these heights get fewer of them, so that the pool stays within a few hundred MB.
+	constexpr int GRABBER_BUFFER_COUNT = 64;
+	constexpr int GRABBER_BUFFER_COUNT_OVER_2048_LINES = 32;
+	constexpr int GRABBER_BUFFER_COUNT_OVER_4096_LINES = 16;
 
 	constexpr int JOYSTICK_PRESSED_EVENT_COUNT = 3;
 	constexpr int JOYSTICK_PRESSED_EVENT_DELAY = 5;

@@ -227,6 +227,12 @@ bool oct_pattern::PatternPlan::buildPreviewPattern(OctScanProtocol& protocol)
 		if (pattern.isAngioPattern()) {
 			numPoints = pattern.numAscan;
 		}
+		// Full range tells an image from its mirror twin by the phase step between neighbouring
+		// A-lines, so they have to lie as close together as in the captured scan: the live
+		// preview takes the A-scan count of the pattern.
+		if (protocol.isFullRangeDomain) {
+			numPoints = pattern.numAscan;
+		}
 	}
 
 	getImpl().preview.initialize(domain, type, numPoints, numLines,

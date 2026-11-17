@@ -33,8 +33,9 @@ namespace sig_chain
 		float* getIntensity(void) const;
 
 		// Sets how many pixels the image buffer and how many samples the intensity buffer
-		// hold, reallocating them when that changes. Not to be called while the image is in
-		// use by the processing or callback threads; the contents are not preserved.
+		// hold. A buffer whose size changes is released and allocated again when it is next
+		// asked for. Not to be called while the image is in use by the processing or callback
+		// threads; the contents are not preserved.
 		void setCapacity(size_t imageSize, size_t intensitySize);
 
 		void setDimension(int width, int height);

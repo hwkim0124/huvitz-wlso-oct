@@ -30,6 +30,9 @@ namespace wso_system
 		bool WSOSYSTEM_DLL_API _stdcall getOctRetinaBsegmTraits(int sourceId, int imageIdx, OctRetinaBsegmTraits* traits);
 		bool WSOSYSTEM_DLL_API _stdcall getOctCorneaBsegmTraits(int sourceId, int imageIdx, OctCorneaBsegmTraits* traits);
 		bool WSOSYSTEM_DLL_API _stdcall getOctBsegmLayerPoints(int sourceId, int imageIdx, OcularLayerType type, OctBsegmLayerPoints* layer);
+		// Struct size self-check for the C# mirrors of the structs above; which is an
+		// OctBsegmStructId. Returns 0 for an unknown id.
+		int WSOSYSTEM_DLL_API _stdcall getOctBsegmStructSize(int which);
 
 		bool WSOSYSTEM_DLL_API _stdcall getOctReportEnfaceImage(int reportId, OctLayerStratumParam param, OctEnfaceImageDescript* desc);
 		bool WSOSYSTEM_DLL_API _stdcall getOctReportAngioImage(int reportId, OctLayerStratumParam param, OctAngioImageDescript* desc);

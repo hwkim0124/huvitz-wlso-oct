@@ -11,6 +11,20 @@
 using namespace oct_report;
 
 
+namespace
+{
+	// The segmentation descriptors hold one value per image column in arrays of
+	// OCT_SEGM_IMAGE_WIDTH_MAX, so the columns beyond that are left out.
+	template <typename T, typename U>
+	void copyColumns(const std::vector<T>& values, U* dest)
+	{
+		// Parenthesized so that the min macro of windows.h does not get in the way.
+		const size_t count = (std::min)(values.size(), static_cast<size_t>(OCT_SEGM_IMAGE_WIDTH_MAX));
+		std::copy_n(values.begin(), count, dest);
+	}
+}
+
+
 struct BscanContent::BscanDataImpl
 {
 	BscanImage* image;
@@ -410,39 +424,39 @@ bool oct_report::BscanContent::fetchRetinaBsegmResult(const OctScanPattern& patt
 	desc.range = pattern.getScanDistance();
 
 	if (const auto& points = getLayerPoints(OcularLayerType::ILM); points.empty() == false) {
-		copy(points.begin(), points.end(), desc.ilms);
+		copyColumns(points, desc.ilms);
 	}
 	if (const auto& points = getLayerPoints(OcularLayerType::NFL); points.empty() == false) {
-		copy(points.begin(), points.end(), desc.nfls);
+		copyColumns(points, desc.nfls);
 	}
 	if (const auto& points = getLayerPoints(OcularLayerType::IPL); points.empty() == false) {
-		copy(points.begin(), points.end(), desc.ipls);
+		copyColumns(points, desc.ipls);
 	}
 	if (const auto& points = getLayerPoints(OcularLayerType::OPL); points.empty() == false) {
-		copy(points.begin(), points.end(), desc.opls);
+		copyColumns(points, desc.opls);
 	}
 	if (const auto& points = getLayerPoints(OcularLayerType::IOS); points.empty() == false) {
-		copy(points.begin(), points.end(), desc.ioss);
+		copyColumns(points, desc.ioss);
 	}
 	if (const auto& points = getLayerPoints(OcularLayerType::RPE); points.empty() == false) {
-		copy(points.begin(), points.end(), desc.rpes);
+		copyColumns(points, desc.rpes);
 	}
 	if (const auto& points = getLayerPoints(OcularLayerType::OPR); points.empty() == false) {
-		copy(points.begin(), points.end(), desc.oprs);
+		copyColumns(points, desc.oprs);
 	}
 	if (const auto& points = getLayerPoints(OcularLayerType::BRM); points.empty() == false) {
-		copy(points.begin(), points.end(), desc.brms);
+		copyColumns(points, desc.brms);
 	}
 
 
 	if (const auto& points = getLayerPoints(OcularLayerType::BMO); points.empty() == false) {
-		copy(points.begin(), points.end(), desc.datums);
+		copyColumns(points, desc.datums);
 	}
 	if (const auto& points = getLayerPoints(OcularLayerType::INNER); points.empty() == false) {
-		copy(points.begin(), points.end(), desc.inners);
+		copyColumns(points, desc.inners);
 	}
 	if (const auto& points = getLayerPoints(OcularLayerType::OUTER); points.empty() == false) {
-		copy(points.begin(), points.end(), desc.outers);
+		copyColumns(points, desc.outers);
 	}
 
 	if (pattern.isOpticDiscScan()) {
@@ -478,24 +492,24 @@ bool oct_report::BscanContent::fetchCorneaBsegmResult(const OctScanPattern& patt
 	desc.range = pattern.getScanDistance();
 
 	if (const auto& points = getLayerPoints(OcularLayerType::EPI); points.empty() == false) {
-		copy(points.begin(), points.end(), desc.epis);
+		copyColumns(points, desc.epis);
 	}
 	if (const auto& points = getLayerPoints(OcularLayerType::BOW); points.empty() == false) {
-		copy(points.begin(), points.end(), desc.bows);
+		copyColumns(points, desc.bows);
 	}
 	if (const auto& points = getLayerPoints(OcularLayerType::END); points.empty() == false) {
-		copy(points.begin(), points.end(), desc.ends);
+		copyColumns(points, desc.ends);
 	}
 
 	if (const auto& points = getLayerPoints(OcularLayerType::INNER); points.empty() == false) {
-		copy(points.begin(), points.end(), desc.inners);
+		copyColumns(points, desc.inners);
 	}
 	if (const auto& points = getLayerPoints(OcularLayerType::OUTER); points.empty() == false) {
-		copy(points.begin(), points.end(), desc.outers);
+		copyColumns(points, desc.outers);
 	}
 
 	if (const auto& points = getCurvatureRadius(); points.empty() == false) {
-		copy(points.begin(), points.end(), desc.curveRadius);
+		copyColumns(points, desc.curveRadius);
 	}
 	return true;
 }
@@ -543,7 +557,7 @@ bool oct_report::BscanContent::fetchCorneaBsegmTraits(const OctScanPattern& patt
 	traits.range = pattern.getScanDistance();
 
 	if (const auto& points = getCurvatureRadius(); points.empty() == false) {
-		copy(points.begin(), points.end(), traits.curveRadius);
+		copyColumns(points, traits.curveRadius);
 	}
 	return true;
 }
@@ -555,7 +569,7 @@ bool oct_report::BscanContent::fetchBsegmLayerPoints(OcularLayerType type, const
 	layer.range = pattern.getScanDistance();
 
 	if (const auto& points = getLayerPoints(type); points.size() == layer.width) {
-		copy(points.begin(), points.end(), layer.data);
+		copyColumns(points, layer.data);
 		return true;
 	}
 	return false;

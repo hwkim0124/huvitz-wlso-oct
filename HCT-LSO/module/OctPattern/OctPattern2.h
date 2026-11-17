@@ -45,7 +45,13 @@ namespace oct_pattern
 	constexpr float PATTERN_SCAN_ANGLE_MAX = 179.0f;
 
 	constexpr int PATTERN_SCAN_POINTS_MIN = 128;
-	constexpr int PATTERN_SCAN_POINTS_MAX = 2048;
+	constexpr int PATTERN_SCAN_POINTS_MAX = BSCAN_LATERAL_SIZE_MAX;
+
+	// A scan line is uploaded as one galvano trajectory: its points with the fore and post
+	// paddings around them.
+	static_assert((int)(PATTERN_SCAN_POINTS_MAX * (1.0f + TRIGGER_FORE_PADDING_RATIO + TRIGGER_POST_PADDING_RATIO)) <= TRAJECT_SAMPLE_SIZE_MAX,
+		"The longest scan line with its paddings must fit a galvano trajectory profile");
+
 	constexpr int PATTERN_SCAN_LINES_MIN = 1;
 	constexpr int PATTERN_SCAN_LINES_MAX = 512; //  256;
 

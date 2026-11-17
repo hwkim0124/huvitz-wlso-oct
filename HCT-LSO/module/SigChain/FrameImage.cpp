@@ -11,10 +11,12 @@ using namespace std;
 
 struct FrameImage::FrameImageImpl
 {
+	// Both buffers are allocated once they are asked for, at the capacity set by then, so
+	// an image that is never used costs nothing however wide the scan is.
 	unique_ptr<unsigned char[]> buffer;
 	unique_ptr<float[]> intensity;
 	size_t bufferSize = FRAME_IMAGE_BUFFER_SIZE;
-	size_t intensitySize = FFT_OUTPUT_BUFFER_SIZE;
+	size_t intensitySize = FRAME_IMAGE_INTENSITY_SIZE;
 
 	uint8_t lateralBuffer[FRAME_DATA_LINES_MAX];
 
@@ -35,8 +37,6 @@ struct FrameImage::FrameImageImpl
 					buffer(nullptr), intensity(nullptr), 
 					lateralBuffer{0}
 	{
-		buffer = make_unique<unsigned char[]>(bufferSize);
-		// intensity = nullptr;
 	}
 };
 
@@ -58,6 +58,9 @@ FrameImage & sig_chain::FrameImage::operator=(FrameImage && rhs) = default;
 
 unsigned char * sig_chain::FrameImage::getBuffer(void) const
 {
+	if (getImpl().buffer == nullptr) {
+		getImpl().buffer = make_unique<unsigned char[]>(getImpl().bufferSize);
+	}
 	return &getImpl().buffer[0];
 }
 
@@ -73,17 +76,14 @@ float * sig_chain::FrameImage::getIntensity(void) const
 
 void sig_chain::FrameImage::setCapacity(size_t imageSize, size_t intensitySize)
 {
+	// A buffer of another size is dropped here and allocated again once it is asked for.
 	if (imageSize != getImpl().bufferSize) {
-		getImpl().buffer = make_unique<unsigned char[]>(imageSize);
 		getImpl().bufferSize = imageSize;
+		getImpl().buffer.reset();
 	}
-
-	// The intensity buffer is only allocated once it has been asked for.
 	if (intensitySize != getImpl().intensitySize) {
 		getImpl().intensitySize = intensitySize;
-		if (getImpl().intensity != nullptr) {
-			getImpl().intensity = make_unique<float[]>(intensitySize);
-		}
+		getImpl().intensity.reset();
 	}
 	return;
 }

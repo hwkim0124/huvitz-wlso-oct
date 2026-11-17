@@ -209,6 +209,24 @@ bool WSOSYSTEM_DLL_API _stdcall wso_system::getOctBsegmLayerPoints(int sourceId,
 }
 
 
+int WSOSYSTEM_DLL_API _stdcall wso_system::getOctBsegmStructSize(int which)
+{
+	switch (static_cast<OctBsegmStructId>(which)) {
+	case OctBsegmStructId::RETINA_DESCRIPTOR:
+		return static_cast<int>(sizeof(OctRetinaBsegmDescriptor));
+	case OctBsegmStructId::CORNEA_DESCRIPTOR:
+		return static_cast<int>(sizeof(OctCorneaBsegmDescriptor));
+	case OctBsegmStructId::LAYER_POINTS:
+		return static_cast<int>(sizeof(OctBsegmLayerPoints));
+	case OctBsegmStructId::RETINA_TRAITS:
+		return static_cast<int>(sizeof(OctRetinaBsegmTraits));
+	case OctBsegmStructId::CORNEA_TRAITS:
+		return static_cast<int>(sizeof(OctCorneaBsegmTraits));
+	}
+	return 0;
+}
+
+
 bool WSOSYSTEM_DLL_API _stdcall wso_system::getOctReportEnfaceImage(int reportId, OctLayerStratumParam param, OctEnfaceImageDescript* desc)
 {
 	if (auto* p = OctAnalysis::getInstance(); p) {

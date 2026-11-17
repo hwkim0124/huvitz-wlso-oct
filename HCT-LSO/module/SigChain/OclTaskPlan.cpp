@@ -853,7 +853,10 @@ bool sig_chain::OclTaskPlan::createClFFTSetupPlan(cl_context& context, cl_comman
 	{
 		size_t batchSize = d_ptr->inputLinesNum;
 		size_t inputSize = d_ptr->inputLineSize;
-		size_t outputSize = d_ptr->outputLinesNum;
+		// The output is transposed to a line per depth bin, each line holding a value per
+		// A-line. The lines are a padded line size apart, which is the larger of the two
+		// dimensions, so that a B-scan with more A-lines than depth bins still fits a line.
+		size_t outputSize = d_ptr->outputLineSizePadded;
 
 		clfftDim fftDim = CLFFT_1D;
 		size_t lengths[1] = { inputSize };
@@ -935,7 +938,8 @@ bool sig_chain::OclTaskPlan::createClFFTZerosPlan(cl_context& context, cl_comman
 	try
 	{
 		size_t inputSize = getImpl().inputZeroLineSize;
-		size_t outputSize = inputSize;// (inputSize / 2 + 1);// getImpl().outputZeroLinesNum;
+		// Transposed like the plain depth FFT, the lines a padded line size apart.
+		size_t outputSize = getImpl().outputZeroLineSize;
 		size_t batchSize = getImpl().inputZeroLinesNum;
 
 		clfftDim fftDim = CLFFT_1D;

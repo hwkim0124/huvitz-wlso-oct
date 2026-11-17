@@ -947,7 +947,10 @@ namespace WsoToolkit
 
                 if (count > 0)
                 {
-                    cmbScanPoints.SelectedIndex = 0;
+                    // The list runs from the densest option down. 1024 stays the default where
+                    // it is offered, as it was before the line patterns got denser options.
+                    int index = Array.IndexOf(points, 1024, 0, count);
+                    cmbScanPoints.SelectedIndex = (index >= 0 ? index : 0);
                 }
                 return;
             }

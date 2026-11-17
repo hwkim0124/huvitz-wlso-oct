@@ -99,8 +99,10 @@ namespace sig_chain
 		static unsigned short* getBackgroundSpectrum(void);
 		static void setBackgroundSpectrum(const unsigned short* data);
 
-		static float* getResampleFrameData(void);
-		static float* getMagnitudeFrameData(void);
+		// Host buffers the data callbacks read a frame back into, holding at least size
+		// samples. They grow to the largest frame asked for and are kept from then on.
+		static float* getResampleFrameData(size_t size);
+		static float* getMagnitudeFrameData(size_t size);
 		static double* getDetectorWavelengths(void);
 		static double getAxialPixelResolution(double refractiveIndex);
 		static double getAxialPixelResolution(double fwhm, double ref_index);

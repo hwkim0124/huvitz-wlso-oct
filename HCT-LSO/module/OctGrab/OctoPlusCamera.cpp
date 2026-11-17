@@ -120,11 +120,23 @@ bool oct_grab::OctoPlusCamera::updateFrameHeight(int height)
 	if (OctoPlus::getImageHeight() == height) {
 		return true;
 	}
+	if (height <= 0 || height > GRABBER_BUFFER_Y_SIZE_MAX) {
+		LogD() << "Usb cmos camera frame height out of range: " << height;
+		return false;
+	}
 	if (OctoPlus::isLineCameraGrabbing()) {
 		OctoPlus::cancelAcquisition();
 	}
 
-	int numOfBuffer = 0;
+	// A grab reads every frame out as it arrives, so a short pool is enough for tall frames.
+	int numOfBuffer = GRABBER_BUFFER_COUNT;
+	if (height > 4096) {
+		numOfBuffer = GRABBER_BUFFER_COUNT_OVER_4096_LINES;
+	}
+	else if (height > 2048) {
+		numOfBuffer = GRABBER_BUFFER_COUNT_OVER_2048_LINES;
+	}
+
 	if (!OctoPlus::updateImageParameters(height, numOfBuffer)) {
 		return false;
 	}
