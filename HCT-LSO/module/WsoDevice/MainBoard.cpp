@@ -609,12 +609,16 @@ bool wso_device::MainBoard::waitForSystemReady(void)
 bool wso_device::MainBoard::prepareDevicesForOctScan(void)
 {
 	bool res = turnOnOctScanBeam(true);
+	if (res) {
+		getRetMirrorMotor()->updatePositionToMirrorIn();
+	}
 	return res;
 }
 
 bool wso_device::MainBoard::releaseDevicesForOctScan(void)
 {
 	turnOnOctScanBeam(false);
+	// getRetMirrorMotor()->updatePositionToMirrorOut();
 	return true;
 }
 

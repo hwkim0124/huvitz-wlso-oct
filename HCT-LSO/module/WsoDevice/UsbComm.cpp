@@ -1790,7 +1790,6 @@ bool wso_device::UsbComm::GalvanoDynamicOffsetRead(std::int16_t& offsetX, std::i
 	return false;
 }
 
-
 bool wso_device::UsbComm::GalvanoScanXY(std::uint16_t sid, std::uint16_t eid)
 {
 	lock_guard<mutex> lock(impl().mutexControl);
@@ -1803,7 +1802,6 @@ bool wso_device::UsbComm::GalvanoScanXY(std::uint16_t sid, std::uint16_t eid)
 	bool reply = (isCommandAsyncMode() ? false : true);
 	return sendMsgCmd(msg, reply);
 }
-
 
 bool wso_device::UsbComm::GalvanoRasterX(std::uint16_t tid, std::uint16_t lines, std::int16_t xoffs, std::int16_t yoffs)
 {
