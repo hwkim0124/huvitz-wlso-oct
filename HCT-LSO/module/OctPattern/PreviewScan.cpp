@@ -11,6 +11,8 @@ using namespace oct_pattern;
 
 struct PreviewScan::PreviewScanImpl
 {
+	int numRepeatsHD = 1;
+
 	PreviewScanImpl() {
 	}
 };
@@ -123,6 +125,19 @@ bool oct_pattern::PreviewScan::buildPattern(bool hidden)
 		}
 	}
 	return true;
+}
+
+
+void oct_pattern::PreviewScan::setNumberOfRepeatsHD(int repeats)
+{
+	getImpl().numRepeatsHD = (repeats < 1 ? 1 : repeats);
+	return;
+}
+
+
+int oct_pattern::PreviewScan::getNumberOfRepeatsHD(void) const
+{
+	return getImpl().numRepeatsHD;
 }
 
 
@@ -557,15 +572,13 @@ void oct_pattern::PreviewScan::buildPreviewLine(bool isVert, int lineCount)
 	frame.addLineTrace(line);
 	addPatternFrame(frame);
 
-	// Scan speed for preview is fixed as the fastest. 
-	const int NUM_LINES_HD = 5; 
-
+	// Scan speed for preview is fixed as the fastest.
 	LineTrace line2;
 	line2.initLine(TRACE_ID_PREVIEW_LINE_HD + lineCount,
 		OctPoint(xStart, yStart),
 		OctPoint(xClose, yClose),
-		numPoints, 
-		NUM_LINES_HD); // PREVIEW_LINE_NUM_POINTS);
+		numPoints,
+		getNumberOfRepeatsHD()); // PREVIEW_LINE_NUM_POINTS);
 	line2.setLineHD(true);
 
 	PatternFrame frame2;
@@ -644,8 +657,8 @@ void oct_pattern::PreviewScan::buildPreviewMultiLine(bool isVert)
 	setNumberOfScanPoints(numPoints);
 
 	// Scan speed for preview is fixed as the fastest. 
-	const int NUM_REPEATS_HD = 5;
-	const int NUM_LINES_MULTI = 4;
+	const int NUM_REPEATS_HD = getNumberOfRepeatsHD();
+	const int NUM_LINES_MULTI = PATTERN_PREVIEW_MULTI_NUM_LINES;
 
 	float x1, x2, y1, y2;
 	for (int lidx = 0; lidx < NUM_LINES_MULTI; lidx++)

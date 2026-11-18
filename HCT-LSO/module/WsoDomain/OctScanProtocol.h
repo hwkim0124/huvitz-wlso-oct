@@ -48,6 +48,11 @@ namespace wso_domain
 		bool isNotFocusAlign = false;
 		bool isNotImageGrabbing = false;
 		bool isFullRangeDomain = false;
+
+		// The preview image of the result is one HD frame, or the average of previewAverageSize
+		// frames when isPreviewAveraging is set (1 to PATTERN_PREVIEW_AVERAGE_SIZE_MAX).
+		bool isPreviewAveraging = false;
+		int previewAverageSize = PATTERN_PREVIEW_AVERAGE_SIZE;
 	};
 
 	struct OctProtocolDescript
@@ -89,6 +94,8 @@ namespace wso_domain
 		bool isFastRasterScan = false;
 		bool isPreviewPattern = false;
 		bool isFullRangeDomain = false;
+		bool isPreviewAveraging = false;
+		int previewAverageSize = PATTERN_PREVIEW_AVERAGE_SIZE;
 
 	public:
 		void initAsDefault()
@@ -165,6 +172,17 @@ namespace wso_domain
 			this->isNotFocusAlign = param.isNotFocusAlign;
 			this->isNotImageGrabbing = param.isNotImageGrabbing;
 			this->isFullRangeDomain = param.isFullRangeDomain;
+
+			// Kept within the supported range, so the protocol records the count actually used.
+			int averageSize = param.previewAverageSize;
+			if (averageSize < 1) {
+				averageSize = 1;
+			}
+			if (averageSize > PATTERN_PREVIEW_AVERAGE_SIZE_MAX) {
+				averageSize = PATTERN_PREVIEW_AVERAGE_SIZE_MAX;
+			}
+			this->isPreviewAveraging = param.isPreviewAveraging;
+			this->previewAverageSize = averageSize;
 		}
 
 		void fetchToInitParam(OctProtocolInitParam& param)
@@ -201,6 +219,19 @@ namespace wso_domain
 			param.isNotFocusAlign = this->isNotFocusAlign;
 			param.isNotImageGrabbing = this->isNotImageGrabbing;
 			param.isFullRangeDomain = this->isFullRangeDomain;
+			param.isPreviewAveraging = this->isPreviewAveraging;
+			param.previewAverageSize = this->previewAverageSize;
+		}
+
+		// Frames grabbed of each HD preview line at capture: one unless they are to be averaged.
+		int getPreviewLineRepeats(void) const {
+			if (!isPreviewAveraging || previewAverageSize < 1) {
+				return 1;
+			}
+			if (previewAverageSize > PATTERN_PREVIEW_AVERAGE_SIZE_MAX) {
+				return PATTERN_PREVIEW_AVERAGE_SIZE_MAX;
+			}
+			return previewAverageSize;
 		}
 
 		bool isOD(void) const {

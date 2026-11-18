@@ -41,8 +41,6 @@ namespace WsoToolkit
         WsoOctScan.OctMacularSummaryDescriptor _macularSummary = new();
         WsoOctScan.OctOpticDiscSummaryDescriptor _optdiscSummary = new();
 
-        WsoOctCalib.OctFullRangeParam _fullRangeParam = new();
-
         bool _isResultAnalyzed = false;
         // A full range result is never analyzed; it is loaded as a data source only, for browsing and export.
         bool _isResultSourced = false;
@@ -73,7 +71,6 @@ namespace WsoToolkit
             ReflectEnfacePatternOptions();
 
             checkFullRangeDomain.IsChecked = false;
-            ReflectFullRangeOptions();
 
             editScanOffsetX.Text = "0";
             editScanOffsetY.Text = "0";
@@ -163,11 +160,6 @@ namespace WsoToolkit
             octScanImagePreview.IsOptimizing = false;
 
             RetreiveProtocolInitParam();
-            if (_octInitParam.isFullRangeDomain && !SubmitFullRangeParam())
-            {
-                Mouse.OverrideCursor = null;
-                return;
-            }
             if (!OctScanning.SetupScanProtocol(_octInitParam))
             {
                 Mouse.OverrideCursor = null;
@@ -179,8 +171,9 @@ namespace WsoToolkit
                 Mouse.OverrideCursor = null;
                 if (_octInitParam.isFullRangeDomain)
                 {
-                    // The phase ramp is checked against the scan line when the scan starts.
-                    ShowError("Failed to start scan preview!\nFull range: check that Phase Base + Phase Inc x (A-Points + paddings) stays within -32768 to 32767.");
+                    // The phase ramp is checked against the scan line when the scan starts. Its
+                    // options are the ones last applied in the OCT Signal Test window.
+                    ShowError("Failed to start scan preview!\nFull range: check in the OCT Signal Test window that Phase Base + Phase Inc x (A-Points + paddings) stays within -32768 to 32767.");
                 }
                 else
                 {
@@ -436,107 +429,6 @@ namespace WsoToolkit
             _octInitParam.isNotFocusAlign = true;
             // Angio patterns are always processed conventionally.
             _octInitParam.isFullRangeDomain = checkFullRangeDomain.IsChecked == true && !pattern.IsAngioScan();
-        }
-
-        // Full range scanning options.
-        ///////////////////////////////////////////////////////////////////////////////////////////////////////
-        private void ReflectFullRangeOptions()
-        {
-            // Start from the parameters the native side holds, so the boxes show what a scan would use.
-            var param = new WsoOctCalib.OctFullRangeParam();
-            OctScanner.ObtainOctFullRangeParam(ref param);
-            _fullRangeParam = param;
-
-            editPhaseBase.Text = param.phaseBase.ToString();
-            editPhaseInc.Text = param.phaseInc.ToString();
-            editPhaseEndWait.Text = param.endPhaseWaitTimeUs.ToString();
-            editPhaseSlew.Text = param.phaseOriginSlewTimeUs.ToString();
-            editFullRangeCutoff.Text = param.lateralCutoffPercent.ToString("0.###");
-            checkFullRangeFlip.IsChecked = param.flipSideband != 0;
-            checkFullRangeFlatten.IsChecked = param.axialFlatten != 0;
-            editFullRangeFlatten.Text = param.axialFlattenWindow.ToString();
-            checkFullRangeBgSubMa.IsChecked = param.movingBackground != 0;
-            editFullRangeBgSubMa.Text = param.movingBackgroundWindow.ToString();
-
-            ReflectFullRangeControlsEnabled();
-        }
-
-        private void ReflectFullRangeControlsEnabled()
-        {
-            bool enabled = checkFullRangeDomain.IsChecked == true;
-            checkFullRangeFlip.IsEnabled = enabled;
-            editPhaseBase.IsEnabled = enabled;
-            editPhaseInc.IsEnabled = enabled;
-            editPhaseEndWait.IsEnabled = enabled;
-            editPhaseSlew.IsEnabled = enabled;
-            editFullRangeCutoff.IsEnabled = enabled;
-            checkFullRangeFlatten.IsEnabled = enabled;
-            checkFullRangeBgSubMa.IsEnabled = enabled;
-            // A size only applies while its option is on.
-            editFullRangeFlatten.IsEnabled = enabled && checkFullRangeFlatten.IsChecked == true;
-            editFullRangeBgSubMa.IsEnabled = enabled && checkFullRangeBgSubMa.IsChecked == true;
-        }
-
-        // Reads the full range options from the GUI controls and hands them to the WSO library,
-        // where they take effect with the scan protocol about to start.
-        private bool SubmitFullRangeParam()
-        {
-            var param = _fullRangeParam;
-
-            if (!int.TryParse(editPhaseBase.Text, out param.phaseBase) || param.phaseBase < short.MinValue || param.phaseBase > short.MaxValue)
-            {
-                ShowError("Full range: Phase Base must be an integer from -32768 to 32767.");
-                return false;
-            }
-            if (!int.TryParse(editPhaseInc.Text, out param.phaseInc) || param.phaseInc == 0 || param.phaseInc < short.MinValue || param.phaseInc > short.MaxValue)
-            {
-                ShowError("Full range: Phase Inc must be a non-zero integer from -32768 to 32767.");
-                return false;
-            }
-            if (!int.TryParse(editPhaseEndWait.Text, out param.endPhaseWaitTimeUs) || param.endPhaseWaitTimeUs < 0)
-            {
-                ShowError("Full range: Wait must be an integer of 0 or more microseconds.");
-                return false;
-            }
-            if (!int.TryParse(editPhaseSlew.Text, out param.phaseOriginSlewTimeUs) || param.phaseOriginSlewTimeUs < 0 || param.phaseOriginSlewTimeUs > ushort.MaxValue)
-            {
-                ShowError("Full range: Slew must be an integer from 0 to 65535 microseconds.");
-                return false;
-            }
-            // Written so that a NaN is rejected as well.
-            if (!float.TryParse(editFullRangeCutoff.Text, out param.lateralCutoffPercent) || !(param.lateralCutoffPercent >= 0.0f && param.lateralCutoffPercent < 50.0f))
-            {
-                ShowError("Full range: Lateral HPF must be a number from 0 to below 50 percent.");
-                return false;
-            }
-            param.flipSideband = checkFullRangeFlip.IsChecked == true ? 1 : 0;
-
-            // The size box is disabled while the flattening is off, so it is only read when on;
-            // otherwise the size last accepted is kept.
-            param.axialFlatten = checkFullRangeFlatten.IsChecked == true ? 1 : 0;
-            if (param.axialFlatten != 0 &&
-                (!int.TryParse(editFullRangeFlatten.Text, out param.axialFlattenWindow) || param.axialFlattenWindow < 2 || param.axialFlattenWindow > 2048))
-            {
-                ShowError("Full range: Flatten size must be an integer from 2 to 2048 samples.");
-                return false;
-            }
-
-            // The moving average background across the A-lines, read the same way.
-            param.movingBackground = checkFullRangeBgSubMa.IsChecked == true ? 1 : 0;
-            if (param.movingBackground != 0 &&
-                (!int.TryParse(editFullRangeBgSubMa.Text, out param.movingBackgroundWindow) || param.movingBackgroundWindow < 2 || param.movingBackgroundWindow > 16384))
-            {
-                ShowError("Full range: BgSubMA size must be an integer from 2 to 16384 A-lines.");
-                return false;
-            }
-
-            if (!OctScanner.SubmitOctFullRangeParam(param))
-            {
-                ShowError("Failed to set full range parameters!");
-                return false;
-            }
-            _fullRangeParam = param;
-            return true;
         }
 
         private bool IsFullRangeResult()

@@ -23,54 +23,6 @@
             </Grid.ColumnDefinitions>
             <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Vertical">
                 <controls:StereoCorneaPreview x:Name="stereoCorneaPreview" Width="340" Height="280"/>
-                <Grid Margin="0,4,0,0">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="8"/>
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="0"/>
-                        <ColumnDefinition Width="90"/>
-                        <ColumnDefinition Width="70"/>
-                        <ColumnDefinition Width="90"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <Label x:Name="label40" Content="Full Range" Style="{StaticResource HeaderStyle}" Grid.ColumnSpan="5"/>
-                    <StackPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="4" Orientation="Horizontal">
-                        <CheckBox x:Name="checkFullRangeDomain" Content="Enable" Style="{StaticResource CheckBoxStyle}" Margin="12,0,0,0" Click="CheckFullRangeDomain_Click"/>
-                        <CheckBox x:Name="checkFullRangeFlip" Content="Flip Sideband" Style="{StaticResource CheckBoxStyle}" Margin="24,0,0,0"/>
-                    </StackPanel>
-                    <Label x:Name="label401" Content="Phase Base" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="1"/>
-                    <Label x:Name="label402" Content="Phase Inc" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="3"/>
-                    <Label x:Name="label403" Content="Wait (us)" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="1"/>
-                    <Label x:Name="label404" Content="Slew (us)" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="3"/>
-                    <Label x:Name="label405" Content="Lateral HPF" Style="{StaticResource LabelStyle}" Grid.Row="4" Grid.Column="1"/>
-                    <TextBox x:Name="editPhaseBase" Style="{StaticResource TextBoxStyleT1}" Grid.Row="2" Grid.Column="2"/>
-                    <TextBox x:Name="editPhaseInc" Style="{StaticResource TextBoxStyleT1}" Grid.Row="2" Grid.Column="4"/>
-                    <TextBox x:Name="editPhaseEndWait" Style="{StaticResource TextBoxStyleT1}" Grid.Row="3" Grid.Column="2"/>
-                    <TextBox x:Name="editPhaseSlew" Style="{StaticResource TextBoxStyleT1}" Grid.Row="3" Grid.Column="4"/>
-                    <StackPanel Grid.Row="4" Grid.Column="2" Grid.ColumnSpan="3" Orientation="Horizontal">
-                        <TextBox x:Name="editFullRangeCutoff" Style="{StaticResource TextBoxStyleT1}"/>
-                        <Label x:Name="label406" Content="% of A-lines" Style="{StaticResource LabelStyle}"/>
-                    </StackPanel>
-                    <CheckBox x:Name="checkFullRangeFlatten" Content="Flatten" Style="{StaticResource CheckBoxStyle}" Grid.Row="5" Grid.Column="1" Margin="12,0,0,0" Click="CheckFullRangeFlatten_Click"/>
-                    <StackPanel Grid.Row="5" Grid.Column="2" Grid.ColumnSpan="3" Orientation="Horizontal">
-                        <TextBox x:Name="editFullRangeFlatten" Style="{StaticResource TextBoxStyleT1}"/>
-                        <Label x:Name="label407" Content="samples" Style="{StaticResource LabelStyle}"/>
-                    </StackPanel>
-                    <CheckBox x:Name="checkFullRangeBgSubMa" Content="BgSubMA" Style="{StaticResource CheckBoxStyle}" Grid.Row="6" Grid.Column="1" Margin="12,0,0,0" Click="CheckFullRangeBgSubMa_Click"/>
-                    <StackPanel Grid.Row="6" Grid.Column="2" Grid.ColumnSpan="3" Orientation="Horizontal">
-                        <TextBox x:Name="editFullRangeBgSubMa" Style="{StaticResource TextBoxStyleT1}"/>
-                        <Label x:Name="label408" Content="A-lines" Style="{StaticResource LabelStyle}"/>
-                    </StackPanel>
-                    <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="5" Grid.RowSpan="8"/>
-                </Grid>
             </StackPanel>
             <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Vertical">
                 <controls:OctScanImagePreview x:Name="octScanImagePreview" Width="1024" Height="530"/>
@@ -219,6 +171,7 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="8"/>
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
@@ -254,7 +207,8 @@
                             <TextBox x:Name="editScanOffsetY" Style="{StaticResource TextBoxStyleT1}" Grid.Row="6" Grid.Column="4" HorizontalAlignment="Left"/>
                             <TextBox x:Name="editScanScaleX" Style="{StaticResource TextBoxStyleT1}" Grid.Row="7" Grid.Column="2" HorizontalAlignment="Left"/>
                             <TextBox x:Name="editScanScaleY" Style="{StaticResource TextBoxStyleT1}" Grid.Row="7" Grid.Column="4" HorizontalAlignment="Left"/>
-                            <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="6" Grid.RowSpan="9"/>
+                            <CheckBox x:Name="checkFullRangeDomain" Content="Full Range" Style="{StaticResource CheckBoxStyle}" Grid.Row="8" Grid.Column="2" Grid.ColumnSpan="3"/>
+                            <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="6" Grid.RowSpan="10"/>
                         </Grid>
                     </StackPanel>
                     <StackPanel x:Name="panelEnfacePattern" Grid.Row="0" Grid.Column="6" Orientation="Vertical">

@@ -62,6 +62,8 @@ std::string wso_domain::OctDataUtil::serializeToJson(const OctScanProtocol& prot
 	j["fast_raster_scan"] = proto.isFastRasterScan;
 	j["preview_pattern"] = proto.isPreviewPattern;
 	j["full_range_domain"] = proto.isFullRangeDomain;
+	j["preview_averaging"] = proto.isPreviewAveraging;
+	j["preview_average_size"] = proto.previewAverageSize;
 
 	auto jstr = j.dump(4);
 	return jstr;
@@ -118,6 +120,10 @@ bool wso_domain::OctDataUtil::populateFromJson(const std::string& jstr, OctScanP
 	proto.isPreviewPattern = j["preview_pattern"];
 	// Absent in snapshots saved before full range scanning existed.
 	proto.isFullRangeDomain = j.value("full_range_domain", false);
+	// Absent in snapshots saved before preview averaging became optional: their preview
+	// images were always averaged over the default count.
+	proto.isPreviewAveraging = j.value("preview_averaging", true);
+	proto.previewAverageSize = j.value("preview_average_size", PATTERN_PREVIEW_AVERAGE_SIZE);
     return true;
 }
 

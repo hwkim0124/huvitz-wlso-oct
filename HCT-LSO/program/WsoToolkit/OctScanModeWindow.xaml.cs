@@ -453,21 +453,6 @@ namespace WsoToolkit
             ReflectEnfaceControlsEnabled();
         }
 
-        private void CheckFullRangeDomain_Click(object sender, RoutedEventArgs e)
-        {
-            ReflectFullRangeControlsEnabled();
-        }
-
-        private void CheckFullRangeFlatten_Click(object sender, RoutedEventArgs e)
-        {
-            ReflectFullRangeControlsEnabled();
-        }
-
-        private void CheckFullRangeBgSubMa_Click(object sender, RoutedEventArgs e)
-        {
-            ReflectFullRangeControlsEnabled();
-        }
-
         private void CheckEnfaceGrid_Click(object sender, RoutedEventArgs e)
         {
             octScanEnfacePreivew.IsOverlayGrid = checkEnfaceGrid.IsChecked == true;

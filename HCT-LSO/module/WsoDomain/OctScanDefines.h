@@ -25,7 +25,10 @@ namespace wso_domain
 	constexpr int PATTERN_PREVIEW_IMAGE_WIDTH = PATTERN_PREVIEW_LATERAL_POINTS;
 	// constexpr int PATTERN_PREVIEW_IMAGE_HEIGHT = PATTERN_PREVIEW_AXIAL_POINTS; // within fft output line size. 
 
+	// Frames grabbed of each HD preview line at capture when preview averaging is on. Every
+	// repeat takes a grab buffer of its own, so the count a protocol may ask for is limited.
 	constexpr int PATTERN_PREVIEW_AVERAGE_SIZE = 5;
+	constexpr int PATTERN_PREVIEW_AVERAGE_SIZE_MAX = 10;
 	constexpr int PATTERN_PREVIEW_HISTORY_SIZE = 10;
 	constexpr float PATTERN_PREVIEW_RANGE_X = 6.0f;
 
@@ -70,7 +73,7 @@ namespace wso_domain
 	constexpr int OCT_FULL_RANGE_AXIAL_FLATTEN_WINDOW_MAX = LINE_CAMERA_CCD_PIXELS;
 	// At twice the A-line count of a B-scan the moving average covers the whole B-scan for
 	// every A-line, so the largest width subtracts the mean spectrum of any B-scan.
-	constexpr int OCT_FULL_RANGE_MOVING_BACKGROUND_WINDOW = 9;
+	constexpr int OCT_FULL_RANGE_MOVING_BACKGROUND_WINDOW = 3;
 	constexpr int OCT_FULL_RANGE_MOVING_BACKGROUND_WINDOW_MIN = 2;
 	constexpr int OCT_FULL_RANGE_MOVING_BACKGROUND_WINDOW_MAX = (BSCAN_LATERAL_SIZE_MAX * 2);
 

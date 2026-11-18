@@ -36,6 +36,9 @@ namespace WsoNativeLib
         private static extern bool isOctScanOptimizing();
 
         [DllImport(LibraryName)]
+        private static extern int getOctProtocolInitParamStructSize();
+
+        [DllImport(LibraryName)]
         [return: MarshalAs(UnmanagedType.I1)]
         private static extern bool setupOctScanProtocol(OctProtocolInitParam param);
 
@@ -117,8 +120,31 @@ namespace WsoNativeLib
             return isOctScanOptimizing();
         }
 
+        private static bool _structSizesVerified;
+
+        /// <summary>
+        /// Asserts that the C# mirror of the native protocol init struct has the native size.
+        /// Called before the struct crosses the boundary; throws on a mismatch so a layout
+        /// drift is caught instead of corrupting memory.
+        /// </summary>
+        public static void VerifyStructSizes()
+        {
+            if (_structSizesVerified)
+            {
+                return;
+            }
+            int nativeSize = getOctProtocolInitParamStructSize();
+            int managedSize = Marshal.SizeOf<OctProtocolInitParam>();
+            if (nativeSize != managedSize)
+            {
+                throw new InvalidOperationException($"OctProtocolInitParam size mismatch: native {nativeSize}, managed {managedSize}");
+            }
+            _structSizesVerified = true;
+        }
+
         public static bool SetupScanProtocol(OctProtocolInitParam param)
         {
+            VerifyStructSizes();
             return setupOctScanProtocol(param);
         }
 

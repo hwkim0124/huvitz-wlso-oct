@@ -390,6 +390,7 @@ namespace WsoNativeLib
 
         public static bool GetProtocolInitParam(int reportId, ref OctProtocolInitParam param)
         {
+            OctScanning.VerifyStructSizes();
             return getOctReportProtocolInitParam(reportId, ref param);
         }
 
@@ -398,6 +399,7 @@ namespace WsoNativeLib
         /// </summary>
         public static bool GetResultProtocolInitParam(int sourceId, ref OctProtocolInitParam param)
         {
+            OctScanning.VerifyStructSizes();
             return getOctResultProtocolInitParam(sourceId, ref param);
         }
     }

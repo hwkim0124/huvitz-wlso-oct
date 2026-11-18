@@ -34,6 +34,7 @@ namespace WsoToolkit
         WsoOctScan.OctProtocolInitParam _octInitParam = new();
         WsoOctCalib.OctDispersionParam _disperParam = new();
         WsoOctCalib.OctSpectrometerParam _spectroParam = new();
+        WsoOctCalib.OctFullRangeParam _fullRangeParam = new();
 
         public bool IsScanOnRetina { get; set; } = true;
         private bool _isDisposePeakByRefer = false;
@@ -82,7 +83,15 @@ namespace WsoToolkit
             }
             if (!OctScanning.StartPreview(_onOctPreviewCaptured, null))
             {
-                ShowError("Failed to start scan preview!");
+                if (_octInitParam.isFullRangeDomain)
+                {
+                    // The phase ramp is checked against the scan line when the scan starts.
+                    ShowError("Failed to start scan preview!\nFull range: check that Phase Base + Phase Inc x (Points + paddings) stays within -32768 to 32767.");
+                }
+                else
+                {
+                    ShowError("Failed to start scan preview!");
+                }
                 return false;
             }
 
@@ -423,6 +432,24 @@ namespace WsoToolkit
             if (OctScanner.SubmitOctSpectrometerParam(param))
             {
                 _spectroParam = param;
+                return true;
+            }
+            return false;
+        }
+
+        // The full range options the WSO library holds. They apply to every full range scan,
+        // the ones started from the OCT Scan Mode window included.
+        public WsoOctCalib.OctFullRangeParam GetFullRangeParam()
+        {
+            OctScanner.ObtainOctFullRangeParam(ref _fullRangeParam);
+            return _fullRangeParam;
+        }
+
+        public bool SetFullRangeParam(WsoOctCalib.OctFullRangeParam param)
+        {
+            if (OctScanner.SubmitOctFullRangeParam(param))
+            {
+                _fullRangeParam = param;
                 return true;
             }
             return false;

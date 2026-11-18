@@ -69,6 +69,7 @@ namespace WsoToolkit
             PopulateSignalOptionControls();
             PopulateDispersionControls(false);
             PopulateSpectrometerControls(false);
+            PopulateFullRangeControls();
 
             BoardDevice.ConnectJoystickButtonPressed(_onJoystickButtonPressed);
             BoardDevice.ConnectOptimizeButtonPressed(_onOptimizeButtonPressed);
@@ -167,6 +168,7 @@ namespace WsoToolkit
 
             checkNotGrabbing.IsChecked = false;
             checkIsAnterior.IsChecked = false;
+            checkFullRangeDomain.IsChecked = false;
 
             radioCameraSpeed3.IsChecked = true;
 
@@ -246,6 +248,14 @@ namespace WsoToolkit
             {
                 ReflectDispersionControls();
                 ReflectSpectrometerControls();
+
+                // The full range options are only read for a full range scan, which does not
+                // start unless they are accepted.
+                if (checkFullRangeDomain.IsChecked == true && !ReflectFullRangeControls())
+                {
+                    Mouse.OverrideCursor = null;
+                    return;
+                }
 
                 StartOctScanPreview();
                 EnableButtonsAtScanning();
@@ -478,6 +488,120 @@ namespace WsoToolkit
             param.wfCoeffs[2] = ToDouble(editSpectParam3.Text);
             param.wfCoeffs[3] = ToDouble(editSpectParam4.Text);
             SetSpectrometerParam(param);
+        }
+
+        // Full range scanning options.
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////
+        private void PopulateFullRangeControls()
+        {
+            // Start from the parameters the native side holds, so the boxes show what a scan would use.
+            var param = GetFullRangeParam();
+
+            editPhaseBase.Text = param.phaseBase.ToString();
+            editPhaseInc.Text = param.phaseInc.ToString();
+            editPhaseEndWait.Text = param.endPhaseWaitTimeUs.ToString();
+            editPhaseSlew.Text = param.phaseOriginSlewTimeUs.ToString();
+            editFullRangeCutoff.Text = param.lateralCutoffPercent.ToString("0.###");
+            checkFullRangeFlip.IsChecked = param.flipSideband != 0;
+            checkFullRangeFlatten.IsChecked = param.axialFlatten != 0;
+            editFullRangeFlatten.Text = param.axialFlattenWindow.ToString();
+            checkFullRangeBgSubMa.IsChecked = param.movingBackground != 0;
+            editFullRangeBgSubMa.Text = param.movingBackgroundWindow.ToString();
+
+            EnableFullRangeControls();
+        }
+
+        private void EnableFullRangeControls()
+        {
+            bool enabled = checkFullRangeDomain.IsChecked == true;
+            checkFullRangeFlip.IsEnabled = enabled;
+            editPhaseBase.IsEnabled = enabled;
+            editPhaseInc.IsEnabled = enabled;
+            editPhaseEndWait.IsEnabled = enabled;
+            editPhaseSlew.IsEnabled = enabled;
+            editFullRangeCutoff.IsEnabled = enabled;
+            checkFullRangeFlatten.IsEnabled = enabled;
+            checkFullRangeBgSubMa.IsEnabled = enabled;
+            // A size only applies while its option is on.
+            editFullRangeFlatten.IsEnabled = enabled && checkFullRangeFlatten.IsChecked == true;
+            editFullRangeBgSubMa.IsEnabled = enabled && checkFullRangeBgSubMa.IsChecked == true;
+        }
+
+        // Reads the full range options from the GUI controls and hands them to the WSO library,
+        // where they take effect with the scan protocol about to start.
+        private bool ReflectFullRangeControls()
+        {
+            // The fields without a control here keep the values the native side holds.
+            var param = GetFullRangeParam();
+
+            if (!int.TryParse(editPhaseBase.Text, out param.phaseBase) || param.phaseBase < short.MinValue || param.phaseBase > short.MaxValue)
+            {
+                ShowError("Full range: Phase Base must be an integer from -32768 to 32767.");
+                return false;
+            }
+            if (!int.TryParse(editPhaseInc.Text, out param.phaseInc) || param.phaseInc == 0 || param.phaseInc < short.MinValue || param.phaseInc > short.MaxValue)
+            {
+                ShowError("Full range: Phase Inc must be a non-zero integer from -32768 to 32767.");
+                return false;
+            }
+            if (!int.TryParse(editPhaseEndWait.Text, out param.endPhaseWaitTimeUs) || param.endPhaseWaitTimeUs < 0)
+            {
+                ShowError("Full range: Wait must be an integer of 0 or more microseconds.");
+                return false;
+            }
+            if (!int.TryParse(editPhaseSlew.Text, out param.phaseOriginSlewTimeUs) || param.phaseOriginSlewTimeUs < 0 || param.phaseOriginSlewTimeUs > ushort.MaxValue)
+            {
+                ShowError("Full range: Slew must be an integer from 0 to 65535 microseconds.");
+                return false;
+            }
+            // Written so that a NaN is rejected as well.
+            if (!float.TryParse(editFullRangeCutoff.Text, out param.lateralCutoffPercent) || !(param.lateralCutoffPercent >= 0.0f && param.lateralCutoffPercent < 50.0f))
+            {
+                ShowError("Full range: Lateral HPF must be a number from 0 to below 50 percent.");
+                return false;
+            }
+            param.flipSideband = checkFullRangeFlip.IsChecked == true ? 1 : 0;
+
+            // The size box is disabled while the flattening is off, so it is only read when on;
+            // otherwise the size last accepted is kept.
+            param.axialFlatten = checkFullRangeFlatten.IsChecked == true ? 1 : 0;
+            if (param.axialFlatten != 0 &&
+                (!int.TryParse(editFullRangeFlatten.Text, out param.axialFlattenWindow) || param.axialFlattenWindow < 2 || param.axialFlattenWindow > 2048))
+            {
+                ShowError("Full range: Flatten size must be an integer from 2 to 2048 samples.");
+                return false;
+            }
+
+            // The moving average background across the A-lines, read the same way.
+            param.movingBackground = checkFullRangeBgSubMa.IsChecked == true ? 1 : 0;
+            if (param.movingBackground != 0 &&
+                (!int.TryParse(editFullRangeBgSubMa.Text, out param.movingBackgroundWindow) || param.movingBackgroundWindow < 2 || param.movingBackgroundWindow > 16384))
+            {
+                ShowError("Full range: BgSubMA size must be an integer from 2 to 16384 A-lines.");
+                return false;
+            }
+
+            if (!SetFullRangeParam(param))
+            {
+                ShowError("Failed to set full range parameters!");
+                return false;
+            }
+            return true;
+        }
+
+        private void CheckFullRangeDomain_Click(object sender, RoutedEventArgs e)
+        {
+            EnableFullRangeControls();
+        }
+
+        private void CheckFullRangeFlatten_Click(object sender, RoutedEventArgs e)
+        {
+            EnableFullRangeControls();
+        }
+
+        private void CheckFullRangeBgSubMa_Click(object sender, RoutedEventArgs e)
+        {
+            EnableFullRangeControls();
         }
 
         private void BtnLoadSpectParams_Click(object sender, RoutedEventArgs e)

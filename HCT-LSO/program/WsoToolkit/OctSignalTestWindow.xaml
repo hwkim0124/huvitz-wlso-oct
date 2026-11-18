@@ -187,7 +187,6 @@
                 <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="5">
                     <CheckBox x:Name="checkNotGrabbing" Content="Not Grabbing" Style="{StaticResource CheckBoxStyle}" />
                     <CheckBox x:Name="checkIsAnterior" Content="Anterior Mode" Style="{StaticResource CheckBoxStyle}" Margin="12, 0, 0, 0" Click="CheckIsAnterior_Click"/>
-                    <CheckBox x:Name="checkFullRangeDomain" Content="Full Range" Style="{StaticResource CheckBoxStyle}" Margin="12, 0, 0, 0"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="6" Grid.ColumnSpan="2">
                     <TextBox x:Name="editScanOffsetX" Style="{StaticResource TextBoxS1Style}" Width="60"/>
@@ -245,6 +244,57 @@
                     <Button x:Name="btnApplySpectParams" Content="Apply" Style="{StaticResource ButtonS1Style}" Margin="4,0,0,0" Click="BtnApplySpectParams_Click"/>
                 </StackPanel>
                 <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="7" Grid.RowSpan="6"/>
+            </Grid>
+            <Grid Margin="0,4,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="12"/>
+                </Grid.RowDefinitions>
+                <!-- Two halves side by side, each a label / box / label / box run, to keep the section short.
+                     520 px in all, as wide as the sections above. -->
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="20"/>
+                    <ColumnDefinition Width="72"/>
+                    <ColumnDefinition Width="56"/>
+                    <ColumnDefinition Width="60"/>
+                    <ColumnDefinition Width="56"/>
+                    <ColumnDefinition Width="86"/>
+                    <ColumnDefinition Width="56"/>
+                    <ColumnDefinition Width="58"/>
+                    <ColumnDefinition Width="56"/>
+                </Grid.ColumnDefinitions>
+                <Label x:Name="label40" Content="Full Range" Style="{StaticResource HeaderStyle}" Grid.ColumnSpan="3" Margin="16,0,0,0" HorizontalAlignment="Left"/>
+                <StackPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="4" Orientation="Horizontal">
+                    <CheckBox x:Name="checkFullRangeDomain" Content="Enable" Style="{StaticResource CheckBoxStyle}" Margin="12,0,0,0" Click="CheckFullRangeDomain_Click"/>
+                    <CheckBox x:Name="checkFullRangeFlip" Content="Flip Sideband" Style="{StaticResource CheckBoxStyle}" Margin="24,0,0,0"/>
+                </StackPanel>
+                <Label x:Name="label405" Content="Lateral HPF" Style="{StaticResource LabelStyle}" Grid.Row="1" Grid.Column="5"/>
+                <StackPanel Grid.Row="1" Grid.Column="6" Grid.ColumnSpan="3" Orientation="Horizontal">
+                    <TextBox x:Name="editFullRangeCutoff" Style="{StaticResource TextBoxStyleT1}"/>
+                    <Label x:Name="label406" Content="% of A-lines" Style="{StaticResource LabelStyle}"/>
+                </StackPanel>
+                <Label x:Name="label401" Content="Phase Base" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="1"/>
+                <Label x:Name="label402" Content="Phase Inc" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="3"/>
+                <Label x:Name="label403" Content="Wait (us)" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="5"/>
+                <Label x:Name="label404" Content="Slew (us)" Style="{StaticResource LabelStyle}" Grid.Row="2" Grid.Column="7"/>
+                <TextBox x:Name="editPhaseBase" Style="{StaticResource TextBoxStyleT1}" Grid.Row="2" Grid.Column="2"/>
+                <TextBox x:Name="editPhaseInc" Style="{StaticResource TextBoxStyleT1}" Grid.Row="2" Grid.Column="4"/>
+                <TextBox x:Name="editPhaseEndWait" Style="{StaticResource TextBoxStyleT1}" Grid.Row="2" Grid.Column="6"/>
+                <TextBox x:Name="editPhaseSlew" Style="{StaticResource TextBoxStyleT1}" Grid.Row="2" Grid.Column="8"/>
+                <CheckBox x:Name="checkFullRangeFlatten" Content="Flatten" Style="{StaticResource CheckBoxStyle}" Grid.Row="3" Grid.Column="1" Margin="12,0,0,0" Click="CheckFullRangeFlatten_Click"/>
+                <StackPanel Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="3" Orientation="Horizontal">
+                    <TextBox x:Name="editFullRangeFlatten" Style="{StaticResource TextBoxStyleT1}"/>
+                    <Label x:Name="label407" Content="samples" Style="{StaticResource LabelStyle}"/>
+                </StackPanel>
+                <CheckBox x:Name="checkFullRangeBgSubMa" Content="BgSubMA" Style="{StaticResource CheckBoxStyle}" Grid.Row="3" Grid.Column="5" Margin="8,0,0,0" Click="CheckFullRangeBgSubMa_Click"/>
+                <StackPanel Grid.Row="3" Grid.Column="6" Grid.ColumnSpan="3" Orientation="Horizontal">
+                    <TextBox x:Name="editFullRangeBgSubMa" Style="{StaticResource TextBoxStyleT1}"/>
+                    <Label x:Name="label408" Content="A-lines" Style="{StaticResource LabelStyle}"/>
+                </StackPanel>
+                <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="9" Grid.RowSpan="5"/>
             </Grid>
         </StackPanel>
     </Grid>

@@ -35,6 +35,11 @@ bool WSOSYSTEM_DLL_API _stdcall wso_system::isOctScanOptimizing(void)
 	return false;
 }
 
+int WSOSYSTEM_DLL_API _stdcall wso_system::getOctProtocolInitParamStructSize(void)
+{
+	return static_cast<int>(sizeof(OctProtocolInitParam));
+}
+
 bool WSOSYSTEM_DLL_API _stdcall wso_system::setupOctScanProtocol(OctProtocolInitParam param)
 {
 	if (auto* p = OctScanning::getInstance(); p) {

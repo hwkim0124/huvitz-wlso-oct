@@ -22,6 +22,12 @@ namespace oct_pattern
 	public:
 		virtual bool buildPattern(bool hidden = false);
 
+		// Times each HD line is scanned at capture, taken by the next buildPattern(). The
+		// frames of a line are averaged into the preview image of the result, so one repeat
+		// captures a single frame without averaging.
+		void setNumberOfRepeatsHD(int repeats);
+		int getNumberOfRepeatsHD(void) const;
+
 	protected:
 		virtual void buildPatternPoint(void);
 		virtual void buildPatternLine(bool isVert);

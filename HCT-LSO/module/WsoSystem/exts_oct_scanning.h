@@ -11,6 +11,10 @@ namespace wso_system
 		bool WSOSYSTEM_DLL_API _stdcall isOctScanMeasuring(void);
 		bool WSOSYSTEM_DLL_API _stdcall isOctScanOptimizing(void);
 
+		// sizeof(OctProtocolInitParam), for the managed mirror to check its layout against
+		// before the struct crosses the boundary.
+		int WSOSYSTEM_DLL_API _stdcall getOctProtocolInitParamStructSize(void);
+
 		bool WSOSYSTEM_DLL_API _stdcall setupOctScanProtocol(OctProtocolInitParam param);
 		bool WSOSYSTEM_DLL_API _stdcall startOctScanPreview(OctPreviewImageCaptured clb_image, OctEnfaceImageCaptured clb_enface);
 		bool WSOSYSTEM_DLL_API _stdcall closeOctScanPreview(bool to_measure, OctScanProtocolCompleted clb_protocol);

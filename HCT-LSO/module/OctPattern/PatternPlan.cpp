@@ -203,7 +203,7 @@ bool oct_pattern::PatternPlan::buildPreviewPattern(OctScanProtocol& protocol)
 	EyeRegion domain = pattern.eyeRegion;
 	OctPatternType type = pattern.patternType;
 
-	int numPoints = PATTERN_PREVIEW_LINE_NUM_POINTS; // pattern._numPoints;
+	int numPoints = pattern.numAscan; 
 	int numLines = pattern.numBscan;
 	float rangeX = pattern.rangeX;
 	float rangeY = pattern.rangeY;
@@ -215,10 +215,12 @@ bool oct_pattern::PatternPlan::buildPreviewPattern(OctScanProtocol& protocol)
 			if (type == OctPatternType::LINE || type == OctPatternType::VERT_LINE) {
 				type = pattern.isVerticalScan() ? OctPatternType::VERT_LINE : OctPatternType::LINE;
 				numLines = 1;
+				numPoints = PATTERN_PREVIEW_LINE_NUM_POINTS;
 			}
 			else {
 				type = pattern.isVerticalScan() ? OctPatternType::VERT_MULTI_LINE : OctPatternType::MULTI_LINE;
-				numLines = 4;
+				numLines = PATTERN_PREVIEW_MULTI_NUM_LINES;
+				numPoints = PATTERN_PREVIEW_MULTI_NUM_POINTS;
 			}
 		}
 		if (pattern.isAngioPattern()) {
@@ -238,6 +240,8 @@ bool oct_pattern::PatternPlan::buildPreviewPattern(OctScanProtocol& protocol)
 		offsetX, offsetY, angle, scaleX, scaleY, moveX, moveY);
 	getImpl().preview.usePreviewPattern(true, usePattern);
 	getImpl().preview.useFastRasters(true, useFaster);
+	// One HD frame per preview line at capture, or as many as the protocol averages.
+	getImpl().preview.setNumberOfRepeatsHD(protocol.getPreviewLineRepeats());
 
 	if (!getImpl().preview.buildPattern(true)) {
 		LogD() << "Failed to build preview pattern";
@@ -253,6 +257,7 @@ bool oct_pattern::PatternPlan::buildPreviewPattern(OctScanProtocol& protocol)
 		LogD() << "Pattern type: " << static_cast<int>(type) << ", horiz.: " << pattern.isHorizontalScan();
 		LogD() << "Line space: " << scan.getScanLineSpace() << " overlaps: " << scan.getNumberOfScanOverlaps();
 		LogD() << "Pattern frames: " << scan.getNumberOfPatternFrames();
+		LogD() << "HD line repeats: " << scan.getNumberOfRepeatsHD() << ", averaging: " << protocol.isPreviewAveraging;
 	}
 	
 	return true;

@@ -488,7 +488,7 @@ namespace wso_domain
 		int flipSideband = 0;										// 1: keep the negative lateral band (mirrors the image).
 		int axialFlatten = 1;										// 1: flatten each spectrum before the lateral filter.
 		int axialFlattenWindow = OCT_FULL_RANGE_AXIAL_FLATTEN_WINDOW;	// Width of the moving average, in spectrum samples.
-		int movingBackground = 0;									// 1: subtract a moving average across the A-lines.
+		int movingBackground = 1;									// 1: subtract a moving average across the A-lines.
 		int movingBackgroundWindow = OCT_FULL_RANGE_MOVING_BACKGROUND_WINDOW;	// Width of that moving average, in A-lines.
 
 		bool isValid(void) const {

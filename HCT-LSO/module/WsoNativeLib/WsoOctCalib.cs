@@ -102,8 +102,8 @@ namespace WsoNativeLib
                 flipSideband = 0;
                 axialFlatten = 1;
                 axialFlattenWindow = 500;
-                movingBackground = 0;
-                movingBackgroundWindow = 9;
+                movingBackground = 1;
+                movingBackgroundWindow = 3;
             }
         }
 

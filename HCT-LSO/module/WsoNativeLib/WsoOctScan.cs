@@ -102,6 +102,13 @@ namespace WsoNativeLib
             [MarshalAs(UnmanagedType.I1)]
             public bool isFullRangeDomain;
 
+            // The preview image of the result is one HD frame, or the average of
+            // previewAverageSize frames when isPreviewAveraging is set (1 to 10). The native
+            // size of this struct is checked by OctScanning.VerifyStructSizes().
+            [MarshalAs(UnmanagedType.I1)]
+            public bool isPreviewAveraging;
+            public int previewAverageSize;
+
             public OctProtocolInitParam()
             {
                 eyeSide = EyeSide.OD;
@@ -136,6 +143,9 @@ namespace WsoNativeLib
                 isNotFocusAlign = false;
                 isNotImageGrabbing = false;
                 isFullRangeDomain = false;
+
+                isPreviewAveraging = false;
+                previewAverageSize = 5;
             }
         }
 
