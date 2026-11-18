@@ -81,6 +81,8 @@ namespace WsoToolkit
             BoardDevice.ReleaseJoystickButtonPressed();
             BoardDevice.ReleaseOptimizeButtonPressed();
 
+            // Closing the window cancels a scan preview still running, see CancelOctScanPreview().
+            DisconnectOctScanPreviewCallbacks();
             OctScanning.CancelScanning();
             OctAnalysis.ClearAllDataReports();
             OctAnalysis.ClearAllDataSources();
@@ -452,6 +454,16 @@ namespace WsoToolkit
         }
 
         private void CheckFullRangeDomain_Click(object sender, RoutedEventArgs e)
+        {
+            ReflectFullRangeControlsEnabled();
+        }
+
+        private void CheckFullRangeFlatten_Click(object sender, RoutedEventArgs e)
+        {
+            ReflectFullRangeControlsEnabled();
+        }
+
+        private void CheckFullRangeBgSubMa_Click(object sender, RoutedEventArgs e)
         {
             ReflectFullRangeControlsEnabled();
         }

@@ -651,16 +651,16 @@ void oct_pattern::PreviewScan::buildPreviewMultiLine(bool isVert)
 	for (int lidx = 0; lidx < NUM_LINES_MULTI; lidx++)
 	{
 		if (lidx == 0) {
-			x1 = (isVert ? xStart : xStart);
-			x2 = (isVert ? xStart : xClose);
-			y1 = (isVert ? yStart : yStart);
-			y2 = (isVert ? yClose : yStart);
-		}
-		else if (lidx == 1) {
 			x1 = (isVert ? xCenter : xStart);
 			x2 = (isVert ? xCenter : xClose);
 			y1 = (isVert ? yStart : yCenter);
 			y2 = (isVert ? yClose : yCenter);
+		}
+		else if (lidx == 1) {
+			x1 = (isVert ? xStart : xStart);
+			x2 = (isVert ? xStart : xClose);
+			y1 = (isVert ? yStart : yStart);
+			y2 = (isVert ? yClose : yStart);
 		}
 		else if (lidx == 2) {
 			x1 = (isVert ? xClose : xStart);
@@ -689,16 +689,16 @@ void oct_pattern::PreviewScan::buildPreviewMultiLine(bool isVert)
 	for (int lidx = 0; lidx < NUM_LINES_MULTI; lidx++)
 	{
 		if (lidx == 0) {
-			x1 = (isVert ? xStart : xStart);
-			x2 = (isVert ? xStart : xClose);
-			y1 = (isVert ? yStart : yStart);
-			y2 = (isVert ? yClose : yStart);
-		}
-		else if (lidx == 1) {
 			x1 = (isVert ? xCenter : xStart);
 			x2 = (isVert ? xCenter : xClose);
 			y1 = (isVert ? yStart : yCenter);
 			y2 = (isVert ? yClose : yCenter);
+		}
+		else if (lidx == 1) {
+			x1 = (isVert ? xStart : xStart);
+			x2 = (isVert ? xStart : xClose);
+			y1 = (isVert ? yStart : yStart);
+			y2 = (isVert ? yClose : yStart);
 		}
 		else if (lidx == 2) {
 			x1 = (isVert ? xClose : xStart);

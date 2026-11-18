@@ -796,10 +796,120 @@ const char * sig_chain::OclKernel::getAxialProjectionSource(void)
 
 // Full range (complex-conjugate resolved) B-scan. The reference phase ramp puts a carrier
 // across the A-lines, so the image and its mirror twin fall on opposite halves of the lateral
-// spectrum. Both kernels work in place on the row major [A-line][spectrum sample] buffers.
+// spectrum. The kernels work on the row major [A-line][spectrum sample] buffers: the first
+// two from one buffer to another, the other two in place.
 const char * sig_chain::OclKernel::getFullRangeSource(void)
 {
 	const char *p =
+		"// Applied to the background subtracted spectra, before they are flattened and	\n" \
+		"// resampled; one work item per spectrum sample, which runs across the A-lines.	\n" \
+		"// The mean of that sample over the A-lines within halfWindow of an A-line is	\n" \
+		"// subtracted from it: a background that follows what changes slowly over the	\n" \
+		"// B-scan. The lateral sideband mask removes such terms as well, but leaks them	\n" \
+		"// from the two ends of the B-scan when they differ there.						\n" \
+		"__kernel void fullRangeMovingBackground(										\n" \
+		"						__global float* input,									\n" \
+		"						__global float* output,									\n" \
+		"						const uint numRows,										\n" \
+		"						const uint numCols,										\n" \
+		"						const uint halfWindow)									\n" \
+		"{																				\n" \
+		"	const int x = get_global_id(0);												\n" \
+		"	const int rows = (int)numRows;												\n" \
+		"	const int cols = (int)numCols;												\n" \
+		"	const int reach = (int)halfWindow;											\n" \
+		"	int y;																		\n" \
+		"	int count = 0;																\n" \
+		"	float sum = 0.0f;															\n" \
+		"																				\n" \
+		"	if (x >= cols) {															\n" \
+		"		return;																	\n" \
+		"	}																			\n" \
+		"																				\n" \
+		"	// The A-lines within reach of the first one.								\n" \
+		"	for (y = 0; y <= reach && y < rows; y++) {									\n" \
+		"		sum += input[y * cols + x];												\n" \
+		"		count += 1;																\n" \
+		"	}																			\n" \
+		"																				\n" \
+		"	for (y = 0; y < rows; y++) {												\n" \
+		"		output[y * cols + x] = input[y * cols + x] - sum / (float)count;		\n" \
+		"																				\n" \
+		"		// Move the running sum on to the A-lines within reach of the next one.	\n" \
+		"		if (y + reach + 1 < rows) {												\n" \
+		"			sum += input[(y + reach + 1) * cols + x];							\n" \
+		"			count += 1;															\n" \
+		"		}																		\n" \
+		"		if (y - reach >= 0) {													\n" \
+		"			sum -= input[(y - reach) * cols + x];								\n" \
+		"			count -= 1;															\n" \
+		"		}																		\n" \
+		"	}																			\n" \
+		"	return;																		\n" \
+		"}																				\n" \
+		"																				\n" \
+		"// Applied to the background subtracted spectra, before they are resampled; one	\n" \
+		"// work item per A-line. The terms that do not interfere, which is the reference	\n" \
+		"// spectrum the background leaves behind with its line to line intensity changes,	\n" \
+		"// vary slowly along the spectrum but pass the lateral sideband mask whenever they	\n" \
+		"// change from A-line to A-line. The dispersion correction would then smear them	\n" \
+		"// over the depth rows around the zero delay, so the mean of the samples within	\n" \
+		"// halfWindow of a sample is subtracted from it. The spectral window follows the	\n" \
+		"// subtraction: applied first, it narrows those terms along the spectrum, which	\n" \
+		"// widens what has to be removed around the zero delay.							\n" \
+		"__kernel void fullRangeAxialFlatten(											\n" \
+		"						__global float* input,									\n" \
+		"						__global float* output,									\n" \
+		"						const uint numRows,										\n" \
+		"						const uint numCols,										\n" \
+		"						const uint halfWindow,									\n" \
+		"						const uint windowing)									\n" \
+		"{																				\n" \
+		"	const int y = get_global_id(0);												\n" \
+		"	const int cols = (int)numCols;												\n" \
+		"	const int reach = (int)halfWindow;											\n" \
+		"	const float pi = 3.141592653589f;											\n" \
+		"	const float span = (float)(cols - 1);										\n" \
+		"	int x;																		\n" \
+		"	int count = 0;																\n" \
+		"	float sum = 0.0f;															\n" \
+		"	float value, w;																\n" \
+		"																				\n" \
+		"	if (y >= (int)numRows) {													\n" \
+		"		return;																	\n" \
+		"	}																			\n" \
+		"																				\n" \
+		"	__global float* src = &input[y * cols];										\n" \
+		"	__global float* dst = &output[y * cols];									\n" \
+		"																				\n" \
+		"	// The samples within reach of the first one.								\n" \
+		"	for (x = 0; x <= reach && x < cols; x++) {									\n" \
+		"		sum += src[x];															\n" \
+		"		count += 1;																\n" \
+		"	}																			\n" \
+		"																				\n" \
+		"	for (x = 0; x < cols; x++) {												\n" \
+		"		value = src[x] - sum / (float)count;									\n" \
+		"		if (windowing != 0) {													\n" \
+		"			// The same window as backgroundSubtraction3.						\n" \
+		"			w = 0.35875f - 0.48829f*cos(2.0f*pi*x/span) + 0.14128f*cos(4.0f*pi*x/span) - 0.01168f*cos(6.0f*pi*x/span);	\n" \
+		"			value *= w;															\n" \
+		"		}																		\n" \
+		"		dst[x] = value;															\n" \
+		"																				\n" \
+		"		// Move the running sum on to the samples within reach of the next one.	\n" \
+		"		if (x + reach + 1 < cols) {												\n" \
+		"			sum += src[x + reach + 1];											\n" \
+		"			count += 1;															\n" \
+		"		}																		\n" \
+		"		if (x - reach >= 0) {													\n" \
+		"			sum -= src[x - reach];												\n" \
+		"			count -= 1;															\n" \
+		"		}																		\n" \
+		"	}																			\n" \
+		"	return;																		\n" \
+		"}																				\n" \
+		"																				\n" \
 		"// Applied between the forward and backward lateral FFTs, where a row is a lateral	\n" \
 		"// frequency bin: keeps one band, doubled as for an analytic signal, and drops the	\n" \
 		"// lowest bins, which hold the terms that do not follow the carrier.				\n" \

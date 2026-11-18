@@ -467,6 +467,15 @@ namespace wso_domain
 	// Full range (complex-conjugate resolved) scanning. The reference phase galvo is ramped one
 	// DAC step per camera trigger, which puts a phase carrier across the A-lines of a B-scan;
 	// a one-sided filter along the lateral axis then separates the image from its mirror twin.
+	// Before that, each spectrum can be flattened by subtracting a moving average along it,
+	// which removes the terms that do not interfere; the dispersion correction would otherwise
+	// smear them around the zero delay row. A narrower average removes more of them, but dims
+	// the image within about (spectrum length / width) rows of the zero delay.
+	// A moving average across the A-lines can be subtracted as well: a background that follows
+	// what changes slowly over a B-scan, such as a fixed pattern fringe of drifting strength,
+	// which the lateral filter leaks from the ends of the B-scan. It is a lateral high-pass
+	// itself, so a narrow average dims the image when the phase carrier is low: over 3 A-lines
+	// its gain is (2/3)(1 - cos(phase step per A-line)).
 	// Enabled per scan by OctProtocolInitParam::isFullRangeDomain.
 	struct OctFullRangeParam
 	{
@@ -477,6 +486,10 @@ namespace wso_domain
 		int trigDelayCount = 1;										// Phase trigger delay, 1 count: 10 ns.
 		float lateralCutoffPercent = OCT_FULL_RANGE_LATERAL_CUTOFF;	// Lowest lateral frequencies removed, % of A-lines.
 		int flipSideband = 0;										// 1: keep the negative lateral band (mirrors the image).
+		int axialFlatten = 1;										// 1: flatten each spectrum before the lateral filter.
+		int axialFlattenWindow = OCT_FULL_RANGE_AXIAL_FLATTEN_WINDOW;	// Width of the moving average, in spectrum samples.
+		int movingBackground = 0;									// 1: subtract a moving average across the A-lines.
+		int movingBackgroundWindow = OCT_FULL_RANGE_MOVING_BACKGROUND_WINDOW;	// Width of that moving average, in A-lines.
 
 		bool isValid(void) const {
 			return (phaseBase >= INT16_MIN && phaseBase <= INT16_MAX) &&
@@ -484,10 +497,12 @@ namespace wso_domain
 				(endPhaseWaitTimeUs >= 0) &&
 				(phaseOriginSlewTimeUs >= 0 && phaseOriginSlewTimeUs <= UINT16_MAX) &&
 				(trigDelayCount >= 0) &&
-				(lateralCutoffPercent >= 0.0f && lateralCutoffPercent < OCT_FULL_RANGE_LATERAL_CUTOFF_MAX);
+				(lateralCutoffPercent >= 0.0f && lateralCutoffPercent < OCT_FULL_RANGE_LATERAL_CUTOFF_MAX) &&
+				(axialFlattenWindow >= OCT_FULL_RANGE_AXIAL_FLATTEN_WINDOW_MIN && axialFlattenWindow <= OCT_FULL_RANGE_AXIAL_FLATTEN_WINDOW_MAX) &&
+				(movingBackgroundWindow >= OCT_FULL_RANGE_MOVING_BACKGROUND_WINDOW_MIN && movingBackgroundWindow <= OCT_FULL_RANGE_MOVING_BACKGROUND_WINDOW_MAX);
 		}
 	};
 	// Mirrored by WsoNativeLib/WsoOctCalib.cs; the C# side checks Marshal.SizeOf at run time
 	// (getOctFullRangeParamStructSize). Update both when the layout changes.
-	static_assert(sizeof(OctFullRangeParam) == 7 * 4, "OctFullRangeParam layout changed; update the C# mirror");
+	static_assert(sizeof(OctFullRangeParam) == 11 * 4, "OctFullRangeParam layout changed; update the C# mirror");
 }

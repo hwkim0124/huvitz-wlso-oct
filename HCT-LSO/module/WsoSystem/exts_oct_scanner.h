@@ -49,8 +49,10 @@ namespace wso_system
 		bool WSOSYSTEM_DLL_API __stdcall isOctFFTWindowingEnabled(bool isset, bool enable);
 		bool WSOSYSTEM_DLL_API __stdcall isOctKLinearResamplingEnabled(bool isset, bool enable);
 
-		// Full range scanning parameters: the reference phase ramp and the lateral sideband
-		// filter. They take effect when the next scan protocol with isFullRangeDomain starts.
+		// Full range scanning parameters: the reference phase ramp, the spectrum pre-filters
+		// (moving background, axial flattening) and the lateral sideband filter. The ramp takes
+		// effect when the next scan protocol with isFullRangeDomain starts, the processing
+		// options with the next frame processed.
 		bool WSOSYSTEM_DLL_API __stdcall obtainOctFullRangeParam(OctFullRangeParam* param);
 		bool WSOSYSTEM_DLL_API __stdcall submitOctFullRangeParam(const OctFullRangeParam* param);
 		// Struct size self-check for the C# mirror.

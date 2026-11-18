@@ -275,7 +275,7 @@ void wso_system::OctArchive::onOctPreviewImageProcessed(unsigned char* bits, int
 	if (auto p = OctScanStatus::getInstance(); p) {
 		if (p->isCapturingToMeasure()) {
 			repeated = p->isPreviewAveragingEnabled();
-			LogD() << "Oct preview image processed, index: " << image_index << ", w: " << width << ", h: " << height;
+			LogD() << "Oct preview image processed, index: " << image_index << ", w: " << width << ", h: " << height << ", repeated: " << repeated;
 
 			if (auto* plan = impl().pattern; plan) {
 				auto& preview = plan->getPreviewScan();

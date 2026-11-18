@@ -56,7 +56,7 @@ namespace wso_domain
 	constexpr int OCT_DISPERSION_PHASE_SHIFT_COEFFS_SIZE = 3;
 
 
-	// Full Range Scanning (reference phase ramp and lateral sideband filter)
+	// Full Range Scanning (reference phase ramp, spectrum pre-filters and lateral sideband filter)
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
 	constexpr int OCT_FULL_RANGE_PHASE_BASE = -32767;
 	constexpr int OCT_FULL_RANGE_PHASE_INC = 4;
@@ -65,6 +65,14 @@ namespace wso_domain
 	constexpr float OCT_FULL_RANGE_LATERAL_CUTOFF = 3.125f;
 	constexpr float OCT_FULL_RANGE_LATERAL_CUTOFF_MAX = 50.0f;
 	constexpr int OCT_FULL_RANGE_LATERAL_CUTOFF_BINS_MIN = 2;
+	constexpr int OCT_FULL_RANGE_AXIAL_FLATTEN_WINDOW = 500;
+	constexpr int OCT_FULL_RANGE_AXIAL_FLATTEN_WINDOW_MIN = 2;
+	constexpr int OCT_FULL_RANGE_AXIAL_FLATTEN_WINDOW_MAX = LINE_CAMERA_CCD_PIXELS;
+	// At twice the A-line count of a B-scan the moving average covers the whole B-scan for
+	// every A-line, so the largest width subtracts the mean spectrum of any B-scan.
+	constexpr int OCT_FULL_RANGE_MOVING_BACKGROUND_WINDOW = 9;
+	constexpr int OCT_FULL_RANGE_MOVING_BACKGROUND_WINDOW_MIN = 2;
+	constexpr int OCT_FULL_RANGE_MOVING_BACKGROUND_WINDOW_MAX = (BSCAN_LATERAL_SIZE_MAX * 2);
 
 
 	// Trigger Step by Scan speed. 

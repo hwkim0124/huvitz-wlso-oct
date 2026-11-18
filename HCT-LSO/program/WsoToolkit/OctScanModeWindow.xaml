@@ -30,6 +30,8 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="8"/>
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
@@ -57,7 +59,17 @@
                         <TextBox x:Name="editFullRangeCutoff" Style="{StaticResource TextBoxStyleT1}"/>
                         <Label x:Name="label406" Content="% of A-lines" Style="{StaticResource LabelStyle}"/>
                     </StackPanel>
-                    <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="5" Grid.RowSpan="6"/>
+                    <CheckBox x:Name="checkFullRangeFlatten" Content="Flatten" Style="{StaticResource CheckBoxStyle}" Grid.Row="5" Grid.Column="1" Margin="12,0,0,0" Click="CheckFullRangeFlatten_Click"/>
+                    <StackPanel Grid.Row="5" Grid.Column="2" Grid.ColumnSpan="3" Orientation="Horizontal">
+                        <TextBox x:Name="editFullRangeFlatten" Style="{StaticResource TextBoxStyleT1}"/>
+                        <Label x:Name="label407" Content="samples" Style="{StaticResource LabelStyle}"/>
+                    </StackPanel>
+                    <CheckBox x:Name="checkFullRangeBgSubMa" Content="BgSubMA" Style="{StaticResource CheckBoxStyle}" Grid.Row="6" Grid.Column="1" Margin="12,0,0,0" Click="CheckFullRangeBgSubMa_Click"/>
+                    <StackPanel Grid.Row="6" Grid.Column="2" Grid.ColumnSpan="3" Orientation="Horizontal">
+                        <TextBox x:Name="editFullRangeBgSubMa" Style="{StaticResource TextBoxStyleT1}"/>
+                        <Label x:Name="label408" Content="A-lines" Style="{StaticResource LabelStyle}"/>
+                    </StackPanel>
+                    <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="5" Grid.RowSpan="8"/>
                 </Grid>
             </StackPanel>
             <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Vertical">

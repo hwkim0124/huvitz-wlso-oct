@@ -58,9 +58,9 @@ namespace oct_pattern
 	constexpr float PATTERN_SCAN_CENTER_X = 0.0f;
 	constexpr float PATTERN_SCAN_CENTER_Y = 0.0f;
 
-
 	constexpr int PATTERN_PREVIEW_LINE_NUM_POINTS = 1024; // 512;
 	constexpr int PATTERN_PREVIEW_MULTI_NUM_POINTS = 512;
+	constexpr int PATTERN_PREVIEW_MULTI_NUM_LINES = 4;
 
 
 	// Line Trace id (Index of Trajectory)

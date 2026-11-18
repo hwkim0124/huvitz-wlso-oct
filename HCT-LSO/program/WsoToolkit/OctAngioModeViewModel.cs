@@ -183,10 +183,20 @@ namespace WsoToolkit
             _isResultAnalyzed = false;
         }
 
+        // Stops the live preview and enface images from reaching this window. The library keeps
+        // the callbacks connected until a scan has closed, so without this the frames still in
+        // its pipeline while the scan is being cancelled are delivered as well.
+        private void DisconnectOctScanPreviewCallbacks()
+        {
+            OctScanning.ReleasePreviewImageCaptured();
+            OctScanning.ReleaseEnfaceImageCaptured();
+        }
+
         private void CancelOctScanPreview()
         {
             if (OctScanning.IsWorking())
             {
+                DisconnectOctScanPreviewCallbacks();
                 OctScanning.ClosePreview(false, _onProtocolCompleted);
                 btnStartScan.Content = "Start Scan";
                 EnableButtonsAtScanning(false);
@@ -373,7 +383,7 @@ namespace WsoToolkit
             var name = cmbScanPattern.SelectedItem.ToString();
             var code = Array.Find(_scanPatterns, item => item.patternName == name).patternCode;
             _octInitParam.patternCode = code;
-            _octInitParam.previewType = WsoOctDefs.OctPatternType.LINE;
+            _octInitParam.previewType = WsoOctDefs.OctPatternType.MULTI_LINE;
 
             _octInitParam.scanPoints = ToInt(cmbScanPoints.SelectedItem.ToString());
             _octInitParam.scanLines = ToInt(cmbScanLines.SelectedItem.ToString());
@@ -877,6 +887,14 @@ namespace WsoToolkit
          private void OnOctScanPreviewImageCaptured(nint data, int width, int height, float quality, float snr_ratio, int ref_point, int index_image)
         {
             if (data == 0) return;
+
+            if (IsOctScanPreviewing())
+            {
+                if (index_image != 0)
+                {
+                    return;
+                }
+            }
 
             // Count the true capture rate before posting, so the preview's frame rate
             // reflects the capture rate rather than the throttled update rate.

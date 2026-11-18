@@ -88,6 +88,12 @@ namespace WsoNativeLib
         [DllImport(LibraryName)]
         private static extern void releaseOctIntensityDataCaptured();
 
+        [DllImport(LibraryName)]
+        private static extern void releaseOctPreviewImageCaptured();
+
+        [DllImport(LibraryName)]
+        private static extern void releaseOctEnfaceImageCaptured();
+
 
         // Public methods
         /////////////////////////////////////////////////////////////////////////////////////////////   
@@ -183,6 +189,25 @@ namespace WsoNativeLib
         public static void ReleaseIntensityDataCaptured()
         {
             releaseOctIntensityDataCaptured();
+        }
+
+        /// <summary>
+        /// Disconnects the live preview image callback given to <see cref="StartPreview"/>, which
+        /// otherwise stays connected until the scan has closed. Returns once a callback in
+        /// progress has finished; no preview image is delivered afterwards.
+        /// </summary>
+        public static void ReleasePreviewImageCaptured()
+        {
+            releaseOctPreviewImageCaptured();
+        }
+
+        /// <summary>
+        /// Disconnects the live enface image callback given to <see cref="StartPreview"/>, in the
+        /// same way as <see cref="ReleasePreviewImageCaptured"/>.
+        /// </summary>
+        public static void ReleaseEnfaceImageCaptured()
+        {
+            releaseOctEnfaceImageCaptured();
         }
     }
 }

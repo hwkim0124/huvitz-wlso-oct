@@ -53,6 +53,13 @@ namespace sig_chain
 
 		static bool performSpectrumDataCallback(OclTaskPlan* plan, const std::uint16_t* input);
 		static bool performBackgroundSubtraction(OclTaskPlan* plan, const std::uint16_t* input);
+		// Full range plans with the moving background option set: subtracts from every spectrum
+		// sample its mean over the neighbouring A-lines. Does nothing otherwise.
+		static bool performMovingBackground(OclTaskPlan* plan);
+		// Full range plans with the axial flattening option set: removes the slowly varying part
+		// of each background subtracted spectrum, then applies the spectral window. Does nothing
+		// otherwise, which leaves the windowing to the background subtraction.
+		static bool performAxialFlattening(OclTaskPlan* plan);
 		static bool performResamplingInput(OclTaskPlan* plan);
 		static bool performPhaseShiftTransform(OclTaskPlan* plan);
 		// Turns the resampled real spectra into the complex spectra the depth FFT consumes:

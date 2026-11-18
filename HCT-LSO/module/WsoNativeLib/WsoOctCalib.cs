@@ -46,8 +46,9 @@ namespace WsoNativeLib
 
         /// <summary>
         /// Full range (complex-conjugate resolved) scanning parameters: the reference phase ramp
-        /// that puts a carrier across the A-lines, and the lateral filter that separates the image
-        /// from its mirror twin. Enabled per scan by OctProtocolInitParam.isFullRangeDomain.
+        /// that puts a carrier across the A-lines, the pre-filters of the spectra (moving background
+        /// and flattening), and the lateral filter that separates the image from its mirror twin.
+        /// Enabled per scan by OctProtocolInitParam.isFullRangeDomain.
         /// Mirrors native wso_domain::OctFullRangeParam (WsoDomain/OctScanStructs.h); the size is
         /// checked at run time by <see cref="OctScanner.VerifyStructSizes"/>.
         /// </summary>
@@ -68,6 +69,27 @@ namespace WsoNativeLib
             public float lateralCutoffPercent;
             /// <summary>1 to keep the negative lateral band, which mirrors the image; otherwise 0.</summary>
             public int flipSideband;
+            /// <summary>
+            /// 1 to subtract a moving average along each spectrum before the lateral filter, which
+            /// clears the rows around the zero delay of the terms that do not interfere; otherwise 0.
+            /// </summary>
+            public int axialFlatten;
+            /// <summary>
+            /// Width of that moving average, in spectrum samples, from 2 to 2048. A narrower width
+            /// removes more, but dims the image within about (2048 / width) rows of the zero delay.
+            /// </summary>
+            public int axialFlattenWindow;
+            /// <summary>
+            /// 1 to subtract a moving average across the A-lines from every spectrum sample, a
+            /// background that follows what changes slowly over a B-scan; otherwise 0.
+            /// </summary>
+            public int movingBackground;
+            /// <summary>
+            /// Width of that moving average, in A-lines, from 2 to 16384. It is a lateral high-pass,
+            /// so a narrow width dims the image when the phase carrier is low; at twice the A-line
+            /// count it subtracts the mean spectrum of the B-scan.
+            /// </summary>
+            public int movingBackgroundWindow;
 
             public OctFullRangeParam()
             {
@@ -78,6 +100,10 @@ namespace WsoNativeLib
                 trigDelayCount = 1;
                 lateralCutoffPercent = 3.125f;
                 flipSideband = 0;
+                axialFlatten = 1;
+                axialFlattenWindow = 500;
+                movingBackground = 0;
+                movingBackgroundWindow = 9;
             }
         }
 

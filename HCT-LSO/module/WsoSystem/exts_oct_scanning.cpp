@@ -159,3 +159,21 @@ void WSOSYSTEM_DLL_API _stdcall wso_system::releaseOctIntensityDataCaptured(void
 	}
 	return;
 }
+
+void WSOSYSTEM_DLL_API _stdcall wso_system::releaseOctPreviewImageCaptured(void)
+{
+	// The registry runs and sets a callback under the same lock, so this waits for a
+	// callback in progress and none starts after it.
+	if (auto* p = CallbackRegistry::getInstance(); p) {
+		p->setOctPreviewImageCaptured(nullptr);
+	}
+	return;
+}
+
+void WSOSYSTEM_DLL_API _stdcall wso_system::releaseOctEnfaceImageCaptured(void)
+{
+	if (auto* p = CallbackRegistry::getInstance(); p) {
+		p->setOctEnfaceImageCaptured(nullptr);
+	}
+	return;
+}

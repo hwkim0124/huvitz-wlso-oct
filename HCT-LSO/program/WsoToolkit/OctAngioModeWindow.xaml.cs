@@ -79,6 +79,8 @@ namespace WsoToolkit
             BoardDevice.ReleaseJoystickButtonPressed();
             BoardDevice.ReleaseOptimizeButtonPressed();
 
+            // Closing the window cancels a scan preview still running, see CancelOctScanPreview().
+            DisconnectOctScanPreviewCallbacks();
             OctScanning.CancelScanning();
             OctAnalysis.ClearAllDataReports();
             OctAnalysis.ClearAllDataSources();

@@ -19,6 +19,15 @@ struct OclContext::OclContextImpl
 	bool isDebugMode = false;
 	OclTaskPlan* currTaskPlan;
 
+	// Pre-filters of the frame in progress, taken from the full range options when its
+	// execution starts: the background subtraction and the filters pass the spectra on from
+	// one buffer to the next and have to agree on the route, while the options can be set at
+	// any time.
+	bool movingBackground = false;
+	unsigned int movingHalfWindow = 0;
+	bool flattenSpectra = false;
+	unsigned int flattenHalfWindow = 0;
+
 	cl_context clContext;
 	cl_command_queue clQueue;
 	std::vector<cl_device_id> clDeviceIds;
@@ -61,6 +70,8 @@ struct OclContext::OclContextImpl
 	cl_kernel clProjectionKernel;
 
 	cl_program clFullRangeProgram;
+	cl_kernel clFullRangeMovingKernel;
+	cl_kernel clFullRangeFlattenKernel;
 	cl_kernel clFullRangeMaskKernel;
 	cl_kernel clFullRangePhaseKernel;
 
@@ -102,6 +113,8 @@ struct OclContext::OclContextImpl
 		clProjectionKernel = NULL;
 
 		clFullRangeProgram = NULL;
+		clFullRangeMovingKernel = NULL;
+		clFullRangeFlattenKernel = NULL;
 		clFullRangeMaskKernel = NULL;
 		clFullRangePhaseKernel = NULL;
 	}
@@ -222,11 +235,32 @@ bool sig_chain::OclContext::executeContext(OclTaskPlan* plan, const std::uint16_
 		LogD() << "Starting execution of Ocl context";
 	}
 
+	getImpl().movingBackground = false;
+	getImpl().flattenSpectra = false;
+	if (plan->useFullRangeDomain()) {
+		OctFullRangeParam param;
+		if (auto* p = OctScanOptions::getInstance(); p) {
+			param = p->getFullRangeParam();
+		}
+		getImpl().movingBackground = (param.movingBackground != 0);
+		getImpl().movingHalfWindow = (unsigned int)(param.movingBackgroundWindow / 2);
+		getImpl().flattenSpectra = (param.axialFlatten != 0);
+		getImpl().flattenHalfWindow = (unsigned int)(param.axialFlattenWindow / 2);
+	}
+
 	if (!performSpectrumDataCallback(plan, input)) {
 		return false;
 	}
 
 	if (!performBackgroundSubtraction(plan, input)) {
+		return false;
+	}
+
+	if (!performMovingBackground(plan)) {
+		return false;
+	}
+
+	if (!performAxialFlattening(plan)) {
 		return false;
 	}
 
@@ -660,13 +694,22 @@ bool sig_chain::OclContext::performBackgroundSubtraction(OclTaskPlan * plan, con
 		unsigned int numRows = (unsigned int)plan->inputLinesNum();
 		unsigned int numCols = (unsigned int)plan->inputLineSize();
 
+		// The pre-filters of a full range frame, see performMovingBackground() and
+		// performAxialFlattening(), can not work in place. They pass the spectra on through
+		// the second and third output buffers, which are free until the depth FFT, and the
+		// last of them leaves the result in the first one for the resampling. The flattening
+		// also takes over the windowing, which has to follow it.
+		const bool moving = getImpl().movingBackground;
+		const bool flatten = getImpl().flattenSpectra;
+		const bool windowing = (ChainSetup::useFFTWindowing() && !flatten);
+		cl_mem* target = ((moving || flatten) ? plan->outputBuffers(1) : plan->outputBuffers(0));
 
 		if (plan->useBackgroundSubtraction())
 		{
-			if (ChainSetup::useFFTWindowing()) {
+			if (windowing) {
 				OPENCL_V_THROW(::clSetKernelArg(getImpl().clSubtractKernel3, 0, sizeof(cl_mem), plan->inputBuffers(0)), "clKernel failed");
 				OPENCL_V_THROW(::clSetKernelArg(getImpl().clSubtractKernel3, 1, sizeof(cl_mem), &getImpl().subtractBuffers[0]), "clKernel failed");
-				OPENCL_V_THROW(::clSetKernelArg(getImpl().clSubtractKernel3, 2, sizeof(cl_mem), plan->outputBuffers(0)), "clKernel failed");
+				OPENCL_V_THROW(::clSetKernelArg(getImpl().clSubtractKernel3, 2, sizeof(cl_mem), target), "clKernel failed");
 				OPENCL_V_THROW(::clSetKernelArg(getImpl().clSubtractKernel3, 3, sizeof(cl_uint), &numRows), "clKernel failed");
 				OPENCL_V_THROW(::clSetKernelArg(getImpl().clSubtractKernel3, 4, sizeof(cl_uint), &numCols), "clKernel failed");
 
@@ -678,7 +721,7 @@ bool sig_chain::OclContext::performBackgroundSubtraction(OclTaskPlan * plan, con
 			else {
 				OPENCL_V_THROW(::clSetKernelArg(getImpl().clSubtractKernel, 0, sizeof(cl_mem), plan->inputBuffers(0)), "clKernel failed");
 				OPENCL_V_THROW(::clSetKernelArg(getImpl().clSubtractKernel, 1, sizeof(cl_mem), &getImpl().subtractBuffers[0]), "clKernel failed");
-				OPENCL_V_THROW(::clSetKernelArg(getImpl().clSubtractKernel, 2, sizeof(cl_mem), plan->outputBuffers(0)), "clKernel failed");
+				OPENCL_V_THROW(::clSetKernelArg(getImpl().clSubtractKernel, 2, sizeof(cl_mem), target), "clKernel failed");
 				OPENCL_V_THROW(::clSetKernelArg(getImpl().clSubtractKernel, 3, sizeof(cl_uint), &numRows), "clKernel failed");
 				OPENCL_V_THROW(::clSetKernelArg(getImpl().clSubtractKernel, 4, sizeof(cl_uint), &numCols), "clKernel failed");
 
@@ -690,9 +733,9 @@ bool sig_chain::OclContext::performBackgroundSubtraction(OclTaskPlan * plan, con
 		}
 		else
 		{
-			if (ChainSetup::useFFTWindowing()) {
+			if (windowing) {
 				OPENCL_V_THROW(::clSetKernelArg(getImpl().clSubtractKernel4, 0, sizeof(cl_mem), plan->inputBuffers(0)), "clKernel failed");
-				OPENCL_V_THROW(::clSetKernelArg(getImpl().clSubtractKernel4, 1, sizeof(cl_mem), plan->outputBuffers(0)), "clKernel failed");
+				OPENCL_V_THROW(::clSetKernelArg(getImpl().clSubtractKernel4, 1, sizeof(cl_mem), target), "clKernel failed");
 				OPENCL_V_THROW(::clSetKernelArg(getImpl().clSubtractKernel4, 2, sizeof(cl_uint), &numRows), "clKernel failed");
 				OPENCL_V_THROW(::clSetKernelArg(getImpl().clSubtractKernel4, 3, sizeof(cl_uint), &numCols), "clKernel failed");
 
@@ -703,7 +746,7 @@ bool sig_chain::OclContext::performBackgroundSubtraction(OclTaskPlan * plan, con
 			}
 			else {
 				OPENCL_V_THROW(::clSetKernelArg(getImpl().clSubtractKernel2, 0, sizeof(cl_mem), plan->inputBuffers(0)), "clKernel failed");
-				OPENCL_V_THROW(::clSetKernelArg(getImpl().clSubtractKernel2, 1, sizeof(cl_mem), plan->outputBuffers(0)), "clKernel failed");
+				OPENCL_V_THROW(::clSetKernelArg(getImpl().clSubtractKernel2, 1, sizeof(cl_mem), target), "clKernel failed");
 				OPENCL_V_THROW(::clSetKernelArg(getImpl().clSubtractKernel2, 2, sizeof(cl_uint), &numRows), "clKernel failed");
 				OPENCL_V_THROW(::clSetKernelArg(getImpl().clSubtractKernel2, 3, sizeof(cl_uint), &numCols), "clKernel failed");
 
@@ -716,6 +759,91 @@ bool sig_chain::OclContext::performBackgroundSubtraction(OclTaskPlan * plan, con
 
 		if (getImpl().isDebugMode) {
 			LogD() << "Background subtracted: " << StopWatch::getElapsedMillis() << " ms";
+		}
+	}
+	catch (std::exception) {
+		return false;
+	}
+#endif
+	return true;
+}
+
+
+bool sig_chain::OclContext::performMovingBackground(OclTaskPlan * plan)
+{
+#ifndef _NCLFFT
+	try {
+		if (getImpl().movingBackground == false) {
+			return true;
+		}
+
+		unsigned int numRows = (unsigned int)plan->inputLinesNum();
+		unsigned int numCols = (unsigned int)plan->inputLineSize();
+		unsigned int halfWindow = getImpl().movingHalfWindow;
+
+		// From the buffer the background subtraction left the spectra in, to the one the
+		// flattening reads, or straight to the one the resampling reads.
+		cl_mem* target = (getImpl().flattenSpectra ? plan->outputBuffers(2) : plan->outputBuffers(0));
+
+		OPENCL_V_THROW(::clSetKernelArg(getImpl().clFullRangeMovingKernel, 0, sizeof(cl_mem), plan->outputBuffers(1)), "clKernel failed");
+		OPENCL_V_THROW(::clSetKernelArg(getImpl().clFullRangeMovingKernel, 1, sizeof(cl_mem), target), "clKernel failed");
+		OPENCL_V_THROW(::clSetKernelArg(getImpl().clFullRangeMovingKernel, 2, sizeof(cl_uint), &numRows), "clKernel failed");
+		OPENCL_V_THROW(::clSetKernelArg(getImpl().clFullRangeMovingKernel, 3, sizeof(cl_uint), &numCols), "clKernel failed");
+		OPENCL_V_THROW(::clSetKernelArg(getImpl().clFullRangeMovingKernel, 4, sizeof(cl_uint), &halfWindow), "clKernel failed");
+
+		// One work item per spectrum sample, which runs across the A-lines.
+		const size_t globalWorkSize[1] = { numCols };
+		OPENCL_V_THROW(clEnqueueNDRangeKernel(getImpl().clQueue, getImpl().clFullRangeMovingKernel, 1,
+			NULL, globalWorkSize, NULL, 0, NULL, NULL),
+			"Full range moving background failed");
+		OPENCL_V_THROW(clFinish(getImpl().clQueue), "clFinish failed");
+
+		if (getImpl().isDebugMode) {
+			LogD() << "Full range moving background subtracted: " << StopWatch::getElapsedMillis() << " ms";
+		}
+	}
+	catch (std::exception) {
+		return false;
+	}
+#endif
+	return true;
+}
+
+
+bool sig_chain::OclContext::performAxialFlattening(OclTaskPlan * plan)
+{
+#ifndef _NCLFFT
+	try {
+		if (getImpl().flattenSpectra == false) {
+			return true;
+		}
+
+		unsigned int numRows = (unsigned int)plan->inputLinesNum();
+		unsigned int numCols = (unsigned int)plan->inputLineSize();
+		unsigned int halfWindow = getImpl().flattenHalfWindow;
+		unsigned int windowing = (ChainSetup::useFFTWindowing() ? 1 : 0);
+
+		// From the buffer the step before left the spectra in, which is the moving background
+		// when it is on and the background subtraction otherwise, to the one the resampling
+		// reads.
+		cl_mem* source = (getImpl().movingBackground ? plan->outputBuffers(2) : plan->outputBuffers(1));
+
+		OPENCL_V_THROW(::clSetKernelArg(getImpl().clFullRangeFlattenKernel, 0, sizeof(cl_mem), source), "clKernel failed");
+		OPENCL_V_THROW(::clSetKernelArg(getImpl().clFullRangeFlattenKernel, 1, sizeof(cl_mem), plan->outputBuffers(0)), "clKernel failed");
+		OPENCL_V_THROW(::clSetKernelArg(getImpl().clFullRangeFlattenKernel, 2, sizeof(cl_uint), &numRows), "clKernel failed");
+		OPENCL_V_THROW(::clSetKernelArg(getImpl().clFullRangeFlattenKernel, 3, sizeof(cl_uint), &numCols), "clKernel failed");
+		OPENCL_V_THROW(::clSetKernelArg(getImpl().clFullRangeFlattenKernel, 4, sizeof(cl_uint), &halfWindow), "clKernel failed");
+		OPENCL_V_THROW(::clSetKernelArg(getImpl().clFullRangeFlattenKernel, 5, sizeof(cl_uint), &windowing), "clKernel failed");
+
+		// One work item per A-line, which runs along its spectrum.
+		const size_t globalWorkSize[1] = { numRows };
+		OPENCL_V_THROW(clEnqueueNDRangeKernel(getImpl().clQueue, getImpl().clFullRangeFlattenKernel, 1,
+			NULL, globalWorkSize, NULL, 0, NULL, NULL),
+			"Full range axial flattening failed");
+		OPENCL_V_THROW(clFinish(getImpl().clQueue), "clFinish failed");
+
+		if (getImpl().isDebugMode) {
+			LogD() << "Full range spectra flattened: " << StopWatch::getElapsedMillis() << " ms";
 		}
 	}
 	catch (std::exception) {
@@ -2181,6 +2309,12 @@ bool sig_chain::OclContext::createFullRangeKernel(void)
 			OclKernel::getFullRangeSource());
 
 		createOpenCLKernel(getImpl().clFullRangeProgram,
+			getImpl().clFullRangeMovingKernel, "fullRangeMovingBackground");
+
+		createOpenCLKernel(getImpl().clFullRangeProgram,
+			getImpl().clFullRangeFlattenKernel, "fullRangeAxialFlatten");
+
+		createOpenCLKernel(getImpl().clFullRangeProgram,
 			getImpl().clFullRangeMaskKernel, "fullRangeSidebandMask");
 
 		createOpenCLKernel(getImpl().clFullRangeProgram,
@@ -2298,6 +2432,8 @@ void sig_chain::OclContext::releaseAxialProjectionKernel(void)
 void sig_chain::OclContext::releaseFullRangeKernel(void)
 {
 #ifndef _NCLFFT
+	releaseOpenCLKernel(getImpl().clFullRangeMovingKernel);
+	releaseOpenCLKernel(getImpl().clFullRangeFlattenKernel);
 	releaseOpenCLKernel(getImpl().clFullRangeMaskKernel);
 	releaseOpenCLKernel(getImpl().clFullRangePhaseKernel);
 	releaseOpenCLProgram(getImpl().clFullRangeProgram);

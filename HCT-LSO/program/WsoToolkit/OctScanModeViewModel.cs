@@ -208,10 +208,20 @@ namespace WsoToolkit
             _isResultSourced = false;
         }
 
+        // Stops the live preview and enface images from reaching this window. The library keeps
+        // the callbacks connected until a scan has closed, so without this the frames still in
+        // its pipeline while the scan is being cancelled are delivered as well.
+        private void DisconnectOctScanPreviewCallbacks()
+        {
+            OctScanning.ReleasePreviewImageCaptured();
+            OctScanning.ReleaseEnfaceImageCaptured();
+        }
+
         private void CancelOctScanPreview()
         {
             if (OctScanning.IsWorking())
             {
+                DisconnectOctScanPreviewCallbacks();
                 OctScanning.ClosePreview(false, _onProtocolCompleted);
                 btnStartScan.Content = "Start Scan";
                 EnableButtonsAtScanning(false);
@@ -398,7 +408,7 @@ namespace WsoToolkit
             var pattern = Array.Find(_scanPatterns, item => item.patternName == name);
             var code = pattern.patternCode;
             _octInitParam.patternCode = code;
-            _octInitParam.previewType = WsoOctDefs.OctPatternType.MULTI_LINE;
+            _octInitParam.previewType = checkFullRangeDomain.IsChecked == true ? WsoOctDefs.OctPatternType.LINE : WsoOctDefs.OctPatternType.MULTI_LINE;
 
             _octInitParam.scanPoints = ToInt(cmbScanPoints.SelectedItem.ToString());
             _octInitParam.scanLines = ToInt(cmbScanLines.SelectedItem.ToString());
@@ -443,6 +453,10 @@ namespace WsoToolkit
             editPhaseSlew.Text = param.phaseOriginSlewTimeUs.ToString();
             editFullRangeCutoff.Text = param.lateralCutoffPercent.ToString("0.###");
             checkFullRangeFlip.IsChecked = param.flipSideband != 0;
+            checkFullRangeFlatten.IsChecked = param.axialFlatten != 0;
+            editFullRangeFlatten.Text = param.axialFlattenWindow.ToString();
+            checkFullRangeBgSubMa.IsChecked = param.movingBackground != 0;
+            editFullRangeBgSubMa.Text = param.movingBackgroundWindow.ToString();
 
             ReflectFullRangeControlsEnabled();
         }
@@ -456,6 +470,11 @@ namespace WsoToolkit
             editPhaseEndWait.IsEnabled = enabled;
             editPhaseSlew.IsEnabled = enabled;
             editFullRangeCutoff.IsEnabled = enabled;
+            checkFullRangeFlatten.IsEnabled = enabled;
+            checkFullRangeBgSubMa.IsEnabled = enabled;
+            // A size only applies while its option is on.
+            editFullRangeFlatten.IsEnabled = enabled && checkFullRangeFlatten.IsChecked == true;
+            editFullRangeBgSubMa.IsEnabled = enabled && checkFullRangeBgSubMa.IsChecked == true;
         }
 
         // Reads the full range options from the GUI controls and hands them to the WSO library,
@@ -491,6 +510,25 @@ namespace WsoToolkit
                 return false;
             }
             param.flipSideband = checkFullRangeFlip.IsChecked == true ? 1 : 0;
+
+            // The size box is disabled while the flattening is off, so it is only read when on;
+            // otherwise the size last accepted is kept.
+            param.axialFlatten = checkFullRangeFlatten.IsChecked == true ? 1 : 0;
+            if (param.axialFlatten != 0 &&
+                (!int.TryParse(editFullRangeFlatten.Text, out param.axialFlattenWindow) || param.axialFlattenWindow < 2 || param.axialFlattenWindow > 2048))
+            {
+                ShowError("Full range: Flatten size must be an integer from 2 to 2048 samples.");
+                return false;
+            }
+
+            // The moving average background across the A-lines, read the same way.
+            param.movingBackground = checkFullRangeBgSubMa.IsChecked == true ? 1 : 0;
+            if (param.movingBackground != 0 &&
+                (!int.TryParse(editFullRangeBgSubMa.Text, out param.movingBackgroundWindow) || param.movingBackgroundWindow < 2 || param.movingBackgroundWindow > 16384))
+            {
+                ShowError("Full range: BgSubMA size must be an integer from 2 to 16384 A-lines.");
+                return false;
+            }
 
             if (!OctScanner.SubmitOctFullRangeParam(param))
             {
@@ -1047,7 +1085,7 @@ namespace WsoToolkit
 
             if (IsOctScanPreviewing())
             {
-                if (index_image != 1)
+                if (index_image != 0)
                 {
                     return;
                 }

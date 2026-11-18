@@ -28,5 +28,11 @@ namespace wso_system
 		void WSOSYSTEM_DLL_API _stdcall releaseOctSpectrumDataCaptured(void);
 		void WSOSYSTEM_DLL_API _stdcall releaseOctResampleDataCaptured(void);
 		void WSOSYSTEM_DLL_API _stdcall releaseOctIntensityDataCaptured(void);
+
+		// Disconnect the live image callbacks given to startOctScanPreview(), which otherwise
+		// stay connected until the scan has closed. Each returns once a callback in progress
+		// has finished; no image is delivered through that callback afterwards.
+		void WSOSYSTEM_DLL_API _stdcall releaseOctPreviewImageCaptured(void);
+		void WSOSYSTEM_DLL_API _stdcall releaseOctEnfaceImageCaptured(void);
 	}
 }

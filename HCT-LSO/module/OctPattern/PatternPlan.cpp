@@ -212,21 +212,19 @@ bool oct_pattern::PatternPlan::buildPreviewPattern(OctScanProtocol& protocol)
 
 	if (!usePattern) {
 		if (type != OctPatternType::POINT) {
-			type = pattern.previewType;
-			if (type == OctPatternType::MULTI_LINE || type == OctPatternType::VERT_MULTI_LINE) {
-				numLines = 4;
-				numPoints = PATTERN_PREVIEW_MULTI_NUM_POINTS;
-			}
-			else if (type == OctPatternType::CROSS) {
-				numLines = 2;
+			if (type == OctPatternType::LINE || type == OctPatternType::VERT_LINE) {
+				type = pattern.isVerticalScan() ? OctPatternType::VERT_LINE : OctPatternType::LINE;
+				numLines = 1;
 			}
 			else {
-				numLines = 1;
+				type = pattern.isVerticalScan() ? OctPatternType::VERT_MULTI_LINE : OctPatternType::MULTI_LINE;
+				numLines = 4;
 			}
 		}
 		if (pattern.isAngioPattern()) {
 			numPoints = pattern.numAscan;
 		}
+
 		// Full range tells an image from its mirror twin by the phase step between neighbouring
 		// A-lines, so they have to lie as close together as in the captured scan: the live
 		// preview takes the A-scan count of the pattern.
