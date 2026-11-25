@@ -99,7 +99,7 @@ namespace wso_device
 
 		bool waitForSystemReady(void);
 
-		bool prepareDevicesForOctScan(void);
+		bool prepareDevicesForOctScan(bool cornea);
 		bool releaseDevicesForOctScan(void);
 		bool turnOnOctScanBeam(bool flag);
 		/*

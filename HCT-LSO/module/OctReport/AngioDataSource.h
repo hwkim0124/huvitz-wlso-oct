@@ -27,8 +27,8 @@ namespace oct_report
 		AngioDataSource& operator=(const AngioDataSource& rhs) = delete;
 
 	public:
-		virtual bool importProtocolContent(const std::wstring& dir_path) override;
-		virtual bool exportProtocolContent(const std::wstring& dir_path, std::wstring& out_path) override;
+		virtual bool importProtocolContent(const std::wstring& dir_path, bool load_protocol = true) override;
+		virtual bool exportProtocolContent(const std::wstring& dir_path, std::wstring& out_path, bool to_dir_path = false) override;
 
 		oct_angio::Angiogram* getAngiogram(void) const;
 

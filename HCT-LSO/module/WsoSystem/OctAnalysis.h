@@ -42,7 +42,9 @@ namespace wso_system
 		bool analyzeProtocolData(int sourceId, bool segment, int& reportId);
 		bool segmentProtocolData(int sourceId);
 		bool importProtocolResult(const std::wstring& dir_path, bool clear_olds, int& sourceId);
-		bool exportProtocolResult(const std::wstring& dir_path, std::wstring& out_path, int sourceId);
+		bool exportProtocolResult(const std::wstring& dir_path, std::wstring& out_path, int sourceId, bool to_dir_path = false);
+		bool importProtocolResultJson(const std::string& protocol_json, const std::wstring& image_dir, bool clear_olds, int& sourceId);
+		bool getProtocolSnapshotJson(int sourceId, std::string& protocol_json);
 
 		bool performSegmentation(oct_report::ProtocolSource* data);
 

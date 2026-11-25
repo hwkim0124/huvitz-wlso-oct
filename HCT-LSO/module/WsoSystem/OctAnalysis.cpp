@@ -118,11 +118,38 @@ bool wso_system::OctAnalysis::importProtocolResult(const std::wstring& dir_path,
 	return false;
 }
 
-bool wso_system::OctAnalysis::exportProtocolResult(const std::wstring& dir_path, std::wstring& out_path, int sourceId)
+bool wso_system::OctAnalysis::exportProtocolResult(const std::wstring& dir_path, std::wstring& out_path, int sourceId, bool to_dir_path)
 {
 	if (auto data = getProtocolSource(sourceId); data) {
-		auto flag = data->exportProtocolContent(dir_path, out_path);
+		auto flag = data->exportProtocolContent(dir_path, out_path, to_dir_path);
 		return flag;
+	}
+	return false;
+}
+
+bool wso_system::OctAnalysis::importProtocolResultJson(const std::string& protocol_json, const std::wstring& image_dir, bool clear_olds, int& sourceId)
+{
+	sourceId = -1;
+	auto result = std::make_unique<ProtocolResult>();
+	if (!result->importScanProtocolJson(protocol_json)) {
+		return false;
+	}
+	if (auto data = emplaceProtocolSource(std::move(result), clear_olds); data) {
+		if (data->importProtocolContent(image_dir, false)) {
+			sourceId = data->getSourceId();
+			return true;
+		}
+	}
+	return false;
+}
+
+bool wso_system::OctAnalysis::getProtocolSnapshotJson(int sourceId, std::string& protocol_json)
+{
+	if (auto data = getProtocolSource(sourceId); data) {
+		if (auto result = data->getProtocolResult(); result) {
+			protocol_json = result->exportScanProtocolJson();
+			return !protocol_json.empty();
+		}
 	}
 	return false;
 }

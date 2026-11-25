@@ -56,12 +56,12 @@ void oct_report::ProtocolSource::setupProtocolResult(std::unique_ptr<oct_result:
 	return;
 }
 
-bool oct_report::ProtocolSource::importProtocolContent(const std::wstring& dir_path)
+bool oct_report::ProtocolSource::importProtocolContent(const std::wstring& dir_path, bool load_protocol)
 {
 	if (auto result = getProtocolResult(); result) {
 		LogD() << "Protocol result importing, path: " << wtoa(dir_path);
 
-		if (!result->importScanProtocol(dir_path)) {
+		if (load_protocol && !result->importScanProtocol(dir_path)) {
 			return false;
 		}
 		if (!result->importFiles(dir_path)) {
@@ -75,11 +75,16 @@ bool oct_report::ProtocolSource::importProtocolContent(const std::wstring& dir_p
 	return false;
 }
 
-bool oct_report::ProtocolSource::exportProtocolContent(const std::wstring& dir_path, std::wstring& out_path)
+bool oct_report::ProtocolSource::exportProtocolContent(const std::wstring& dir_path, std::wstring& out_path, bool to_dir_path)
 {
 	if (auto result = getProtocolResult(); result) {
-		out_path = getImpl().fileDirPath;
-		if (out_path.empty()) {
+		out_path = (to_dir_path ? dir_path : getImpl().fileDirPath);
+		if (to_dir_path) {
+			if (!CreateDirectory(out_path.c_str(), NULL) && ERROR_ALREADY_EXISTS != GetLastError()) {
+				return false;
+			}
+		}
+		else if (out_path.empty()) {
 			if (!result->createExportDirectory(dir_path, out_path)) {
 				return false;
 			}

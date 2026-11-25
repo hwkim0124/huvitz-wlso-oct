@@ -38,6 +38,11 @@ namespace eye_align
 	//   ALIGN_TIMEOUT, PUPIL_LOST) or a failure - backs Z off to readyPosZ (backOffOnEnd); a second
 	//   cancel during that retreat stops it where it is.
 	//
+	// Ready modes (position moves only: no camera, no detection, no LED change)
+	//   READY         steps 1..3 for the given eye side, then ALIGN_COMPLETED
+	//   READY_MIDDLE  step 1, then swing -> origin, X -> origin, then ALIGN_COMPLETED
+	//   Both end the run on arrival; a cancel or a failure on the way ends it like above.
+	//
 	// Threads
 	//   camera thread  -> onCorneaFrame(): copies the frame into CorneaFrameStore, returns.
 	//   worker thread  -> one control iteration per new frame: detect, track, drive the
@@ -81,7 +86,8 @@ namespace eye_align
 		void setModelConfig(const PupilModelConfig& config);
 		PupilModelConfig getModelConfig(void) const;
 
-		// Starts a run. AUTO and MANUAL use eyeSide (OD when unknown); FULL forces OD.
+		// Starts a run. AUTO, MANUAL and READY use eyeSide (OD when unknown); FULL forces
+		// OD; READY_MIDDLE ignores it. The ready modes do not need the camera preview.
 		// Returns EyeAlignResult::NONE on success, otherwise the refusal reason.
 		EyeAlignResult startAlignment(EyeAlignMode mode, EyeSide eyeSide, EyeAlignEventOccurred callback);
 		// Stops every axis, backs Z off to readyPosZ (backOffOnEnd, AUTO/FULL) and ends
@@ -155,6 +161,9 @@ namespace eye_align
 		bool phaseToReadyZ(void);
 		bool phaseToEyeX(void);
 		bool phaseSwingToTilt(void);
+		bool phaseToMiddle(void);		// READY_MIDDLE: swing -> origin, X -> origin, then completes
+		// Requests the COMPLETED ending (ALIGN_COMPLETED); returns false like every run end.
+		bool completeRun(void);
 		bool phaseSearching(void);
 		bool phaseCenteringY(void);
 		bool phaseApproaching(void);

@@ -18,7 +18,7 @@ namespace
 int WSOSYSTEM_DLL_API __stdcall wso_system::startEyeAlignment(int mode, int eyeSide, EyeAlignEventOccurred clbEvent)
 {
 	try {
-		if (mode < static_cast<int>(EyeAlignMode::MANUAL) || mode > static_cast<int>(EyeAlignMode::FULL)) {
+		if (mode < static_cast<int>(EyeAlignMode::MANUAL) || mode > static_cast<int>(EyeAlignMode::READY_MIDDLE)) {
 			return static_cast<int>(EyeAlignResult::INTERNAL_ERROR);
 		}
 		auto result = EyeAlignment::getInstance()->startAlignment(

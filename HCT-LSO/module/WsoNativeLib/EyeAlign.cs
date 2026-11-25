@@ -129,7 +129,9 @@ namespace WsoNativeLib
         /// <summary>
         /// Starts an alignment run. Returns <see cref="EyeAlignResult.None"/> on success,
         /// otherwise the refusal reason (busy, preview not running, motors not ready, ...).
-        /// AUTO and MANUAL use <paramref name="eyeSide"/>; FULL always starts with OD.
+        /// AUTO, MANUAL and READY use <paramref name="eyeSide"/>; FULL always starts with OD;
+        /// READY_MIDDLE ignores it. READY and READY_MIDDLE only move the head to a ready
+        /// position, end with <c>AlignCompleted</c> and do not need the camera preview.
         /// </summary>
         public static EyeAlignResult StartAlignment(EyeAlignMode mode, EyeSide eyeSide, EyeAlignEventOccurred callback)
         {
@@ -239,7 +241,8 @@ namespace WsoNativeLib
 
         public static bool IsTerminalEvent(EyeAlignEvent evt)
         {
-            return evt == EyeAlignEvent.AlignCancelled || evt == EyeAlignEvent.AlignFailed;
+            return evt == EyeAlignEvent.AlignCancelled || evt == EyeAlignEvent.AlignFailed
+                || evt == EyeAlignEvent.AlignCompleted;
         }
     }
 }

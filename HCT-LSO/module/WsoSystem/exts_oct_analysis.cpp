@@ -95,6 +95,41 @@ bool WSOSYSTEM_DLL_API _stdcall wso_system::exportOctScanProtocolResult(LPCTSTR 
 	return false;
 }
 
+bool WSOSYSTEM_DLL_API _stdcall wso_system::exportOctScanProtocolResultToDir(LPCTSTR dir_path, int sourceId)
+{
+	if (auto* p = OctAnalysis::getInstance(); p) {
+		auto dir_str = std::wstring(dir_path);
+		auto out_str = std::wstring();
+		return p->exportProtocolResult(dir_str, out_str, sourceId, true);
+	}
+	return false;
+}
+
+bool WSOSYSTEM_DLL_API _stdcall wso_system::importOctScanProtocolResultFromJson(LPCSTR protocol_json, LPCTSTR image_dir, bool clear_olds, int* sourceId)
+{
+	if (auto* p = OctAnalysis::getInstance(); p) {
+		auto json_str = std::string(protocol_json);
+		auto dir_str = std::wstring(image_dir);
+		return p->importProtocolResultJson(json_str, dir_str, clear_olds, *sourceId);
+	}
+	return false;
+}
+
+int WSOSYSTEM_DLL_API _stdcall wso_system::getOctScanProtocolSnapshot(int sourceId, char* buffer, int size)
+{
+	if (auto* p = OctAnalysis::getInstance(); p) {
+		auto json_str = std::string();
+		if (p->getProtocolSnapshotJson(sourceId, json_str)) {
+			auto length = (int)json_str.length();
+			if (buffer != nullptr && size > length) {
+				memcpy(buffer, json_str.c_str(), length + 1);
+			}
+			return length;
+		}
+	}
+	return -1;
+}
+
 int WSOSYSTEM_DLL_API _stdcall wso_system::getOctPatternContentCount(int sourceId)
 {
 	if (auto* p = OctAnalysis::getInstance(); p) {

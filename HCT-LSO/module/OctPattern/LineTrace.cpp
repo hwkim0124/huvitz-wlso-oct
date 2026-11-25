@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "LineTrace.h"
 
+#include <algorithm>
+
 using namespace oct_pattern;
 
 
@@ -140,8 +142,8 @@ void oct_pattern::LineTrace::setPaddings(int forePadds, int postPadds, int numPo
 	if (numPoints != 0) {
 		forePadds = (int)(numPoints * TRIGGER_FORE_PADDING_RATIO);
 		postPadds = (int)(numPoints * TRIGGER_POST_PADDING_RATIO);
-		// forePadds = max(forePadds, TRIGGER_FORE_PADDING_POINTS);
-		// postPadds = max(postPadds, TRIGGER_POST_PADDING_POINTS);
+		forePadds = std::clamp(forePadds, TRIGGER_FORE_PADDING_POINTS_MIN, TRIGGER_FORE_PADDING_POINTS_MAX);
+		postPadds = std::clamp(postPadds, TRIGGER_POST_PADDING_POINTS_MIN, TRIGGER_POST_PADDING_POINTS_MAX);
 	}
 
 	getImpl().numForePaddings = forePadds;

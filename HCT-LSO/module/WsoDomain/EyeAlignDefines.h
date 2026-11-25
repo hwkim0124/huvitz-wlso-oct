@@ -13,7 +13,9 @@ namespace wso_domain
 	{
 		MANUAL = 0,		// detector only, operator moves the head; FOCUS_ALIGNED when centred on both cameras
 		AUTO = 1,		// ready Z -> eye-side X -> swing tilt -> search -> centre -> follow, eye side given at start
-		FULL = 2		// same as AUTO, always starts with the right eye (OD)
+		FULL = 2,		// same as AUTO, always starts with the right eye (OD)
+		READY = 3,		// ready Z -> eye-side X -> swing tilt, then the run completes (ALIGN_COMPLETED); eye side given at start
+		READY_MIDDLE = 4	// ready Z -> swing origin -> X origin, then the run completes (ALIGN_COMPLETED); eye side not used
 	};
 
 	enum class EyeAlignPhase : int
@@ -31,7 +33,9 @@ namespace wso_domain
 		MONITORING,			// MANUAL only: detecting, not yet centred on both images, no motion
 		HELD,				// holdEyeAlignment(): motors stopped, detection and events continue, no motion
 		CANCELED,
-		FAILED
+		FAILED,
+		TO_MIDDLE,			// READY_MIDDLE only, after step 1: swing -> origin, then X -> origin
+		COMPLETED			// READY / READY_MIDDLE: the head stands at its ready position, run ended
 	};
 
 	// Reason carried by ALIGN_CANCELLED / ALIGN_FAILED and returned by start refusals.
@@ -64,13 +68,14 @@ namespace wso_domain
 		FULL_ALIGN_STARTED,
 		AUTO_ALIGN_STARTED,
 		MANUAL_ALIGN_STARTED,
-		// terminal (arg = EyeAlignResult); fired exactly once per run, always last
+		// terminal (arg = EyeAlignResult); exactly one of these two or ALIGN_COMPLETED
+		// (end of this enum) is fired per run, always last
 		ALIGN_CANCELLED,
 		ALIGN_FAILED,
 		// sequence progress
 		READY_POSITION_REACHED,		// step 1 done
 		EYE_SIDE_POSITION_REACHED,	// step 2 done (arg = EyeSide)
-		SWING_AT_TILT,				// step 3 done (arg = EyeSide)
+		SWING_AT_TILT,				// step 3 done (arg = EyeSide); READY completes here
 		SEARCH_STARTED,				// step 4: Z advancing toward searchLimitPosZ
 		SIDE_EYE_FOUND,					// side pupil seen detectConsecutive frames (arg = IrCameraId)
 		SIDE_EYE_NOT_FOUND,				// step 4: search limit reached with no side lock, or searchTimeoutMs elapsed (arg = IrCameraId)
@@ -99,7 +104,11 @@ namespace wso_domain
 		// errors
 		MOTOR_MOVE_FAILED,			// (arg = MotorType)
 		PHASE_TIMEOUT,				// a position phase overran its timeout (arg = EyeAlignPhase)
-		ALIGN_TIMEOUT				// alignTimeoutMs elapsed before the first FOCUS_ALIGNED (arg = EyeAlignPhase)
+		ALIGN_TIMEOUT,				// alignTimeoutMs elapsed before the first FOCUS_ALIGNED (arg = EyeAlignPhase)
+		// READY / READY_MIDDLE (appended so the values above keep their numbers)
+		READY_MOVE_STARTED,			// lifecycle of both ready modes (arg = EyeSide, UNKNOWN for READY_MIDDLE)
+		MIDDLE_POSITION_REACHED,	// READY_MIDDLE: swing and X at their origins
+		ALIGN_COMPLETED				// terminal: the ready position was reached (arg = EyeAlignResult::NONE)
 	};
 
 	// The pupil target geometry (target point, image-error -> motor sign mapping) is not

@@ -62,6 +62,17 @@ namespace WsoNativeLib
         [return: MarshalAs(UnmanagedType.I1)]
         private static extern bool exportOctScanProtocolResult(string dir_path, StringBuilder out_path, int sourceId);
 
+        [DllImport(LibraryName, CharSet = CharSet.Unicode)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool exportOctScanProtocolResultToDir(string dir_path, int sourceId);
+
+        [DllImport(LibraryName, CharSet = CharSet.Unicode)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private static extern bool importOctScanProtocolResultFromJson([MarshalAs(UnmanagedType.LPUTF8Str)] string protocol_json, string image_dir, [MarshalAs(UnmanagedType.I1)] bool clearOlds, ref int sourceId);
+
+        [DllImport(LibraryName)]
+        private static extern int getOctScanProtocolSnapshot(int sourceId, byte[]? buffer, int size);
+
         [DllImport(LibraryName)]
         private static extern int getOctPatternContentCount(int sourceId);
 
@@ -224,6 +235,42 @@ namespace WsoNativeLib
             }
             export_path = "";
             return false;
+        }
+
+        /// <summary>
+        /// 하위 폴더를 만들지 않고 지정한 폴더에 protocol.json과 B-Scan, Preview, EnFace 이미지를 그대로 내보냅니다.
+        /// </summary>
+        public static bool ExportProtocolResultToDir(int sourceId, string dir_path)
+        {
+            return exportOctScanProtocolResultToDir(dir_path, sourceId);
+        }
+
+        /// <summary>
+        /// DB 등에 보관한 protocol.json 문자열과 이미지 폴더로 분석 source를 만듭니다.
+        /// </summary>
+        public static bool ImportProtocolResultFromJson(string protocol_json, string image_dir, bool clearOlds, ref int sourceId)
+        {
+            bool result = importOctScanProtocolResultFromJson(protocol_json, image_dir, clearOlds, ref sourceId);
+            _sourceId = result ? sourceId : -1;
+            return result;
+        }
+
+        /// <summary>
+        /// source의 스캔 프로토콜을 protocol.json과 같은 형식의 문자열로 돌려줍니다. 실패하면 null입니다.
+        /// </summary>
+        public static string? GetProtocolSnapshot(int sourceId)
+        {
+            int length = getOctScanProtocolSnapshot(sourceId, null, 0);
+            if (length < 0)
+            {
+                return null;
+            }
+            var buffer = new byte[length + 1];
+            if (getOctScanProtocolSnapshot(sourceId, buffer, buffer.Length) != length)
+            {
+                return null;
+            }
+            return Encoding.UTF8.GetString(buffer, 0, length);
         }
 
         public static int GetPatternContentCount(int sourceId)

@@ -282,13 +282,13 @@ int wso_domain::OctScanHelper::getPatternAscanList(vector<int>& list, OctPattern
 		case OctPatternCode::DISC_POINT:
 		case OctPatternCode::CORNEA_POINT:
 		case OctPatternCode::CALIBRATION_POINT:
-			list = { 1024, 512, 256 };
+			list = { 2048, 1024, 512, 256 };
 			break;
 		case OctPatternCode::MACULAR_LINE:
 		case OctPatternCode::FUNDUS_LINE:
 		case OctPatternCode::DISC_CIRCLE:
 		case OctPatternCode::CORNEA_LINE:
-			list = { 4096, 2048, 1024, 512 };
+			list = { 8192, 6144, 4096, 2048, 1024, 512 };
 			break;
 		case OctPatternCode::MACULAR_CROSS:
 		case OctPatternCode::MACULAR_RASTER:
@@ -297,7 +297,7 @@ int wso_domain::OctScanHelper::getPatternAscanList(vector<int>& list, OctPattern
 		case OctPatternCode::MACULAR_RADIAL:
 		case OctPatternCode::DISC_RADIAL:
 		case OctPatternCode::CORNEA_RADIAL:
-			list = { 1024, 512 };
+			list = { 2048, 1024, 512 };
 			break;
 		case OctPatternCode::MACULAR_CUBE:
 		case OctPatternCode::DISC_CUBE:
@@ -439,54 +439,55 @@ int wso_domain::OctScanHelper::getPatternRangeList(vector<float>& xlist, vector<
 
 	switch (code) {
 		case OctPatternCode::MACULAR_LINE:
-			xlist = { 3.0f, 4.5f, 6.0f, 9.0f, 12.0f, 16.5f };
-			ylist = { 3.0f, 4.5f, 6.0f, 9.0f, 12.0f };
+			xlist = { 3.0f, 4.5f, 6.0f, 9.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f, 17.0f, 18.0f, 19.0f, 20.0f, 21.0f, 22.0f, 23.0f };
+			ylist = { 3.0f, 4.5f, 6.0f, 9.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f, 17.0f, 18.0f, 19.0f, 20.0f, 21.0f, 22.0f, 23.0f };
 			break;
 		case OctPatternCode::CORNEA_LINE:
-			xlist = { 3.0f, 4.5f, 6.0f, 8.0f, 9.0f, 12.0f, 16.5f };
-			ylist = { 3.0f, 4.5f, 6.0f, 8.0f, 9.0f, 12.0f };
+			xlist = { 3.0f, 4.5f, 6.0f, 8.0f, 9.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f, 17.0f, 18.0f, 19.0f, 20.0f, 21.0f, 22.0f, 23.0f };
+			ylist = { 3.0f, 4.5f, 6.0f, 8.0f, 9.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f, 17.0f, 18.0f, 19.0f, 20.0f, 21.0f, 22.0f, 23.0f };
 			break;
 		case OctPatternCode::FUNDUS_LINE:
-			xlist = { 9.0f, 13.0f };
+			xlist = { 3.0f, 4.5f, 6.0f, 9.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f, 17.0f, 18.0f, 19.0f, 20.0f, 21.0f, 22.0f, 23.0f };
+			ylist = { 3.0f, 4.5f, 6.0f, 9.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f, 17.0f, 18.0f, 19.0f, 20.0f, 21.0f, 22.0f, 23.0f };
 			break;
 		case OctPatternCode::DISC_CIRCLE:
 			xlist = { 3.25f };
 			ylist = { 3.25f };
 			break;
 		case OctPatternCode::MACULAR_CROSS:
-			xlist = { 4.5f, 6.0f, 9.0f, 12.0f };
-			ylist = { 4.5f, 6.0f, 9.0f, 12.0f };
+			xlist = { 4.5f, 6.0f, 9.0f, 12.0f, 15.0f, 18.0f, 21.0f, 23.0f };
+			ylist = { 4.5f, 6.0f, 9.0f, 12.0f, 15.0f, 18.0f, 21.0f, 23.0f };
 			break;
 		case OctPatternCode::MACULAR_RADIAL:
 		case OctPatternCode::DISC_RADIAL:
-			xlist = { 3.0f, 4.5f, 6.0f, 9.0f, 12.0f };
-			ylist = { 3.0f, 4.5f, 6.0f, 9.0f, 12.0f };
+			xlist = { 3.0f, 4.5f, 6.0f, 9.0f, 12.0f, 15.0f, 18.0f, 21.0f, 23.0f };
+			ylist = { 3.0f, 4.5f, 6.0f, 9.0f, 12.0f, 15.0f, 18.0f, 21.0f, 23.0f };
 			break;
 		case OctPatternCode::CORNEA_RADIAL:
-			xlist = { 3.0f, 4.5f, 6.0f, 8.0f, 9.0f, 12.0f };
-			ylist = { 3.0f, 4.5f, 6.0f, 8.0f, 9.0f, 12.0f };
+			xlist = { 3.0f, 4.5f, 6.0f, 8.0f, 9.0f, 12.0f, 15.0f, 18.0f, 21.0f, 23.0f };
+			ylist = { 3.0f, 4.5f, 6.0f, 8.0f, 9.0f, 12.0f, 15.0f, 18.0f, 21.0f, 23.0f };
 			break;
 		case OctPatternCode::MACULAR_RASTER:
 		case OctPatternCode::DISC_RASTER:
 		case OctPatternCode::FUNDUS_RASTER:
-			xlist = { 4.5f, 6.0f, 9.0f, 12.0f };
-			ylist = { 4.5f, 6.0f, 9.0f, 12.0f };
+			xlist = { 4.5f, 6.0f, 9.0f, 12.0f, 15.0f, 18.0f, 21.0f, 23.0f };
+			ylist = { 4.5f, 6.0f, 9.0f, 12.0f, 15.0f, 18.0f, 21.0f, 23.0f };
 			break;
 		case OctPatternCode::MACULAR_CUBE:
 		case OctPatternCode::DISC_CUBE:
 		case OctPatternCode::FUNDUS_CUBE:
 		case OctPatternCode::CORNEA_CUBE:
-			xlist = { 3.0f, 4.5f, 6.0f, 9.0f, 12.0f, 16.5f };
-			ylist = { 3.0f, 4.5f, 6.0f, 9.0f, 12.0f };
+			xlist = { 3.0f, 4.5f, 6.0f, 9.0f, 12.0f, 15.0f, 18.0f, 21.0f, 23.0f };
+			ylist = { 3.0f, 4.5f, 6.0f, 9.0f, 12.0f, 15.0f, 18.0f, 21.0f, 23.0f };
 			break;
 		case OctPatternCode::MACULAR_ANGIO:
 		case OctPatternCode::DISC_ANGIO:
-			xlist = { 3.0f, 4.5f, 6.0f, 9.0f, 12.0f, 16.5f };
-			ylist = { 3.0f, 4.5f, 6.0f, 9.0f, 12.0f };
+			xlist = { 3.0f, 4.5f, 6.0f, 9.0f, 12.0f, 15.0f, 18.0f, 21.0f, 23.0f };
+			ylist = { 3.0f, 4.5f, 6.0f, 9.0f, 12.0f, 15.0f, 18.0f, 21.0f, 23.0f };
 			break;
 		case OctPatternCode::FUNDUS_ANGIO:
-			xlist = { 6.0f, 9.0f, 13.0f };
-			ylist = { 6.0f, 9.0f, 9.0f };
+			xlist = { 3.0f, 4.5f, 6.0f, 9.0f, 12.0f, 15.0f, 18.0f, 21.0f, 23.0f };
+			ylist = { 3.0f, 4.5f, 6.0f, 9.0f, 12.0f, 15.0f, 18.0f, 21.0f, 23.0f };
 			break;
 	}
 	return (int)xlist.size();

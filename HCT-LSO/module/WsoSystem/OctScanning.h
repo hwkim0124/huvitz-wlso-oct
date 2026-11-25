@@ -43,8 +43,8 @@ namespace wso_system
 	protected:
 		bool beginScanProtocol(void);
 		bool initScanProcessing(bool enface);
-		bool setScanDevicesPrepared(bool init_scan, bool not_align);
-		bool setScanDevicesReleased(void);
+		bool prepareScanDevices(bool init_scan, bool not_align);
+		bool releaseScanDevices(void);
 		bool alignScanFocusToReadyPosition(bool init_scan, bool not_align);
 
 		bool startPreviewScan(bool enface);

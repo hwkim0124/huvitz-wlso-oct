@@ -41,6 +41,9 @@ namespace WsoToolkit
             _onAutoReferOptimized = new WsoCallback.OctAutoReferOptimized(this.OnOctAutoReferOptimized);
             _onAutoScanOptimized = new WsoCallback.OctAutoScanOptimized(this.OnOctAutoScanOptimized);
 
+            _readyAlign = new ReadyAlignButtons(this, btnReadyOd, btnReadyOs, btnReadyMiddle,
+                enabled => stereoCorneaPreview.IsStageControlEnabled = enabled);
+
             octScanEnfacePreivew.ChartCenterRelocated = OnChartCenterRelocated;
         }
 
@@ -78,6 +81,8 @@ namespace WsoToolkit
 
             BoardDevice.ReleaseJoystickButtonPressed();
             BoardDevice.ReleaseOptimizeButtonPressed();
+
+            _readyAlign.CancelAtClose();
 
             // Closing the window cancels a scan preview still running, see CancelOctScanPreview().
             DisconnectOctScanPreviewCallbacks();
@@ -172,9 +177,16 @@ namespace WsoToolkit
             }
         }
 
+        // Ready OD / Ready OS / Middle: starts the move to that ready position, or cancels
+        // it when pressed again while it runs (the button reads "Cancel" meanwhile).
+        private void BtnReadyAlign_Click(object sender, RoutedEventArgs e)
+        {
+            _readyAlign.OnButtonClick((Button)sender);
+        }
+
         private void BtnShowFocusM_Click(object sender, RoutedEventArgs e)
         {
-            if (_focusMotorWindow == null || _focusMotorWindow.IsLoaded)
+            if (_focusMotorWindow == null || !_focusMotorWindow.IsLoaded)
             {
                 _focusMotorWindow = new();
                 _focusMotorWindow.Show();

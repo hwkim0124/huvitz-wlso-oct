@@ -20,7 +20,6 @@ namespace wso_domain
 	// Default Pattern preview, enface settings. 
 	///////////////////////////////////////////////////////////////////////////////////////////
 	constexpr int PATTERN_PREVIEW_LATERAL_POINTS = 1024; // 512;
-	// constexpr int PATTERN_PREVIEW_AXIAL_POINTS = 512;
 	constexpr int PATTERN_PREVIEW_ASCAN_POINTS = PATTERN_PREVIEW_LATERAL_POINTS;
 	constexpr int PATTERN_PREVIEW_IMAGE_WIDTH = PATTERN_PREVIEW_LATERAL_POINTS;
 	// constexpr int PATTERN_PREVIEW_IMAGE_HEIGHT = PATTERN_PREVIEW_AXIAL_POINTS; // within fft output line size. 

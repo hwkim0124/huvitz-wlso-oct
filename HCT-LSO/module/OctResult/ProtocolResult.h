@@ -50,6 +50,8 @@ namespace oct_result
 
 		bool importScanProtocol(const std::wstring& dir_path, const std::wstring& fname = L"protocol.json");
 		bool exportScanProtocol(const std::wstring& dir_path, const std::wstring& fname = L"protocol.json");
+		bool importScanProtocolJson(const std::string& jstr);
+		std::string exportScanProtocolJson(void) const;
 
 		bool exportFiles(const std::wstring& dirPath,
 						const std::wstring& imagePrefix = L"",

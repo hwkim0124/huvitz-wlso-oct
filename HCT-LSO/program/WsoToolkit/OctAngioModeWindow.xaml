@@ -137,6 +137,7 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="8"/>
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
@@ -156,7 +157,13 @@
                                 <TextBox x:Name="editDiopter" Style="{StaticResource TextBoxStyleT1}" HorizontalAlignment="Left"/>
                                 <Label x:Name="label1021" Content="D" Style="{StaticResource LabelStyle}"/>
                             </StackPanel>
-                            <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="4" Grid.RowSpan="4"/>
+                            <Label x:Name="label26" Content="Move To" Style="{StaticResource LabelStyle}" Grid.Row="3" Grid.Column="1"/>
+                            <StackPanel Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="2" Orientation="Horizontal">
+                                <Button x:Name="btnReadyOd" Content="Ready OD" Style="{StaticResource ButtonStyleS1}" Width="58" Click="BtnReadyAlign_Click"/>
+                                <Button x:Name="btnReadyOs" Content="Ready OS" Style="{StaticResource ButtonStyleS1}" Width="58" Margin="4,0,0,0" Click="BtnReadyAlign_Click"/>
+                                <Button x:Name="btnReadyMiddle" Content="Middle" Style="{StaticResource ButtonStyleS1}" Width="58" Margin="4,0,0,0" Click="BtnReadyAlign_Click"/>
+                            </StackPanel>
+                            <Border Style="{StaticResource BorderStyle}" Grid.ColumnSpan="4" Grid.RowSpan="5"/>
                         </Grid>
                     </StackPanel>
                     <StackPanel Grid.Row="0" Grid.Column="4" Orientation="Vertical">

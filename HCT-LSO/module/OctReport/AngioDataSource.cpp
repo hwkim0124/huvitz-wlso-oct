@@ -36,9 +36,9 @@ oct_report::AngioDataSource::~AngioDataSource() = default;
 oct_report::AngioDataSource::AngioDataSource(AngioDataSource&& rhs) = default;
 AngioDataSource& oct_report::AngioDataSource::operator=(AngioDataSource&& rhs) = default;
 
-bool oct_report::AngioDataSource::importProtocolContent(const std::wstring& dir_path)
+bool oct_report::AngioDataSource::importProtocolContent(const std::wstring& dir_path, bool load_protocol)
 {
-	if (ProtocolSource::importProtocolContent(dir_path)) {
+	if (ProtocolSource::importProtocolContent(dir_path, load_protocol)) {
 		auto& pattern = getScanPattern();
 		impl().angiogram.setupAngioPattern(pattern);
 		if (impl().angiogram.loadDataFiles(wtoa(dir_path))) {
@@ -56,13 +56,13 @@ bool oct_report::AngioDataSource::importProtocolContent(const std::wstring& dir_
 }
 
 
-bool oct_report::AngioDataSource::exportProtocolContent(const std::wstring& dir_path, std::wstring& out_path)
+bool oct_report::AngioDataSource::exportProtocolContent(const std::wstring& dir_path, std::wstring& out_path, bool to_dir_path)
 {
 	if (!impl().angiogram.isAmplitduesValid()) {
 		LogD() << "Amplitude data is not valid.";
 		return false;
 	}
-	if (ProtocolSource::exportProtocolContent(dir_path, out_path)) {
+	if (ProtocolSource::exportProtocolContent(dir_path, out_path, to_dir_path)) {
 		if (impl().angiogram.saveDataFiles(wtoa(out_path))) {
 			return true;
 		}

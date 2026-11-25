@@ -78,8 +78,8 @@ namespace oct_report
 		const OctCorneaImageDescript* getCorneaImageDescript(void) const;
 
 		void setupProtocolResult(std::unique_ptr<oct_result::ProtocolResult>&& result);
-		virtual bool importProtocolContent(const std::wstring& dir_path);
-		virtual bool exportProtocolContent(const std::wstring& dir_path, std::wstring& out_path);
+		virtual bool importProtocolContent(const std::wstring& dir_path, bool load_protocol = true);
+		virtual bool exportProtocolContent(const std::wstring& dir_path, std::wstring& out_path, bool to_dir_path = false);
 
 		virtual int importPatternImages(const std::wstring& dirPath, int numImages = 0);
 		virtual int importPatternImages(const std::vector<std::wstring>& fileList);

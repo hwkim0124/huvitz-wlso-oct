@@ -162,7 +162,6 @@
     <ClInclude Include="cpp_util.h" />
     <ClInclude Include="CppUtil2.h" />
     <ClInclude Include="CvAdjust.h" />
-	<ClInclude Include="CvAdjustExports.h" />
     <ClInclude Include="CvImage.h" />
     <ClInclude Include="CvProcess.h" />
     <ClInclude Include="framework.h" />
@@ -181,7 +180,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CvAdjust.cpp" />
-	<ClCompile Include="CvAdjustExports.cpp" />
     <ClCompile Include="CvImage.cpp" />
     <ClCompile Include="CvProcess.cpp" />
     <ClCompile Include="dllmain.cpp" />

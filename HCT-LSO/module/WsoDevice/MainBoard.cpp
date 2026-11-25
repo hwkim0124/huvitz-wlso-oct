@@ -606,11 +606,18 @@ bool wso_device::MainBoard::waitForSystemReady(void)
 	return result;
 }
 
-bool wso_device::MainBoard::prepareDevicesForOctScan(void)
+bool wso_device::MainBoard::prepareDevicesForOctScan(bool cornea)
 {
 	bool res = turnOnOctScanBeam(true);
 	if (res) {
 		getRetMirrorMotor()->updatePositionToMirrorIn();
+
+		if (cornea) {
+			getOctAntLensMotor()->updatePositionToMirrorIn();
+		}
+		else {
+			getOctAntLensMotor()->updatePositionToMirrorOut();
+		}
 	}
 	return res;
 }

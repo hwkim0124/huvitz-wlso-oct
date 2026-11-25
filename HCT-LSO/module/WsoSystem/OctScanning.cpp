@@ -137,7 +137,7 @@ bool wso_system::OctScanning::prepareScan(const OctProtocolInitParam& param)
 	bool init_scan = param.isFirstScanOnSide;
 	bool not_align = param.isNotFocusAlign;
 
-	if (!setScanDevicesPrepared(init_scan, not_align)) {
+	if (!prepareScanDevices(init_scan, not_align)) {
 		return false;
 	}
 	
@@ -193,7 +193,7 @@ bool wso_system::OctScanning::closeScan(bool measure, OctScanProtocolCompleted c
 	// Grabbing has finished by now, the measure frames included, so the reference phase
 	// ramp of a full range scan can be stopped.
 	ScanFunc::clearFullRangePhaseControl();
-	setScanDevicesReleased();
+	releaseScanDevices();
 
 	// if (!measure) {
 		releaseScanCallbacks();
@@ -440,7 +440,7 @@ bool wso_system::OctScanning::initScanProcessing(bool enface)
 }
 
 
-bool wso_system::OctScanning::setScanDevicesPrepared(bool init_scan, bool not_align)
+bool wso_system::OctScanning::prepareScanDevices(bool init_scan, bool not_align)
 {
 	/*
 	if (!Hardware::getInstance()->initializeOctScanner()) {
@@ -449,7 +449,8 @@ bool wso_system::OctScanning::setScanDevicesPrepared(bool init_scan, bool not_al
 	*/
 
 	if (auto* board = Hardware::getInstance()->getMainBoard(); board) {
-		if (!board->prepareDevicesForOctScan()) {
+		bool cornea = impl().protocol.isCorneaScan();
+		if (!board->prepareDevicesForOctScan(cornea)) {
 			return false;
 		}
 	}
@@ -469,7 +470,7 @@ bool wso_system::OctScanning::setScanDevicesPrepared(bool init_scan, bool not_al
 	return true;
 }
 
-bool wso_system::OctScanning::setScanDevicesReleased(void)
+bool wso_system::OctScanning::releaseScanDevices(void)
 {
 	if (auto* board = Hardware::getInstance()->getMainBoard(); board) {
 		if (!board->releaseDevicesForOctScan()) {

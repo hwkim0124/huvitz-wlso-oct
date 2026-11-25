@@ -11,7 +11,9 @@ namespace wso_system
 	{
 		// Eye Alignment (EyeAlign module)
 		///////////////////////////////////////////////////////////////////////////////////////////
-		// mode: EyeAlignMode, eyeSide: EyeSide (used by AUTO / MANUAL; FULL forces OD).
+		// mode: EyeAlignMode, eyeSide: EyeSide (used by AUTO / MANUAL / READY; FULL forces OD,
+		// READY_MIDDLE ignores it). READY and READY_MIDDLE only move the head to a ready
+		// position and end with ALIGN_COMPLETED; they do not need the camera preview.
 		// Returns an EyeAlignResult code: 0 (NONE) on success, otherwise the refusal reason.
 		int WSOSYSTEM_DLL_API __stdcall startEyeAlignment(int mode, int eyeSide, EyeAlignEventOccurred clbEvent);
 		// Stops every axis, backs Z off to readyPosZ (backOffOnEnd) and ends the run with

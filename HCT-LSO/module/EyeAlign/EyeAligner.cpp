@@ -63,6 +63,8 @@ namespace
 		case EyeAlignPhase::HELD: return "HELD";
 		case EyeAlignPhase::CANCELED: return "CANCELED";
 		case EyeAlignPhase::FAILED: return "FAILED";
+		case EyeAlignPhase::TO_MIDDLE: return "TO_MIDDLE";
+		case EyeAlignPhase::COMPLETED: return "COMPLETED";
 		}
 		return "?";
 	}
@@ -105,6 +107,9 @@ namespace
 		case EyeAlignEvent::MOTOR_MOVE_FAILED: return "MOTOR_MOVE_FAILED";
 		case EyeAlignEvent::PHASE_TIMEOUT: return "PHASE_TIMEOUT";
 		case EyeAlignEvent::ALIGN_TIMEOUT: return "ALIGN_TIMEOUT";
+		case EyeAlignEvent::READY_MOVE_STARTED: return "READY_MOVE_STARTED";
+		case EyeAlignEvent::MIDDLE_POSITION_REACHED: return "MIDDLE_POSITION_REACHED";
+		case EyeAlignEvent::ALIGN_COMPLETED: return "ALIGN_COMPLETED";
 		}
 		return "?";
 	}
@@ -118,6 +123,13 @@ namespace
 		case MotorType::SWING: return (direction == SWING_DIRECTION_LEFT) ? EyeAlignEvent::END_OF_SWING_LEFT : EyeAlignEvent::END_OF_SWING_RIGHT;
 		default: return EyeAlignEvent::NONE;
 		}
+	}
+
+	// READY / READY_MIDDLE only position the head and then complete: no detection, no
+	// search, no following.
+	bool isReadyMode(EyeAlignMode mode)
+	{
+		return mode == EyeAlignMode::READY || mode == EyeAlignMode::READY_MIDDLE;
 	}
 
 	int cameraIndex(IrCameraId cameraId)
@@ -153,6 +165,7 @@ struct EyeAligner::EyeAlignerImpl
 	EyeSide eyeSide = EyeSide::OD;
 	IrCameraId sideCameraId = IrCameraId::CORNEA_RIGHT;
 	bool manual = false;
+	bool readyOnly = false;			// READY / READY_MIDDLE: position moves only, then ALIGN_COMPLETED
 
 	std::thread workerThread;
 	std::thread eventThread;
@@ -363,11 +376,14 @@ EyeAlignResult eye_align::EyeAligner::startAlignment(EyeAlignMode mode, EyeSide 
 	// the thread objects are reused.
 	joinThreads();
 
-	if (state.camera == nullptr || !state.camera->isPlaying()) {
+	// The ready modes only move the head: they need no camera image.
+	const bool readyOnly = isReadyMode(mode);
+	if (!readyOnly && (state.camera == nullptr || !state.camera->isPlaying())) {
 		return EyeAlignResult::PREVIEW_NOT_RUNNING;
 	}
 
 	state.manual = (mode == EyeAlignMode::MANUAL);
+	state.readyOnly = readyOnly;
 	if (!state.manual) {
 		if (!state.axisX.isReady() || !state.axisY.isReady() || !state.axisZ.isReady() || !state.axisSwing.isReady()) {
 			return EyeAlignResult::MOTOR_NOT_READY;
@@ -379,7 +395,10 @@ EyeAlignResult eye_align::EyeAligner::startAlignment(EyeAlignMode mode, EyeSide 
 		state.runConfig = state.config;
 	}
 
-	if (mode == EyeAlignMode::FULL) {
+	if (mode == EyeAlignMode::READY_MIDDLE) {
+		eyeSide = EyeSide::UNKNOWN;		// the middle belongs to neither eye
+	}
+	else if (mode == EyeAlignMode::FULL) {
 		eyeSide = EyeSide::OD;			// FULL always starts with the right eye
 	}
 	else if (eyeSide != EyeSide::OS) {
@@ -453,11 +472,14 @@ EyeAlignResult eye_align::EyeAligner::startAlignment(EyeAlignMode mode, EyeSide 
 	state.holdRequested = false;
 	state.held = false;
 	state.runStartTime = state.phaseStartTime = state.phaseDwellUntil = state.heldSince = Clock::now();
-	state.alignDeadline = (state.runConfig.alignTimeoutMs > 0)
+	// alignTimeoutMs bounds the way to the first FOCUS_ALIGNED; a ready run never focuses
+	// and is bounded by the timeouts of its position phases instead.
+	state.alignDeadline = (state.runConfig.alignTimeoutMs > 0 && !state.readyOnly)
 		? state.runStartTime + std::chrono::milliseconds(state.runConfig.alignTimeoutMs)
 		: Clock::time_point::max();
 	state.searchDeadline = Clock::time_point::max();		// armed when the search starts
-	state.frames.setAccepting(true);
+	// A ready run takes no frames: no detection, no SIDE_EYE_FOUND / LOWER_EYE_FOUND.
+	state.frames.setAccepting(!state.readyOnly);
 	state.running = true;
 
 	state.eventThread = std::thread(&EyeAligner::runEventDispatch, this);
@@ -646,10 +668,14 @@ void eye_align::EyeAligner::runControlLoop(void)
 		switch (state.mode.load()) {
 		case EyeAlignMode::FULL: raiseEvent(EyeAlignEvent::FULL_ALIGN_STARTED, static_cast<int>(state.eyeSide)); break;
 		case EyeAlignMode::AUTO: raiseEvent(EyeAlignEvent::AUTO_ALIGN_STARTED, static_cast<int>(state.eyeSide)); break;
+		case EyeAlignMode::READY:
+		case EyeAlignMode::READY_MIDDLE: raiseEvent(EyeAlignEvent::READY_MOVE_STARTED, static_cast<int>(state.eyeSide)); break;
 		default: raiseEvent(EyeAlignEvent::MANUAL_ALIGN_STARTED, static_cast<int>(state.eyeSide)); break;
 		}
 
-		setupCorneaLeds();
+		if (!state.readyOnly) {
+			setupCorneaLeds();		// a ready run looks at no image: the LEDs stay as they are
+		}
 
 		if (!state.manual) {
 			// Fresh positions before the first move decision.
@@ -715,7 +741,8 @@ void eye_align::EyeAligner::finishRun(void)
 
 		// Every ending - a user cancel included - retreats Z to the ready position so
 		// the head is never left close to the eye; a second cancel() aborts the retreat.
-		if (!state.manual && state.runConfig.backOffOnEnd != 0) {
+		// A completed ready run already stands at readyPosZ.
+		if (!state.manual && state.runConfig.backOffOnEnd != 0 && state.endPhase != EyeAlignPhase::COMPLETED) {
 			backOffToReadyPosition();
 		}
 		stopAllAxes();
@@ -729,7 +756,13 @@ void eye_align::EyeAligner::finishRun(void)
 	state.phase = state.endPhase;
 	updateStatusSnapshot();
 
-	const auto terminalEvent = (state.endPhase == EyeAlignPhase::CANCELED) ? EyeAlignEvent::ALIGN_CANCELLED : EyeAlignEvent::ALIGN_FAILED;
+	auto terminalEvent = EyeAlignEvent::ALIGN_FAILED;
+	if (state.endPhase == EyeAlignPhase::CANCELED) {
+		terminalEvent = EyeAlignEvent::ALIGN_CANCELLED;
+	}
+	else if (state.endPhase == EyeAlignPhase::COMPLETED) {
+		terminalEvent = EyeAlignEvent::ALIGN_COMPLETED;
+	}
 	raiseEvent(terminalEvent, static_cast<int>(state.endReason));
 	LogI() << "EyeAligner finished, phase: " << phaseName(state.endPhase) << ", reason: " << static_cast<int>(state.endReason);
 
@@ -1077,6 +1110,7 @@ bool eye_align::EyeAligner::processPhase(void)
 	case EyeAlignPhase::TO_READY_Z: return phaseToReadyZ();
 	case EyeAlignPhase::TO_EYE_X: return phaseToEyeX();
 	case EyeAlignPhase::SWING_TO_TILT: return phaseSwingToTilt();
+	case EyeAlignPhase::TO_MIDDLE: return phaseToMiddle();
 	case EyeAlignPhase::SEARCHING: return phaseSearching();
 	case EyeAlignPhase::APPROACHING: return phaseApproaching();
 	case EyeAlignPhase::CENTERING_Y: return phaseCenteringY();
@@ -1088,6 +1122,7 @@ bool eye_align::EyeAligner::processPhase(void)
 	case EyeAlignPhase::IDLE:
 	case EyeAlignPhase::CANCELED:
 	case EyeAlignPhase::FAILED:
+	case EyeAlignPhase::COMPLETED:
 		return false;
 	}
 	return false;
@@ -1141,8 +1176,33 @@ bool eye_align::EyeAligner::phaseToReadyZ(void)
 		return false;
 	}
 	raiseEvent(EyeAlignEvent::READY_POSITION_REACHED, static_cast<int>(state.eyeSide));
-	changePhase(EyeAlignPhase::TO_EYE_X, PHASE_END_DWELL_MS);
+	const bool toMiddle = (state.mode == EyeAlignMode::READY_MIDDLE);
+	changePhase(toMiddle ? EyeAlignPhase::TO_MIDDLE : EyeAlignPhase::TO_EYE_X, PHASE_END_DWELL_MS);
 	return true;
+}
+
+bool eye_align::EyeAligner::phaseToMiddle(void)
+{
+	auto& state = impl();
+	// READY_MIDDLE, with Z already at readyPosZ: the swing goes to its origin first (the
+	// same order as the crossing in phaseToEyeX: the head travels in X untilted), then X
+	// to its origin, and the run completes.
+	if (!movePhaseAxisTo(state.axisSwing, MOTOR_SWING_INIT_POS, EyeAlignPhase::TO_MIDDLE, SWING_TIMEOUT_MS)) {
+		return false;
+	}
+	if (!movePhaseAxisTo(state.axisX, MOTOR_STAGE_X_INIT_POS, EyeAlignPhase::TO_MIDDLE, EYE_X_TIMEOUT_MS)) {
+		return false;
+	}
+	raiseEvent(EyeAlignEvent::MIDDLE_POSITION_REACHED);
+	return completeRun();
+}
+
+bool eye_align::EyeAligner::completeRun(void)
+{
+	// Ends the run the good way: finishRun() delivers ALIGN_COMPLETED as the terminal
+	// event and leaves the head where it stands.
+	requestRunEnd(EyeAlignPhase::COMPLETED, EyeAlignResult::NONE);
+	return false;
 }
 
 bool eye_align::EyeAligner::phaseToEyeX(void)
@@ -1175,6 +1235,9 @@ bool eye_align::EyeAligner::phaseSwingToTilt(void)
 		return false;
 	}
 	raiseEvent(EyeAlignEvent::SWING_AT_TILT, static_cast<int>(state.eyeSide));
+	if (state.mode == EyeAlignMode::READY) {
+		return completeRun();		// the eye's ready position: ready Z, eye-side X, swing tilt
+	}
 	changePhase(EyeAlignPhase::SEARCHING, PHASE_END_DWELL_MS);
 	state.searchDeadline = state.phaseStartTime + std::chrono::milliseconds(state.runConfig.searchTimeoutMs);
 	raiseEvent(EyeAlignEvent::SEARCH_STARTED);

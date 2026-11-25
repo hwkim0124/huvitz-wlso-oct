@@ -34,13 +34,18 @@ namespace oct_pattern
 
 	constexpr int TRIGGER_FORE_PADDING_POINTS = 8; // 5;
 	constexpr int TRIGGER_POST_PADDING_POINTS = 2; // 5;
+	constexpr int TRIGGER_FORE_PADDING_POINTS_MAX = 128;
+	constexpr int TRIGGER_POST_PADDING_POINTS_MAX = 128;
+	constexpr int TRIGGER_FORE_PADDING_POINTS_MIN = 24;
+	constexpr int TRIGGER_POST_PADDING_POINTS_MIN = 24;
+
 	constexpr float TRIGGER_FORE_PADDING_RATIO = 0.1f;
 	constexpr float TRIGGER_POST_PADDING_RATIO = 0.1f;
 
 	constexpr float PATTERN_SCAN_RANGE_X_MIN = 0.0f;// 2.0f;
-	constexpr float PATTERN_SCAN_RANGE_X_MAX = 16.5f; // 12.0f;// 12.0f;
+	constexpr float PATTERN_SCAN_RANGE_X_MAX = 23.0f; // 16.5f; // 12.0f;// 12.0f;
 	constexpr float PATTERN_SCAN_RANGE_Y_MIN = 0.0f;// 2.0f;
-	constexpr float PATTERN_SCAN_RANGE_Y_MAX = 12.0f; // 9.0f;// 9.0f;
+	constexpr float PATTERN_SCAN_RANGE_Y_MAX = 23.0f; // 12.0f; // 9.0f;// 9.0f;
 	constexpr float PATTERN_SCAN_ANGLE_MIN = 0.0f;
 	constexpr float PATTERN_SCAN_ANGLE_MAX = 179.0f;
 

@@ -166,6 +166,28 @@ bool oct_result::ProtocolResult::exportScanProtocol(const std::wstring& dir_path
 }
 
 
+bool oct_result::ProtocolResult::importScanProtocolJson(const std::string& jstr)
+{
+	auto& proto = getScanProtocol();
+	if (OctDataUtil::populateFromJson(jstr, proto)) {
+		LogD() << "Protocol result descript imported from json, length: " << jstr.length();
+
+		auto& measure = getScanProtocol().getMeasure();
+		getPatternOutput().setDescript(measure);
+		getPreviewOutput().setDescript(measure);
+		getAngioOutput().setDescript(measure);
+		return true;
+	}
+	return false;
+}
+
+
+std::string oct_result::ProtocolResult::exportScanProtocolJson(void) const
+{
+	return OctDataUtil::serializeToJson(getScanProtocol());
+}
+
+
 bool oct_result::ProtocolResult::exportFiles(const std::wstring& dirPath,
 	const std::wstring& imagePrefix, const std::wstring& enfaceName,
 	const std::wstring& previewName, const std::wstring& retinaName,

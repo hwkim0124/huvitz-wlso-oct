@@ -12,6 +12,8 @@ namespace WsoNativeLib
             Manual = 0,
             Auto = 1,
             Full = 2,
+            Ready = 3,          // ready Z -> eye-side X -> swing tilt, then AlignCompleted
+            ReadyMiddle = 4,    // ready Z -> swing origin -> X origin, then AlignCompleted
         }
 
         public enum EyeAlignPhase : int
@@ -21,8 +23,8 @@ namespace WsoNativeLib
             ToEyeX,
             SwingToTilt,
             Searching,
-            Approaching,
             CenteringY,
+            Approaching,
             CenteringX,
             CenteringZ,
             Focused,
@@ -30,6 +32,8 @@ namespace WsoNativeLib
             Held,
             Canceled,
             Failed,
+            ToMiddle,
+            Completed,
         }
 
         public enum EyeAlignResult : int
@@ -88,6 +92,9 @@ namespace WsoNativeLib
             MotorMoveFailed,
             PhaseTimeout,
             AlignTimeout,
+            ReadyMoveStarted,
+            MiddlePositionReached,
+            AlignCompleted,
         }
 
         [StructLayout(LayoutKind.Sequential)]

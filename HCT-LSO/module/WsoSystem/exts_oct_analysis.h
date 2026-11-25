@@ -19,6 +19,9 @@ namespace wso_system
 		bool WSOSYSTEM_DLL_API _stdcall segmentOctScanProtocolData(int sourceId);
 		bool WSOSYSTEM_DLL_API _stdcall importOctScanProtocolResult(LPCTSTR dir_path, bool clear_olds, int* sourceId);
 		bool WSOSYSTEM_DLL_API _stdcall exportOctScanProtocolResult(LPCTSTR dir_path, LPTSTR out_path, int sourceId);
+		bool WSOSYSTEM_DLL_API _stdcall exportOctScanProtocolResultToDir(LPCTSTR dir_path, int sourceId);
+		bool WSOSYSTEM_DLL_API _stdcall importOctScanProtocolResultFromJson(LPCSTR protocol_json, LPCTSTR image_dir, bool clear_olds, int* sourceId);
+		int WSOSYSTEM_DLL_API _stdcall getOctScanProtocolSnapshot(int sourceId, char* buffer, int size);
 
 		int WSOSYSTEM_DLL_API _stdcall getOctPatternContentCount(int sourceId);
 		int WSOSYSTEM_DLL_API _stdcall getOctPreviewContentCount(int sourceId);

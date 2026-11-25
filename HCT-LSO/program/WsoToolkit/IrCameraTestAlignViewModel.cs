@@ -40,7 +40,7 @@ namespace WsoToolkit
         ///
         private void InitializeAlignControls()
         {
-            cmbAlignMode.ItemsSource = new string[] { "Manual", "Auto", "Full" };
+            cmbAlignMode.ItemsSource = new string[] { "Manual", "Auto", "Full", "Ready", "Ready Middle" };
             cmbAlignMode.SelectedIndex = 0;
 
             cmbAlignEyeSide.ItemsSource = new string[] { "OD (right eye)", "OS (left eye)" };
@@ -61,8 +61,16 @@ namespace WsoToolkit
             {
                 1 => EyeAlignMode.Auto,
                 2 => EyeAlignMode.Full,
+                3 => EyeAlignMode.Ready,
+                4 => EyeAlignMode.ReadyMiddle,
                 _ => EyeAlignMode.Manual,
             };
+        }
+
+        // Ready / Ready Middle only move the head to a ready position and complete.
+        private static bool IsReadyAlignMode(EyeAlignMode mode)
+        {
+            return mode == EyeAlignMode.Ready || mode == EyeAlignMode.ReadyMiddle;
         }
 
         private EyeSide GetAlignEyeSideSelected()
@@ -100,14 +108,15 @@ namespace WsoToolkit
         ///
         private void StartEyeAlignment()
         {
-            if (!IsCorneaCameraPreviewing())
+            var mode = GetAlignModeSelected();
+            var side = GetAlignEyeSideSelected();
+
+            // The ready modes move the head without looking at an image.
+            if (!IsReadyAlignMode(mode) && !IsCorneaCameraPreviewing())
             {
                 ShowWarning("Start the cornea camera preview before aligning.");
                 return;
             }
-
-            var mode = GetAlignModeSelected();
-            var side = GetAlignEyeSideSelected();
 
             var result = EyeAlign.StartAlignment(mode, side, _onEyeAlignEvent);
             if (result != EyeAlignResult.None)
@@ -124,8 +133,9 @@ namespace WsoToolkit
             btnAlignHold.IsEnabled = false;
             cmbAlignMode.IsEnabled = false;
             cmbAlignEyeSide.IsEnabled = false;
-            lblAlignStatus.Content = $"{mode} starting ({side})";
-            AppendAlignEvent($"--- start {mode} {side}");
+            string target = (mode == EyeAlignMode.ReadyMiddle) ? "middle" : side.ToString();
+            lblAlignStatus.Content = $"{mode} starting ({target})";
+            AppendAlignEvent($"--- start {mode} {target}");
         }
 
         private void CancelEyeAlignment()
@@ -175,7 +185,9 @@ namespace WsoToolkit
             if (EyeAlign.IsTerminalEvent(evt))
             {
                 ResetAlignControls();
-                lblAlignStatus.Content = $"{evt} ({(EyeAlignResult)arg})";
+                lblAlignStatus.Content = (evt == EyeAlignEvent.AlignCompleted)
+                    ? $"{mode} completed"
+                    : $"{evt} ({(EyeAlignResult)arg})";
             }
         }
 
@@ -185,6 +197,7 @@ namespace WsoToolkit
             {
                 case EyeAlignEvent.AlignCancelled:
                 case EyeAlignEvent.AlignFailed:
+                case EyeAlignEvent.AlignCompleted:
                     return ((EyeAlignResult)arg).ToString();
                 case EyeAlignEvent.EyeFound:
                 case EyeAlignEvent.EyeNotFound:
@@ -205,6 +218,7 @@ namespace WsoToolkit
                 case EyeAlignEvent.FullAlignStarted:
                 case EyeAlignEvent.AutoAlignStarted:
                 case EyeAlignEvent.ManualAlignStarted:
+                case EyeAlignEvent.ReadyMoveStarted:
                 case EyeAlignEvent.ReadyPositionReached:
                 case EyeAlignEvent.EyeSidePositionReached:
                 case EyeAlignEvent.SwingAtTilt:

@@ -28,6 +28,8 @@ namespace WsoToolkit
         WsoCallback.OctAutoPolarOptimized _onAutoPolarOptimized;
         WsoCallback.OctAutoReferOptimized _onAutoReferOptimized;
 
+        // Move To row of the Target Eye group (Ready OD / Ready OS / Middle buttons).
+        utils.ReadyAlignButtons _readyAlign;
 
         LightControlWindow? _lightControlWindow = null;
         FocusMotorWindow? _focusMotorWindow = null;
